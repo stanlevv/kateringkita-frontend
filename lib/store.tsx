@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 export const rp = (n: number) => "Rp " + n.toLocaleString("id-ID");
-export type Menu = { id: number; name: string; cat: string; price: number; hpp: number; stock: number; hold: number; sold: number; est: string; img: string };
+export type Menu = { id: number; name: string; cat: string; price: number; hpp: number; stock: number; hold: number; sold: number; est: string; img: string; isOptimistic?: boolean };
 export type Order = {
   id: string;
   name: string;
