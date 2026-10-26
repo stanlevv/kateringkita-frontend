@@ -5,7 +5,10 @@ import { cookies } from "next/headers";
 import { menuSchema, MenuActionState, MenuInput } from "@/lib/schemas";
 import { authActionClient, ActionError } from "@/lib/safe-action";
 
-const BACKEND_URL = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const BACKEND_URL =
+  process.env.BACKEND_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://ketring-45f82aef1ca0.herokuapp.com/api";
 
 // In-memory persistent cache / fallback di server Next.js
 let serverMenuList = [

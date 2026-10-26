@@ -59,11 +59,34 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const BACKEND_URL =
+    process.env.BACKEND_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://ketring-45f82aef1ca0.herokuapp.com/api";
+
+  let savedData = parsed.data;
+  try {
+    const res = await fetch(`${BACKEND_URL}/menus`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(parsed.data),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) savedData = json.data;
+    }
+  } catch {
+    // Fallback
+  }
+
   return NextResponse.json(
     {
       success: true,
       message: "Data menu valid dan berhasil disimpan di server!",
-      data: parsed.data,
+      data: savedData,
     },
     { status: 201 }
   );
