@@ -18,6 +18,8 @@ export const useAuth = () => {
       if (res.token) {
         localStorage.setItem("token", res.token);
         localStorage.setItem("user", JSON.stringify(res.user));
+        document.cookie = `auth_token=${res.token}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `token=${res.token}; path=/; max-age=86400; SameSite=Lax`;
         router.push("/dashboard");
       }
     } catch (err: any) {
