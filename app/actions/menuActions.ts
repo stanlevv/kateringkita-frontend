@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { menuSchema, MenuActionState, MenuInput } from "@/lib/schemas";
 import { authActionClient, ActionError } from "@/lib/safe-action";
+import { uploadImageToR2 } from "@/lib/r2";
 
 const BACKEND_URL =
   process.env.BACKEND_API_URL ||
@@ -229,3 +230,33 @@ export async function checkAuthSession() {
   const token = cookieStore.get("auth_token")?.value || cookieStore.get("token")?.value;
   return Boolean(token);
 }
+
+/**
+ * Server Action untuk mengunggah file foto menu ke Cloudflare R2
+ */
+export async function uploadMenuImageAction(formData: FormData): Promise<{
+  success: boolean;
+  url?: string;
+  source?: "r2" | "fallback";
+  error?: string;
+}> {
+  try {
+    const file = formData.get("file") as File | null;
+    if (!file || !(file instanceof File) || file.size === 0) {
+      return { success: false, error: "Tidak ada file gambar yang dipilih." };
+    }
+
+    const result = await uploadImageToR2(file);
+    return {
+      success: true,
+      url: result.url,
+      source: result.source,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Gagal mengunggah gambar ke Cloudflare R2.",
+    };
+  }
+}
+

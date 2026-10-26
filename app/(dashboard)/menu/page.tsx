@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Shell from "@/components/Shell";
 import { useStore, rp, Menu } from "@/lib/store";
-import { createMenuAction, deleteMenuAction, toggleAuthSession, checkAuthSession } from "@/app/actions/menuActions";
+import { createMenuAction, deleteMenuAction, toggleAuthSession, checkAuthSession, uploadMenuImageAction } from "@/app/actions/menuActions";
 import { CATEGORIES, MenuActionState } from "@/lib/schemas";
 
 const mono = "font-[family-name:var(--font-mono)]";
@@ -77,6 +77,9 @@ function FormView({
   const [price, setPrice] = useState(String(cur?.price ?? ""));
   const [stock, setStock] = useState(String(cur?.stock ?? "10"));
   const [est, setEst] = useState(cur?.est ?? "15 Mnt");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadSource, setUploadSource] = useState<"r2" | "fallback" | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -113,9 +116,27 @@ function FormView({
   const catLabel = fcats.find((c) => c[0] === cat)?.[1];
   const mid = cur ? String(cur.id).slice(-3).padStart(3, "0") : String(menu.length + 1).padStart(3, "0");
 
-  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) setImg(URL.createObjectURL(f));
+    if (!f) return;
+    setImg(URL.createObjectURL(f));
+    setIsUploading(true);
+    setUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", f);
+      const res = await uploadMenuImageAction(formData);
+      if (res.success && res.url) {
+        setImg(res.url);
+        setUploadSource(res.source || null);
+      } else {
+        setUploadError(res.error || "Gagal mengunggah foto.");
+      }
+    } catch (err: any) {
+      setUploadError(err.message || "Gagal mengunggah gambar.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleCustomSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -331,32 +352,66 @@ function FormView({
               <span className="text-[11px] text-gray-400">Format JPG/PNG, rasio 4:3, maks 5MB</span>
             </div>
             <div className="border-2 border-dashed border-orange-300 bg-orange-50/30 rounded-2xl p-4 flex items-center gap-4">
-              {img ? <img src={img} alt="" className="w-[88px] h-[72px] rounded-lg object-cover" /> : <div className="w-[88px] h-[72px] rounded-lg bg-gray-100" />}
+              {img ? (
+                <div className="relative w-[88px] h-[72px] rounded-lg overflow-hidden shrink-0 border border-gray-200">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-[11px] font-bold">
+                      <span className="animate-spin mr-1">⌛</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-[88px] h-[72px] rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                  <UploadCloud size={24} />
+                </div>
+              )}
               <div className="flex-1">
-                <div className="flex gap-3 items-center">
+                <div className="flex flex-wrap gap-2.5 items-center">
                   <input ref={file} type="file" accept="image/*" hidden onChange={pick} />
                   <button
                     type="button"
+                    disabled={isUploading}
                     onClick={() => file.current?.click()}
-                    className="h-9 px-4 rounded-lg border border-gray-200 bg-white text-[13px] font-semibold inline-flex items-center gap-2 hover:bg-gray-50"
+                    className="h-9 px-4 rounded-lg border border-gray-200 bg-white text-[13px] font-semibold inline-flex items-center gap-2 hover:bg-gray-50 disabled:opacity-60"
                   >
                     <UploadCloud size={15} className="text-orange-600" />
-                    {img ? "Ganti Foto" : "Unggah Foto"}
+                    {isUploading ? "Mengunggah..." : img ? "Ganti Foto" : "Unggah Foto"}
                   </button>
-                  {img && (
+                  {img && !isUploading && (
                     <button
                       type="button"
-                      onClick={() => setImg("")}
+                      onClick={() => {
+                        setImg("");
+                        setUploadSource(null);
+                      }}
                       className="text-[13px] font-semibold text-red-500 inline-flex items-center gap-1.5 hover:underline"
                     >
                       <Trash2 size={14} />
                       Hapus
                     </button>
                   )}
+                  {uploadSource === "r2" && (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-md px-2 py-1">
+                      ✓ Cloudflare R2
+                    </span>
+                  )}
+                  {uploadSource === "fallback" && (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 rounded-md px-2 py-1">
+                      Local Mode
+                    </span>
+                  )}
                 </div>
-                <p className="text-[12px] text-gray-500 mt-2">
-                  Foto menu katering berkualitas mempermudah pembeli memilih saat checkout via portal online.
-                </p>
+                {uploadError ? (
+                  <p className="text-[12px] text-red-600 font-semibold mt-2 flex items-center gap-1">
+                    <AlertCircle size={13} />
+                    {uploadError}
+                  </p>
+                ) : (
+                  <p className="text-[12px] text-gray-500 mt-2">
+                    Foto menu tersimpan aman di Cloudflare R2 Storage tanpa biaya bandwidth.
+                  </p>
+                )}
               </div>
             </div>
           </div>
