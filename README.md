@@ -1,145 +1,138 @@
-# 🍱 KateringKita - Frontend Web Application
+# KateringKita — Web Penjual & Admin
 
-<div align="center">
+Aplikasi web **KateringKita** untuk dua peran:
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.3.8-black.svg?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.8-blue.svg?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8.svg?logo=tailwindcss)](https://tailwindcss.com/)
-[![Zod](https://img.shields.io/badge/Zod-Validation-3068b7.svg?logo=zod)](https://zod.dev/)
-[![next-safe-action](https://img.shields.io/badge/next--safe--action-v8-purple.svg)](https://next-safe-action.dev/)
-[![Vercel Deployment](https://img.shields.io/badge/Deploy-Vercel-black.svg?logo=vercel)](https://ketringkita-frontend.vercel.app)
-[![Custom Domain](https://img.shields.io/badge/Domain-ketringkita.edufin.app-success.svg)](https://ketringkita.edufin.app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+- **Penjual katering:** mengelola toko, menu, dan kuota porsi harian, lalu memproses pesanan mahasiswa dari dashboard live.
+- **Admin platform:** memverifikasi penjual baru dan mengelola data master, promo platform, serta log.
 
-Aplikasi Web Modern Manajemen Bisnis Katering **KateringKita**, dibangun menggunakan **Next.js 16 (App Router & Turbopack)**, **React 19**, **Server Actions**, **Optimistic UI**, dan terhubung langsung ke Backend REST API berbasis cloud.
+Pembeli memakai aplikasi mobile terpisah. Web ini tidak menyimpan data sendiri; semuanya lewat [kateringkita-backend](https://github.com/stanlevv/kateringkita-backend).
 
-[🌐 Custom Domain (Production)](https://ketringkita.edufin.app/) • [⚡ Mirror Vercel](https://ketringkita-frontend.vercel.app/) • [⚙️ Live Backend API (Heroku)](https://ketring-45f82aef1ca0.herokuapp.com/)
-
-</div>
+| | Alamat |
+|---|---|
+| Production | https://ketringkita.edufin.app |
+| Cadangan Vercel | https://ketringkita-frontend.vercel.app |
+| API yang dipakai | https://ketring-45f82aef1ca0.herokuapp.com/api/v1 |
 
 ---
 
-## 📌 Ringkasan Aplikasi
+## Status per November 2026
 
-**KateringKita** adalah solusi digital all-in-one bagi pelaku usaha katering, UMKM kuliner, dan merchant makanan untuk mempermudah operasional dapur:
-- **Katalog & Formulir CRUD Menu (Lab Pertemuan 10):** Manajemen menu dengan validasi Zod bersama (*shared schema*), proteksi Server Actions, dan antarmuka instan menggunakan React 19 `useOptimistic`.
-- **Live Antrean Pesanan (POS Dashboard):** Pemantauan status pengerjaan pesanan (Dipesan, Diproses, Siap Diambil) dengan timer holding otomatis.
-- **Kalkulator & Copilot HPP:** Perhitungan modal bahan, estimasi margin keuntungan per porsi, dan rekomendasi harga jual optimal.
-- **Simulator WhatsApp Gateway:** Pembuatan pesan pesanan dan konfirmasi pembayaran terformat rapi untuk pelanggan.
-- **Riwayat Penjualan & Ekspor CSV:** Rekapitulasi omzet dan pencetakan data penjualan dalam format spreadsheet.
+| Halaman | Alamat | Data |
+|---|---|---|
+| Halaman pembuka | `/` | Statis, animasi printer struk dan alur satu pesanan |
+| Masuk, daftar penjual | `/login`, `/register` | API |
+| Dashboard live | `/dashboard` | API, diperbarui tiap 5 detik |
+| Pesanan | `/pesanan`, `/pesanan/[kode]` | API |
+| Menu & kuota | `/menu`, `/menu/baru`, `/menu/[id]` | API |
+| Pengaturan toko | `/pengaturan` | API |
+| Templat WhatsApp | `/template-wa` | API |
+| Kalkulator HPP | `/copilot` | Dihitung di peramban |
+| Laporan | `/laporan` | **Data contoh**, menunggu F09 (sedang dikerjakan) |
+| Promo toko | `/promo` | **Data contoh**, menunggu F12 |
+| Ulasan | `/ulasan` | **Data contoh**, menunggu F13 |
+| Panel admin | `/admin`, `/admin/verifikasi`, `/admin/penjual`, `/admin/data-master`, `/admin/promo`, `/admin/log` | API |
+| Pratinjau keadaan | `/pratinjau` | Hanya mode pengembangan: memicu keadaan seperti kosong, gagal muat, dan pesanan baru |
 
----
-
-## ✨ Fitur Teknis Lab Pertemuan 10 (Advanced Form Handling)
-
-Proyek ini telah menerapkan seluruh standar praktikum modern Next.js:
-
-1. **Shared Zod Schema ([`lib/schemas.ts`](lib/schemas.ts)):**
-   - Satu sumber kebenaran (*single source of truth*) untuk validasi data menu baik di sisi browser (*client-side*) maupun di sisi server (*server-side*).
-   - Sanitasi teks, validasi enum kategori (`Nasi Box`, `Snack`, `Minuman`, `Paket Custom`), serta pengecekan batas minimum nominal HPP dan harga jual.
-
-2. **Per-Field Validation Error Feedback:**
-   - Pesan error interaktif muncul secara presisi tepat di bawah input field yang bermasalah tanpa me-refresh halaman.
-
-3. **Optimistic UI Updates (React 19 `useOptimistic`):**
-   - Saat pengguna menambahkan menu baru atau mengubah kuota stok, perubahan langsung direfleksikan seketika pada antarmuka pengguna tanpa menunggu latency jaringan (*zero waiting lag*). Jika server gagal, state akan di-rollback secara otomatis.
-
-4. **Type-Safe Mutation Guard ([`lib/safe-action.ts`](lib/safe-action.ts)):**
-   - Mutasi data diproteksi oleh middleware `authActionClient` dari pustaka `next-safe-action`, menolak mutasi dari pengguna yang belum terautentikasi melalui verifikasi cookie HTTP.
+Selama masih ada halaman berdata contoh, area penjual menampilkan banner "Sebagian halaman masih memakai data contoh." Uji otomatis: **90 berkas, 764 test**, semuanya lulus.
 
 ---
 
-## 🗂️ Struktur Direktori Proyek
+## Teknologi
+
+| Bagian | Pilihan |
+|---|---|
+| Framework | Next.js 16.3 (App Router, Server Components, Server Actions, Route Handlers) |
+| UI | React 19.2, Tailwind CSS 4, ikon `lucide-react` |
+| Bahasa | TypeScript 5 |
+| Validasi form | Zod 4 (aturan sama dengan backend) |
+| Font | Inter, Plus Jakarta Sans, JetBrains Mono, Bricolage Grotesque lewat `next/font` |
+| Uji | Vitest 5, Testing Library, jsdom; lint dengan ESLint 9 |
+| Hosting | Vercel |
+
+Dependency produksi hanya lima: `next`, `react`, `react-dom`, `zod`, `lucide-react`.
+
+---
+
+## Cara kerja
 
 ```text
-kateringkita-frontend/
-├── app/
-│   ├── (auth)/
-│   │   ├── login/page.tsx         # Formulir login JWT
-│   │   └── register/page.tsx      # Formulir pendaftaran merchant baru
-│   ├── (dashboard)/
-│   │   ├── copilot/page.tsx       # Kalkulator HPP & margin
-│   │   ├── dashboard/page.tsx     # Live antrean pesanan & holding timer
-│   │   ├── menu/page.tsx          # CRUD Menu interaktif (Lab 10 Form Handling)
-│   │   ├── pengaturan/page.tsx    # Profil toko & pengaturan merchant
-│   │   ├── riwayat/page.tsx       # Rekapitulasi transaksi & export CSV
-│   │   └── template-wa/page.tsx   # Generator format chat WhatsApp
-│   ├── actions/
-│   │   └── menuActions.ts         # Server Actions Next.js (Safe Action Client)
-│   ├── api/
-│   │   └── menu/route.ts          # Route Handler API proxy
-│   ├── layout.tsx                 # Root layout & font provider
-│   └── page.tsx                   # Landing page
-├── components/                    # Reusable UI widgets & modal dialogs
-├── hooks/
-│   └── (kosong)                   # Sesi memakai cookie httpOnly `kk_session` (lib/session.ts, server action)
-├── lib/
-│   ├── axios.ts                   # Klien HTTP Axios (lama)
-│   ├── safe-action.ts             # Client wrapper next-safe-action & auth middleware
-│   ├── schemas.ts                 # Shared Zod validation schema
-│   ├── store.tsx                  # Global State Context & format rupiah helper
-│   └── validators.ts              # Validasi format email & nomor WhatsApp Indonesia
-└── public/menu/                   # Aset gambar & ilustrasi menu katering
+Peramban ──► Next.js di Vercel ──────────────► API Express di Heroku ──► TiDB Cloud
+             (Server Components,   token JWT
+              Server Actions,      dari cookie
+              Route Handlers)      httpOnly
 ```
+
+- **Token tidak pernah sampai ke JavaScript peramban.** Saat masuk, Server Action menyimpan token di cookie `httpOnly` bernama `kk_session`. Setiap panggilan ke API dilakukan di server Next (`lib/merchant-api.ts`, `lib/admin/api.ts`).
+- **Penjaga halaman.** `proxy.ts` mengarahkan pengunjung tanpa sesi ke `/login`. Setiap halaman juga memeriksa peran (`requireMerchant()` / admin) di server.
+- **Dashboard live.** Klien memanggil Route Handler `/dashboard/sinkron?sejak=` setiap 5 detik (30 detik bila tab tersembunyi). Respons hanya berisi pesanan yang berubah, lalu digabung per kode pesanan. KPI di dashboard dihitung dari data yang sama dengan antrean.
+- **Aksi pesanan** (konfirmasi, masak, siap, selesai, tolak) dijalankan lewat Server Action, dengan jendela 5 detik untuk membatalkan sebelum terkirim.
+- **Unggah foto** langsung dari peramban ke Cloudflare R2 memakai URL bertanda tangan dari backend (`lib/unggah.ts`). Fitur ini aktif setelah R2 diatur di backend.
+- **Ekspor CSV laporan** dibuat oleh Route Handler `/laporan/csv`, dengan BOM agar terbaca benar di Excel.
 
 ---
 
-## 🚀 Panduan Memulai (Quick Start)
+## Struktur folder
 
-### 1. Prasyarat Sistem
-- **Node.js** `>= 20.0.0`
-- **npm** `>= 10.0.0`
+```text
+app/
+├── page.tsx               Halaman pembuka
+├── (auth)/                login, register
+├── (dashboard)/           Halaman penjual + Route Handler (dashboard/sinkron, laporan/csv, pesanan/[code]/wa)
+├── (admin)/admin/         Halaman admin
+└── actions/               Server Actions (auth, akun, toko, profil, menu, pesanan, promo, admin)
+components/
+├── ui/                    Komponen dasar: tombol, input, dialog, tabel, kartu KPI, unggah berkas
+├── shell/                 Sidebar, kepala halaman, navigasi
+├── landing/               Printer struk dan alur pesanan di halaman pembuka
+└── dashboard, orders, menu, reports, promo, reviews, settings, wa, hpp, admin
+lib/
+├── data/                  Pembacaan data per halaman (memanggil API)
+├── merchant-api.ts        Klien API penjual (token dari cookie)
+├── session.ts             Sesi, requireMerchant()
+├── schemas.ts             Aturan validasi form
+├── format.ts              Rupiah, tanggal dan jam WIB
+└── dashboard.ts, laporan.ts, order-status.ts, …   Logika murni yang diuji
+proxy.ts                   Pengalihan ke /login untuk halaman yang butuh sesi
+```
 
-### 2. Instalasi
+Warna dan ukuran memakai token di `app/globals.css` (misalnya `bg-accent`, `text-ink-muted`), bukan kelas Tailwind mentah. Semua teks berbahasa Indonesia.
+
+---
+
+## Menjalankan di komputer sendiri
+
+Prasyarat: Node.js ≥ 22 dan backend yang sedang berjalan (lokal atau production).
+
 ```bash
 git clone https://github.com/stanlevv/kateringkita-frontend.git
 cd kateringkita-frontend
 npm install
-```
-
-### 3. Konfigurasi Environment Variables
-Salin file template `.env.example`:
-```bash
 cp .env.example .env.local
+npm run dev                 # http://localhost:3000
 ```
 
-Isi variabel environment:
-```env
-BACKEND_API_URL=http://localhost:5000/api/v1
-```
-*(Sesi login disimpan di cookie httpOnly `kk_session` yang diatur server action; tidak ada variabel `NEXT_PUBLIC_*` untuk API.)*
+| Variabel | Wajib | Keterangan |
+|---|---|---|
+| `BACKEND_API_URL` | ya | Alamat API termasuk `/api/v1`, misalnya `http://localhost:5000/api/v1` |
+| `INTERNAL_API_SECRET` | tidak | Sama dengan nilai di backend, minimal 32 karakter |
 
-### 4. Menjalankan Aplikasi
-```bash
-# Mode Pengembangan (Hot Reload dengan Turbopack)
-npm run dev
+Tidak ada variabel `NEXT_PUBLIC_*`: alamat API dan token hanya dipakai di server.
 
-# Kompilasi Production
-npm run build
-
-# Menjalankan Server Production
-npm start
-```
-Buka browser pada: `http://localhost:3000`
+| Perintah | Fungsi |
+|---|---|
+| `npm run dev` | Server pengembangan |
+| `npm run build` lalu `npm start` | Build production lalu jalankan |
+| `npm test` | Seluruh uji Vitest |
+| `npm run lint` | ESLint |
 
 ---
 
-## 🌐 Informasi Live Deployment
+## Deploy
 
-- **Custom Domain:** [`https://ketringkita.edufin.app`](https://ketringkita.edufin.app)  
-  *Dikonfigurasi menggunakan DNS CNAME pointing ke record Vercel Edge Network dengan sertifikat SSL otomatis.*
-- **Vercel Default Host:** [`https://ketringkita-frontend.vercel.app`](https://ketringkita-frontend.vercel.app)
-- **Live Backend Engine:** [`https://ketring-45f82aef1ca0.herokuapp.com/`](https://ketring-45f82aef1ca0.herokuapp.com/)
+Project Vercel `ketringkita-frontend` tersambung ke repo ini. Setiap push ke `main` otomatis di-build dan dipasang ke `ketringkita.edufin.app`. Variabel `BACKEND_API_URL` diatur di Vercel → Settings → Environment Variables.
 
 ---
 
-## 👥 Tim Pengembang
+## Lisensi
 
-Platform **KateringKita** dikembangkan dengan dedikasi untuk efisiensi ekosistem katering lokal.
-
----
-
-## 📄 Lisensi
-
-Proyek ini dilisensikan di bawah [MIT License](LICENSE).
+[MIT](LICENSE)
