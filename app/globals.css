@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-canvas: #FAF8F5;
+  --color-surface: #FFFFFF;
+  --color-subtle: #F1EEEA;
+  --color-accent: #FF6B35;
+  --color-accent-pressed: #F25A1F;
+  --color-steel: #2B2622;
+  --color-on-steel: #F6EFE8;
+  --color-on-steel-muted: #CFC6BD;
+  --color-paper: #FFFDF8;
+  --color-primary: #C2410C;
+  --color-primary-pressed: #9A3412;
+  --color-primary-soft: #FFF3EB;
+  --color-ink: #241F1A;
+  --color-ink-muted: #665D55;
+  --color-line: #E4DED7;
+  --color-line-strong: #9B9187;
+  --color-success: #166534;  --color-success-bg: #EFF8F1;
+  --color-warning: #92400E;  --color-warning-bg: #FFFBEB;
+  --color-danger:  #B42318;  --color-danger-bg:  #FEF3F2;
+  --color-info:    #1D4ED8;  --color-info-bg:    #EFF6FF;
+  --color-focus:   #1D4ED8;
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-jakarta);
+  --font-mono: var(--font-jetbrains);
+  --font-headline: var(--font-bricolage);
+
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Fokus terlihat untuk semua elemen yang dapat difokus (G-7). */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-canvas text-ink font-sans;
 }

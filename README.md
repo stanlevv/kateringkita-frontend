@@ -73,9 +73,9 @@ kateringkita-frontend/
 │   └── page.tsx                   # Landing page
 ├── components/                    # Reusable UI widgets & modal dialogs
 ├── hooks/
-│   └── useAuth.ts                 # Hook autentikasi & sinkronisasi token cookie
+│   └── (kosong)                   # Sesi memakai cookie httpOnly `kk_session` (lib/session.ts, server action)
 ├── lib/
-│   ├── axios.ts                   # Klien HTTP Axios dengan konfigurasi API Heroku
+│   ├── axios.ts                   # Klien HTTP Axios (lama)
 │   ├── safe-action.ts             # Client wrapper next-safe-action & auth middleware
 │   ├── schemas.ts                 # Shared Zod validation schema
 │   ├── store.tsx                  # Global State Context & format rupiah helper
@@ -106,10 +106,9 @@ cp .env.example .env.local
 
 Isi variabel environment:
 ```env
-NEXT_PUBLIC_API_URL=https://ketring-45f82aef1ca0.herokuapp.com/api
-BACKEND_API_URL=https://ketring-45f82aef1ca0.herokuapp.com/api
+BACKEND_API_URL=http://localhost:5000/api/v1
 ```
-*(Catatan: Jika menjalankan backend lokal di port 5000, ubah URL menjadi `http://localhost:5000/api`)*
+*(Sesi login disimpan di cookie httpOnly `kk_session` yang diatur server action; tidak ada variabel `NEXT_PUBLIC_*` untuk API.)*
 
 ### 4. Menjalankan Aplikasi
 ```bash
