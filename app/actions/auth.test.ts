@@ -9,7 +9,7 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ set }), headers: async 
 vi.mock("@/services/api", () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a) }));
 vi.mock("@/services/authService", () => ({ SESSION_COOKIE: "kk_session", getSessionToken: async () => undefined }));
 
-import { login } from "./auth";
+import { login, mintaKodeReset, resetKataSandi } from "./auth";
 
 const masuk = (role: string) =>
   apiFetch.mockResolvedValue({ ok: true, status: 200, data: { token: "tok", expires_at: "2030-01-01T00:00:00Z", user: { role } } });
@@ -85,5 +85,18 @@ describe("F01-SEC-2 IP klien ke backend", () => {
     apiFetch.mockClear(); masuk("customer");
     await login({}, form());
     expect(apiFetch.mock.calls[1][1]).not.toHaveProperty("headers");
+  });
+});
+
+describe("F11 lupa sandi", () => {
+  it("mintaKodeReset -> POST /auth/password/forgot", async () => {
+    apiFetch.mockResolvedValue({ ok: true, status: 200, data: { message: "x" } });
+    expect(await mintaKodeReset("a@b.id")).toEqual({ ok: true });
+    expect(apiFetch).toHaveBeenCalledWith("/auth/password/forgot", expect.objectContaining({ method: "POST", body: JSON.stringify({ email: "a@b.id" }) }));
+  });
+  it("resetKataSandi: galat kode diteruskan ke form", async () => {
+    apiFetch.mockResolvedValue({ ok: false, status: 400, error: { code: "VALIDATION_ERROR", message: "Data tidak valid.", fields: { code: ["Kode salah atau sudah kedaluwarsa."] } } });
+    expect(await resetKataSandi({ email: "a@b.id", code: "123456", password: "baru12345" }))
+      .toEqual({ error: "Data tidak valid.", code: "VALIDATION_ERROR", fields: { code: ["Kode salah atau sudah kedaluwarsa."] } });
   });
 });

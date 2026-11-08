@@ -2,11 +2,12 @@
 
 import { galat, galatField } from "@/lib/action-result";
 import { cekField, changePasswordSchema } from "@/lib/schemas";
-import { requireMerchant } from "@/services/authService";
+import { apiFetch } from "@/services/api";
+import { getSessionToken, requireMerchant } from "@/services/authService";
 import { getSkenario } from "@/lib/skenario";
 import type { ActionResult } from "@/types/api";
 
-// shortcut: PUT /me/password di F02; tidak disimpan (D2)
+// F02: PUT /me/password (204); backend mencabut sesi lain, sesi ini tetap
 export async function changePassword(input: { current_password: string; new_password: string }): Promise<ActionResult<{ ok: true }>> {
   await requireMerchant();
   const s = await getSkenario();
@@ -19,5 +20,11 @@ export async function changePassword(input: { current_password: string; new_pass
   if (s === "konflik") {
     return galatField({ current_password: "Kata sandi lama salah." }, "Kata sandi lama salah.");
   }
-  return { data: { ok: true } };
+  const res = await apiFetch("/me/password", {
+    method: "PUT",
+    token: await getSessionToken(),
+    body: JSON.stringify({ current_password: input.current_password, new_password: input.new_password }),
+  });
+  if (res.ok) return { data: { ok: true } };
+  return { error: res.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
 }

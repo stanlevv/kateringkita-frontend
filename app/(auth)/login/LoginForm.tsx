@@ -23,9 +23,9 @@ const pesanGagal: Record<string, string> = {
   NOT_MERCHANT: TEKS_PEMBELI,
 };
 
-type Props = { next?: string; alasan?: "sesi-habis" | "bukan-penjual"; registered?: boolean };
+type Props = { next?: string; alasan?: "sesi-habis" | "bukan-penjual"; registered?: boolean; reset?: boolean };
 
-export default function LoginForm({ next, alasan, registered }: Props) {
+export default function LoginForm({ next, alasan, registered, reset }: Props) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [lihat, setLihat] = useState(false);
@@ -79,9 +79,11 @@ export default function LoginForm({ next, alasan, registered }: Props) {
       ? <Banner tone="warning">Sesi berakhir, silakan masuk lagi</Banner>
       : registered
         ? <Banner tone="success">Akun berhasil dibuat. Silakan masuk.</Banner>
-        : next
-          ? <Banner tone="info">Masuk untuk melanjutkan</Banner>
-          : null;
+        : reset
+          ? <Banner tone="success">Kata sandi sudah diganti. Silakan masuk.</Banner>
+          : next
+            ? <Banner tone="info">Masuk untuk melanjutkan</Banner>
+            : null;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
@@ -108,6 +110,7 @@ export default function LoginForm({ next, alasan, registered }: Props) {
               className="absolute right-0 top-[26px]"
             />
           </div>
+          <Link href="/lupa-sandi" className="-mt-2 inline-flex min-h-11 items-center self-end text-sm font-medium text-primary underline">Lupa kata sandi?</Link>
           <Button type="submit" size="lg" loading={pending} loadingText="Memproses…" disabled={aktif}>
             {aktif ? `Coba lagi dalam ${sisa} dtk` : "Masuk"}
           </Button>

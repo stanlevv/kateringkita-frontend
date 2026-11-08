@@ -35,6 +35,15 @@ export const businessSchema = z.object({
   address: wajib("Alamat wajib diisi.", 255),
 });
 
+// --- Lupa sandi (F11): aturan sama dengan be/src/dto/auth.dto.ts ---
+export const emailResetSchema = z.object({
+  email: z.string().trim().min(1, "Email wajib diisi.").pipe(z.email("Format email tidak valid.")),
+});
+
+export const resetSandiSchema = z
+  .object({ code: z.string().regex(/^\d{6}$/, "Kode berisi 6 angka."), password: kataSandiBaru, confirm: z.string() })
+  .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "Konfirmasi kata sandi tidak sama." });
+
 // --- Menu (M-07): aturan sama dengan API.md POST /merchant/menus ---
 const angka = (label: string, min: number, maks?: number) => {
   const a = z.number({ error: `${label} wajib diisi.` }).int(`${label} harus bilangan bulat.`).min(min, `${label} minimal ${min.toLocaleString("id-ID")}.`);

@@ -73,3 +73,16 @@ export async function logout() {
   (await cookies()).delete(SESSION_COOKIE);
   redirect("/login");
 }
+
+// F11 lupa sandi: kode OTP dikirim ke email akun; jawaban API sama untuk email terdaftar atau tidak.
+export async function mintaKodeReset(email: string): Promise<AuthState> {
+  const res = await apiFetch("/auth/password/forgot", { method: "POST", headers: await clientIpHeaders(), body: JSON.stringify({ email }) });
+  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  return { ok: true };
+}
+
+export async function resetKataSandi(input: { email: string; code: string; password: string }): Promise<AuthState> {
+  const res = await apiFetch("/auth/password/reset", { method: "POST", headers: await clientIpHeaders(), body: JSON.stringify(input) });
+  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  return { ok: true };
+}
