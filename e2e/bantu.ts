@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { expect, type Locator, type Page } from "@playwright/test";
 
 // Semua nilai di sini hanya untuk DB lokal sekali-pakai `kateringkita_e2e`.
-export const URL_DB = "mysql://root:root@127.0.0.1:3306/kateringkita_e2e";
+// E2E_DATABASE_URL untuk MySQL lokal dengan kredensial lain (mis. Laragon: root tanpa sandi); nama DB tetap harus *_e2e.
+export const URL_DB = process.env.E2E_DATABASE_URL ?? "mysql://root:root@127.0.0.1:3306/kateringkita_e2e";
 export const JWT_SECRET_UJI = "kunci-uji-e2e-hanya-lokal-0123456789-abcdef";
 export const PORT_API = 5050;
 export const PORT_WEB = 3050;

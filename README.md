@@ -80,14 +80,19 @@
 |---|---|---|
 | `/` | Landing page interaktif dengan demonstrasi alur pemesanan | Publik |
 | `/login` & `/register` | Masuk akun & pendaftaran mitra merchant katering | Publik |
+| `/lupa-sandi` | Reset kata sandi dengan kode OTP dari email | Publik |
 | `/dashboard` | Live operational dashboard pesanan masuk toko | Merchant |
 | `/pesanan` & `/pesanan/[code]` | Antrean dan rincian lengkap pesanan pelanggan | Merchant |
 | `/menu`, `/menu/baru`, `/menu/[id]` | Manajemen katalog menu, harga, foto, dan kuota harian | Merchant |
 | `/laporan` | Dasbor keuangan, tren transaksi, dan ekspor CSV | Merchant |
 | `/pengaturan` | Profil toko, jam operasional, dan titik jemput | Merchant |
 | `/template-wa` | Kustomisasi templat pesan WhatsApp otomatis | Merchant |
-| `/copilot` | Kalkulator HPP (*Harga Pokok Penjualan*) & saran harga | Merchant |
-| `/admin/*` | Verifikasi merchant, master data, promo, dan log sistem | Admin |
+| `/copilot` | Kalkulator HPP (*Harga Pokok Penjualan*), saran harga, dan asisten AI toko (Gemini) | Merchant |
+| `/promo` & `/ulasan` | Promo toko (kode promo checkout) dan ulasan pembeli | Merchant |
+| `/admin/*` | Verifikasi merchant, master data, promo & biaya, kontak CS, dan log sistem | Admin |
+| `/admin/moderasi` | Sembunyikan ulasan, turunkan menu yang melanggar | Admin |
+| `/admin/keuangan` | Rekap omzet, diskon, biaya layanan per toko + ekspor CSV | Admin |
+| `/admin/pengumuman` | Kirim pengumuman ke notifikasi aplikasi | Admin |
 
 ---
 
