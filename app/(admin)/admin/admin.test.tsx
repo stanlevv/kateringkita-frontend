@@ -38,6 +38,7 @@ describe("shell admin", () => {
       ["Ringkasan", "/admin"],
       ["Verifikasi", "/admin/verifikasi"],
       ["Penjual", "/admin/penjual"],
+      ["Moderasi", "/admin/moderasi"],
       ["Data master", "/admin/data-master"],
       ["Promo & biaya", "/admin/promo"],
       ["Log", "/admin/log"],

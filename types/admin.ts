@@ -52,3 +52,14 @@ export type ItemMaster = {
   id: number; name: string; is_active: boolean;
   icon?: string | null; description?: string | null; sort_order?: number;
 };
+
+// F19 be/src/services/admin-moderasi.service.ts
+export type UlasanModerasi = {
+  id: number; rating: number; comment: string | null; created_at: string; hidden: boolean; hidden_at: string | null; hidden_reason: string | null;
+  menu: { id: number; name: string }; merchant: { id: number; business_name: string }; customer_name: string; order_code: string;
+};
+export type MenuModerasi = {
+  id: number; name: string; price: number; image_url: string | null; is_active: boolean; moderated: boolean; moderated_at: string | null;
+  moderation_reason: string | null; created_at: string; merchant: { id: number; business_name: string };
+};
+export type AksiModerasi = "hide" | "unhide" | "takedown" | "restore";
