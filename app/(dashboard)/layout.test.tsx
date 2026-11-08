@@ -6,9 +6,9 @@ vi.mock("@/services/orderService", () => ({ getJumlahTindakan: async () => 7 }))
 import DashboardLayout from "./layout";
 
 describe("shell dashboard", () => {
-  it("selalu menampilkan penanda data contoh", async () => {
+  it("F13: penanda data contoh sudah tidak ada (semua services tersambung backend)", async () => {
     const el = await DashboardLayout({ children: null });
-    expect(JSON.stringify(el)).toContain("Sebagian halaman masih memakai data contoh.");
+    expect(JSON.stringify(el)).not.toContain("data contoh");
   });
   it("badge pesanan = jumlah menunggu + terkonfirmasi dari server (M-04)", async () => {
     const el = await DashboardLayout({ children: null });

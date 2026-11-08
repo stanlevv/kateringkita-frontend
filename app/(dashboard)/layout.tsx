@@ -2,7 +2,6 @@ import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { StoreStatusProvider, type StoreInfo } from "@/app/components/shell/StoreStatus";
 import { StatusToko } from "@/app/components/StatusToko";
-import { Banner } from "@/app/components/ui/Banner";
 import { Toaster } from "@/app/components/ui/Toast";
 import { getJumlahTindakan } from "@/services/orderService";
 import { getProfile } from "@/services/profileService";
@@ -25,8 +24,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar store={store} badge={badge} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header nama={nama} toko={toko} store={store} badge={badge} />
-          {/* shortcut: hapus saat semua services/ tersambung backend (F13) */}
-          <div className="px-4 pt-4 md:px-6"><Banner tone="info">Sebagian halaman masih memakai data contoh.</Banner></div>
           <div className="px-4 pt-4 empty:hidden md:px-6"><StatusToko merchant={merchant} /></div>
           <main id="konten" tabIndex={-1} className="flex-1 p-4 md:p-6">{children}</main>
         </div>
