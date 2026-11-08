@@ -63,3 +63,10 @@ export type MenuModerasi = {
   moderation_reason: string | null; created_at: string; merchant: { id: number; business_name: string };
 };
 export type AksiModerasi = "hide" | "unhide" | "takedown" | "restore";
+
+// F20 be/src/services/admin-keuangan.service.ts
+export type AngkaKeuangan = {
+  orders: number; subtotal: number; discount_merchant: number; discount_platform: number; service_fee: number; total: number;
+  merchant_net: number; platform_net: number;
+};
+export type RekapKeuangan = { rows: (AngkaKeuangan & { merchant_id: number; business_name: string })[]; totals: AngkaKeuangan };

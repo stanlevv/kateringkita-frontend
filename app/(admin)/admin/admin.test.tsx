@@ -41,6 +41,7 @@ describe("shell admin", () => {
       ["Moderasi", "/admin/moderasi"],
       ["Data master", "/admin/data-master"],
       ["Promo & biaya", "/admin/promo"],
+      ["Keuangan", "/admin/keuangan"],
       ["Log", "/admin/log"],
     ]);
     expect(within(nav).getByRole("link", { name: "Ringkasan" })).toHaveAttribute("aria-current", "page");

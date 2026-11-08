@@ -57,6 +57,9 @@ function teks(v: string) {
   return /[",\r\n]/.test(aman) ? `"${aman.replaceAll('"', '""')}"` : aman;
 }
 
+// F20: dipakai juga CSV keuangan admin (lib/keuangan.ts)
+export const selCsv = teks;
+
 /** LP-N4: isi CSV (kode,waktu,menu,qty,omzet,hpp,laba,metode). */
 export function buatCsv(list: Transaction[]): string {
   const baris = list.map((t) =>

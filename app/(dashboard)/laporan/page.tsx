@@ -1,6 +1,6 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { HourlyChart } from "@/app/(dashboard)/laporan/components/HourlyChart";
-import { RangePicker } from "@/app/(dashboard)/laporan/components/RangePicker";
+import { RangePicker } from "@/app/components/ui/RangePicker";
 import { ReportKpis } from "@/app/(dashboard)/laporan/components/ReportKpis";
 import { TransactionTable } from "@/app/(dashboard)/laporan/components/TransactionTable";
 import { PageHeader } from "@/app/components/shell/PageHeader";
