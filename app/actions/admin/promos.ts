@@ -37,3 +37,12 @@ export async function simpanBiayaLayanan(value: number): Promise<ActionResult<{ 
   if (masalah) return galatField({ value: masalah }, masalah);
   return hasil(await adminFetch<{ service_fee: number }>("/settings/service-fee", { method: "PUT", body: JSON.stringify({ value }) }));
 }
+
+// Kontak CS untuk aplikasi pembeli: nomor WA 08… (10–13 digit) atau kosong.
+export async function simpanKontakCs(wa: string): Promise<ActionResult<{ cs_whatsapp: string | null }>> {
+  await requireAdmin();
+  const nomor = typeof wa === "string" ? wa.trim() : "";
+  if (nomor && !/^08\d{8,11}$/.test(nomor)) return galatField({ wa_number: "Nomor WA harus diawali 08 dan 10–13 digit." }, "Periksa nomor WA.");
+  const res = await adminFetch<{ cs_whatsapp: string | null }>("/settings/cs-contact", { method: "PUT", body: JSON.stringify({ wa_number: nomor }) });
+  return res.ok ? { data: res.data ?? { cs_whatsapp: null } } : hasil(res);
+}
