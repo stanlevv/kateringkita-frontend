@@ -9,7 +9,7 @@ function dariKontrol(e: { target: EventTarget; currentTarget: HTMLElement }) {
   return !!k && e.currentTarget.contains(k);
 }
 
-export function DataTable<T>({ columns, rows, rowKey, onRowClick, caption }: { columns: Column<T>[]; rows: T[]; rowKey: (row: T) => string; onRowClick?: (row: T) => void; caption: string }) {
+export function DataTable<T>({ columns, rows, rowKey, onRowClick, caption }: { columns: Column<T>[]; rows: T[]; rowKey: (row: T, i: number) => string; onRowClick?: (row: T) => void; caption: string }) {
   return (
     <div className="max-w-full overflow-x-auto rounded-lg border border-line">
       <table className="w-full border-collapse text-left text-sm">
@@ -22,9 +22,9 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, caption }: { c
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {rows.map((r, i) => (
             <tr
-              key={rowKey(r)}
+              key={rowKey(r, i)}
               onClick={onRowClick && ((e) => !dariKontrol(e) && onRowClick(r))}
               onKeyDown={onRowClick && ((e) => {
                 if ((e.key === "Enter" || e.key === " ") && !dariKontrol(e)) { e.preventDefault(); onRowClick(r); }

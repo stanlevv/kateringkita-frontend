@@ -36,7 +36,7 @@ export async function siapkanDb(): Promise<void> {
   } finally {
     await conn.end();
   }
-  const { migrate } = await import("../../be/src/db/migrate");
+  const { migrate } = await import("../../be/src/scripts/migrate");
   await migrate(URL_DB);
   await buatAdmin();
 }

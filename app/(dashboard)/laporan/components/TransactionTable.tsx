@@ -75,11 +75,11 @@ export function TransactionTable({ rows, total, page, dari, sampai }: { rows: Tr
         <>
           {/* Delapan kolom tidak muat di bawah 1024 px; di sana kartu bertumpuk dengan data yang sama. */}
           <div className="hidden lg:block">
-            <DataTable caption="Buku transaksi" columns={KOLOM} rows={rows} rowKey={(t) => t.code} />
+            <DataTable caption="Buku transaksi" columns={KOLOM} rows={rows} rowKey={(t, i) => `${t.code}-${i}`} />
           </div>
           <ul className="flex flex-col gap-3 lg:hidden">
-            {rows.map((t) => (
-              <li key={t.code} className="flex flex-col gap-1 rounded-lg border border-line p-4">
+            {rows.map((t, i) => (
+              <li key={`${t.code}-${i}`} className="flex flex-col gap-1 rounded-lg border border-line p-4">
                 <span className="flex items-center justify-between gap-2">
                   <span className="font-mono font-semibold text-ink">{t.code}</span>
                   <span className="text-sm text-ink-muted">{waktu(t)}</span>

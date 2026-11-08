@@ -39,7 +39,7 @@ async function panggil<T>(method: string, path: string, token?: string, body?: u
 // Dipanggil sekali per DB oleh global-setup.ts (nomor admin unik); kolam koneksi dibiarkan, prosesnya langsung keluar.
 export async function buatAdmin(): Promise<void> {
   isiEnvBackend();
-  const { createAdmin } = await import("../../be/src/admin/create");
+  const { createAdmin } = await import("../../be/src/scripts/create-admin");
   await createAdmin(ADMIN);
 }
 
