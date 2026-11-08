@@ -1,9 +1,9 @@
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { SettingsForm } from "@/components/settings/SettingsForm";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { getPickupPoints } from "@/lib/data/meta";
-import { getProfile } from "@/lib/data/profile";
-import { requireMerchant } from "@/lib/session";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { SettingsForm } from "@/app/(dashboard)/pengaturan/components/SettingsForm";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { getPickupPoints } from "@/services/metaService";
+import { getProfile } from "@/services/profileService";
+import { requireMerchant } from "@/services/authService";
 
 const teks = (v: unknown) => (typeof v === "string" ? v : "");
 

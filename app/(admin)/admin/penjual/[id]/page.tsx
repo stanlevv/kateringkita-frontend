@@ -1,12 +1,12 @@
 import { SearchX } from "lucide-react";
-import { MerchantDetail } from "@/components/admin/MerchantDetail";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LinkButton } from "@/components/ui/LinkButton";
-import { adminFetch } from "@/lib/admin/api";
-import type { DetailPenjual } from "@/lib/admin/types";
-import { requireAdmin } from "@/lib/session";
+import { MerchantDetail } from "@/app/(admin)/admin/components/MerchantDetail";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { EmptyState } from "@/app/components/ui/EmptyState";
+import { LinkButton } from "@/app/components/ui/LinkButton";
+import { adminFetch } from "@/services/api";
+import type { DetailPenjual } from "@/types/admin";
+import { requireAdmin } from "@/services/authService";
 
 // A-05 — Detail penjual.
 export default async function PenjualDetailPage({ params }: { params: Promise<{ id: string }> }) {

@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Ban, CheckCircle2, ChefHat, Clock, Hourglass, PackageCheck, ThumbsUp, TimerOff } from "lucide-react";
-import type { MerchantOrder } from "./types";
+import type { MerchantOrder } from "@/types/order";
 
 export type TampilanStatus =
   | "menunggu-konfirmasi"

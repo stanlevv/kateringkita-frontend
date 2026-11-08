@@ -5,7 +5,7 @@ vi.mock("next/headers", () => ({
   cookies: async () => ({ get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined) }),
 }));
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/lib/session", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 import { deletePromo, savePromo, setPromoActive } from "./promos";
 
 const ok = { code: "BARU10", description: "Promo baru", type: "percent", value: 10, max_discount: 5000, min_subtotal: 0, quota: null, per_user_limit: 1, starts_at: "2026-11-01T00:00:00.000Z", ends_at: "2026-12-01T00:00:00.000Z", is_active: true };

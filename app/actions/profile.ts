@@ -1,12 +1,12 @@
 "use server";
 
 import { galat, galatField } from "@/lib/action-result";
-import { hasil } from "@/lib/api";
-import { merchantFetch } from "@/lib/merchant-api";
+import { hasil, merchantFetch } from "@/services/api";
 import { bersihkanProfil, cekProfil } from "@/lib/schemas";
-import { requireMerchant } from "@/lib/session";
+import { requireMerchant } from "@/services/authService";
 import { getSkenario } from "@/lib/skenario";
-import type { ActionResult, MerchantProfile } from "@/lib/types";
+import type { ActionResult } from "@/types/api";
+import type { MerchantProfile } from "@/types/profile";
 
 export async function saveProfile(input: unknown): Promise<ActionResult<MerchantProfile>> {
   await requireMerchant();

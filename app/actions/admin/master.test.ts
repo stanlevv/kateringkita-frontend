@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
-vi.mock("@/lib/session", () => ({ requireAdmin: () => requireAdmin() }));
-vi.mock("@/lib/admin/api", async (asli) => ({ ...(await asli<object>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
+vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
+vi.mock("@/services/api", async (asli) => ({ ...(await asli<object>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
 import { setAktifMaster, simpanMaster, tukarUrutan } from "./master";
 import { setAktifPromoPlatform, simpanBiayaLayanan, simpanPromoPlatform } from "./promos";
 

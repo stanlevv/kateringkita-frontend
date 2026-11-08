@@ -1,4 +1,4 @@
-import type { MerchantMenu } from "../types";
+import type { MerchantMenu } from "@/types/menu";
 import { categories } from "./meta";
 
 type Baris = [id: number, name: string, cat: number, unit: string, price: number, hpp: number, kuota: number, terjual: number, ditahan: number, opts?: string[]];

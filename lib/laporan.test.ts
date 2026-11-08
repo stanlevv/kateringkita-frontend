@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buatCsv, cekRentang, jumlahHari, parseRentang, perJam } from "./laporan";
-import type { Transaction } from "./types";
+import type { Transaction } from "@/types/report";
 
 const HARI_INI = "2026-10-31";
 
@@ -47,7 +47,8 @@ describe("LP-N1 parseRentang", () => {
 
 const trx = (o: Partial<Transaction> = {}): Transaction => ({
   code: "KK-20261031-AB2C",
-  created_at: "2026-10-31T04:42:00.000Z",
+  created_at: "2026-10-30T10:00:00.000Z",
+  completed_at: "2026-10-31T04:42:00.000Z",
   customer_name: "Rafli",
   payment_method: "cod",
   total: 44000,
@@ -63,6 +64,9 @@ describe("LP-N4 buatCsv", () => {
     const [h, b] = buatCsv([trx()]).trim().split("\r\n");
     expect(h).toBe("kode,waktu,menu,qty,omzet,hpp,laba,metode");
     expect(b).toBe("KK-20261031-AB2C,2026-10-31 11:42,Nasi Ayam,2,44000,28000,16000,cod");
+  });
+  it("kolom waktu dari completed_at (WIB), bukan created_at", () => {
+    expect(buatCsv([trx({ created_at: "2026-10-29T01:00:00.000Z", completed_at: "2026-10-31T17:30:00.000Z" })])).toContain(",2026-11-01 00:30,");
   });
   it("kutip, koma, dan baris baru di-escape", () => {
     const csv = buatCsv([trx({ menu_name: 'Nasi "Spesial", pedas\nlevel 3' })]);
@@ -81,13 +85,20 @@ describe("LP-N4 buatCsv", () => {
 describe("LP-N2 perJam", () => {
   it("menjumlah per jam WIB, urut jam", () => {
     const r = perJam([
-      trx({ created_at: "2026-10-31T04:10:00.000Z", total: 10000, qty: 1 }),
-      trx({ created_at: "2026-10-30T04:50:00.000Z", total: 20000, qty: 3 }),
-      trx({ created_at: "2026-10-31T01:00:00.000Z", total: 5000, qty: 1 }),
+      trx({ code: "A", completed_at: "2026-10-31T04:10:00.000Z", total: 10000, qty: 1 }),
+      trx({ code: "B", completed_at: "2026-10-30T04:50:00.000Z", total: 20000, qty: 3 }),
+      trx({ code: "C", completed_at: "2026-10-31T01:00:00.000Z", total: 5000, qty: 1 }),
     ]);
     expect(r).toEqual([
       { hour: 8, orders: 1, portions: 1, revenue: 5000 },
       { hour: 11, orders: 2, portions: 4, revenue: 30000 },
     ]);
+  });
+  it("satu pesanan dengan dua baris menu dihitung sebagai satu pesanan", () => {
+    const r = perJam([
+      trx({ code: "A", menu_name: "Nasi", completed_at: "2026-10-31T04:10:00.000Z", total: 10000, qty: 1 }),
+      trx({ code: "A", menu_name: "Teh", completed_at: "2026-10-31T04:10:00.000Z", total: 4000, qty: 2 }),
+    ]);
+    expect(r).toEqual([{ hour: 11, orders: 1, portions: 3, revenue: 14000 }]);
   });
 });

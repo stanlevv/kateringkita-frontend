@@ -1,10 +1,9 @@
 "use server";
 
-import { hasil } from "@/lib/api";
-import { merchantFetch } from "@/lib/merchant-api";
-import { requireMerchant } from "@/lib/session";
+import { hasil, merchantFetch } from "@/services/api";
+import { requireMerchant } from "@/services/authService";
 import { getSkenario } from "@/lib/skenario";
-import type { ActionResult } from "@/lib/types";
+import type { ActionResult } from "@/types/api";
 
 export async function setStoreOpen(isOpen: boolean): Promise<ActionResult<{ is_open: boolean }>> {
   await requireMerchant();

@@ -1,10 +1,10 @@
 "use server";
 
 import { galat, galatField } from "@/lib/action-result";
-import { adminFetch, hasil } from "@/lib/admin/api";
-import { requireAdmin } from "@/lib/session";
-import type { AksiPenjual } from "@/lib/admin/types";
-import type { ActionResult } from "@/lib/types";
+import { adminFetch, hasil } from "@/services/api";
+import { requireAdmin } from "@/services/authService";
+import type { AksiPenjual } from "@/types/admin";
+import type { ActionResult } from "@/types/api";
 
 const DENGAN_ALASAN: AksiPenjual[] = ["request-fix", "suspend"];
 const SEMUA: AksiPenjual[] = [...DENGAN_ALASAN, "verify", "reactivate", "close-today"];

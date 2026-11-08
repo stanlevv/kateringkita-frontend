@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
-vi.mock("@/lib/session", () => ({ requireAdmin: () => requireAdmin() }));
-vi.mock("@/lib/admin/api", () => ({ adminFetch: (...a: unknown[]) => adminFetch(...a) }));
+vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
+vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn() }),
   usePathname: () => "/admin/penjual",

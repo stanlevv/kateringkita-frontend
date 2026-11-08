@@ -1,12 +1,12 @@
 import { SearchX } from "lucide-react";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { MenuForm } from "@/components/menu/MenuForm";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LinkButton } from "@/components/ui/LinkButton";
-import { getMenu } from "@/lib/data/menus";
-import { getCategories } from "@/lib/data/meta";
-import { requireMerchant } from "@/lib/session";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { EmptyState } from "@/app/components/ui/EmptyState";
+import { LinkButton } from "@/app/components/ui/LinkButton";
+import { getMenu } from "@/services/menuService";
+import { getCategories } from "@/services/metaService";
+import { requireMerchant } from "@/services/authService";
 
 // M-07, MF-N2 — Ubah menu. MF-E5: id tidak ada ditampilkan di halaman ini, bukan 404 global.
 export default async function UbahMenuPage({ params }: { params: Promise<{ id: string }> }) {

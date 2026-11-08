@@ -1,11 +1,11 @@
 "use server";
 
 import { galat, galatField } from "@/lib/action-result";
-import { adminFetch, hasil } from "@/lib/admin/api";
-import { bersihkanMaster, cekMaster, tabDariKind, type IsianMaster } from "@/lib/admin/master";
-import type { ItemMaster } from "@/lib/admin/types";
-import { requireAdmin } from "@/lib/session";
-import type { ActionResult } from "@/lib/types";
+import { adminFetch, hasil } from "@/services/api";
+import { bersihkanMaster, cekMaster, tabDariKind, type IsianMaster } from "@/services/adminMasterService";
+import type { ItemMaster } from "@/types/admin";
+import { requireAdmin } from "@/services/authService";
+import type { ActionResult } from "@/types/api";
 
 const idOk = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
 const urutOk = (n: unknown) => Number.isInteger(n) && (n as number) >= 0;

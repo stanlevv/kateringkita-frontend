@@ -1,11 +1,11 @@
 import { simpanPromoPlatform, setAktifPromoPlatform } from "@/app/actions/admin/promos";
-import { ServiceFeeForm } from "@/components/admin/ServiceFeeForm";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { PromoList } from "@/components/promo/PromoList";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { adminFetch } from "@/lib/admin/api";
-import { requireAdmin } from "@/lib/session";
-import type { Promo } from "@/lib/types";
+import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { PromoList } from "@/app/components/promo/PromoList";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { adminFetch } from "@/services/api";
+import { requireAdmin } from "@/services/authService";
+import type { Promo } from "@/types/promo";
 
 // A-02…A-04 — Promo platform dan biaya layanan.
 export default async function PromoPlatformPage() {

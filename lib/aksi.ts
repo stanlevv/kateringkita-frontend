@@ -1,4 +1,4 @@
-import type { ActionResult } from "./types";
+import type { ActionResult } from "@/types/api";
 
 /** Server action bisa melempar (jaringan putus, server dimulai ulang); ubah jadi galat agar UI tidak macet. */
 export async function panggil<T>(fn: () => Promise<ActionResult<T>>): Promise<ActionResult<T>> {

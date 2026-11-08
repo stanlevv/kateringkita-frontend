@@ -1,9 +1,9 @@
-import { VerificationQueue } from "@/components/admin/VerificationQueue";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { adminFetch } from "@/lib/admin/api";
-import type { AntrianPenjual } from "@/lib/admin/types";
-import { requireAdmin } from "@/lib/session";
+import { VerificationQueue } from "@/app/(admin)/admin/components/VerificationQueue";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { adminFetch } from "@/services/api";
+import type { AntrianPenjual } from "@/types/admin";
+import { requireAdmin } from "@/services/authService";
 
 // A-05 — Antrean verifikasi penjual.
 export default async function VerifikasiPage() {

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ChevronLeft, PackageX } from "lucide-react";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { OrderDetail } from "@/components/orders/OrderDetail";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { Banner } from "@/components/ui/Banner";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LinkButton } from "@/components/ui/LinkButton";
-import { getOrder } from "@/lib/data/orders";
-import { requireMerchant } from "@/lib/session";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { OrderDetail } from "@/app/components/orders/OrderDetail";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { Banner } from "@/app/components/ui/Banner";
+import { EmptyState } from "@/app/components/ui/EmptyState";
+import { LinkButton } from "@/app/components/ui/LinkButton";
+import { getOrder } from "@/services/orderService";
+import { requireMerchant } from "@/services/authService";
 
 const Kembali = () => (
   <Link href="/pesanan" className="mb-4 inline-flex min-h-11 items-center gap-1 text-primary hover:underline focus-visible:ring-2 focus-visible:ring-focus">

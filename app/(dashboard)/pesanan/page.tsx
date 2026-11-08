@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { OrderTable } from "@/components/orders/OrderTable";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { getOrders } from "@/lib/data/orders";
+import { OrderTable } from "@/app/(dashboard)/pesanan/components/OrderTable";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { getOrders } from "@/services/orderService";
 import { hariIniWib } from "@/lib/format";
 import { STATUS_FILTER } from "@/lib/order-filter";
-import { requireMerchant } from "@/lib/session";
+import { requireMerchant } from "@/services/authService";
 
 const satu = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 

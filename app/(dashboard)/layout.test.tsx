@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/session", () => ({ requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: { business_name: "Dapur" } }) }));
-vi.mock("@/lib/data/profile", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
-vi.mock("@/lib/data/orders", () => ({ getJumlahTindakan: async () => 7 }));
+vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: { business_name: "Dapur" } }) }));
+vi.mock("@/services/profileService", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
+vi.mock("@/services/orderService", () => ({ getJumlahTindakan: async () => 7 }));
 import DashboardLayout from "./layout";
 
 describe("shell dashboard", () => {

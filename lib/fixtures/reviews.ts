@@ -1,4 +1,4 @@
-import type { Review } from "../types";
+import type { Review } from "@/types/review";
 import { menus } from "./menus";
 import { hariLalu } from "./waktu";
 

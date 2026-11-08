@@ -6,7 +6,6 @@ import { pickupPoints, categories, merchantTypes } from "./meta";
 import { promoStatus } from "../promo-status";
 import { promos } from "./promos";
 import { reviews } from "./reviews";
-import { hourly, ringkasan, transaksi } from "./reports";
 import { profile } from "./profile";
 
 const KODE = /^KK-\d{8}-[A-Z2-7]{4}$/;
@@ -95,15 +94,6 @@ const profileSchema = z.object({
   is_open: z.boolean(),
 });
 
-const summarySchema = z
-  .object({ target: rupiah, revenue: rupiah, hpp_total: rupiah, profit: z.number().int(), achievement_pct: z.number().int().nonnegative() })
-  .refine((r) => r.profit === r.revenue - r.hpp_total, "profit")
-  .refine((r) => r.achievement_pct === Math.round((r.revenue / r.target) * 100), "capaian");
-
-const hourlySchema = z.object({ hour: z.number().int().min(0).max(23), orders: z.number().int(), portions: z.number().int(), revenue: rupiah });
-const trxSchema = z.object({ code: z.string().regex(KODE), created_at: iso, menu_name: z.string().min(1), qty: z.number().int().positive(), total: rupiah, hpp_total: rupiah, status: z.literal("completed") });
-
-
 describe("fixtures", () => {
   it("menu: >=12 dari 4 kategori, valid", () => {
     const ms = menus();
@@ -148,27 +138,5 @@ describe("fixtures", () => {
   });
   it("profil valid", () => {
     expect(profileSchema.safeParse(profile()).success).toBe(true);
-  });
-  it("laporan: deterministik per tanggal, jumlah konsisten (LP-N1..N3)", () => {
-    const trx = transaksi("2026-10-25", "2026-10-31");
-    expect(trx).toEqual(transaksi("2026-10-25", "2026-10-31"));
-    expect(trx.length).toBeGreaterThanOrEqual(21);
-    trx.forEach((t) => expect(trxSchema.safeParse(t).success, t.code).toBe(true));
-    expect(new Set(trx.map((t) => t.code)).size).toBe(trx.length);
-    const r = ringkasan("2026-10-25", "2026-10-31");
-    expect(summarySchema.safeParse(r).success).toBe(true);
-    expect(r.revenue).toBe(trx.reduce((a, t) => a + t.total, 0));
-    expect(r.hpp_total).toBe(trx.reduce((a, t) => a + t.hpp_total, 0));
-    expect(r.profit).toBe(r.revenue - r.hpp_total);
-    // rentang yang berimpit menghasilkan transaksi yang sama
-    expect(transaksi("2026-10-31", "2026-10-31")).toEqual(trx.filter((t) => t.code.startsWith("KK-20261031")));
-  });
-  it("laporan: per jam satu hari = jumlah transaksi hari itu", () => {
-    const hari = transaksi("2026-10-28", "2026-10-28");
-    const jam = hourly("2026-10-28");
-    jam.forEach((h) => expect(hourlySchema.safeParse(h).success).toBe(true));
-    expect(jam.reduce((a, h) => a + h.revenue, 0)).toBe(hari.reduce((a, t) => a + t.total, 0));
-    expect(jam.reduce((a, h) => a + h.orders, 0)).toBe(hari.length);
-    expect(jam.reduce((a, h) => a + h.portions, 0)).toBe(hari.reduce((a, t) => a + t.qty, 0));
   });
 });

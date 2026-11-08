@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getSkenario = vi.fn();
 vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/lib/session", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/lib/merchant-api", () => ({ merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
 import { setStoreOpen } from "./store";
 
 beforeEach(() => {

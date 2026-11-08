@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Eye, EyeOff } from "lucide-react";
 import { registerMerchant } from "@/app/actions/auth";
-import { Brand } from "@/components/shell/Brand";
-import { Banner } from "@/components/ui/Banner";
-import { Button } from "@/components/ui/Button";
-import { ErrorSummary } from "@/components/ui/ErrorSummary";
-import { Field } from "@/components/ui/Field";
-import { Input, Select } from "@/components/ui/Input";
-import { LinkButton } from "@/components/ui/LinkButton";
+import { Brand } from "@/app/components/shell/Brand";
+import { Banner } from "@/app/components/ui/Banner";
+import { Button } from "@/app/components/ui/Button";
+import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
+import { Field } from "@/app/components/ui/Field";
+import { IconButton } from "@/app/components/ui/IconButton";
+import { Input, Select } from "@/app/components/ui/Input";
+import { LinkButton } from "@/app/components/ui/LinkButton";
 import { businessSchema, cekField, ownerSchema } from "@/lib/schemas";
 
 type Jenis = { id: number; name: string };
@@ -26,6 +27,8 @@ const LANGKAH_SIAP = ["Lengkapi pengaturan toko", "Tambah menu pertama", "Buka d
 export default function RegisterForm({ types, typesFailed }: { types: Jenis[]; typesFailed: boolean }) {
   const [langkah, setLangkah] = useState<1 | 2>(1);
   const [v, setV] = useState<Nilai>(AWAL);
+  const [lihatPass, setLihatPass] = useState(false);
+  const [lihatConfirm, setLihatConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [kunci, setKunci] = useState(0);
   const [umum, setUmum] = useState("");
@@ -129,8 +132,30 @@ export default function RegisterForm({ types, typesFailed }: { types: Jenis[]; t
           <Field label="Nama lengkap" required error={errors.full_name} id="full_name"><Input {...field("full_name")} autoComplete="name" /></Field>
           <Field label="Nomor WA" required help="Dipakai untuk masuk dan dihubungi pembeli. Contoh: 081234567890" error={errors.phone} id="phone"><Input {...field("phone")} type="tel" inputMode="numeric" autoComplete="tel" /></Field>
           <Field label="Email (opsional)" error={errors.email} id="email"><Input {...field("email")} type="email" autoComplete="email" /></Field>
-          <Field label="Kata sandi" required help="Minimal 8 karakter, berisi huruf dan angka." error={errors.password} id="password"><Input {...field("password")} type="password" autoComplete="new-password" /></Field>
-          <Field label="Konfirmasi kata sandi" required error={errors.confirm} id="confirm"><Input {...field("confirm")} type="password" autoComplete="new-password" /></Field>
+          <div className="relative">
+            <Field label="Kata sandi" required help="Minimal 8 karakter, berisi huruf dan angka." error={errors.password} id="password">
+              <Input {...field("password")} type={lihatPass ? "text" : "password"} autoComplete="new-password" className="pr-12" />
+            </Field>
+            <IconButton
+              icon={lihatPass ? EyeOff : Eye}
+              label={lihatPass ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+              aria-pressed={lihatPass}
+              onClick={() => setLihatPass((s) => !s)}
+              className="absolute right-0 top-[26px]"
+            />
+          </div>
+          <div className="relative">
+            <Field label="Konfirmasi kata sandi" required error={errors.confirm} id="confirm">
+              <Input {...field("confirm")} type={lihatConfirm ? "text" : "password"} autoComplete="new-password" className="pr-12" />
+            </Field>
+            <IconButton
+              icon={lihatConfirm ? EyeOff : Eye}
+              label={lihatConfirm ? "Sembunyikan konfirmasi kata sandi" : "Tampilkan konfirmasi kata sandi"}
+              aria-pressed={lihatConfirm}
+              onClick={() => setLihatConfirm((s) => !s)}
+              className="absolute right-0 top-[26px]"
+            />
+          </div>
           <Button type="submit" size="lg">Lanjut</Button>
         </form>
       ) : (

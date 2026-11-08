@@ -4,9 +4,9 @@ import { readFileSync } from "node:fs";
 const getSkenario = vi.fn();
 vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/lib/session", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/lib/merchant-api", () => ({ merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
 import { orders } from "@/lib/fixtures/orders";
 import { orderAction } from "./orders";
 
@@ -29,7 +29,7 @@ describe("orderAction (M-04, M-08, D15)", () => {
     const src = readFileSync("app/actions/orders.ts", "utf8");
     expect(src).toContain("orderAction(code: string, aksi: AksiPesanan, reason?: string)");
     expect(src).not.toContain("current");
-    expect(src).not.toContain("@/lib/data/orders");
+    expect(src).not.toContain("@/services/orderService");
   });
   it("POST /orders/:code/:aksi dengan body kosong; hasil diteruskan", async () => {
     const r = await orderAction(KODE, "cook");

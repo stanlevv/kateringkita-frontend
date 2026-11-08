@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { MerchantTable } from "@/components/admin/MerchantTable";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { adminFetch } from "@/lib/admin/api";
-import { LIMIT_PENJUAL } from "@/lib/admin/merchants";
-import type { MetaHalaman, PenjualRingkas } from "@/lib/admin/types";
-import { requireAdmin } from "@/lib/session";
+import { MerchantTable } from "@/app/(admin)/admin/components/MerchantTable";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { adminFetch } from "@/services/api";
+import { LIMIT_PENJUAL } from "@/services/adminMerchantService";
+import type { MetaHalaman, PenjualRingkas } from "@/types/admin";
+import { requireAdmin } from "@/services/authService";
 
 const STATUS = ["pending", "needs_fix", "verified", "suspended"];
 

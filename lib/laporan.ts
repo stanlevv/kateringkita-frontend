@@ -1,7 +1,9 @@
 import { formatJam, jamWib, tanggalWib } from "./format";
-import type { HourlyPoint, Transaction } from "./types";
+import type { HourlyPoint, Transaction } from "@/types/report";
 
 export const MAKS_HARI = 92;
+// Di sini, bukan di komponen "use client": halaman server hanya menerima nilainya dari modul biasa.
+export const LIMIT_TRANSAKSI = 20;
 
 const POLA = /^\d{4}-\d{2}-\d{2}$/;
 const ms = (d: string) => Date.parse(`${d}T00:00:00Z`);
@@ -31,13 +33,17 @@ export function parseRentang(dari: string | undefined, sampai: string | undefine
 /** Tanggal (YYYY-MM-DD, WIB) `n` hari sebelum `d`. */
 export const hariSebelum = (d: string, n: number) => new Date(ms(d) - n * 86400e3).toISOString().slice(0, 10);
 
-/** LP-N2: total per jam WIB, urut jam; jam tanpa transaksi tidak muncul. */
+/** LP-N2: total per jam WIB, urut jam; jam tanpa transaksi tidak muncul. Satu pesanan = satu `code`, walau punya banyak baris menu. */
 export function perJam(list: Transaction[]): HourlyPoint[] {
   const peta = new Map<number, HourlyPoint>();
+  const terhitung = new Set<string>();
   for (const t of list) {
-    const hour = jamWib(t.created_at);
+    const hour = jamWib(t.completed_at);
     const p = peta.get(hour) ?? { hour, orders: 0, portions: 0, revenue: 0 };
-    p.orders += 1;
+    if (!terhitung.has(`${hour}|${t.code}`)) {
+      terhitung.add(`${hour}|${t.code}`);
+      p.orders += 1;
+    }
     p.portions += t.qty;
     p.revenue += t.total;
     peta.set(hour, p);
@@ -56,7 +62,7 @@ export function buatCsv(list: Transaction[]): string {
   const baris = list.map((t) =>
     [
       teks(t.code),
-      teks(`${tanggalWib(t.created_at)} ${formatJam(t.created_at).replace(".", ":")}`),
+      teks(`${tanggalWib(t.completed_at)} ${formatJam(t.completed_at).replace(".", ":")}`),
       teks(t.menu_name),
       t.qty,
       t.total,

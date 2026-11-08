@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/app/components/ui/Skeleton";
 
 // PS-S1: kerangka judul, filter, dan baris.
 export default function Loading() {

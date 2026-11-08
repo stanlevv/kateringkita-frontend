@@ -1,4 +1,4 @@
-import type { MerchantOrder, OrderStatus, PaymentMethod, PaymentStatus } from "../types";
+import type { MerchantOrder, OrderStatus, PaymentMethod, PaymentStatus } from "@/types/order";
 import { menus } from "./menus";
 import { pickupPoints } from "./meta";
 import { menitLagi, menitLalu } from "./waktu";

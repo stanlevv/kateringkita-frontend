@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/app/components/ui/Skeleton";
 
 // G-1 memuat: kerangka umum segmen admin.
 export default function Loading() {

@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/app/components/ui/Skeleton";
 
 // MN-S3: kerangka judul, filter, dan kartu.
 export default function Loading() {

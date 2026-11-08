@@ -2,9 +2,9 @@
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/services/api";
 import { safeNext } from "@/lib/safe-next";
-import { SESSION_COOKIE, getSessionToken } from "@/lib/session";
+import { SESSION_COOKIE, getSessionToken } from "@/services/authService";
 
 // code: UNAUTHENTICATED | VALIDATION_ERROR | RATE_LIMITED | NETWORK | CONFLICT (dari apiFetch) atau NOT_MERCHANT.
 export type AuthState = { error?: string; code?: string; fields?: Record<string, string[]>; ok?: boolean };

@@ -1,4 +1,4 @@
-import type { Review } from "./types";
+import type { Review } from "@/types/review";
 import { urlDengan } from "./url";
 
 export const LIMIT_ULASAN = 10;

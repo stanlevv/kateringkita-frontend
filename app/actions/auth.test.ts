@@ -6,8 +6,8 @@ const apiFetch = vi.fn();
 vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to) }));
 const hdrs = new Map<string, string>();
 vi.mock("next/headers", () => ({ cookies: async () => ({ set }), headers: async () => ({ get: (k: string) => hdrs.get(k) ?? null }) }));
-vi.mock("@/lib/api", () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a) }));
-vi.mock("@/lib/session", () => ({ SESSION_COOKIE: "kk_session", getSessionToken: async () => undefined }));
+vi.mock("@/services/api", () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a) }));
+vi.mock("@/services/authService", () => ({ SESSION_COOKIE: "kk_session", getSessionToken: async () => undefined }));
 
 import { login } from "./auth";
 

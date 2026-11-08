@@ -1,7 +1,7 @@
-import { Header } from "@/components/shell/Header";
-import { Sidebar } from "@/components/shell/Sidebar";
-import { Toaster } from "@/components/ui/Toast";
-import { requireAdmin } from "@/lib/session";
+import { Header } from "@/app/components/shell/Header";
+import { Sidebar } from "@/app/components/shell/Sidebar";
+import { Toaster } from "@/app/components/ui/Toast";
+import { requireAdmin } from "@/services/authService";
 
 // F18 — shell admin. Data dari backend sungguhan, jadi tanpa banner "Data contoh" dan tanpa status dapur.
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

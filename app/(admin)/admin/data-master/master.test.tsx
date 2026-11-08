@@ -7,8 +7,8 @@ const adminFetch = vi.fn();
 const replace = vi.fn();
 const refresh = vi.fn();
 let query = "";
-vi.mock("@/lib/session", () => ({ requireAdmin: () => requireAdmin() }));
-vi.mock("@/lib/admin/api", () => ({ adminFetch: (...a: unknown[]) => adminFetch(...a) }));
+vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
+vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, refresh, push: vi.fn() }),
   usePathname: () => "/admin/data-master",
@@ -27,10 +27,10 @@ vi.mock("@/app/actions/admin/promos", () => ({
   simpanBiayaLayanan: (...a: unknown[]) => simpanBiayaLayanan(...a), simpanPromoPlatform: (...a: unknown[]) => simpanPromoPlatform(...a), setAktifPromoPlatform: (...a: unknown[]) => setAktifPromoPlatform(...a),
 }));
 vi.mock("@/app/actions/promos", () => ({ savePromo: vi.fn(), setPromoActive: vi.fn(), deletePromo: vi.fn() }));
-import { ServiceFeeForm } from "@/components/admin/ServiceFeeForm";
-import { PromoList } from "@/components/promo/PromoList";
-import { Toaster } from "@/components/ui/Toast";
-import type { Promo } from "@/lib/types";
+import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
+import { PromoList } from "@/app/components/promo/PromoList";
+import { Toaster } from "@/app/components/ui/Toast";
+import type { Promo } from "@/types/promo";
 import DataMasterPage from "./page";
 import PromoPage from "../promo/page";
 
@@ -157,7 +157,7 @@ describe("promo platform & biaya layanan", () => {
     expect(input.starts_at).toMatch(/Z$/);
   });
   it("mode admin: form tanpa saklar Promo aktif; mode penjual tetap punya", async () => {
-    const { PromoForm } = await import("@/components/promo/PromoForm");
+    const { PromoForm } = await import("@/app/components/promo/PromoForm");
     const { rerender } = render(<PromoForm admin onSaved={vi.fn()} onClose={vi.fn()} simpan={simpanPromoPlatform} />);
     expect(screen.queryByRole("switch", { name: "Promo aktif" })).toBeNull();
     rerender(<PromoForm onSaved={vi.fn()} onClose={vi.fn()} />);

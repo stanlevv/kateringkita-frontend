@@ -1,7 +1,8 @@
 import { geserWib, tanggalWib } from "./format";
 import { nextStatus, type AksiPesanan } from "./order-status";
 import { perluTindakan } from "./shell";
-import type { MerchantMenu, MerchantOrder } from "./types";
+import type { MerchantMenu } from "@/types/menu";
+import type { MerchantOrder } from "@/types/order";
 
 /** Salinan `rec` dengan `key` diganti, atau dihapus bila `v` undefined. */
 export function ganti<V>(rec: Record<string, V>, key: string | number, v: V | undefined): Record<string, V> {
@@ -125,7 +126,7 @@ const DIBAYAR_ALUR = new Set<MerchantOrder["status"]>(["confirmed", "cooking", "
 export function ringkasHariIni(orders: MerchantOrder[], menus: MerchantMenu[], sekarang: number): Ringkasan {
   const hari = geserWib(sekarang).toISOString().slice(0, 10);
   const hariIni = (iso: string | null) => !!iso && tanggalWib(iso) === hari;
-  const omzet = orders.filter((o) => o.status === "completed" && hariIni(o.completed_at)).reduce((a, o) => a + o.total, 0);
+  const omzet = orders.filter((o) => o.status === "completed" && hariIni(o.completed_at)).reduce((a, o) => a + o.subtotal, 0); // D10: sama dengan revenue laporan (tanpa biaya layanan)
   const aktif = menus.filter((m) => m.is_active);
   const kapasitas = { terpakai: aktif.reduce((a, m) => a + m.sold_today + m.held_today, 0), total: aktif.reduce((a, m) => a + m.quota_today, 0) };
   const siap = orders.filter((o) => hariIni(o.ready_at) && o.confirmed_at);

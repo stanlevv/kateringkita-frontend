@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/app/components/ui/Skeleton";
 
 // SY-3: kerangka umum segmen dashboard.
 export default function Loading() {

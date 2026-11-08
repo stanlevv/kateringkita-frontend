@@ -1,12 +1,13 @@
 // Data penjual dari backend ditiru dengan fixture.
-vi.mock("@/lib/merchant-api", async () => ({
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
   merchantFetch: async (path: string) => ({
     ok: true,
     status: 200,
     data: path.startsWith("/orders") ? (await import("@/lib/fixtures/orders")).orders() : path === "/menus" ? (await import("@/lib/fixtures/menus")).menus() : (await import("@/lib/fixtures/profile")).profile(),
   }),
+  apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }),
 }));
-vi.mock("@/lib/api", async (orig) => ({ ...(await orig<typeof import("@/lib/api")>()), apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }) }));
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,14 +16,14 @@ const getSkenario = vi.fn();
 const refresh = vi.fn();
 const setStoreOpen = vi.fn();
 vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
-vi.mock("@/lib/session", () => ({ requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: null }) }));
+vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: null }) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }), usePathname: () => "/dashboard" }));
 vi.mock("@/app/actions/store", () => ({ setStoreOpen: (...a: unknown[]) => setStoreOpen(...a) }));
 vi.mock("@/app/actions/orders", () => ({ orderAction: vi.fn() }));
 vi.mock("@/app/actions/menus", () => ({ adjustQuota: vi.fn() }));
-import { StoreStatusProvider } from "@/components/shell/StoreStatus";
-import { Toaster } from "@/components/ui/Toast";
-import { getProfile } from "@/lib/data/profile";
+import { StoreStatusProvider } from "@/app/components/shell/StoreStatus";
+import { Toaster } from "@/app/components/ui/Toast";
+import { getProfile } from "@/services/profileService";
 import { formatRupiah, tanggalWib } from "@/lib/format";
 import { menus as fixMenus } from "@/lib/fixtures/menus";
 import { orders as fixOrders } from "@/lib/fixtures/orders";

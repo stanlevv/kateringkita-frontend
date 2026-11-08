@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { apiFetch } from "@/lib/api";
-import { getSession } from "@/lib/session";
+import { apiFetch } from "@/services/api";
+import { getSession } from "@/services/authService";
 import RegisterForm from "./RegisterForm";
 
 export default async function RegisterPage() {

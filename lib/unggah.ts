@@ -1,6 +1,6 @@
 import { requestUpload } from "@/app/actions/menus";
 import { panggil } from "./aksi";
-import type { ActionResult } from "./types";
+import type { ActionResult } from "@/types/api";
 
 /** Browser -> penyimpanan: minta URL bertanda tangan ke server, lalu PUT berkas langsung (FE-08). */
 export async function unggahFoto(file: File, purpose: "menu" | "logo" | "qris"): Promise<ActionResult<{ public_url: string }>> {

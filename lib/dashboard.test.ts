@@ -3,7 +3,8 @@ import { menus } from "./fixtures/menus";
 import { orders } from "./fixtures/orders";
 import { antrean, batasSejak, ganti, jumlahTab, ringkasHariIni, satukanPesanan, selisihJam, sisaHold, stokMenu, pangkasOptimis, terapkanOptimis, terapkanWaktu, urutKuota } from "./dashboard";
 import { perluTindakan } from "./shell";
-import type { MerchantMenu, MerchantOrder } from "./types";
+import type { MerchantMenu } from "@/types/menu";
+import type { MerchantOrder } from "@/types/order";
 
 const o = (p: Partial<MerchantOrder>): MerchantOrder => ({ ...orders()[0], ...p });
 
@@ -160,9 +161,9 @@ describe("D2 ringkasHariIni", () => {
   const item = (menu_id: number, menu_name: string, qty: number) => ({ menu_id, menu_name, qty, unit_price: 10000, options: [], line_total: qty * 10000 });
   const hariIni = "2026-11-01T01:00:00Z";
   const list = [
-    o({ code: "S1", status: "completed", total: 30000, created_at: hariIni, confirmed_at: "2026-11-01T01:00:00Z", ready_at: "2026-11-01T01:12:00Z", completed_at: "2026-11-01T01:20:00Z", items: [item(1, "Nasi Ayam", 2)] }),
-    o({ code: "S2", status: "completed", total: 50000, created_at: "2026-10-31T16:00:00Z", confirmed_at: "2026-10-31T16:10:00Z", ready_at: "2026-10-31T16:20:00Z", completed_at: "2026-10-31T16:30:00Z", items: [item(2, "Soto", 9)] }),
-    o({ code: "R1", status: "ready", total: 20000, created_at: hariIni, confirmed_at: "2026-11-01T02:00:00Z", ready_at: "2026-11-01T02:18:00Z", completed_at: null, items: [item(1, "Nasi Ayam", 1), item(3, "Es Teh", 2)] }),
+    o({ code: "S1", status: "completed", subtotal: 28000, total: 30000, created_at: hariIni, confirmed_at: "2026-11-01T01:00:00Z", ready_at: "2026-11-01T01:12:00Z", completed_at: "2026-11-01T01:20:00Z", items: [item(1, "Nasi Ayam", 2)] }),
+    o({ code: "S2", status: "completed", subtotal: 48000, total: 50000, created_at: "2026-10-31T16:00:00Z", confirmed_at: "2026-10-31T16:10:00Z", ready_at: "2026-10-31T16:20:00Z", completed_at: "2026-10-31T16:30:00Z", items: [item(2, "Soto", 9)] }),
+    o({ code: "R1", status: "ready", subtotal: 18000, total: 20000, created_at: hariIni, confirmed_at: "2026-11-01T02:00:00Z", ready_at: "2026-11-01T02:18:00Z", completed_at: null, items: [item(1, "Nasi Ayam", 1), item(3, "Es Teh", 2)] }),
     o({ code: "H1", status: "holding", total: 10000, created_at: hariIni, confirmed_at: null, ready_at: null, completed_at: null, items: [item(3, "Es Teh", 5)] }),
     o({ code: "C1", status: "cancelled", total: 10000, created_at: hariIni, confirmed_at: null, ready_at: null, completed_at: null, items: [item(3, "Es Teh", 5)] }),
     o({ code: "K1", status: "confirmed", total: 10000, created_at: hariIni, confirmed_at: hariIni, ready_at: null, completed_at: null, items: [item(3, "Es Teh", 1)] }),
@@ -170,9 +171,12 @@ describe("D2 ringkasHariIni", () => {
   const m = (id: number, quota_today: number, sold_today: number, held_today: number, is_active = true) => ({ ...menus()[0], id, quota_today, sold_today, held_today, is_active }) as MerchantMenu;
   const daftar = [m(1, 20, 5, 2), m(2, 10, 3, 0), m(3, 50, 40, 0, false)];
 
+  it("D10 omzet = jumlah subtotal (bukan total) pesanan completed hari ini", () => {
+    expect(ringkasHariIni(list, daftar, SEKARANG).omzet).toBe(28000);
+  });
   it("omzet hanya completed hari ini (WIB); kapasitas menu aktif; perlu tindakan", () => {
     const r = ringkasHariIni(list, daftar, SEKARANG);
-    expect(r.omzet).toBe(30000);
+    expect(r.omzet).toBe(28000);
     expect(r.kapasitas).toEqual({ terpakai: 10, total: 30 });
     expect(r.perluTindakan).toBe(2);
   });
@@ -184,9 +188,9 @@ describe("D2 ringkasHariIni", () => {
     expect(ringkasHariIni(list, daftar, SEKARANG).terlaris).toEqual({ name: "Nasi Ayam", portions: 3 });
     expect(ringkasHariIni([], daftar, SEKARANG).terlaris).toBeNull();
   });
-  it("ready -> completed menaikkan omzet sebesar total", () => {
+  it("ready -> completed menaikkan omzet sebesar subtotal", () => {
     const sebelum = ringkasHariIni(list, daftar, SEKARANG).omzet;
     const sesudah = list.map((x) => (x.code === "R1" ? { ...x, status: "completed" as const, completed_at: "2026-11-01T02:30:00Z" } : x));
-    expect(ringkasHariIni(sesudah, daftar, SEKARANG).omzet).toBe(sebelum + 20000);
+    expect(ringkasHariIni(sesudah, daftar, SEKARANG).omzet).toBe(sebelum + 18000);
   });
 });

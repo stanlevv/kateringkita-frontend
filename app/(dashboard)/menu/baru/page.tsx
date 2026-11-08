@@ -1,8 +1,8 @@
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { MenuForm } from "@/components/menu/MenuForm";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { getCategories } from "@/lib/data/meta";
-import { requireMerchant } from "@/lib/session";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { getCategories } from "@/services/metaService";
+import { requireMerchant } from "@/services/authService";
 
 const bulat = (v: string | string[] | undefined) => (typeof v === "string" && /^\d{1,9}$/.test(v) ? Number(v) : undefined);
 

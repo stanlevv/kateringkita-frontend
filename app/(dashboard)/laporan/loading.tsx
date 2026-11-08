@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/app/components/ui/Skeleton";
 
 // Kerangka judul, pemilih rentang, kartu angka, grafik, dan tabel.
 export default function Loading() {

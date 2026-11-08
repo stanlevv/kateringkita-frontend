@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getSession } from "@/services/authService";
 import LoginForm from "./LoginForm";
 
 type Params = { next?: string; alasan?: string; registered?: string };

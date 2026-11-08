@@ -1,12 +1,12 @@
 "use server";
 
 import { galat } from "@/lib/action-result";
-import { hasil } from "@/lib/api";
-import { merchantFetch } from "@/lib/merchant-api";
+import { hasil, merchantFetch } from "@/services/api";
 import { teksAksi, type AksiPesanan } from "@/lib/order-status";
-import { requireMerchant } from "@/lib/session";
+import { requireMerchant } from "@/services/authService";
 import { getSkenario } from "@/lib/skenario";
-import type { ActionResult, MerchantOrder } from "@/lib/types";
+import type { ActionResult } from "@/types/api";
+import type { MerchantOrder } from "@/types/order";
 
 // M-04, M-08: status selalu diputuskan backend (D15); klien hanya mengirim aksi.
 export async function orderAction(code: string, aksi: AksiPesanan, reason?: string): Promise<ActionResult<MerchantOrder>> {

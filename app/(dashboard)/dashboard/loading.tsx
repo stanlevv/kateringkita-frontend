@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/app/components/ui/Skeleton";
 
 // DB-S1: skeleton seukuran konten — KPI, 3 kartu antrean, 5 baris kuota.
 export default function Loading() {

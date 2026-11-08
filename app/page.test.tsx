@@ -4,7 +4,7 @@ import Home from "./page";
 
 let down = false;
 const getSession = vi.fn();
-vi.mock("@/lib/session", () => ({ getSession: () => (down ? Promise.reject(new Error("down")) : getSession()) }));
+vi.mock("@/services/authService", () => ({ getSession: () => (down ? Promise.reject(new Error("down")) : getSession()) }));
 
 // jsdom tidak punya IntersectionObserver/matchMedia; animasi landing cukup dibuat diam.
 vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} });

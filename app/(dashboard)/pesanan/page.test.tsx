@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 const getOrders = vi.fn();
-vi.mock("@/lib/session", () => ({ requireMerchant: async () => ({ user: {}, merchant: null }) }));
-vi.mock("@/lib/data/orders", () => ({ getOrders: (...a: unknown[]) => getOrders(...a) }));
-vi.mock("@/components/orders/OrderTable", () => ({ OrderTable: () => null }));
+vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({ user: {}, merchant: null }) }));
+vi.mock("@/services/orderService", () => ({ getOrders: (...a: unknown[]) => getOrders(...a) }));
+vi.mock("@/app/(dashboard)/pesanan/components/OrderTable", () => ({ OrderTable: () => null }));
 import { hariIniWib } from "@/lib/format";
 import PesananPage from "./page";
 

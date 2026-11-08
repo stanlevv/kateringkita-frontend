@@ -1,11 +1,12 @@
 "use server";
 
 import { galat, galatField } from "@/lib/action-result";
-import { adminFetch, hasil } from "@/lib/admin/api";
-import { cekBiaya } from "@/lib/admin/master";
+import { adminFetch, hasil } from "@/services/api";
+import { cekBiaya } from "@/services/adminMasterService";
 import { bersihkanPromo, cekPromo } from "@/lib/schemas";
-import { requireAdmin } from "@/lib/session";
-import type { ActionResult, Promo } from "@/lib/types";
+import { requireAdmin } from "@/services/authService";
+import type { ActionResult } from "@/types/api";
+import type { Promo } from "@/types/promo";
 
 const idOk = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
 const argSalah = () => galat("VALIDATION_ERROR", "Data promo tidak valid.");

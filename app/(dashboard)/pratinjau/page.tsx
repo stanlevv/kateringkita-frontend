@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireMerchant } from "@/lib/session";
+import { requireMerchant } from "@/services/authService";
 import { getSkenario, SKENARIO } from "@/lib/skenario";
 
 export default async function PratinjauPage() {

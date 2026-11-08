@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { MasterTable } from "@/components/admin/MasterTable";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { adminFetch } from "@/lib/admin/api";
-import { tabDariId } from "@/lib/admin/master";
-import type { ItemMaster } from "@/lib/admin/types";
-import { requireAdmin } from "@/lib/session";
+import { MasterTable } from "@/app/(admin)/admin/components/MasterTable";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { adminFetch } from "@/services/api";
+import { tabDariId } from "@/services/adminMasterService";
+import type { ItemMaster } from "@/types/admin";
+import { requireAdmin } from "@/services/authService";
 
 // A-01…A-03 — Data master. Tab aktif di URL (?tab=); nilai tak dikenal jatuh ke Kategori.
 export default async function DataMasterPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {

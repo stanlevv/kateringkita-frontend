@@ -5,7 +5,7 @@ vi.mock("next/headers", () => ({
   cookies: async () => ({ get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined) }),
 }));
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/lib/session", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 import { changePassword } from "./account";
 
 afterEach(() => { vi.unstubAllEnvs(); jar.value = undefined; requireMerchant.mockClear(); });

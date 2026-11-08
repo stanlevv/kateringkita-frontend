@@ -1,12 +1,12 @@
 "use server";
 
 import { galat } from "@/lib/action-result";
-import { hasil } from "@/lib/api";
-import { merchantFetch } from "@/lib/merchant-api";
+import { hasil, merchantFetch } from "@/services/api";
 import { menuFormSchema } from "@/lib/schemas";
-import { requireMerchant } from "@/lib/session";
+import { requireMerchant } from "@/services/authService";
 import { getSkenario } from "@/lib/skenario";
-import type { ActionResult, MerchantMenu } from "@/lib/types";
+import type { ActionResult } from "@/types/api";
+import type { MerchantMenu } from "@/types/menu";
 
 const idMenu = (id: unknown) => typeof id === "number" && Number.isInteger(id) && id > 0;
 const tidakAda = () => galat("NOT_FOUND", "Menu tidak ditemukan.");

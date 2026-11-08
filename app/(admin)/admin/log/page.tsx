@@ -1,12 +1,12 @@
 import { Suspense } from "react";
-import { AuditTable } from "@/components/admin/AuditTable";
-import { LogFilters } from "@/components/admin/LogFilters";
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { adminFetch } from "@/lib/admin/api";
-import { LIMIT_LOG } from "@/lib/admin/log";
-import type { AuditLog, MetaHalaman } from "@/lib/admin/types";
-import { requireAdmin } from "@/lib/session";
+import { AuditTable } from "@/app/(admin)/admin/components/AuditTable";
+import { LogFilters } from "@/app/(admin)/admin/components/LogFilters";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { adminFetch } from "@/services/api";
+import { LIMIT_LOG } from "@/services/adminLogService";
+import type { AuditLog, MetaHalaman } from "@/types/admin";
+import { requireAdmin } from "@/services/authService";
 
 const FILTER = ["action", "target_type", "target_id", "from", "to"] as const;
 

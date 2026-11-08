@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { CalendarClock, CalendarX, CircleCheck, PackageX, PowerOff } from "lucide-react";
 import { formatRupiah } from "./format";
 import type { Nada } from "./order-status";
-import type { Promo } from "./types";
+import type { Promo } from "@/types/promo";
 
 export type StatusPromo = "nonaktif" | "terjadwal" | "berakhir" | "kuota-habis" | "berjalan";
 

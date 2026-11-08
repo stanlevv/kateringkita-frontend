@@ -1,15 +1,16 @@
 // Data penjual dari backend ditiru dengan fixture.
-vi.mock("@/lib/merchant-api", async () => ({
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
   merchantFetch: async (path: string) => ({ ok: true, status: 200, data: path.startsWith("/orders") ? (await import("@/lib/fixtures/orders")).orders() : (await import("@/lib/fixtures/profile")).profile(), meta: { total: 16 } }),
+  apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }),
 }));
-vi.mock("@/lib/api", async (orig) => ({ ...(await orig<typeof import("@/lib/api")>()), apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }) }));
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const getSkenario = vi.fn();
 const requireMerchant = vi.fn(async () => ({ user: { full_name: "Diego", phone: "081234567890", email: "d@x.id" }, merchant: null }));
 vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
-vi.mock("@/lib/session", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock("@/app/actions/profile", () => ({ saveProfile: vi.fn() }));
 vi.mock("@/app/actions/account", () => ({ changePassword: vi.fn() }));

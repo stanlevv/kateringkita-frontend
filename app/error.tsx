@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/app/components/ui/Button";
 
 // SY-2: tanpa detail teknis. Next 16: prop `retry` (bukan `reset`).
 export default function Error({ retry }: { error: Error & { digest?: string }; retry: () => void }) {

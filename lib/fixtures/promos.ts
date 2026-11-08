@@ -1,4 +1,4 @@
-import type { Promo } from "../types";
+import type { Promo } from "@/types/promo";
 import { hariLagi, hariLalu } from "./waktu";
 
 // Empat status tampilan: berjalan, terjadwal, berakhir, nonaktif.

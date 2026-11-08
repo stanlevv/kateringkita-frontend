@@ -5,9 +5,9 @@ vi.mock("next/headers", () => ({
   cookies: async () => ({ get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined) }),
 }));
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/lib/session", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/lib/merchant-api", () => ({ merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
 import { saveProfile } from "./profile";
 
 const ok = { business_name: "Dapur Baru", logo_url: null, qris_image_url: null, description: "", address: "Jl. A", wa_number: "081234567890", service_mode: "daily", open_time: "07:00", close_time: "16:00", hold_minutes: 5, daily_revenue_target: 0, pickup_point_ids: [1] };

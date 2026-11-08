@@ -6,9 +6,9 @@ vi.mock("next/headers", () => ({
 }));
 
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/lib/session", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/lib/merchant-api", () => ({ merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
 import { adjustQuota, requestUpload, saveMenu, setMenuActive } from "./menus";
 
 const ok = { name: "Nasi Box", category_id: 1, description: "", image_url: null, unit_label: "porsi", price: 15000, hpp: 9000, daily_quota: 20, prep_minutes: 15, is_preorder: false, preorder_days: 0, min_order_qty: 1, options: [] };

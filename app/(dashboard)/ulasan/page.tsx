@@ -1,10 +1,10 @@
-import { GagalMuat } from "@/components/dashboard/GagalMuat";
-import { MenuRatings, RatingSummary } from "@/components/reviews/RatingSummary";
-import { ReviewList } from "@/components/reviews/ReviewList";
-import { PageHeader } from "@/components/shell/PageHeader";
-import { getMenus } from "@/lib/data/menus";
-import { getReviews } from "@/lib/data/reviews";
-import { requireMerchant } from "@/lib/session";
+import { GagalMuat } from "@/app/components/GagalMuat";
+import { MenuRatings, RatingSummary } from "@/app/(dashboard)/ulasan/components/RatingSummary";
+import { ReviewList } from "@/app/(dashboard)/ulasan/components/ReviewList";
+import { PageHeader } from "@/app/components/shell/PageHeader";
+import { getMenus } from "@/services/menuService";
+import { getReviews } from "@/services/reviewService";
+import { requireMerchant } from "@/services/authService";
 import { saringUlasan } from "@/lib/ulasan";
 
 const angka = (v: string | string[] | undefined, min: number, maks: number) => {

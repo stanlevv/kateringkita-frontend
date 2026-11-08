@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { getSession } from "@/lib/session";
-import { AlurPesanan } from "@/components/landing/AlurPesanan";
-import { PrinterDemo } from "@/components/landing/PrinterDemo";
-import s from "@/components/landing/landing.module.css";
+import { getSession } from "@/services/authService";
+import { AlurPesanan } from "@/app/components/landing/AlurPesanan";
+import { PrinterDemo } from "@/app/components/landing/PrinterDemo";
+import s from "@/app/components/landing/landing.module.css";
 
 // Halaman pembuka "rel tiket dapur": struk tercetak, papan sisa porsi, dan alur satu pesanan.
 export default async function Home() {

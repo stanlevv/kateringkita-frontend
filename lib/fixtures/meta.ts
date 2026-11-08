@@ -1,4 +1,4 @@
-import type { Category, MerchantType, PickupPoint } from "../types";
+import type { Category, MerchantType, PickupPoint } from "@/types/meta";
 
 // Salinan seed docs/schema.sql.
 export const categories = (): Category[] => [

@@ -1,5 +1,5 @@
 import { formatJam, formatTanggal, geserWib } from "./format";
-import type { MerchantOrder } from "./types";
+import type { MerchantOrder } from "@/types/order";
 
 /** SH-N1: jumlah pesanan yang menunggu tindakan penjual (menunggu + terkonfirmasi). */
 export function perluTindakan(orders: Pick<MerchantOrder, "status">[]): number {

@@ -1,5 +1,5 @@
 import { formatJam, formatRupiah } from "./format";
-import type { MerchantOrder, PaymentMethod } from "./types";
+import type { MerchantOrder, PaymentMethod } from "@/types/order";
 
 export const MAKS_TEMPLATE = 1000;
 

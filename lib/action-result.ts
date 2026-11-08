@@ -1,4 +1,4 @@
-import type { ApiError } from "./types";
+import type { ApiError } from "@/types/api";
 
 export const galat = (code: string, message: string): { error: ApiError } => ({ error: { code, message } });
 

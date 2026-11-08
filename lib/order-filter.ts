@@ -1,4 +1,4 @@
-import type { OrderStatus } from "./types";
+import type { OrderStatus } from "@/types/order";
 
 export const LIMIT_PESANAN = 20;
 

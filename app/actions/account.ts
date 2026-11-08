@@ -2,9 +2,9 @@
 
 import { galat, galatField } from "@/lib/action-result";
 import { cekField, changePasswordSchema } from "@/lib/schemas";
-import { requireMerchant } from "@/lib/session";
+import { requireMerchant } from "@/services/authService";
 import { getSkenario } from "@/lib/skenario";
-import type { ActionResult } from "@/lib/types";
+import type { ActionResult } from "@/types/api";
 
 // shortcut: PUT /me/password di F02; tidak disimpan (D2)
 export async function changePassword(input: { current_password: string; new_password: string }): Promise<ActionResult<{ ok: true }>> {

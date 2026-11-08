@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { nextStatus, statusView, tampilanStatus } from "./order-status";
-import type { MerchantOrder } from "./types";
+import type { MerchantOrder } from "@/types/order";
 
 const base = {
   code: "KK-20261031-AAAA",

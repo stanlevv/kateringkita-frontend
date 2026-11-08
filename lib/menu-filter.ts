@@ -1,5 +1,5 @@
 import { stokMenu } from "./dashboard";
-import type { MerchantMenu } from "./types";
+import type { MerchantMenu } from "@/types/menu";
 
 export type StatusMenu = "semua" | "aktif" | "menipis" | "habis" | "nonaktif";
 export type FilterMenu = { q: string; kategori: string; status: StatusMenu };

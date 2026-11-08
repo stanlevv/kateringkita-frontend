@@ -1,4 +1,4 @@
-import type { MerchantProfile } from "../types";
+import type { MerchantProfile } from "@/types/profile";
 import { merchantTypes } from "./meta";
 
 export const profile = (): MerchantProfile => ({
