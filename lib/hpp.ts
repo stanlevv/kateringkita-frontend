@@ -12,7 +12,7 @@ export function cekHpp(bahan: Bahan[], margin: number): Record<string, string> {
   return g;
 }
 
-// shortcut: dihitung di klien; POST /merchant/tools/hpp di F17
+// F17: tetap dihitung di klien agar hasil tampil per ketikan tanpa round-trip; rumus tidak rahasia, jadi tanpa endpoint server
 export function hitungHpp(bahan: Bahan[], targetMargin: number): { hpp: number; suggested_price: number } {
   if (Object.keys(cekHpp(bahan, targetMargin)).length > 0) throw new RangeError("Isian kalkulator HPP tidak valid.");
   const hpp = Math.ceil(bahan.reduce((a, b) => a + b.biaya / b.porsi, 0) - 1e-9);
