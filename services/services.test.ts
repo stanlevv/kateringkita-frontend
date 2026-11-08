@@ -66,6 +66,12 @@ describe("services", () => {
     expect(await getCategories()).toEqual({ data: categories() });
     expect(apiFetch).toHaveBeenCalledWith("/meta/categories");
   });
+  it("F12 getPromos: GET /merchant/promos", async () => {
+    set();
+    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [] });
+    expect(await getPromos()).toEqual({ data: [] });
+    expect(merchantFetch).toHaveBeenCalledWith("/promos");
+  });
   it("gagal-muat: semua baca mengembalikan error", async () => {
     set("gagal-muat");
     const R = { from: "2026-10-25", to: "2026-10-31" };
