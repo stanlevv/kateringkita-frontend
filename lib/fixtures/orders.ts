@@ -36,7 +36,7 @@ const SPEC: Spec[] = [
   { code: `${D}M7UG`, status: "completed", method: "va", pay: "paid", items: [[3, 2]], umur: 240, nama: "Putri Handayani", telp: "081566778899" },
   { code: `${D}N2VH`, status: "cancelled", method: "cod", pay: "unpaid", items: [[2, 1]], umur: 90, nama: "Hendra Gunawan", telp: "087755443322", alasan: "Stok habis", oleh: "merchant" },
   { code: `${D}P3WJ`, status: "cancelled", method: "qris", pay: "refunded", items: [[5, 2]], umur: 150, nama: "Winda Lestari", telp: "082199887766", alasan: "Dibatalkan pembeli", oleh: "customer" },
-  { code: `${D}Q4XK`, status: "expired", method: "qris", pay: "expired", items: [[11, 1]], umur: 200, nama: "Aldi Firmansyah", telp: "081244332211", alasan: "Batas waktu bayar habis", oleh: "system" },
+  { code: `${D}Q4XK`, status: "expired", method: "qris", pay: "unpaid", items: [[11, 1]], umur: 200, nama: "Aldi Firmansyah", telp: "081244332211", alasan: "Batas waktu bayar habis", oleh: "system" },
   { code: `${D}R5YL`, status: "expired", method: "cod", pay: "unpaid", items: [[1, 1]], umur: 300, nama: "Mega Sari", telp: "089955667788", alasan: "Tidak dikonfirmasi tepat waktu", oleh: "system" },
 ];
 

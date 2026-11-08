@@ -1,4 +1,4 @@
-import { Ban, Banknote, CheckCircle2, Clock, TimerOff, Undo2, type LucideIcon } from "lucide-react";
+import { Ban, Banknote, CheckCircle2, Clock, Hourglass, Undo2, type LucideIcon } from "lucide-react";
 import type { Nada } from "@/lib/order-status";
 import type { PaymentMethod, PaymentStatus } from "@/types/order";
 import { Badge } from "./Badge";
@@ -8,7 +8,7 @@ const status: Record<PaymentStatus, { label: string; tone: Nada; icon: LucideIco
   unpaid: { label: "Belum bayar", tone: "warning", icon: Clock },
   paid: { label: "Lunas", tone: "success", icon: CheckCircle2 },
   failed: { label: "Gagal", tone: "danger", icon: Ban },
-  expired: { label: "Kadaluarsa", tone: "danger", icon: TimerOff },
+  pending: { label: "Menunggu verifikasi", tone: "warning", icon: Hourglass },
   refunded: { label: "Dikembalikan", tone: "neutral", icon: Undo2 },
 };
 

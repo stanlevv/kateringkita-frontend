@@ -16,7 +16,7 @@ const kartu = (order: MerchantOrder, extra: Partial<React.ComponentProps<typeof 
 
 const TAMPILAN: [string, Partial<MerchantOrder>, string, string | null][] = [
   ["holding tunai", { status: "holding", payment_method: "cod", payment_status: "unpaid" }, "Menunggu konfirmasi", "Konfirmasi"],
-  ["holding QRIS belum lunas", { status: "holding", payment_method: "qris", payment_status: "unpaid" }, "Menunggu pembayaran", null],
+  ["holding QRIS belum lunas", { status: "holding", payment_method: "qris", payment_status: "unpaid" }, "Menunggu pembayaran", "Verifikasi bayar & terima"],
   ["confirmed", { status: "confirmed", hold_until: null, seconds_left: null }, "Dikonfirmasi", "Mulai masak"],
   ["cooking", { status: "cooking", cooking_at: dasar.created_at }, "Dimasak", "Siap diambil"],
   ["ready", { status: "ready" }, "Siap diambil", "Selesai"],

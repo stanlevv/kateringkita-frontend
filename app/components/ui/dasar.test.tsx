@@ -40,9 +40,9 @@ describe("Badge status (G-7)", () => {
     expect(screen.getByText("Menunggu konfirmasi")).toBeInTheDocument();
   });
   it("PaymentBadge metode + status berupa teks", () => {
-    render(<PaymentBadge method="va" status="expired" />);
+    render(<PaymentBadge method="va" status="pending" />);
     expect(screen.getByText("Virtual Account")).toBeInTheDocument();
-    expect(screen.getByText("Kadaluarsa")).toBeInTheDocument();
+    expect(screen.getByText("Menunggu verifikasi")).toBeInTheDocument();
   });
 });
 

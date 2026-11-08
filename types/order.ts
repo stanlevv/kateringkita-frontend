@@ -3,7 +3,8 @@ import type { PickupPoint } from "@/types/meta";
 
 export type OrderStatus = "holding" | "confirmed" | "cooking" | "ready" | "completed" | "cancelled" | "expired";
 export type PaymentMethod = "cod" | "qris" | "va";
-export type PaymentStatus = "unpaid" | "paid" | "failed" | "expired" | "refunded";
+// sama dengan ENUM orders.payment_status
+export type PaymentStatus = "unpaid" | "pending" | "paid" | "failed" | "refunded";
 
 export type OrderItem = {
   menu_id: number;
