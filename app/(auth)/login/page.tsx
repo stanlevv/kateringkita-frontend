@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/services/authService";
 import LoginForm from "./LoginForm";
+
+// canonical tanpa ?next=… supaya varian URL login tidak dianggap halaman berbeda.
+export const metadata: Metadata = {
+  title: "Masuk penjual",
+  description: "Masuk ke dashboard KateringKita untuk mengelola menu, kuota porsi, dan pesanan katering kampus Anda.",
+  alternates: { canonical: "/login" },
+};
 
 type Params = { next?: string; alasan?: string; registered?: string; reset?: string };
 

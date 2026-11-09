@@ -1,4 +1,5 @@
 import "server-only";
+import { headers as requestHeaders } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ActionResult } from "@/types/api";
 import { getSessionToken } from "@/services/authService";
@@ -10,6 +11,11 @@ export async function apiFetch<T>(path: string, init: RequestInit & { token?: st
   const base = process.env.BACKEND_API_URL;
   if (!base) throw new Error("BACKEND_API_URL belum diatur.");
   const { token, headers, ...rest } = init;
+  // dari proxy.ts; di luar konteks request (mis. skrip) headers() melempar -> tanpa ID
+  let requestId: string | null = null;
+  try {
+    requestId = (await requestHeaders()).get("x-request-id");
+  } catch {}
   let res: Response;
   try {
     res = await fetch(`${base}${path}`, {
@@ -19,6 +25,7 @@ export async function apiFetch<T>(path: string, init: RequestInit & { token?: st
       headers: {
         ...(rest.body ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(requestId ? { "X-Request-Id": requestId } : {}),
         ...headers,
       },
     });

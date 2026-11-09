@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { Toaster } from "@/app/components/ui/Toast";
 import { requireAdmin } from "@/services/authService";
+
+export const metadata: Metadata = { title: "Panel admin", robots: { index: false, follow: false } };
 
 // F18 — shell admin. Data dari backend sungguhan, jadi tanpa banner "Data contoh" dan tanpa status dapur.
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

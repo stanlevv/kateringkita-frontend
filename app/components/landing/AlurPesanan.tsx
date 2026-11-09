@@ -39,7 +39,10 @@ export function AlurPesanan() {
     <section className={s.flow} id="alur" aria-labelledby="alur-judul">
       <div className={s.wrap}>
         <div className={s.flowText}>
-          <h2 id="alur-judul">Satu pesanan, dari checkout sampai diambil</h2>
+          <div>
+            <p className={s.eyebrow}>Cara kerja</p>
+            <h2 id="alur-judul">Satu pesanan dari checkout sampai diambil</h2>
+          </div>
           {BEATS.map((b, i) => (
             <div key={b.s} className={s.beat} data-s={b.s} ref={(el) => { beats.current[i] = el; }}>
               <span className={s.n}>{b.jam}</span>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { StoreStatusProvider, type StoreInfo } from "@/app/components/shell/StoreStatus";
@@ -6,6 +7,8 @@ import { Toaster } from "@/app/components/ui/Toast";
 import { getJumlahTindakan } from "@/services/orderService";
 import { getProfile } from "@/services/profileService";
 import { requireMerchant } from "@/services/authService";
+
+export const metadata: Metadata = { title: "Dashboard penjual", robots: { index: false, follow: false } };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, merchant } = await requireMerchant();

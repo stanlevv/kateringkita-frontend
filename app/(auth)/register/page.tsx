@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { apiFetch } from "@/services/api";
 import { getSession } from "@/services/authService";
 import RegisterForm from "./RegisterForm";
+
+export const metadata: Metadata = {
+  title: "Daftar jadi penjual katering kampus",
+  description: "Buka toko katering di KateringKita: daftar sebagai penjual, pasang menu dan kuota porsi, lalu terima pre-order dari mahasiswa.",
+  alternates: { canonical: "/register" },
+};
 
 export default async function RegisterPage() {
   await connection();

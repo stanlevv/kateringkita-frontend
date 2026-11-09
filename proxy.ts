@@ -9,7 +9,13 @@ export function proxy(req: NextRequest) {
     to.searchParams.set("next", dari.pathname + dari.search);
     return NextResponse.redirect(to);
   }
-  return NextResponse.next();
+  // ID yang sama terlihat di DevTools (header response) dan diteruskan ke backend lewat apiFetch
+  const id = crypto.randomUUID();
+  const headers = new Headers(req.headers);
+  headers.set("x-request-id", id);
+  const res = NextResponse.next({ request: { headers } });
+  res.headers.set("x-request-id", id);
+  return res;
 }
 
 export const config = {

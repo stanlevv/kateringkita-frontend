@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import Home from "./page";
 
 let down = false;
@@ -44,6 +44,18 @@ describe("landing", () => {
     const { container } = render(await Home());
     expect(container.textContent).not.toMatch(/Redis|RAG|Lab|WebSocket/);
     expect(container.textContent).not.toMatch(/gratis/i);
-    expect(screen.getAllByRole("heading", { level: 3 }).length).toBe(3);
+    // tiga ketukan alur pesanan
+    expect(within(container.querySelector<HTMLElement>("#alur")!).getAllByRole("heading", { level: 3 })).toHaveLength(3);
+  });
+
+  it("SEO: satu h1, JSON-LD FAQPage sama dengan tanya jawab yang tampil", async () => {
+    getSession.mockResolvedValue(null);
+    const { container } = render(await Home());
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!);
+    const faq = ld["@graph"].find((n: { "@type": string }) => n["@type"] === "FAQPage");
+    const tampil = [...container.querySelectorAll("#faq summary")].map((s) => s.textContent);
+    expect(tampil.length).toBeGreaterThan(0);
+    expect(faq.mainEntity.map((q: { name: string }) => q.name)).toEqual(tampil);
   });
 });

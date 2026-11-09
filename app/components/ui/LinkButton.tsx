@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { cx, fokus } from "./cx";
 
 const varian = {
-  primary: "bg-primary text-surface hover:bg-primary-pressed",
+  primary: "bg-accent text-ink hover:bg-accent-pressed",
   secondary: "border border-line-strong bg-surface text-ink hover:bg-subtle",
 };
 
@@ -13,7 +13,7 @@ export function LinkButton({ variant = "primary", size = "md", className, ...res
     <Link
       {...rest}
       className={cx(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 font-medium transition-colors motion-reduce:transition-none",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 font-semibold transition-colors motion-reduce:transition-none",
         size === "lg" && "min-h-12 px-6 text-lg",
         varian[variant],
         fokus,

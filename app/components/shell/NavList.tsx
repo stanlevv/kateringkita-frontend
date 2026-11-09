@@ -29,7 +29,7 @@ export function NavList({ badge = 0, rail = false, onNavigate, admin = false }: 
                     className={cx(
                       "relative flex min-h-11 items-center gap-3 rounded-md border-l-4 px-3 text-sm",
                       rail && "justify-center xl:justify-start",
-                      aktif ? "border-primary bg-primary-soft font-semibold text-primary" : "border-transparent text-ink hover:bg-subtle",
+                      aktif ? "border-accent bg-primary-soft font-semibold text-primary" : "border-transparent text-ink hover:bg-subtle",
                       fokus,
                     )}
                   >
