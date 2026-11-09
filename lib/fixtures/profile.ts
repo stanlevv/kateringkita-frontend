@@ -17,4 +17,5 @@ export const profile = (): MerchantProfile => ({
   qris_image_url: null,
   wa_template: "Halo {nama}, pesanan {kode} sudah kami konfirmasi.",
   pickup_point_ids: [1, 2, 3],
+  dine_in_enabled: false,
 });

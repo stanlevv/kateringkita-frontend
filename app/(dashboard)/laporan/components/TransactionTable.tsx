@@ -14,7 +14,7 @@ import { LIMIT_TRANSAKSI } from "@/lib/laporan";
 import type { PaymentMethod } from "@/types/order";
 import type { Transaction } from "@/types/report";
 
-const METODE: Record<PaymentMethod, string> = { qris: "QRIS", va: "Virtual Account", cod: "Tunai" };
+const METODE: Record<PaymentMethod, string> = { qris: "QRIS", va: "Virtual Account", cod: "Tunai", online: "Bayar online" };
 const laba = (t: Transaction) => t.total - t.hpp_total;
 const waktu = (t: Transaction) => `${formatTanggal(t.completed_at)}, ${formatJam(t.completed_at)}`;
 

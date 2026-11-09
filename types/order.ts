@@ -2,7 +2,8 @@ import type { MenuOption } from "@/types/menu";
 import type { PickupPoint } from "@/types/meta";
 
 export type OrderStatus = "holding" | "confirmed" | "cooking" | "ready" | "completed" | "cancelled" | "expired";
-export type PaymentMethod = "cod" | "qris" | "va";
+// online = halaman bayar Midtrans Snap (pesanan meja, F21)
+export type PaymentMethod = "cod" | "qris" | "va" | "online";
 // sama dengan ENUM orders.payment_status
 export type PaymentStatus = "unpaid" | "pending" | "paid" | "failed" | "refunded";
 
@@ -22,7 +23,8 @@ export type MerchantOrder = {
   payment_status: PaymentStatus;
   hold_until: string | null;
   seconds_left: number | null;
-  pickup_point: PickupPoint;
+  pickup_point: PickupPoint | null; // null = pesanan meja
+  table: { id: number; label: string } | null; // F21 pesan dari meja
   pickup_at: string | null; // null = secepatnya
   items: OrderItem[];
   subtotal: number;
@@ -31,7 +33,7 @@ export type MerchantOrder = {
   total: number;
   note: string | null;
   customer_name: string;
-  customer_phone: string;
+  customer_phone: string | null; // tamu meja boleh tanpa nomor
   cancel_reason: string | null;
   cancelled_by: "customer" | "merchant" | "system" | null;
   created_at: string;

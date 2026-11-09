@@ -85,7 +85,8 @@
 | `/pesanan` & `/pesanan/[code]` | Antrean dan rincian lengkap pesanan pelanggan | Merchant |
 | `/menu`, `/menu/baru`, `/menu/[id]` | Manajemen katalog menu, harga, foto, dan kuota harian | Merchant |
 | `/laporan` | Dasbor keuangan, tren transaksi, dan ekspor CSV | Merchant |
-| `/pengaturan` | Profil toko, jam operasional, dan titik jemput | Merchant |
+| `/pengaturan` | Profil toko, jam operasional, titik jemput, dan pesan dari meja (sakelar, daftar meja, QR) | Merchant |
+| `/cetak-qr` | Lembar QR semua meja aktif siap cetak (A4) | Merchant |
 | `/template-wa` | Kustomisasi templat pesan WhatsApp otomatis | Merchant |
 | `/copilot` | Kalkulator HPP (*Harga Pokok Penjualan*), saran harga, dan asisten AI toko (Gemini) | Merchant |
 | `/promo` & `/ulasan` | Promo toko (kode promo checkout) dan ulasan pembeli | Merchant |
@@ -93,6 +94,10 @@
 | `/admin/moderasi` | Sembunyikan ulasan, turunkan menu yang melanggar | Admin |
 | `/admin/keuangan` | Rekap omzet, diskon, biaya layanan per toko + ekspor CSV | Admin |
 | `/admin/pengumuman` | Kirim pengumuman ke notifikasi aplikasi | Admin |
+| `/meja/[token]` | PWA pesan dari meja (dibuka QR): menu, keranjang, pesan & bayar Midtrans Snap tanpa akun | Publik |
+| `/meja/pesanan/[code]` | Status pesanan meja (token tamu tersimpan di peramban) | Publik |
+
+**Layar kecil.** Dashboard penjual dan admin hanya untuk tablet/desktop: di bawah 768 px tampil layar "Buka di tablet atau komputer" (`template.tsx` grup). Halaman `/meja` justru dirancang untuk HP.
 
 ---
 

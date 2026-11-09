@@ -42,7 +42,7 @@ describe("OrderCard 8 tampilan status (brief §4)", () => {
     expect(screen.getByText(/Rafli Ramadhan/)).toBeInTheDocument();
     expect(screen.getByText(/0812-3456-7890/)).toBeInTheDocument();
     expect(screen.getByText("+Sambal pisah")).toBeInTheDocument();
-    expect(screen.getByText(dasar.pickup_point.name)).toBeInTheDocument();
+    expect(screen.getByText(dasar.pickup_point!.name)).toBeInTheDocument();
     expect(screen.getByText("Ambil: secepatnya")).toBeInTheDocument();
     expect(screen.getByText(/Sambal dipisah, sendok 3 pcs/)).toBeInTheDocument();
     expect(screen.getByText("Tunai")).toBeInTheDocument();

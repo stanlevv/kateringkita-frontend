@@ -20,7 +20,9 @@ import { unggahFoto } from "@/lib/unggah";
 import { cekProfil } from "@/lib/schemas";
 import type { MerchantProfile } from "@/types/profile";
 import type { PickupPoint } from "@/types/meta";
+import type { Meja } from "@/types/meja";
 import { ChangePasswordForm } from "./ChangePasswordForm";
+import { PesanMeja } from "./PesanMeja";
 import { PickupPointPicker } from "./PickupPointPicker";
 
 const BAGIAN = [
@@ -28,6 +30,7 @@ const BAGIAN = [
   { id: "operasional", judul: "Operasional" },
   { id: "titik-temu", judul: "Titik temu" },
   { id: "pembayaran", judul: "Pembayaran" },
+  { id: "meja", judul: "Pesan dari meja" },
   { id: "akun", judul: "Akun" },
 ] as const;
 const MODE = [
@@ -125,10 +128,13 @@ function Gambar({ id, nama, jenis, url, error, onChange, onBusy }: { id: string;
   );
 }
 
-type Props = { profile: MerchantProfile; pickupPoints: PickupPoint[] | null; user: { full_name: string; phone: string; email: string }; lengkapi?: string };
+type Props = {
+  profile: MerchantProfile; pickupPoints: PickupPoint[] | null; user: { full_name: string; phone: string; email: string }; lengkapi?: string;
+  tables?: Meja[] | null; // F21; undefined = belum dimuat (pratinjau)
+};
 
 /** M-10, M-03, PG-*: pengaturan toko. */
-export function SettingsForm({ profile, pickupPoints, user, lengkapi }: Props) {
+export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [] }: Props) {
   const [awal, setAwal] = useState(() => awalDari(profile));
   const [v, setV] = useState<Isian>(awal);
   const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
@@ -285,6 +291,11 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi }: Props) {
               </div>
             </Bagian>
           </form>
+
+          {/* di luar form utama: aksinya tersimpan langsung, tidak ikut "Simpan perubahan" */}
+          <Bagian id="meja" judul="Pesan dari meja" sorot={sorot === "meja"}>
+            <PesanMeja aktifAwal={profile.dine_in_enabled} mejaAwal={tables} />
+          </Bagian>
 
           <Bagian id="akun" judul="Akun" sorot={sorot === "akun"}>
             <dl className="grid gap-3 sm:grid-cols-3">

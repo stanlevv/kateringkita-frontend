@@ -22,7 +22,7 @@ describe("wa-template (M-11)", () => {
   });
   it("contoh memakai Rupiah dan titik temu pesanan", () => {
     expect(contoh.total).toMatch(/^Rp /);
-    expect(contoh.titik_temu).toBe(orders()[0].pickup_point.name);
+    expect(contoh.titik_temu).toBe(orders()[0].pickup_point!.name);
   });
   it("templat bawaan memakai semua placeholder dan tidak ada yang tak dikenal", () => {
     for (const p of PLACEHOLDER) expect(TEMPLATE_BAWAAN).toContain(p.kode);

@@ -66,7 +66,7 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-ink"><span className="font-semibold">{o.customer_name}</span> <span className="text-ink-muted">· {formatTelepon(o.customer_phone)}</span></p>
+        <p className="text-ink"><span className="font-semibold">{o.customer_name}</span> {o.customer_phone && <span className="text-ink-muted">· {formatTelepon(o.customer_phone)}</span>}</p>
         <PaymentBadge method={o.payment_method} status={o.payment_status} />
       </div>
 
@@ -80,8 +80,8 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
       </ul>
 
       <div className="flex flex-wrap justify-between gap-2 text-sm text-ink-muted">
-        <span className="inline-flex items-center gap-1"><MapPin aria-hidden className="size-4" /><span>{o.pickup_point.name}</span></span>
-        <span>{o.pickup_at ? `Ambil: ${formatJam(o.pickup_at)}` : "Ambil: secepatnya"}</span>
+        <span className="inline-flex items-center gap-1"><MapPin aria-hidden className="size-4" /><span>{o.table ? `Meja ${o.table.label}` : o.pickup_point?.name}</span></span>
+        <span>{o.table ? "Makan di tempat" : o.pickup_at ? `Ambil: ${formatJam(o.pickup_at)}` : "Ambil: secepatnya"}</span>
       </div>
       {o.note && <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink">“{o.note}”</p>}
       {dibatalkan && o.cancel_reason && <p className="text-sm text-danger">Alasan: {o.cancel_reason}</p>}
@@ -90,7 +90,7 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
         <p className="font-semibold text-ink">Total <span className="font-mono">{formatRupiah(o.total)}</span></p>
         <div className="flex flex-wrap gap-2 sm:ml-auto">
           {v.secondary.includes("reject") && <TombolTolak disabled={!!pending} onClick={onTolak} />}
-          {v.secondary.includes("chat-wa") && <ChatWaLink code={o.code} />}
+          {v.secondary.includes("chat-wa") && o.customer_phone && <ChatWaLink code={o.code} />}
           <Button variant="ghost" onClick={onSlip}><FileText aria-hidden className="size-4" />Lihat slip</Button>
           {v.primary && (
             <Button data-aksi-utama className="w-full sm:w-auto" loading={pending === v.primary} loadingText={teksAksi[v.primary].proses}

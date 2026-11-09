@@ -26,7 +26,7 @@ Terima kasih sudah memesan.`;
 /** Nilai pengganti per placeholder, kunci tanpa kurung kurawal. */
 export type ContohPesanan = Record<string, string>;
 
-const METODE: Record<PaymentMethod, string> = { qris: "QRIS", va: "Virtual Account", cod: "Tunai" };
+const METODE: Record<PaymentMethod, string> = { qris: "QRIS", va: "Virtual Account", cod: "Tunai", online: "Bayar online" };
 
 export function contohDariPesanan(o: MerchantOrder): ContohPesanan {
   return {
@@ -34,7 +34,7 @@ export function contohDariPesanan(o: MerchantOrder): ContohPesanan {
     nama: o.customer_name,
     menu: o.items.map((i) => `${i.qty}x ${i.menu_name}`).join(", "),
     total: formatRupiah(o.total),
-    titik_temu: o.pickup_point.name,
+    titik_temu: o.pickup_point?.name ?? (o.table ? `Meja ${o.table.label}` : "-"),
     waktu_ambil: o.pickup_at ? `${formatJam(o.pickup_at)} WIB` : "Secepatnya",
     metode_bayar: METODE[o.payment_method],
   };

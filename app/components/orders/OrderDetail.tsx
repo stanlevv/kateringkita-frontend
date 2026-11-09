@@ -64,7 +64,7 @@ function Aksi({ order }: { order: MerchantOrder }) {
         </Button>
       )}
       {v.secondary.includes("reject") && <TombolTolak disabled={!!kirim} onClick={() => setTolak(true)} />}
-      {v.secondary.includes("chat-wa") && <ChatWaLink code={order.code} />}
+      {v.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
       <RejectDialog code={tolak ? order.code : null} onClose={() => setTolak(false)} onConfirm={(r) => { setTolak(false); void jalankan("reject", r); }} />
       <StokDialog code={stok ? order.code : null} onClose={() => setStok(false)}
         onTolak={() => { setStok(false); setTolak(true); }}
@@ -81,11 +81,13 @@ export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; a
       <div className="flex flex-wrap items-center gap-2"><StatusBadge order={o} /><PaymentBadge method={o.payment_method} status={o.payment_status} /></div>
 
       <Bagian judul="Pemesan">
-        <p><span className="font-semibold">{o.customer_name}</span> · {formatTelepon(o.customer_phone)}</p>
-        <p className="inline-flex items-center gap-1 text-ink-muted"><MapPin aria-hidden className="size-4" />Titik ambil: {o.pickup_point.name}</p>
-        <p className="text-ink-muted">
-          Waktu ambil: {o.pickup_at ? `${tanggalWib(o.pickup_at) === hariPesan ? "" : `${formatTanggal(o.pickup_at)} `}${formatJam(o.pickup_at)}` : "Secepatnya"}
-        </p>
+        <p><span className="font-semibold">{o.customer_name}</span>{o.customer_phone && ` · ${formatTelepon(o.customer_phone)}`}</p>
+        <p className="inline-flex items-center gap-1 text-ink-muted"><MapPin aria-hidden className="size-4" />{o.table ? `Meja ${o.table.label} · makan di tempat` : `Titik ambil: ${o.pickup_point?.name}`}</p>
+        {!o.table && (
+          <p className="text-ink-muted">
+            Waktu ambil: {o.pickup_at ? `${tanggalWib(o.pickup_at) === hariPesan ? "" : `${formatTanggal(o.pickup_at)} `}${formatJam(o.pickup_at)}` : "Secepatnya"}
+          </p>
+        )}
         {o.note && <p className="rounded-md bg-subtle px-3 py-2">“{o.note}”</p>}
       </Bagian>
 

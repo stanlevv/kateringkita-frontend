@@ -62,6 +62,7 @@ function bangun(s: Spec): MerchantOrder {
     hold_until: holding ? menitLagi(5 - s.umur) : null,
     seconds_left: holding ? Math.round((5 - s.umur) * 60) : null,
     pickup_point: titik,
+    table: null,
     pickup_at: s.pickup ? menitLagi(s.pickup) : null,
     items,
     subtotal,

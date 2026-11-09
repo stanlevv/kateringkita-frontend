@@ -16,4 +16,5 @@ export type MerchantProfile = {
   qris_image_url: string | null;
   wa_template: string | null;
   pickup_point_ids: number[];
+  dine_in_enabled: boolean; // F21 pesan dari meja
 };
