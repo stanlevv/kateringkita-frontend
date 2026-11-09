@@ -15,9 +15,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#FF6B35",
     lang: "id",
     icons: [
-      { src: "/meja/ikon/192", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/meja/ikon/512", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/meja/ikon/512", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/api/meja/ikon/192", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/api/meja/ikon/512", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/api/meja/ikon/512", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }
