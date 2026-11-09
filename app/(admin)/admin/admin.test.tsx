@@ -45,6 +45,7 @@ describe("shell admin", () => {
       ["Pengumuman", "/admin/pengumuman"],
       ["AI", "/admin/ai"],
       ["Log", "/admin/log"],
+      ["Server", "/admin/server"],
     ]);
     expect(within(nav).getByRole("link", { name: "Ringkasan" })).toHaveAttribute("aria-current", "page");
     expect(screen.queryByText(/Data contoh/)).toBeNull();
