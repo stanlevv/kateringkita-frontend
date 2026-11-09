@@ -94,6 +94,7 @@
 | `/admin/moderasi` | Sembunyikan ulasan, turunkan menu yang melanggar | Admin |
 | `/admin/keuangan` | Rekap omzet, diskon, biaya layanan per toko + ekspor CSV | Admin |
 | `/admin/pengumuman` | Kirim pengumuman ke notifikasi aplikasi | Admin |
+| `/admin/ai` | Penyedia AI gratis untuk Asisten AI: urutan fallback, key (hanya bisa ditulis), uji koneksi, status | Admin |
 | `/meja/[token]` | PWA pesan dari meja (dibuka QR): menu, keranjang, pesan & bayar Midtrans Snap tanpa akun | Publik |
 | `/meja/pesanan/[code]` | Status pesanan meja (token tamu tersimpan di peramban) | Publik |
 

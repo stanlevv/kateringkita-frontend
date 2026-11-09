@@ -43,6 +43,7 @@ describe("shell admin", () => {
       ["Promo & biaya", "/admin/promo"],
       ["Keuangan", "/admin/keuangan"],
       ["Pengumuman", "/admin/pengumuman"],
+      ["AI", "/admin/ai"],
       ["Log", "/admin/log"],
     ]);
     expect(within(nav).getByRole("link", { name: "Ringkasan" })).toHaveAttribute("aria-current", "page");

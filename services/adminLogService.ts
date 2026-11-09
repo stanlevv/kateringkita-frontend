@@ -19,6 +19,9 @@ const TETAP: Record<string, string> = {
   "promo.activate": "Aktifkan promo",
   "promo.deactivate": "Nonaktifkan promo",
   "settings.service_fee": "Ubah biaya layanan",
+  "ai.create": "Tambah penyedia AI",
+  "ai.update": "Ubah penyedia AI",
+  "ai.delete": "Hapus penyedia AI",
 };
 
 /** Semua aksi yang dikenal, untuk pilihan filter: [kode, label]. */
@@ -42,6 +45,7 @@ export const TARGET_LOG: [string, string][] = [
   ["merchant-types", "Jenis usaha"],
   ["promo", "Promo"],
   ["settings", "Pengaturan"],
+  ["ai_provider", "Penyedia AI"],
 ];
 
 export function labelTarget(type: string, id: string): string {
