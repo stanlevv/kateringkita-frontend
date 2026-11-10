@@ -58,6 +58,7 @@ function Aksi({ order }: { order: MerchantOrder }) {
   if (!v.primary && !v.secondary.some((s) => s !== "lihat-slip")) return null;
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      {v.hint && <p className="self-center text-ink-muted">{v.hint}</p>}
       {v.primary && (
         <Button loading={kirim === v.primary} loadingText={teksAksi[v.primary].proses} disabled={!!kirim} onClick={() => void jalankan(v.primary!)}>
           {v.primaryLabel}
@@ -65,7 +66,7 @@ function Aksi({ order }: { order: MerchantOrder }) {
       )}
       {v.secondary.includes("reject") && <TombolTolak disabled={!!kirim} onClick={() => setTolak(true)} />}
       {v.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
-      <RejectDialog code={tolak ? order.code : null} onClose={() => setTolak(false)} onConfirm={(r) => { setTolak(false); void jalankan("reject", r); }} />
+      <RejectDialog order={tolak ? order : null} onClose={() => setTolak(false)} onConfirm={(r) => { setTolak(false); void jalankan("reject", r); }} />
       <StokDialog code={stok ? order.code : null} onClose={() => setStok(false)}
         onTolak={() => { setStok(false); setTolak(true); }}
         onTambah={() => router.push(`/menu?q=${encodeURIComponent(order.items[0]?.menu_name ?? "")}`)} />

@@ -22,6 +22,8 @@ const TETAP: Record<string, string> = {
   "ai.create": "Tambah penyedia AI",
   "ai.update": "Ubah penyedia AI",
   "ai.delete": "Hapus penyedia AI",
+  "payout.create": "Catat pencairan dana",
+  "refund.mark": "Tandai dana dikembalikan",
 };
 
 /** Semua aksi yang dikenal, untuk pilihan filter: [kode, label]. */

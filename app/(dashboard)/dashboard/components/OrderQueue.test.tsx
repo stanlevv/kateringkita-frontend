@@ -53,7 +53,8 @@ afterEach(() => {
 describe("tab antrean (brief §3)", () => {
   it("Perlu tindakan menghitung holding + confirmed dan tampil pertama", () => {
     pasang();
-    expect(screen.getByRole("tab", { name: /Perlu tindakan/ })).toHaveTextContent("5");
+    // F26: K3MA (VA belum lunas) tetap tampil di daftar, tetapi tidak dihitung karena menunggu pembeli
+    expect(screen.getByRole("tab", { name: /Perlu tindakan/ })).toHaveTextContent("4");
     expect(screen.getByRole("tab", { name: /Dimasak/ })).toHaveTextContent("2");
     expect(screen.getByRole("tab", { name: /Siap diambil/ })).toHaveTextContent("2");
     expect(screen.getAllByRole("article")).toHaveLength(5);

@@ -47,7 +47,7 @@ export async function saveMenu(id: number | null, input: unknown): Promise<Actio
   return hasil(await merchantFetch<MerchantMenu>(path, { method: id === null ? "POST" : "PATCH", body: JSON.stringify(r.data) }));
 }
 
-export async function requestUpload(berkas: { purpose: "menu" | "logo" | "qris"; content_type: string; size: number }): Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>> {
+export async function requestUpload(berkas: { purpose: "menu" | "logo"; content_type: string; size: number }): Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>> {
   await requireMerchant();
   if ((await getSkenario()) === "gagal-aksi") return galat("INTERNAL_ERROR", "Foto gagal diunggah. Coba lagi");
   return hasil(await merchantFetch<{ upload_url: string; public_url: string; expires_at: string }>("/uploads", { method: "POST", body: JSON.stringify(berkas) }));

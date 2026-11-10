@@ -26,7 +26,7 @@ Terima kasih sudah memesan.`;
 /** Nilai pengganti per placeholder, kunci tanpa kurung kurawal. */
 export type ContohPesanan = Record<string, string>;
 
-const METODE: Record<PaymentMethod, string> = { qris: "QRIS", va: "Virtual Account", cod: "Tunai", online: "Bayar online" };
+const METODE: Record<PaymentMethod, string> = { qris: "QRIS toko", va: "Virtual Account", cod: "Tunai", online: "Bayar online" };
 
 export function contohDariPesanan(o: MerchantOrder): ContohPesanan {
   return {

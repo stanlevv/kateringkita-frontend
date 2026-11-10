@@ -137,7 +137,7 @@ describe("DB-A3 pesanan baru dari penyegaran", () => {
     expect(pertama).toHaveTextContent("KK-20261101-AAAA");
     expect(pertama).toHaveAttribute("data-baru", "true");
     expect(within(pertama).getByText("Baru")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /Perlu tindakan/ })).toHaveTextContent("6");
+    expect(screen.getByRole("tab", { name: /Perlu tindakan/ })).toHaveTextContent("5");
     expect(document.querySelector(".sr-only[aria-live=polite]")).toHaveTextContent("1 pesanan baru masuk");
     expect(audio).toHaveBeenCalled();
   });

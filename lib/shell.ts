@@ -1,9 +1,13 @@
 import { formatJam, formatTanggal, geserWib } from "./format";
+import { tampilanStatus } from "./order-status";
 import type { MerchantOrder } from "@/types/order";
 
-/** SH-N1: jumlah pesanan yang menunggu tindakan penjual (menunggu + terkonfirmasi). */
-export function perluTindakan(orders: Pick<MerchantOrder, "status">[]): number {
-  return orders.filter((o) => o.status === "holding" || o.status === "confirmed").length;
+/**
+ * SH-N1: jumlah pesanan yang menunggu tindakan penjual: menunggu konfirmasi + terkonfirmasi.
+ * F26: VA/bayar online yang belum lunas tidak dihitung; Midtrans menerimanya otomatis begitu lunas.
+ */
+export function perluTindakan(orders: Pick<MerchantOrder, "status" | "payment_method" | "payment_status">[]): number {
+  return orders.filter((o) => o.status === "confirmed" || tampilanStatus(o) === "menunggu-konfirmasi").length;
 }
 
 const menit = (hhmm: string) => {

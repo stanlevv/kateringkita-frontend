@@ -179,7 +179,7 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </Select>
             </Field>
-            <Field label="Deskripsi" id="mf-description" help={`${v.description.length}/500 karakter`} error={galat("description")}>
+            <Field label="Deskripsi" id="mf-description" help={`Sebut bahan, rasa, dan porsi (mis. pedas, tanpa daging). Dipakai pencarian dan rekomendasi AI pembeli; 160 karakter pertama paling berpengaruh. ${v.description.length}/500 karakter`} error={galat("description")}>
               <Textarea value={v.description} onChange={(e) => set("description", e.target.value)} onBlur={blur("description")} />
             </Field>
             <Field label="Satuan" id="mf-unit_label" required help="Contoh: porsi, box, isi 5" error={galat("unit_label")}>

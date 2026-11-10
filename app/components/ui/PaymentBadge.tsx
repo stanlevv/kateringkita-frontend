@@ -3,7 +3,7 @@ import type { Nada } from "@/lib/order-status";
 import type { PaymentMethod, PaymentStatus } from "@/types/order";
 import { Badge } from "./Badge";
 
-const metode: Record<PaymentMethod, string> = { qris: "QRIS", va: "Virtual Account", cod: "Tunai", online: "Bayar online" };
+const metode: Record<PaymentMethod, string> = { qris: "QRIS toko", va: "Virtual Account", cod: "Tunai", online: "Bayar online" };
 const status: Record<PaymentStatus, { label: string; tone: Nada; icon: LucideIcon }> = {
   unpaid: { label: "Belum bayar", tone: "warning", icon: Clock },
   paid: { label: "Lunas", tone: "success", icon: CheckCircle2 },

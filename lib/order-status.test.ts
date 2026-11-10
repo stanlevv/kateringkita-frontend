@@ -17,9 +17,9 @@ describe("nextStatus", () => {
   it("holding+qris belum bayar confirm -> CONFLICT", () => {
     expect(nextStatus(o({ payment_method: "qris" }), "confirm")).toEqual({ error: "CONFLICT" });
   });
-  it("F10 pay: qris belum bayar -> confirmed + paid; cod -> CONFLICT", () => {
-    expect(nextStatus(o({ payment_method: "qris" }), "pay")).toMatchObject({ status: "confirmed", payment_status: "paid" });
-    expect(nextStatus(o({}), "pay")).toEqual({ error: "CONFLICT" });
+  it("F26 VA/online belum lunas: konfirmasi ditolak (lunas diterima otomatis oleh Midtrans)", () => {
+    for (const payment_method of ["va", "online"] as const) expect(nextStatus(o({ payment_method }), "confirm")).toEqual({ error: "CONFLICT" });
+    expect(nextStatus(o({ payment_method: "online", payment_status: "paid" }), "confirm")).toMatchObject({ status: "confirmed" });
   });
   it("rantai masak", () => {
     expect(nextStatus(o({ status: "confirmed" }), "cook")).toMatchObject({ status: "cooking" });
@@ -45,7 +45,7 @@ describe("nextStatus", () => {
 describe("peta status (brief v3 sec 4)", () => {
   const kasus: [Partial<MerchantOrder>, string, string | undefined, string[]][] = [
     [{}, "menunggu-konfirmasi", "confirm", ["reject", "chat-wa"]],
-    [{ payment_method: "qris" }, "menunggu-bayar", "pay", ["chat-wa"]],
+    [{ payment_method: "online" }, "menunggu-bayar", undefined, ["chat-wa"]],
     [{ status: "confirmed" }, "confirmed", "cook", ["reject", "chat-wa"]],
     [{ status: "cooking" }, "cooking", "ready", ["chat-wa"]],
     [{ status: "ready" }, "ready", "complete", ["chat-wa"]],
@@ -74,6 +74,9 @@ describe("peta status (brief v3 sec 4)", () => {
       "Dibatalkan",
       "Kadaluarsa",
     ]);
+  });
+  it("F26 menunggu bayar: tanpa tombol utama, keterangan diterima otomatis", () => {
+    expect(statusView["menunggu-bayar"].hint).toBe("Diterima otomatis setelah lunas");
   });
   it("ada 8 tampilan", () => {
     expect(Object.keys(statusView)).toHaveLength(8);

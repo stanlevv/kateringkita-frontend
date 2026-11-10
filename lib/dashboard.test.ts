@@ -75,7 +75,8 @@ describe("tab antrean (brief §3)", () => {
   it("jumlah tab Perlu tindakan sama dengan perluTindakan() (KPI & sidebar)", () => {
     const j = jumlahTab(list);
     expect(j.tindakan).toBe(perluTindakan(list));
-    expect(j.tindakan).toBe(antrean(list, "tindakan", nanti).length);
+    // F26: daftar tetap memuat holding VA/online yang menunggu pembayaran; angka hanya yang perlu tindakan penjual
+    expect(j.tindakan).toBe(antrean(list, "tindakan", nanti).filter((x) => perluTindakan([x]) === 1).length);
     expect(j.dimasak).toBe(list.filter((x) => x.status === "cooking").length);
     expect(j.siap).toBe(list.filter((x) => x.status === "ready").length);
     expect(j.semua).toBe(list.length);

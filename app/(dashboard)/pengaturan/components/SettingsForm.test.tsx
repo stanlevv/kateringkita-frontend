@@ -10,14 +10,17 @@ vi.mock("@/app/actions/profile", () => ({ saveProfile: (...a: unknown[]) => save
 const unggahFoto = vi.fn();
 vi.mock("@/lib/unggah", () => ({ unggahFoto: (...a: unknown[]) => unggahFoto(...a) }));
 vi.mock("@/app/actions/account", () => ({ changePassword: (...a: unknown[]) => changePassword(...a) }));
+const saveRekening = vi.fn();
+vi.mock("@/app/actions/pencairan", () => ({ saveRekening: (...a: unknown[]) => saveRekening(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { pickupPoints } from "@/lib/fixtures/meta";
+import { pencairanSaya } from "@/lib/fixtures/pencairan";
 import { profile } from "@/lib/fixtures/profile";
 import { SettingsForm } from "./SettingsForm";
 
 const user = { full_name: "Diego", phone: "081234567890", email: "d@x.id" };
 const tampil = (p: Partial<React.ComponentProps<typeof SettingsForm>> = {}) =>
-  render(<><a href="/dashboard">Beranda</a><Toaster /><SettingsForm profile={profile()} pickupPoints={pickupPoints()} user={user} {...p} /></>);
+  render(<><a href="/dashboard">Beranda</a><Toaster /><SettingsForm profile={profile()} pickupPoints={pickupPoints()} user={user} pencairan={pencairanSaya()} {...p} /></>);
 const ketik = async (label: string | RegExp, teks: string) => {
   const el = screen.getByLabelText(label);
   await userEvent.clear(el);
@@ -26,7 +29,7 @@ const ketik = async (label: string | RegExp, teks: string) => {
 const bar = () => screen.queryByRole("button", { name: "Simpan perubahan" });
 
 beforeEach(() => {
-  unggahFoto.mockReset(); saveProfile.mockReset(); changePassword.mockReset(); refresh.mockReset();
+  unggahFoto.mockReset(); saveProfile.mockReset(); changePassword.mockReset(); refresh.mockReset(); saveRekening.mockReset();
   saveProfile.mockResolvedValue({ data: profile() });
   Element.prototype.scrollIntoView = vi.fn();
 });
@@ -168,16 +171,16 @@ describe("PG-A1 peringatan keluar", () => {
   });
 });
 
-describe("Logo & QRIS (M-10, FE-08)", () => {
+describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
   const png = () => new File([new Uint8Array(10)], "f.png", { type: "image/png" });
   const pilih = (i: number) => fireEvent.change(document.querySelectorAll("input[type=file]")[i] as HTMLInputElement, { target: { files: [png()] } });
-  const dgn = { logo_url: "https://cdn.test/logo.png", qris_image_url: "https://cdn.test/qris.png" };
+  const dgn = { logo_url: "https://cdn.test/logo.png" };
 
-  it("ada pemilih berkas untuk logo dan QRIS; gambar server tampil; teks 'setelah fitur unggah' hilang", () => {
+  it("hanya pemilih berkas logo; gambar server tampil; tidak ada unggah QRIS", () => {
     tampil({ profile: { ...profile(), ...dgn } });
-    expect(document.querySelectorAll("input[type=file]")).toHaveLength(2);
+    expect(document.querySelectorAll("input[type=file]")).toHaveLength(1);
     expect(screen.getByAltText("Logo toko")).toBeInTheDocument();
-    expect(screen.getByAltText("QRIS")).toBeInTheDocument();
+    expect(screen.queryByText(/QRIS statis/)).not.toBeInTheDocument();
     expect(screen.queryByText(/setelah fitur unggah/)).not.toBeInTheDocument();
   });
   it("unggah logo -> memanggil unggahFoto(berkas, 'logo'); simpan mengirim logo_url baru", async () => {
@@ -188,16 +191,10 @@ describe("Logo & QRIS (M-10, FE-08)", () => {
     expect(unggahFoto.mock.calls[0][1]).toBe("logo");
     await userEvent.click(bar()!);
     await waitFor(() => expect(saveProfile).toHaveBeenCalled());
-    expect(saveProfile.mock.calls[0][0]).toMatchObject({ logo_url: "https://cdn.test/baru.png", qris_image_url: dgn.qris_image_url });
+    expect(saveProfile.mock.calls[0][0]).toMatchObject({ logo_url: "https://cdn.test/baru.png" });
+    expect(saveProfile.mock.calls[0][0]).not.toHaveProperty("qris_image_url");
   });
-  it("Hapus gambar QRIS -> qris_image_url null", async () => {
-    tampil({ profile: { ...profile(), ...dgn } });
-    await userEvent.click(within(screen.getByRole("group", { name: "QRIS" })).getByRole("button", { name: "Hapus gambar" }));
-    await userEvent.click(bar()!);
-    await waitFor(() => expect(saveProfile).toHaveBeenCalled());
-    expect(saveProfile.mock.calls[0][0]).toMatchObject({ logo_url: dgn.logo_url, qris_image_url: null });
-  });
-  it("tanpa perubahan gambar: kedua field sama dengan profil", async () => {
+  it("tanpa perubahan gambar: logo sama dengan profil", async () => {
     tampil({ profile: { ...profile(), ...dgn } });
     await ketik(/Nama usaha/, "Dapur Lain");
     await userEvent.click(bar()!);
@@ -207,7 +204,7 @@ describe("Logo & QRIS (M-10, FE-08)", () => {
   it("unggah gagal -> pesan Indonesia, gambar lama tetap, tidak ada perubahan", async () => {
     unggahFoto.mockResolvedValue({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
     tampil({ profile: { ...profile(), ...dgn } });
-    pilih(1);
+    pilih(0);
     expect(await screen.findByText("Foto gagal diunggah. Coba lagi")).toBeInTheDocument();
     expect(bar()).not.toBeInTheDocument();
   });
@@ -268,13 +265,11 @@ describe("Logo & QRIS (M-10, FE-08)", () => {
     tampil();
     pilih(0);
     expect(await screen.findByText("Logo terunggah.")).toHaveAttribute("role", "status");
-    pilih(1);
-    expect(await screen.findByText("QRIS terunggah.")).toHaveAttribute("role", "status");
   });
   it("kontrol foto punya id untuk tautan ringkasan galat", () => {
     tampil();
     expect(document.getElementById("pg-logo_url")).not.toBeNull();
-    expect(document.getElementById("pg-qris_image_url")).not.toBeNull();
+    expect(document.getElementById("pg-qris_image_url")).toBeNull();
   });
   it("galat server fields.logo_url tampil di bagian logo", async () => {
     saveProfile.mockResolvedValue({ error: { code: "VALIDATION_ERROR", message: "x", fields: { logo_url: ["Foto tidak valid. Unggah ulang foto."] } } });
@@ -360,5 +355,39 @@ describe("Akun", () => {
     await userEvent.click(screen.getByRole("button", { name: "Ganti kata sandi" }));
     expect(changePassword).not.toHaveBeenCalled();
     expect(screen.getByText("Konfirmasi kata sandi tidak sama.")).toBeInTheDocument();
+  });
+});
+
+describe("F26 rekening pencairan (di luar form utama, tersimpan langsung)", () => {
+  const kosong = { ...pencairanSaya(), account: null, payouts: [] };
+  it("belum ada rekening: form tampil, saldo & bagian toko dijelaskan, simpan tidak membuat form utama kotor", async () => {
+    saveRekening.mockResolvedValue({ data: pencairanSaya() });
+    tampil({ pencairan: kosong });
+    const form = screen.getByRole("form", { name: "Rekening pencairan" });
+    expect(screen.getByText("Rp 58.000")).toBeInTheDocument();
+    expect(screen.getByText(/biaya Midtrans tidak memotong bagian toko/)).toBeInTheDocument();
+    await userEvent.selectOptions(within(form).getByLabelText(/Bank atau e-wallet/), "bca");
+    await userEvent.type(within(form).getByLabelText(/Nomor rekening/), "0123456789");
+    await userEvent.type(within(form).getByLabelText(/Nama pemilik rekening/), "Diego Pratama");
+    await userEvent.type(within(form).getByLabelText(/Kata sandi akun/), "rahasia123");
+    await userEvent.click(within(form).getByRole("button", { name: "Simpan rekening" }));
+    expect(saveRekening).toHaveBeenCalledWith({ bank: "bca", account_number: "0123456789", account_name: "Diego Pratama", password: "rahasia123" });
+    expect(await screen.findByText("Rekening pencairan disimpan")).toBeInTheDocument();
+    expect(screen.getByText(/a\.n\. Diego Pratama/)).toBeInTheDocument();
+    expect(bar()).not.toBeInTheDocument();
+  });
+  it("galat field dari backend (sandi salah) tampil di kolomnya", async () => {
+    saveRekening.mockResolvedValue({ error: { code: "VALIDATION_ERROR", message: "Data tidak valid.", fields: { password: ["Kata sandi salah."] } } });
+    tampil({ pencairan: pencairanSaya() });
+    await userEvent.click(screen.getByRole("button", { name: "Ganti rekening" }));
+    await userEvent.click(screen.getByRole("button", { name: "Simpan rekening" }));
+    expect(await screen.findByText("Kata sandi salah.")).toBeInTheDocument();
+  });
+  it("riwayat pencairan tampil; gagal dimuat -> pesan", () => {
+    const { unmount } = tampil({ pencairan: pencairanSaya() });
+    expect(screen.getByText(/Ref\. TRF-0001/)).toBeInTheDocument();
+    unmount();
+    tampil({ pencairan: null });
+    expect(screen.getByText("Data pencairan belum bisa dimuat. Muat ulang halaman.")).toBeInTheDocument();
   });
 });

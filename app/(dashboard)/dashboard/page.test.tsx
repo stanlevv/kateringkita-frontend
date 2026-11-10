@@ -56,8 +56,8 @@ describe("Dashboard berisi (brief §3)", () => {
   it("KPI Perlu tindakan = jumlah tab Perlu tindakan", async () => {
     await tampil(null);
     const tab = screen.getByRole("tab", { name: /Perlu tindakan/ });
-    expect(tab).toHaveTextContent("5");
-    expect(kpi("Perlu tindakan")).toHaveTextContent("5");
+    expect(tab).toHaveTextContent("4"); // F26: VA belum lunas tidak dihitung
+    expect(kpi("Perlu tindakan")).toHaveTextContent("4");
   });
   it("D2: KPI dihitung dari antrean & kuota nyata, bukan data contoh", async () => {
     await tampil(null);

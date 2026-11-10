@@ -58,15 +58,16 @@ const tidakDilihat = () => typeof document !== "undefined" && (document.hidden |
 export function useNotifikasi(orders: MerchantOrder[], dimuat: number, sekarang = dimuat) {
   const suara = useSyncExternalStore(langgan, bacaSuara, () => true);
   const [lama, setLama] = useState(orders);
-  const [sorot, setSorot] = useState<string[]>(() => orders.filter((o) => dimuat - Date.parse(o.created_at) < BARU_MS).map((o) => o.code));
+  const [sorot, setSorot] = useState<string[]>(() => orders.filter((o) => perluTindakan([o]) === 1 && dimuat - Date.parse(o.created_at) < BARU_MS).map((o) => o.code));
   const [belumDilihat, setBelumDilihat] = useState(() => (tidakDilihat() ? sorot.length : 0));
   const [gelombang, setGelombang] = useState(0);
 
   if (orders !== lama) {
-    const dikenal = new Set(lama.map((o) => o.code));
-    // Hanya pesanan "perlu tindakan" (holding/confirmed: QRIS bisa lunas sebelum terlihat) yang dibuat hari ini WIB menurut jam server.
+    // Pesanan dibuat hari ini (WIB, jam server) yang BARU menjadi "perlu tindakan": baru masuk, atau VA/online yang tadi
+    // menunggu bayar lalu lunas (F26, diterima otomatis). Yang belum lunas tidak berbunyi: penjual belum bisa apa-apa.
+    const siapLama = new Set(lama.filter((o) => perluTindakan([o]) === 1).map((o) => o.code));
     const hari = geserWib(sekarang).toISOString().slice(0, 10);
-    const masuk = orders.filter((o) => !dikenal.has(o.code) && perluTindakan([o]) === 1 && tanggalWib(o.created_at) === hari).map((o) => o.code);
+    const masuk = orders.filter((o) => !siapLama.has(o.code) && perluTindakan([o]) === 1 && tanggalWib(o.created_at) === hari).map((o) => o.code);
     setLama(orders);
     if (masuk.length) {
       setSorot(masuk);

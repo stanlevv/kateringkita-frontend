@@ -92,6 +92,7 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
           {v.secondary.includes("reject") && <TombolTolak disabled={!!pending} onClick={onTolak} />}
           {v.secondary.includes("chat-wa") && o.customer_phone && <ChatWaLink code={o.code} />}
           <Button variant="ghost" onClick={onSlip}><FileText aria-hidden className="size-4" />Lihat slip</Button>
+          {v.hint && <p className="self-center text-sm text-ink-muted">{v.hint}</p>}
           {v.primary && (
             <Button data-aksi-utama className="w-full sm:w-auto" loading={pending === v.primary} loadingText={teksAksi[v.primary].proses}
               disabled={!!pending} onClick={() => onAksi(v.primary!)}>

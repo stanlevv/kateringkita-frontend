@@ -13,7 +13,6 @@ export type MerchantProfile = {
   close_time: string;
   hold_minutes: number;
   daily_revenue_target: number;
-  qris_image_url: string | null;
   wa_template: string | null;
   pickup_point_ids: number[];
   dine_in_enabled: boolean; // F21 pesan dari meja

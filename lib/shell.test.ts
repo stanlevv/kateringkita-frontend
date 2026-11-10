@@ -15,9 +15,14 @@ const SIANG = Date.parse("2026-10-31T04:42:00Z");
 
 describe("SH-N1 badge perlu tindakan", () => {
   it("menghitung holding dan confirmed saja", () => {
-    const o = ["holding", "confirmed", "cooking", "ready", "completed", "holding"].map((status) => ({ status }));
+    const o = ["holding", "confirmed", "cooking", "ready", "completed", "holding"].map((status) => ({ status, payment_method: "cod", payment_status: "unpaid" }));
     expect(perluTindakan(o as never)).toBe(3);
     expect(perluTindakan([])).toBe(0);
+  });
+  it("F26: VA/online belum lunas tidak dihitung (diterima otomatis setelah lunas)", () => {
+    const o = (payment_method: string, payment_status: string) => ({ status: "holding", payment_method, payment_status });
+    expect(perluTindakan([o("va", "unpaid"), o("online", "pending")] as never)).toBe(0);
+    expect(perluTindakan([o("online", "paid"), o("cod", "unpaid")] as never)).toBe(2);
   });
 });
 

@@ -1,7 +1,7 @@
 // Data penjual dari backend ditiru dengan fixture.
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
-  merchantFetch: async (path: string) => ({ ok: true, status: 200, data: path.startsWith("/orders") ? (await import("@/lib/fixtures/orders")).orders() : path === "/tables" ? [] : (await import("@/lib/fixtures/profile")).profile(), meta: { total: 16 } }),
+  merchantFetch: async (path: string) => ({ ok: true, status: 200, data: path.startsWith("/orders") ? (await import("@/lib/fixtures/orders")).orders() : path === "/tables" ? [] : path === "/payouts" ? (await import("@/lib/fixtures/pencairan")).pencairanSaya() : (await import("@/lib/fixtures/profile")).profile(), meta: { total: 16 } }),
   apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }),
 }));
 import { render, screen } from "@testing-library/react";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cekField, cekProfil, changePasswordSchema, menuFormSchema } from "./schemas";
 
-const profil = { business_name: "Dapur", description: "", logo_url: null, address: "Jl. A", wa_number: "081234567890", service_mode: "both", open_time: "07:00", close_time: "16:00", hold_minutes: 5, daily_revenue_target: 0, qris_image_url: null, pickup_point_ids: [1] };
+const profil = { business_name: "Dapur", description: "", logo_url: null, address: "Jl. A", wa_number: "081234567890", service_mode: "both", open_time: "07:00", close_time: "16:00", hold_minutes: 5, daily_revenue_target: 0, pickup_point_ids: [1] };
 describe("cekProfil (M-10)", () => {
   it("valid lolos", () => expect(cekProfil(profil)).toEqual({}));
   it("PG-E1 tutup <= buka", () => {

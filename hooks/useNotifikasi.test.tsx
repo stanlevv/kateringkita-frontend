@@ -35,10 +35,23 @@ describe("D9 / review 8: hanya holding baru hari ini (WIB) yang dianggap pesanan
 });
 
 describe("review A/C: pesanan dibayar & jam server", () => {
-  it("kode baru berstatus confirmed (dibayar QRIS saat tab tersembunyi) dibuat hari ini -> disorot", () => {
+  it("kode baru berstatus confirmed (lunas saat tab tersembunyi) dibuat hari ini -> disorot", () => {
     const { result, rerender } = pasang();
     rerender({ orders: [...awal, o("LUNAS", { status: "confirmed", created_at: new Date(T0).toISOString() })] });
     expect(result.current.baru).toEqual(["LUNAS"]);
+  });
+  it("F26: VA/online belum lunas tidak disorot; disorot saat lunas & diterima otomatis", () => {
+    const { result, rerender } = pasang();
+    const tunggu = o("VA", { payment_method: "va", payment_status: "unpaid", created_at: new Date(T0).toISOString() });
+    rerender({ orders: [...awal, tunggu] });
+    expect(result.current.baru).toEqual([]);
+    rerender({ orders: [...awal, { ...tunggu, status: "confirmed", payment_status: "paid" }] });
+    expect(result.current.baru).toEqual(["VA"]);
+  });
+  it("pesanan yang sudah perlu tindakan tidak disorot ulang saat berpindah status", () => {
+    const { result, rerender } = pasang();
+    rerender({ orders: [{ ...awal[0], status: "confirmed" }] });
+    expect(result.current.baru).toEqual([]);
   });
   it("hari ini dari jam server (jam perangkat + selisih), bukan jam perangkat", () => {
     const SERVER = Date.parse("2026-11-01T16:59:00.000Z"); // 23.59 WIB

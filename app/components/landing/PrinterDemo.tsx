@@ -6,9 +6,9 @@ import s from "./landing.module.css";
 // Data ilustrasi untuk animasi halaman pembuka, bukan data dari backend.
 const ORDERS = [
   { code: "KK-4K0T", jam: "07.42", nama: "Rani", qty: 2, ambil: "Gedung C, 12.10", bayar: "Tunai" },
-  { code: "KK-9PLA", jam: "07.44", nama: "Dimas", qty: 3, ambil: "Perpustakaan, 12.30", bayar: "QRIS" },
+  { code: "KK-9PLA", jam: "07.44", nama: "Dimas", qty: 3, ambil: "Perpustakaan, 12.30", bayar: "Bayar online" },
   { code: "KK-2HXR", jam: "07.47", nama: "Ayu", qty: 1, ambil: "Gedung C, 12.10", bayar: "Tunai" },
-  { code: "KK-7TQE", jam: "07.51", nama: "Fajar", qty: 4, ambil: "Masjid Kampus, 11.45", bayar: "QRIS" },
+  { code: "KK-7TQE", jam: "07.51", nama: "Fajar", qty: 4, ambil: "Masjid Kampus, 11.45", bayar: "VA" },
 ];
 const ITEM = "Nasi Ayam Bakar", HARGA = 15000, PORSI = 40;
 const JEDA = 1400, CETAK = 1600;

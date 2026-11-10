@@ -14,7 +14,6 @@ export const profile = (): MerchantProfile => ({
   close_time: "21:00",
   hold_minutes: 5,
   daily_revenue_target: 500_000,
-  qris_image_url: null,
   wa_template: "Halo {nama}, pesanan {kode} sudah kami konfirmasi.",
   pickup_point_ids: [1, 2, 3],
   dine_in_enabled: false,

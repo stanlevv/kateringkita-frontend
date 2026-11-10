@@ -21,15 +21,17 @@ import { cekProfil } from "@/lib/schemas";
 import type { MerchantProfile } from "@/types/profile";
 import type { PickupPoint } from "@/types/meta";
 import type { Meja } from "@/types/meja";
+import type { PencairanSaya } from "@/types/pencairan";
 import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
 import { PesanMeja } from "./PesanMeja";
 import { PickupPointPicker } from "./PickupPointPicker";
+import { RekeningPencairan } from "./RekeningPencairan";
 
 const BAGIAN = [
   { id: "profil", judul: "Profil toko" },
   { id: "operasional", judul: "Operasional" },
   { id: "titik-temu", judul: "Titik temu" },
-  { id: "pembayaran", judul: "Pembayaran" },
+  { id: "pembayaran", judul: "Pembayaran & pencairan" },
   { id: "meja", judul: "Pesan dari meja" },
   { id: "akun", judul: "Akun" },
 ] as const;
@@ -40,7 +42,7 @@ const MODE = [
 ] as const;
 const LABEL: Record<string, string> = {
   business_name: "Nama usaha", description: "Deskripsi", address: "Alamat", wa_number: "Nomor WA toko", open_time: "Jam buka", close_time: "Jam tutup",
-  hold_minutes: "Durasi tahan pesanan", logo_url: "Logo toko", qris_image_url: "QRIS", daily_revenue_target: "Target omzet harian", pickup_point_ids: "Titik temu",
+  hold_minutes: "Durasi tahan pesanan", logo_url: "Logo toko", daily_revenue_target: "Target omzet harian", pickup_point_ids: "Titik temu",
 };
 const MB = 1024 * 1024;
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
@@ -48,13 +50,13 @@ const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 type Isian = {
   business_name: string; description: string; address: string; wa_number: string; service_mode: MerchantProfile["service_mode"];
   open_time: string; close_time: string; hold_minutes: string; daily_revenue_target: string; pickup_point_ids: number[];
-  logo_url: string | null; qris_image_url: string | null;
+  logo_url: string | null;
 };
 
 const awalDari = (p: MerchantProfile): Isian => ({
   business_name: p.business_name, description: p.description ?? "", address: p.address, wa_number: p.wa_number, service_mode: p.service_mode,
   open_time: p.open_time, close_time: p.close_time, hold_minutes: String(p.hold_minutes), daily_revenue_target: String(p.daily_revenue_target),
-  pickup_point_ids: p.pickup_point_ids, logo_url: p.logo_url, qris_image_url: p.qris_image_url,
+  pickup_point_ids: p.pickup_point_ids, logo_url: p.logo_url,
 });
 const kunci = (i: Isian) => JSON.stringify({ ...i, pickup_point_ids: [...i.pickup_point_ids].sort((a, b) => a - b) });
 
@@ -67,8 +69,8 @@ function Bagian({ id, judul, sorot, children }: { id: string; judul: string; sor
   );
 }
 
-/** Logo / QRIS: pratinjau, unggah langsung ke penyimpanan (FE-08), hapus (PG-E3). */
-function Gambar({ id, nama, jenis, url, error, onChange, onBusy }: { id: string; nama: "Logo toko" | "QRIS"; jenis: "logo" | "qris"; url: string | null; error?: string; onChange: (u: string | null) => void; onBusy: (b: boolean) => void }) {
+/** Logo: pratinjau, unggah langsung ke penyimpanan (FE-08), hapus (PG-E3). F26: QRIS statis toko dihapus (bayar online lewat Midtrans). */
+function Gambar({ id, url, error, onChange, onBusy }: { id: string; url: string | null; error?: string; onChange: (u: string | null) => void; onBusy: (b: boolean) => void }) {
   const [galat, setGalat] = useState<string | null>(null);
   const [sibuk, setSibuk] = useState(false);
   const [selesai, setSelesai] = useState(false);
@@ -100,7 +102,7 @@ function Gambar({ id, nama, jenis, url, error, onChange, onBusy }: { id: string;
     berjalan.current = true;
     setSibuk(true);
     onBusy(true);
-    const r = await unggahFoto(f, jenis);
+    const r = await unggahFoto(f, "logo");
     if (id !== unggahKe.current) return;
     berjalan.current = false;
     setSibuk(false);
@@ -111,18 +113,18 @@ function Gambar({ id, nama, jenis, url, error, onChange, onBusy }: { id: string;
   }
   const pesan = galat ?? error;
   return (
-    <div role="group" aria-label={nama} className="flex flex-col gap-3">
+    <div role="group" aria-label="Logo toko" className="flex flex-col gap-3">
       {url ? (
         <div className="relative aspect-square w-40 overflow-hidden rounded-md bg-subtle">
-          <Image src={url} alt={nama} fill unoptimized sizes="160px" className="object-contain" />
+          <Image src={url} alt="Logo toko" fill unoptimized sizes="160px" className="object-contain" />
         </div>
       ) : (
         <p className="text-sm text-ink-muted">Belum ada gambar.</p>
       )}
       {sibuk && <p role="status" className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />Mengunggah…</p>}
-      {selesai && !sibuk && <p role="status" className="text-sm text-success">{nama === "QRIS" ? "QRIS" : "Logo"} terunggah.</p>}
+      {selesai && !sibuk && <p role="status" className="text-sm text-success">Logo terunggah.</p>}
       {pesan && <p role="alert" className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{pesan}</p>}
-      <div ref={wadah}><FileDrop id={id} maxBytes={5 * MB} onFile={(f) => void pilih(f)} onError={setGalat} label={url ? `Ganti ${nama === "QRIS" ? "QRIS" : "logo"}` : `Pilih ${nama === "QRIS" ? "QRIS" : "logo"}`} /></div>
+      <div ref={wadah}><FileDrop id={id} maxBytes={5 * MB} onFile={(f) => void pilih(f)} onError={setGalat} label={url ? "Ganti logo" : "Pilih logo"} /></div>
       {url && <div><Button variant="ghost" onClick={() => { batalkan(); pindahFokus.current = true; setGalat(null); setSelesai(false); onChange(null); }}><X aria-hidden className="size-4" />Hapus gambar</Button></div>}
     </div>
   );
@@ -131,10 +133,11 @@ function Gambar({ id, nama, jenis, url, error, onChange, onBusy }: { id: string;
 type Props = {
   profile: MerchantProfile; pickupPoints: PickupPoint[] | null; user: { full_name: string; phone: string; email: string }; lengkapi?: string;
   tables?: Meja[] | null; // F21; undefined = belum dimuat (pratinjau)
+  pencairan?: PencairanSaya | null; // F26; null = gagal dimuat
 };
 
 /** M-10, M-03, PG-*: pengaturan toko. */
-export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [] }: Props) {
+export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [], pencairan = null }: Props) {
   const [awal, setAwal] = useState(() => awalDari(profile));
   const [v, setV] = useState<Isian>(awal);
   const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
@@ -167,7 +170,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
   const input = {
     business_name: v.business_name, description: v.description, logo_url: v.logo_url, address: v.address, wa_number: v.wa_number, service_mode: v.service_mode,
     open_time: v.open_time, close_time: v.close_time, hold_minutes: num(v.hold_minutes), daily_revenue_target: num(v.daily_revenue_target),
-    qris_image_url: v.qris_image_url, pickup_point_ids: v.pickup_point_ids,
+    pickup_point_ids: v.pickup_point_ids,
   };
   const semua = cekProfil(input);
   const galatSemua = dicoba ? { ...server, ...semua } : semua;
@@ -240,7 +243,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
               </Field>
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium text-ink">Logo toko</p>
-                <Gambar key={`logo-${resetKe}`} id="pg-logo_url" nama="Logo toko" jenis="logo" url={v.logo_url} error={galat("logo_url")} onChange={(u) => set("logo_url", u)} onBusy={(b) => setMengunggah((n) => n + (b ? 1 : -1))} />
+                <Gambar key={`logo-${resetKe}`} id="pg-logo_url" url={v.logo_url} error={galat("logo_url")} onChange={(u) => set("logo_url", u)} onBusy={(b) => setMengunggah((n) => n + (b ? 1 : -1))} />
               </div>
               <Field label="Alamat" id="pg-address" required error={galat("address")}>
                 <Input value={v.address} maxLength={255} onChange={(e) => set("address", e.target.value)} onBlur={blur("address")} />
@@ -269,7 +272,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
                 </Field>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Durasi tahan pesanan (menit)" id="pg-hold_minutes" required help="Pesanan ditahan selama ini menunggu konfirmasi. 1 sampai 30 menit." error={galat("hold_minutes")}>
+                <Field label="Durasi tahan pesanan (menit)" id="pg-hold_minutes" required help="Batas waktu pesanan baru menunggu konfirmasi Anda (tunai) atau pembayaran pembeli (VA, bayar online). Lewat batas, pesanan batal otomatis dan stok kembali. 1 sampai 30 menit." error={galat("hold_minutes")}>
                   <Input type="number" inputMode="numeric" min={1} max={30} step={1} value={v.hold_minutes} onChange={(e) => set("hold_minutes", e.target.value)} onBlur={blur("hold_minutes")} />
                 </Field>
                 <Field label="Target omzet harian (Rp)" id="pg-daily_revenue_target" help="Isi 0 bila tidak memakai target." error={galat("daily_revenue_target")}>
@@ -282,17 +285,13 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
               <p className="text-ink-muted">Pilih tempat pembeli bisa mengambil pesanan. Minimal satu.</p>
               <PickupPointPicker points={pickupPoints} value={v.pickup_point_ids} onChange={(ids) => set("pickup_point_ids", ids)} onBlur={blur("pickup_point_ids")} error={pickupPoints ? galat("pickup_point_ids") : undefined} />
             </Bagian>
-
-            <Bagian id="pembayaran" judul="Pembayaran" sorot={sorot === "pembayaran"}>
-              <div className="flex flex-col gap-1.5">
-                <p className="text-sm font-medium text-ink">QRIS statis (opsional)</p>
-                <p className="text-sm text-ink-muted">Gambar kode QRIS toko yang ditampilkan ke pembeli.</p>
-                <Gambar key={`qris-${resetKe}`} id="pg-qris_image_url" nama="QRIS" jenis="qris" url={v.qris_image_url} error={galat("qris_image_url")} onChange={(u) => set("qris_image_url", u)} onBusy={(b) => setMengunggah((n) => n + (b ? 1 : -1))} />
-              </div>
-            </Bagian>
           </form>
 
           {/* di luar form utama: aksinya tersimpan langsung, tidak ikut "Simpan perubahan" */}
+          <Bagian id="pembayaran" judul="Pembayaran & pencairan" sorot={sorot === "pembayaran"}>
+            <RekeningPencairan data={pencairan} />
+          </Bagian>
+
           <Bagian id="meja" judul="Pesan dari meja" sorot={sorot === "meja"}>
             <PesanMeja aktifAwal={profile.dine_in_enabled} mejaAwal={tables} />
           </Bagian>

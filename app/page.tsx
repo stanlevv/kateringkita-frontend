@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Calculator, ChartColumn, Check, ChevronDown, Gauge, ListChecks, MapPin, MessageCircle, type LucideIcon } from "lucide-react";
+import { ArrowRight, Calculator, ChartColumn, Check, ChevronDown, Gauge, ListChecks, MapPin, MessageCircle, QrCode, Sparkles, Wallet, type LucideIcon } from "lucide-react";
 import { getSession } from "@/services/authService";
 import { AlurPesanan } from "@/app/components/landing/AlurPesanan";
 import { PrinterDemo } from "@/app/components/landing/PrinterDemo";
@@ -23,7 +23,7 @@ const SOROTAN = ["Kuota porsi harian", "Antrean pesanan langsung", "Laporan & ek
 const FAKTA = [
   { nilai: "5 menit", ket: "porsi ditahan untuk pembeli saat checkout" },
   { nilai: "5 detik", ket: "antrean pesanan diperbarui tanpa muat ulang" },
-  { nilai: "QRIS · VA · Tunai", ket: "metode bayar tercatat di setiap pesanan" },
+  { nilai: "Tunai · VA · Online", ket: "bayar non-tunai lewat Midtrans, pesanan diterima otomatis begitu lunas" },
 ];
 
 const FITUR: { icon: LucideIcon; judul: string; isi: string }[] = [
@@ -33,21 +33,25 @@ const FITUR: { icon: LucideIcon; judul: string; isi: string }[] = [
   { icon: MessageCircle, judul: "Template pesan WhatsApp", isi: "Kabari pembeli dengan pesan yang sudah berisi kode, menu, dan jam ambil. Tidak perlu mengetik ulang." },
   { icon: ChartColumn, judul: "Laporan penjualan", isi: "Pantau omzet, pesanan selesai, menu terlaris, dan jam tersibuk. Unduh CSV untuk pembukuan." },
   { icon: Calculator, judul: "Kalkulator HPP & promo", isi: "Hitung harga pokok per porsi sebelum menentukan harga jual, lalu buat kode promo toko saat perlu." },
+  { icon: QrCode, judul: "Pesan dari meja", isi: "Cetak QR untuk tiap meja. Pelanggan memilih menu dan bayar online tanpa membuat akun, lalu pesanannya masuk ke antrean yang sama." },
+  { icon: Wallet, judul: "Bayar online, dana dicairkan", isi: "Pembeli bayar lewat Virtual Account, QRIS, atau e-wallet melalui Midtrans. Bagian toko ditransfer ke rekening yang Anda daftarkan." },
+  { icon: Sparkles, judul: "Asisten AI", isi: "Tanyakan strategi harga dari Kalkulator HPP. Pembeli juga dibantu AI memilih menu yang sedang tersedia sesuai budget." },
 ];
 
 const LANGKAH = [
   { judul: "Daftar sebagai penjual", isi: "Isi data diri dan usaha Anda. Admin memeriksa data sebelum toko ditampilkan ke pembeli." },
   { judul: "Pasang menu dan porsi", isi: "Tambahkan foto, harga, dan kuota porsi untuk hari yang Anda pilih." },
-  { judul: "Terima pesanan pertama", isi: "Pesanan dari aplikasi mahasiswa masuk ke antrean. Proses, lalu kabari pembeli saat siap diambil." },
+  { judul: "Terima pesanan pertama", isi: "Pesanan dari aplikasi mahasiswa atau QR di meja masuk ke antrean. Proses, lalu kabari pembeli saat siap." },
 ];
 
 // Satu sumber untuk teks yang tampil dan JSON-LD FAQPage (Google mensyaratkan keduanya sama).
 const FAQ = [
-  { q: "Apa itu KateringKita?", a: "KateringKita adalah layanan pre-order katering untuk lingkungan kampus. Mahasiswa memesan lewat aplikasi KateringKita di ponsel, sedangkan penjual mengelola menu, kuota porsi, dan pesanan dari dashboard web ini." },
+  { q: "Apa itu KateringKita?", a: "KateringKita adalah layanan pre-order katering untuk lingkungan kampus. Mahasiswa memesan lewat aplikasi KateringKita di ponsel atau memindai QR di meja toko, sedangkan penjual mengelola menu, kuota porsi, dan pesanan dari dashboard web ini." },
   { q: "Siapa yang bisa mendaftar sebagai penjual?", a: "Usaha katering atau dapur rumahan yang melayani mahasiswa di sekitar kampus. Setelah mendaftar, admin memeriksa data usaha Anda sebelum toko tampil di aplikasi." },
   { q: "Bagaimana kuota porsi mencegah pesanan berlebih?", a: "Setiap menu punya kuota porsi harian. Saat pembeli checkout, porsinya ditahan selama 5 menit sehingga pembeli lain melihat sisa porsi yang sebenarnya. Begitu kuota habis, menu tidak bisa dipesan lagi." },
-  { q: "Metode pembayaran apa yang tercatat?", a: "Setiap pesanan mencatat metode bayarnya: QRIS, Virtual Account, atau tunai saat pesanan diambil. Metode ini terlihat di antrean dan rincian pesanan." },
-  { q: "Apakah perlu memasang aplikasi khusus?", a: "Tidak. Dashboard penjual berjalan di browser, baik di laptop maupun ponsel. Aplikasi ponsel hanya dibutuhkan oleh pembeli." },
+  { q: "Metode pembayaran apa saja yang bisa dipakai?", a: "Tunai saat pesanan diambil, Virtual Account, atau bayar online (QRIS dan e-wallet) lewat Midtrans. Pembayaran non-tunai dikonfirmasi otomatis, jadi pesanan langsung masuk antrean begitu lunas." },
+  { q: "Bagaimana dana pembayaran non-tunai sampai ke penjual?", a: "Pembayaran Virtual Account dan online masuk ke KateringKita lewat Midtrans. Setelah pesanan selesai, admin mentransfer bagian toko, yaitu subtotal dikurangi promo toko, ke rekening yang Anda isi di Pengaturan. Saldo dan riwayat pencairan terlihat di halaman yang sama." },
+  { q: "Apakah perlu memasang aplikasi khusus?", a: "Tidak. Dashboard penjual berjalan di browser, baik di laptop maupun ponsel. Aplikasi ponsel hanya dibutuhkan pembeli pre-order; pesanan dari meja cukup lewat browser." },
   { q: "Apakah data penjualan bisa diunduh?", a: "Bisa. Halaman laporan menampilkan omzet, pesanan selesai, menu terlaris, dan sebaran pesanan per jam, lalu dapat diunduh sebagai berkas CSV yang rapi dibuka di Excel." },
 ];
 

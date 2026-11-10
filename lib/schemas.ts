@@ -107,7 +107,6 @@ const profilForm = {
   close_time: jam,
   hold_minutes: angka("Durasi tahan pesanan", 1, 30),
   daily_revenue_target: angka("Target omzet", 0, 1_000_000_000),
-  qris_image_url: z.string().nullable(),
   pickup_point_ids: z.array(z.number().int()).min(1, "Pilih minimal satu titik temu."),
 };
 const profilPenuh = z.object(profilForm);

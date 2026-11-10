@@ -35,7 +35,7 @@ const orderSchema = z
   .object({
     code: z.string().regex(KODE),
     status: z.enum(["holding", "confirmed", "cooking", "ready", "completed", "cancelled", "expired"]),
-    payment_method: z.enum(["cod", "qris", "va"]),
+    payment_method: z.enum(["cod", "va", "online"]),
     payment_status: z.enum(["unpaid", "pending", "paid", "failed", "refunded"]),
     items: z
       .array(z.object({ qty: z.number().int().positive(), unit_price: rupiah, line_total: rupiah }))

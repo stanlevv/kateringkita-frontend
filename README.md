@@ -85,7 +85,7 @@
 | `/pesanan` & `/pesanan/[code]` | Antrean dan rincian lengkap pesanan pelanggan | Merchant |
 | `/menu`, `/menu/baru`, `/menu/[id]` | Manajemen katalog menu, harga, foto, dan kuota harian | Merchant |
 | `/laporan` | Dasbor keuangan, tren transaksi, dan ekspor CSV | Merchant |
-| `/pengaturan` | Profil toko, jam operasional, titik jemput, dan pesan dari meja (sakelar, daftar meja, QR) | Merchant |
+| `/pengaturan` | Profil toko, jam operasional, titik jemput, rekening & riwayat pencairan dana, dan pesan dari meja (sakelar, daftar meja, QR) | Merchant |
 | `/cetak-qr` | Lembar QR semua meja aktif siap cetak (A4) | Merchant |
 | `/template-wa` | Kustomisasi templat pesan WhatsApp otomatis | Merchant |
 | `/copilot` | Kalkulator HPP (*Harga Pokok Penjualan*), saran harga, dan asisten AI toko (Gemini) | Merchant |
@@ -93,6 +93,7 @@
 | `/admin/*` | Verifikasi merchant, master data, promo & biaya, kontak CS, dan log sistem | Admin |
 | `/admin/moderasi` | Sembunyikan ulasan, turunkan menu yang melanggar | Admin |
 | `/admin/keuangan` | Rekap omzet, diskon, biaya layanan per toko + ekspor CSV | Admin |
+| `/admin/pencairan` | Saldo non-tunai per toko, catat pencairan ke rekening toko, daftar dana yang harus dikembalikan, riwayat (F26) | Admin super |
 | `/admin/pengumuman` | Kirim pengumuman ke notifikasi aplikasi | Admin |
 | `/admin/ai` | Penyedia AI gratis untuk Asisten AI: urutan fallback, key (hanya bisa ditulis), uji koneksi, status | Admin |
 | `/meja/[token]` | PWA pesan dari meja (dibuka QR): menu, keranjang, pesan & bayar Midtrans Snap tanpa akun | Publik |

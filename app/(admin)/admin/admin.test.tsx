@@ -43,6 +43,7 @@ describe("shell admin", () => {
       ["Data master", "/admin/data-master"],
       ["Promo & biaya", "/admin/promo"],
       ["Keuangan", "/admin/keuangan"],
+      ["Pencairan", "/admin/pencairan"],
       ["Pengumuman", "/admin/pengumuman"],
       ["AI", "/admin/ai"],
       ["Kelola admin", "/admin/admin"],
@@ -62,7 +63,7 @@ describe("shell admin", () => {
     const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
     const href = within(nav).getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(href).toContain("/admin/moderasi");
-    for (const h of ["/admin/keuangan", "/admin/ai", "/admin/admin", "/admin/server"]) expect(href).not.toContain(h);
+    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"]) expect(href).not.toContain(h);
   });
 
   it("sandi sementara: isi halaman diganti formulir ganti sandi", async () => {

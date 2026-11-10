@@ -151,7 +151,7 @@ export function OrderQueue({ orders, menus, sekarang, baru, onOptimis, onFokusKu
         )}
       </div>
 
-      <RejectDialog code={tolak} onClose={() => setTolak(null)} onConfirm={konfirmasiTolak} />
+      <RejectDialog order={orders.find((o) => o.code === tolak) ?? null} onClose={() => setTolak(null)} onConfirm={konfirmasiTolak} />
       <OrderSlipDrawer order={slipOrder} onClose={() => setSlip(null)} />
       <StokDialog code={stok?.code ?? null} onClose={() => setStok(null)} onTolak={() => { const c = stok!.code; setStok(null); setTolak(c); }} onTambah={tambahKuotaStok} />
     </section>

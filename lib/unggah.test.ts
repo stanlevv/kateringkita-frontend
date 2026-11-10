@@ -38,7 +38,7 @@ describe("unggahFoto (M-07, M-10, FE-08)", () => {
   });
   it("requestUpload gagal -> galatnya diteruskan, PUT tidak dipanggil", async () => {
     requestUpload.mockResolvedValue({ error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
-    expect(await unggahFoto(berkas, "qris")).toEqual({ error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
+    expect(await unggahFoto(berkas, "logo")).toEqual({ error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
     expect(fetchMock).not.toHaveBeenCalled();
   });
   it("requestUpload melempar -> galat jaringan, tidak melempar", async () => {

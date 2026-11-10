@@ -10,7 +10,7 @@ const merchantFetch = vi.fn();
 vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
 import { saveProfile } from "./profile";
 
-const ok = { business_name: "Dapur Baru", logo_url: null, qris_image_url: null, description: "", address: "Jl. A", wa_number: "081234567890", service_mode: "daily", open_time: "07:00", close_time: "16:00", hold_minutes: 5, daily_revenue_target: 0, pickup_point_ids: [1] };
+const ok = { business_name: "Dapur Baru", logo_url: null, description: "", address: "Jl. A", wa_number: "081234567890", service_mode: "daily", open_time: "07:00", close_time: "16:00", hold_minutes: 5, daily_revenue_target: 0, pickup_point_ids: [1] };
 const kirim = () => JSON.parse(merchantFetch.mock.calls[0][1].body);
 beforeEach(() => {
   merchantFetch.mockReset();
@@ -19,9 +19,10 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllEnvs(); jar.value = undefined; requireMerchant.mockClear(); });
 
 describe("saveProfile (M-10, M-11)", () => {
-  it("meneruskan logo_url / qris_image_url ke backend (F04 D15)", async () => {
-    await saveProfile({ ...ok, logo_url: "https://cdn.test/l.png", qris_image_url: null });
-    expect(kirim()).toMatchObject({ logo_url: "https://cdn.test/l.png", qris_image_url: null });
+  it("meneruskan logo_url ke backend (F04 D15); qris_image_url tidak dikirim lagi (F26)", async () => {
+    await saveProfile({ ...ok, logo_url: "https://cdn.test/l.png", qris_image_url: "https://cdn.test/q.png" });
+    expect(kirim()).toMatchObject({ logo_url: "https://cdn.test/l.png" });
+    expect("qris_image_url" in kirim()).toBe(false);
   });
   it("galat backend fields.logo_url diteruskan", async () => {
     merchantFetch.mockResolvedValue({ ok: false, status: 400, error: { code: "VALIDATION_ERROR", message: "x", fields: { logo_url: ["Foto tidak valid. Unggah ulang foto."] } } });
