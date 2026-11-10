@@ -25,7 +25,7 @@ function Level({ l }: { l: LogServer["level"] }) {
 
 // F23: kondisi server, masalah per jam, dan log error 5xx & request lambat (30 hari)
 export default async function ServerPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  await requireAdmin();
+  await requireAdmin("super");
   const sp = await searchParams;
   const q = new URLSearchParams();
   if (sp.level === "error" || sp.level === "slow") q.set("level", sp.level);

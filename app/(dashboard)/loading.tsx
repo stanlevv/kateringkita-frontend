@@ -1,16 +1,13 @@
-import { Skeleton } from "@/app/components/ui/Skeleton";
+import { RangkaHalaman } from "@/app/components/shell/RangkaHalaman";
+import { SkeletonKartu } from "@/app/components/ui/Skeleton";
 
-// SY-3: kerangka umum segmen dashboard.
+// SY-3: cadangan netral untuk halaman yang belum punya loading.tsx sendiri (mis. pratinjau).
 export default function Loading() {
   return (
-    <div role="status" aria-label="Memuat halaman" className="flex flex-col gap-6">
-      <Skeleton className="h-9 w-64" />
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+    <RangkaHalaman>
+      <div className="flex flex-col gap-4">
+        {[0, 1, 2].map((i) => <SkeletonKartu key={i} />)}
       </div>
-      <div className="flex flex-col gap-3">
-        {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16" />)}
-      </div>
-    </div>
+    </RangkaHalaman>
   );
 }

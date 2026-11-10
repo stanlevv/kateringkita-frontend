@@ -10,12 +10,13 @@ import type { Promo } from "@/types/promo";
 
 // A-02…A-04 — Promo platform, biaya layanan, dan kontak CS.
 export default async function PromoPlatformPage() {
-  await requireAdmin();
+  const { user } = await requireAdmin();
+  const bolehSetelan = user.admin_level === "super"; // Fase 1: ubah biaya & kontak CS khusus super
   const [promos, biaya] = await Promise.all([adminFetch<Promo[]>("/promos"), adminFetch<{ service_fee: number; cs_whatsapp: string | null }>("/settings")]);
   return (
     <PageHeader title="Promo & biaya" description="Promo yang berlaku di semua toko dan biaya layanan per pesanan.">
       <div className="flex flex-col gap-8">
-        {biaya.ok && biaya.data ? (
+        {!bolehSetelan ? null : biaya.ok && biaya.data ? (
           <div className="grid gap-4 lg:grid-cols-2">
             <ServiceFeeForm nilai={biaya.data.service_fee} />
             <CsContactForm nilai={biaya.data.cs_whatsapp ?? ""} />

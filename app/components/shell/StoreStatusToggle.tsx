@@ -32,7 +32,7 @@ export function useUbahStatusDapur() {
   return { ubah, pending };
 }
 
-/** SH-N3 / SH-E1 / SH-A1. `rail`: di bawah 1280 px hanya saklar. Status dibaca dari StoreStatusProvider. */
+/** SH-N3 / SH-E1 / SH-A1. `rail`: hanya saklar kecuali sidebar sedang lebar (varian sb-lebar). Status dibaca dari StoreStatusProvider. */
 export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
   const { isOpen, buka, tutup } = useStoreStatus();
   const { ubah, pending } = useUbahStatusDapur();
@@ -46,9 +46,9 @@ export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
   );
 
   return (
-    <div className={cx("flex flex-col gap-1", rail && "items-center xl:items-stretch")}>
+    <div className={cx("flex flex-col gap-1", rail && "items-center sb-lebar:items-stretch")}>
       <div className="flex items-center justify-between gap-2">
-        <div className={cx(rail && "hidden xl:block")}>
+        <div className={cx(rail && "hidden sb-lebar:block")}>
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Status dapur</p>
           <p className={cx("text-sm font-semibold", isOpen ? "text-success" : "text-ink-muted")}>{isOpen ? "Buka" : "Tutup"}</p>
         </div>
@@ -59,7 +59,7 @@ export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
           onChange={(v) => (v ? ubah(true) : setKonfirmasi(true))}
         />
       </div>
-      {luarJam && <p className={cx("text-xs text-warning", rail && "hidden xl:block")}>Di luar jam buka ({labelJamBuka(buka, tutup)})</p>}
+      {luarJam && <p className={cx("text-xs text-warning", rail && "hidden sb-lebar:block")}>Di luar jam buka ({labelJamBuka(buka, tutup)})</p>}
       <ConfirmDialog
         open={konfirmasi}
         onClose={() => setKonfirmasi(false)}

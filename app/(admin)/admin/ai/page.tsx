@@ -7,7 +7,7 @@ import { PenyediaAiPanel } from "./components/PenyediaAiPanel";
 
 // F22 penyedia AI (gratis) dengan fallback otomatis + F25 pemakaian (token, panggilan, gagal). ?hari=7|30
 export default async function AdminAiPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  await requireAdmin();
+  await requireAdmin("super");
   const hari = (await searchParams).hari === "30" ? 30 : 7;
   const [r, pakai] = await Promise.all([getPenyediaAi(), getPemakaianAi(hari)]);
   return (

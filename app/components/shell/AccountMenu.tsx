@@ -53,15 +53,11 @@ export function AccountMenu({ nama, toko, admin = false }: { nama: string; toko:
       </button>
       {open && (
         <div id={panelId} className="absolute right-0 top-full z-30 mt-1 w-56 rounded-md border border-line bg-surface p-1 shadow-lg">
-          {!admin && (
-            <>
-              <Link href="/pengaturan#akun" onClick={() => setOpen(false)} className={item}>
-                <UserCog aria-hidden className="size-4" />
-                Pengaturan akun
-              </Link>
-              <hr className="my-1 border-line" />
-            </>
-          )}
+          <Link href={admin ? "/admin/akun" : "/pengaturan#akun"} onClick={() => setOpen(false)} className={item}>
+            <UserCog aria-hidden className="size-4" />
+            Pengaturan akun
+          </Link>
+          <hr className="my-1 border-line" />
           <form action={logout}>
             <button type="submit" className={cx(item, "text-danger")}>
               <LogOut aria-hidden className="size-4" />

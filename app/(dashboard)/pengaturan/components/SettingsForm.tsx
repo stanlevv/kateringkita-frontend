@@ -21,7 +21,7 @@ import { cekProfil } from "@/lib/schemas";
 import type { MerchantProfile } from "@/types/profile";
 import type { PickupPoint } from "@/types/meta";
 import type { Meja } from "@/types/meja";
-import { ChangePasswordForm } from "./ChangePasswordForm";
+import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
 import { PesanMeja } from "./PesanMeja";
 import { PickupPointPicker } from "./PickupPointPicker";
 

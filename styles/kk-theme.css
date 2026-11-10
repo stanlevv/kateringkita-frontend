@@ -29,4 +29,11 @@
   --font-mono: var(--font-jetbrains);
 
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
+
+  /* Kerangka memuat (SY-3): kilau digeser dengan transform (tanpa reflow); kerangka baru tampil setelah 150 ms
+     supaya perpindahan halaman yang cepat tidak berkedip. */
+  --animate-kilau: kilau 1.6s ease-in-out infinite;
+  --animate-muncul: muncul 0.2s ease-out 0.15s both;
+  @keyframes kilau { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  @keyframes muncul { from { opacity: 0; } }
 }

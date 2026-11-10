@@ -1,12 +1,14 @@
-import { Skeleton } from "@/app/components/ui/Skeleton";
+import { RangkaHalaman } from "@/app/components/shell/RangkaHalaman";
+import { SkeletonDaftar, SkeletonFilter } from "@/app/components/ui/Skeleton";
 
-// PS-S1: kerangka judul, filter, dan baris.
+// PS-S1: filter (cari, tanggal, status) lalu tabel (≥ 1024 px) atau kartu.
 export default function Loading() {
   return (
-    <div role="status" aria-label="Memuat pesanan" className="flex flex-col gap-4">
-      <Skeleton className="mb-2 h-8 w-48" />
-      <Skeleton className="h-11 w-full" />
-      {[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
-    </div>
+    <RangkaHalaman judul="Pesanan">
+      <div className="flex flex-col gap-4">
+        <SkeletonFilter pilihan={["md:w-44", "md:w-48"]} />
+        <SkeletonDaftar kolom={6} />
+      </div>
+    </RangkaHalaman>
   );
 }

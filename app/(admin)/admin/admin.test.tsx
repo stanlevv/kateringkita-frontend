@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/app/actions/auth", () => ({ logout: vi.fn() }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 import AdminLayout from "./layout";
 import AdminPage from "./page";
 import LogPage from "./log/page";
@@ -24,7 +25,7 @@ const ringkasan = {
 };
 
 beforeEach(() => {
-  requireAdmin.mockReset().mockResolvedValue({ user: { full_name: "Dina" }, merchant: null });
+  requireAdmin.mockReset().mockResolvedValue({ user: { full_name: "Dina", admin_level: "super", must_change_password: false }, merchant: null });
   adminFetch.mockReset();
 });
 
@@ -44,6 +45,7 @@ describe("shell admin", () => {
       ["Keuangan", "/admin/keuangan"],
       ["Pengumuman", "/admin/pengumuman"],
       ["AI", "/admin/ai"],
+      ["Kelola admin", "/admin/admin"],
       ["Log", "/admin/log"],
       ["Server", "/admin/server"],
     ]);
@@ -52,6 +54,22 @@ describe("shell admin", () => {
     expect(screen.queryByRole("searchbox")).toBeNull();
     expect(screen.queryByText(/Pengaturan akun/)).toBeNull();
     expect(screen.getByText("isi")).toBeInTheDocument();
+  });
+
+  it("tingkat ops: menu khusus super (keuangan, AI, kelola admin, server) disembunyikan", async () => {
+    requireAdmin.mockResolvedValue({ user: { full_name: "Ops", admin_level: "ops", must_change_password: false }, merchant: null });
+    render(await AdminLayout({ children: <p>isi</p> }));
+    const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
+    const href = within(nav).getAllByRole("link").map((a) => a.getAttribute("href"));
+    expect(href).toContain("/admin/moderasi");
+    for (const h of ["/admin/keuangan", "/admin/ai", "/admin/admin", "/admin/server"]) expect(href).not.toContain(h);
+  });
+
+  it("sandi sementara: isi halaman diganti formulir ganti sandi", async () => {
+    requireAdmin.mockResolvedValue({ user: { full_name: "Baru", admin_level: "ops", must_change_password: true }, merchant: null });
+    render(await AdminLayout({ children: <p>isi</p> }));
+    expect(screen.queryByText("isi")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Ganti kata sandi sementara" })).toBeInTheDocument();
   });
 });
 

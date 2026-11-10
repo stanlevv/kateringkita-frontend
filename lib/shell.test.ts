@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { diLuarJamBuka, formatHariJam, inisial, labelJamBuka, perluTindakan } from "./shell";
+import { diLuarJamBuka, formatHariJam, inisial, labelJamBuka, modeSidebar, perluTindakan } from "./shell";
+
+describe("SH-N1 mode sidebar dari cookie", () => {
+  it("hanya 'ringkas' yang menciutkan; kosong/asing = lebar", () => {
+    expect(modeSidebar("ringkas")).toBe("ringkas");
+    expect(modeSidebar("lebar")).toBe("lebar");
+    expect(modeSidebar(undefined)).toBe("lebar");
+    expect(modeSidebar("<script>")).toBe("lebar");
+  });
+});
 
 // 2026-10-31 04:42Z = 11.42 WIB (Sabtu)
 const SIANG = Date.parse("2026-10-31T04:42:00Z");

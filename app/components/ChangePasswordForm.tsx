@@ -14,7 +14,8 @@ const KOSONG = { current_password: "", new_password: "", confirm: "" };
 const LABEL: Record<string, string> = { current_password: "Kata sandi lama", new_password: "Kata sandi baru", confirm: "Ulangi kata sandi baru" };
 
 /** PG-N2, PG-E2: formulir sendiri, terpisah dari simpan pengaturan toko. */
-export function ChangePasswordForm() {
+/** `onSelesai`: dipanggil setelah sandi diganti (admin dengan sandi sementara → muat ulang panel). */
+export function ChangePasswordForm({ onSelesai }: { onSelesai?: () => void } = {}) {
   const [v, setV] = useState(KOSONG);
   const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
   const [dicoba, setDicoba] = useState(false);
@@ -55,6 +56,7 @@ export function ChangePasswordForm() {
     setTersentuh(new Set());
     setDicoba(false);
     toast({ tone: "success", message: "Kata sandi diganti. Perangkat lain sudah dikeluarkan." });
+    onSelesai?.();
   }
 
   return (

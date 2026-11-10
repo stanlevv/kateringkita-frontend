@@ -14,11 +14,11 @@ export function LogoMark({ className }: { className?: string }) {
 
 export function Brand({ rail = false }: { rail?: boolean }) {
   return (
-    <div className={cx("flex items-center gap-2", rail && "justify-center xl:justify-start")}>
+    <div className={cx("flex items-center gap-2", rail && "justify-center sb-lebar:justify-start")}>
       <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-linear-to-br from-accent to-accent-light text-surface shadow-[0_6px_14px_-6px_rgb(255_107_53/.7)]">
         <LogoMark className="size-6" />
       </span>
-      <span className={cx("font-display text-lg font-extrabold tracking-tight text-ink", rail && "hidden xl:inline")}>
+      <span className={cx("font-display text-lg font-extrabold tracking-tight text-ink", rail && "hidden sb-lebar:inline")}>
         Katering<span className="text-primary">Kita</span>
       </span>
     </div>

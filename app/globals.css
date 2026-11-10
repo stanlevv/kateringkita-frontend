@@ -2,6 +2,16 @@
 
 @import "../styles/kk-theme.css";
 
+/* SH-N1: sidebar lebar hanya di layar ≥ 1280 px, kecuali penjual menciutkannya (data-sidebar="ringkas", disimpan di cookie).
+   Di 768–1279 px sidebar selalu rail; label lengkap dibuka lewat drawer supaya konten tidak tergeser. */
+@custom-variant sb-lebar {
+  @media (width >= 80rem) {
+    &:where([data-sidebar="lebar"], [data-sidebar="lebar"] *) {
+      @slot;
+    }
+  }
+}
+
 /* Fokus terlihat untuk semua elemen yang dapat difokus (G-7). */
 @layer base {
   :focus-visible {

@@ -43,7 +43,7 @@ const promo: Promo = { id: 3, code: "PLAT10", description: null, type: "percent"
 
 beforeEach(() => {
   for (const m of [requireAdmin, adminFetch, replace, refresh, tukarUrutan, setAktifMaster, simpanMaster, simpanBiayaLayanan, simpanPromoPlatform, setAktifPromoPlatform]) m.mockReset();
-  requireAdmin.mockResolvedValue({});
+  requireAdmin.mockResolvedValue({ user: { admin_level: "super" } });
   query = "";
 });
 

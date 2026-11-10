@@ -3,6 +3,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { apiFetch } from "@/services/api";
+import type { AdminLevel } from "@/lib/admin-level";
 
 export const SESSION_COOKIE = "kk_session";
 
@@ -31,9 +32,11 @@ export async function requireMerchant(): Promise<Session> {
 }
 
 // Admin. Role lain mendapat 404 agar keberadaan panel tidak terlihat.
-export async function requireAdmin(): Promise<Session> {
+// Tanpa argumen: admin tingkat apa pun. Dengan tingkat: tingkat lain juga 404 (backend tetap penjaga utamanya).
+export async function requireAdmin(...tingkat: AdminLevel[]): Promise<Session> {
   const session = await getSession();
   if (!session) redirect("/login?alasan=sesi-habis");
   if (session.user.role !== "admin") notFound();
+  if (tingkat.length && !tingkat.includes(session.user.admin_level as AdminLevel)) notFound();
   return session;
 }

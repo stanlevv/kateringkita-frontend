@@ -37,3 +37,8 @@ export function inisial(nama: string): string {
   const k = nama.trim().split(/\s+/).filter(Boolean);
   return k.length ? k.slice(0, 2).map((x) => x[0].toUpperCase()).join("") : "?";
 }
+
+/** SH-N1: pilihan lebar sidebar di layar ≥ 1280 px. Disimpan di cookie agar layout server langsung merender yang benar (tanpa kedip). */
+export const COOKIE_SIDEBAR = "kk-sidebar";
+export type ModeSidebar = "lebar" | "ringkas";
+export const modeSidebar = (nilai: string | undefined): ModeSidebar => (nilai === "ringkas" ? "ringkas" : "lebar");

@@ -28,7 +28,7 @@ const KOLOM: Column<Baris>[] = [
 
 // F20 — rekap keuangan platform per toko (pesanan selesai). Rentang di URL: ?dari&sampai.
 export default async function KeuanganPage({ searchParams }: { searchParams: Promise<{ dari?: string; sampai?: string }> }) {
-  await requireAdmin();
+  await requireAdmin("super");
   const sp = await searchParams;
   const hariIni = hariIniWib();
   const { dari, sampai, galat } = parseRentang(sp.dari, sp.sampai, hariIni);

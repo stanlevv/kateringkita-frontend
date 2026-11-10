@@ -4,13 +4,14 @@ const jar = { value: undefined as string | undefined };
 vi.mock("next/headers", () => ({
   cookies: async () => ({ get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined) }),
 }));
-const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant(), getSessionToken: async () => "tok" }));
+const getSession = vi.fn(async () => ({ user: { role: "merchant" }, merchant: null }));
+vi.mock("@/services/authService", () => ({ getSession: () => getSession(), getSessionToken: async () => "tok" }));
+vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 const apiFetch = vi.fn();
 vi.mock("@/services/api", () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a) }));
 import { changePassword } from "./account";
 
-afterEach(() => { vi.unstubAllEnvs(); jar.value = undefined; requireMerchant.mockClear(); apiFetch.mockReset(); });
+afterEach(() => { vi.unstubAllEnvs(); jar.value = undefined; getSession.mockClear(); apiFetch.mockReset(); });
 const set = (v: string) => { vi.stubEnv("NODE_ENV", "development"); jar.value = v; };
 const isi = { current_password: "lama1234", new_password: "baru12345" };
 
@@ -18,7 +19,7 @@ describe("changePassword (PG-N2, PG-E2)", () => {
   it("sukses: PUT /me/password dengan token sesi (204)", async () => {
     apiFetch.mockResolvedValue({ ok: true, status: 204, data: undefined });
     expect(await changePassword(isi)).toEqual({ data: { ok: true } });
-    expect(requireMerchant).toHaveBeenCalled();
+    expect(getSession).toHaveBeenCalled();
     expect(apiFetch).toHaveBeenCalledWith("/me/password", expect.objectContaining({ method: "PUT", token: "tok", body: JSON.stringify(isi) }));
   });
   it("sandi lama salah dari backend -> fields diteruskan", async () => {

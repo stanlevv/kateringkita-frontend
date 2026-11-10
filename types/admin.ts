@@ -70,3 +70,17 @@ export type AngkaKeuangan = {
   merchant_net: number; platform_net: number;
 };
 export type RekapKeuangan = { rows: (AngkaKeuangan & { merchant_id: number; business_name: string })[]; totals: AngkaKeuangan };
+
+// Fase 1 kelola admin
+export type AkunAdmin = {
+  id: number;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  admin_level: "super" | "ops" | "support" | null;
+  is_active: boolean;
+  must_change_password: boolean;
+  created_at: string;
+  last_login_at: string | null;
+};
+export type AdminDenganSandi = { admin: AkunAdmin; temp_password: string };

@@ -1,4 +1,4 @@
-import { BookOpen, BarChart3, Calculator, Database, Flag, LayoutGrid, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, type LucideIcon } from "lucide-react";
+import { BookOpen, BarChart3, Calculator, Database, Flag, LayoutGrid, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, UserCog, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: boolean; exact?: boolean };
 export type NavGroup = { grup: string; items: NavItem[] };
@@ -17,6 +17,7 @@ export const adminNav: NavGroup[] = [
       { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
       { href: "/admin/pengumuman", label: "Pengumuman", icon: Megaphone },
       { href: "/admin/ai", label: "AI", icon: Sparkles },
+      { href: "/admin/admin", label: "Kelola admin", icon: UserCog },
       { href: "/admin/log", label: "Log", icon: ScrollText },
       { href: "/admin/server", label: "Server", icon: Server },
     ],
