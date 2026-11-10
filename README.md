@@ -83,7 +83,7 @@
 | `/lupa-sandi` | Reset kata sandi dengan kode OTP dari email | Publik |
 | `/dashboard` | Live operational dashboard pesanan masuk toko | Merchant |
 | `/pesanan` & `/pesanan/[code]` | Antrean dan rincian lengkap pesanan pelanggan | Merchant |
-| `/menu`, `/menu/baru`, `/menu/[id]` | Manajemen katalog menu, harga, foto, dan kuota harian | Merchant |
+| `/menu`, `/menu/baru`, `/menu/[id]` | Manajemen katalog menu, harga, foto, dan kuota harian. Foto (≤ 20 MB) diperkecil di peramban jadi WebP ≤ 1600 px lalu diunggah langsung ke Cloudflare R2 (`lib/unggah.ts`) | Merchant |
 | `/laporan` | Dasbor keuangan, tren transaksi, dan ekspor CSV | Merchant |
 | `/pengaturan` | Profil toko, jam operasional, titik jemput, rekening & riwayat pencairan dana, dan pesan dari meja (sakelar, daftar meja, QR) | Merchant |
 | `/cetak-qr` | Lembar QR semua meja aktif siap cetak (A4) | Merchant |

@@ -124,7 +124,7 @@ function Gambar({ id, url, error, onChange, onBusy }: { id: string; url: string 
       {sibuk && <p role="status" className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />Mengunggah…</p>}
       {selesai && !sibuk && <p role="status" className="text-sm text-success">Logo terunggah.</p>}
       {pesan && <p role="alert" className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{pesan}</p>}
-      <div ref={wadah}><FileDrop id={id} maxBytes={5 * MB} onFile={(f) => void pilih(f)} onError={setGalat} label={url ? "Ganti logo" : "Pilih logo"} /></div>
+      <div ref={wadah}><FileDrop id={id} maxBytes={20 * MB /* diperkecil di lib/unggah.ts */} onFile={(f) => void pilih(f)} onError={setGalat} label={url ? "Ganti logo" : "Pilih logo"} /></div>
       {url && <div><Button variant="ghost" onClick={() => { batalkan(); pindahFokus.current = true; setGalat(null); setSelesai(false); onChange(null); }}><X aria-hidden className="size-4" />Hapus gambar</Button></div>}
     </div>
   );

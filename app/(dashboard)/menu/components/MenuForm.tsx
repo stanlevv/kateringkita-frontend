@@ -206,7 +206,8 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
             )}
             {galat("image_url") && <p className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{galat("image_url")}</p>}
             {fotoGalat && <p role="alert" className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{fotoGalat}</p>}
-            <FileDrop id="mf-image_url" maxBytes={5 * MB} onFile={pilihFoto} onError={setFotoGalat} label={tampilFoto ? "Ganti foto" : "Pilih foto"} />
+            {/* foto HP besar diperkecil di lib/unggah.ts sebelum diunggah (batas backend 5 MB) */}
+            <FileDrop id="mf-image_url" maxBytes={20 * MB} onFile={pilihFoto} onError={setFotoGalat} label={tampilFoto ? "Ganti foto" : "Pilih foto"} />
             {tampilFoto && <div><Button variant="ghost" onClick={hapusFoto}><X aria-hidden className="size-4" />Hapus foto</Button></div>}
           </Bagian>
 
