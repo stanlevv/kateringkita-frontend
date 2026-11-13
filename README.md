@@ -92,6 +92,7 @@
 | `/promo` & `/ulasan` | Promo toko (kode promo checkout) dan ulasan pembeli | Merchant |
 | `/admin/*` | Verifikasi merchant, master data, promo & biaya, kontak CS, dan log sistem | Admin |
 | `/admin/moderasi` | Sembunyikan ulasan, turunkan menu yang melanggar | Admin |
+| `/admin/tiket` & `/admin/tiket/[code]` | Tiket bantuan pembeli: tab Menunggu/Dibalas/Ditutup/Semua, cari, percakapan, balas (notifikasi ke pembeli), tutup tiket | Admin (semua tingkat, termasuk support) |
 | `/admin/keuangan` | Rekap omzet, diskon, biaya layanan per toko + ekspor CSV | Admin |
 | `/admin/pencairan` | Saldo non-tunai per toko, catat pencairan ke rekening toko, daftar dana yang harus dikembalikan, riwayat (F26) | Admin super |
 | `/admin/pengumuman` | Kirim pengumuman ke notifikasi aplikasi | Admin |

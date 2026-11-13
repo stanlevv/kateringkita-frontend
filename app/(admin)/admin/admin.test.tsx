@@ -40,6 +40,7 @@ describe("shell admin", () => {
       ["Verifikasi", "/admin/verifikasi"],
       ["Penjual", "/admin/penjual"],
       ["Moderasi", "/admin/moderasi"],
+      ["Tiket", "/admin/tiket"],
       ["Data master", "/admin/data-master"],
       ["Promo & biaya", "/admin/promo"],
       ["Keuangan", "/admin/keuangan"],
@@ -63,6 +64,16 @@ describe("shell admin", () => {
     const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
     const href = within(nav).getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(href).toContain("/admin/moderasi");
+    expect(href).toContain("/admin/tiket");
+    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"]) expect(href).not.toContain(h);
+  });
+
+  it("tingkat support: menu Tiket ada (pekerjaan utama support); menu khusus super tetap disembunyikan", async () => {
+    requireAdmin.mockResolvedValue({ user: { full_name: "Sari", admin_level: "support", must_change_password: false }, merchant: null });
+    render(await AdminLayout({ children: <p>isi</p> }));
+    const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
+    expect(within(nav).getByRole("link", { name: "Tiket" })).toHaveAttribute("href", "/admin/tiket");
+    const href = within(nav).getAllByRole("link").map((a) => a.getAttribute("href"));
     for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"]) expect(href).not.toContain(h);
   });
 

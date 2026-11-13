@@ -4,8 +4,9 @@ export type AdminLevel = "super" | "ops" | "support";
 export const LABEL_LEVEL: Record<AdminLevel, string> = { super: "Super", ops: "Operasional", support: "Support" };
 export const KETERANGAN_LEVEL: Record<AdminLevel, string> = {
   super: "Semua fitur, termasuk kelola admin, keuangan, AI, dan server.",
-  ops: "Verifikasi, penjual, moderasi, data master, promo, pengumuman. Tanpa keuangan, AI, server, dan kelola admin.",
-  support: "Hanya melihat data, tanpa mengubah apa pun.",
+  ops: "Verifikasi, penjual, moderasi, tiket bantuan, data master, promo, pengumuman. Tanpa keuangan, AI, server, dan kelola admin.",
+  // Backend: support boleh GET di luar fitur khusus super, plus GET/POST /tickets…
+  support: "Melihat data serta membalas dan menutup tiket bantuan. Selain tiket, tidak bisa mengubah apa pun.",
 };
 
 // Halaman panel yang hanya untuk super

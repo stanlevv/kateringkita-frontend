@@ -7,6 +7,8 @@ describe("label log", () => {
     expect(labelAksi("master.categories.create")).toBe("Tambah kategori");
     expect(labelAksi("promo.update")).toBe("Ubah promo");
     expect(labelAksi("settings.service_fee")).toBe("Ubah biaya layanan");
+    expect(labelAksi("ticket.reply")).toBe("Balas tiket bantuan");
+    expect(labelAksi("ticket.close")).toBe("Tutup tiket bantuan");
     expect(labelAksi("x.y")).toBe("x.y");
   });
   it("daftar perubahan: hanya field yang berbeda, lama → baru", () => {

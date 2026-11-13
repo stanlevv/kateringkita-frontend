@@ -1,4 +1,4 @@
-import { Banknote, BookOpen, BarChart3, Calculator, Database, Flag, LayoutGrid, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, UserCog, type LucideIcon } from "lucide-react";
+import { Banknote, BookOpen, BarChart3, Calculator, Database, Flag, LayoutGrid, LifeBuoy, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, UserCog, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: boolean; exact?: boolean };
 export type NavGroup = { grup: string; items: NavItem[] };
@@ -12,6 +12,8 @@ export const adminNav: NavGroup[] = [
       { href: "/admin/verifikasi", label: "Verifikasi", icon: ShieldCheck },
       { href: "/admin/penjual", label: "Penjual", icon: Store },
       { href: "/admin/moderasi", label: "Moderasi", icon: Flag },
+      // Tiket bantuan: semua tingkat (super, ops, support), bukan KHUSUS_SUPER di lib/admin-level.ts
+      { href: "/admin/tiket", label: "Tiket", icon: LifeBuoy },
       { href: "/admin/data-master", label: "Data master", icon: Database },
       { href: "/admin/promo", label: "Promo & biaya", icon: Tag },
       { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
