@@ -84,3 +84,26 @@ export type AkunAdmin = {
   last_login_at: string | null;
 };
 export type AdminDenganSandi = { admin: AkunAdmin; temp_password: string };
+
+// Tiket bantuan (kontrak tiket-kontrak.md, bagian Admin): GET/POST /api/v1/admin/tickets…
+export type KategoriTiket = "akun" | "pembayaran" | "pesanan" | "penjual" | "aplikasi" | "lainnya";
+/** open = menunggu admin, answered = admin sudah membalas (menunggu pembeli), closed = ditutup. */
+export type StatusTiket = "open" | "answered" | "closed";
+export type PengirimTiket = "customer" | "admin";
+
+export type TiketRingkas = {
+  code: string; category: KategoriTiket; subject: string; status: StatusTiket; order_code: string | null;
+  created_at: string; last_message_at: string; last_message_preview: string; last_sender_role: PengirimTiket;
+  customer: { id: number; full_name: string; phone: string };
+};
+export type MetaTiket = MetaHalaman & { counts: Record<StatusTiket, number> };
+
+/** `sender_name`: nama admin asli atau nama pembeli. */
+export type PesanTiket = { id: number; sender_role: PengirimTiket; sender_name: string | null; body: string; created_at: string };
+export type DetailTiket = Omit<TiketRingkas, "last_message_preview" | "customer"> & {
+  closed_at: string | null;
+  closed_by: PengirimTiket | null;
+  customer: { id: number; full_name: string; phone: string; email: string | null };
+  order: { code: string; status: StatusPesananAdmin; total: number; merchant_name: string; created_at: string } | null;
+  messages: PesanTiket[];
+};

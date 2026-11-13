@@ -32,6 +32,19 @@ export function formatTanggal(iso: string): string {
   return `${w.getUTCDate()} ${BULAN[w.getUTCMonth()]} ${w.getUTCFullYear()}`;
 }
 
+/**
+ * "Baru saja", "5 menit lalu", "3 jam lalu", "2 hari lalu"; 7 hari atau lebih -> "31 Okt 2026".
+ * `sekarang` dikirim pemanggil (mis. waktu render server) supaya hasil server dan hidrasi klien sama.
+ */
+export function waktuRelatif(iso: string, sekarang: number): string {
+  const menit = Math.floor((sekarang - Date.parse(iso)) / 60_000);
+  if (menit < 1) return "Baru saja";
+  if (menit < 60) return `${menit} menit lalu`;
+  if (menit < 24 * 60) return `${Math.floor(menit / 60)} jam lalu`;
+  if (menit < 7 * 24 * 60) return `${Math.floor(menit / (24 * 60))} hari lalu`;
+  return formatTanggal(iso);
+}
+
 /** "0812-3456-7890"; nomor yang terlalu pendek dikembalikan apa adanya. */
 export function formatTelepon(raw: string): string {
   const d = raw.replace(/\D/g, "").replace(/^62/, "0");

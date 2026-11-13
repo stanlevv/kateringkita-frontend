@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { formatJam, formatRupiah, formatTanggal, formatTelepon, geserWib, hariIniWib, inputWibKeIso, isoKeInputWib, jamWib, tanggalWib } from "./format";
+import { formatJam, formatRupiah, formatTanggal, formatTelepon, geserWib, hariIniWib, inputWibKeIso, isoKeInputWib, jamWib, tanggalWib, waktuRelatif } from "./format";
 
 describe("waktu WIB untuk input datetime-local", () => {
   it("WIB lokal <-> ISO UTC", () => {
@@ -40,5 +40,21 @@ describe("format", () => {
     vi.setSystemTime(new Date("2026-10-30T18:00:00Z"));
     expect(hariIniWib()).toBe("2026-10-31");
     vi.useRealTimers();
+  });
+});
+
+describe("waktuRelatif", () => {
+  const T = Date.parse("2026-11-13T10:00:00Z");
+  const lalu = (ms: number) => new Date(T - ms).toISOString();
+  it("menit, jam, hari; di bawah 1 menit (atau jam server sedikit maju) -> Baru saja", () => {
+    expect(waktuRelatif(lalu(30e3), T)).toBe("Baru saja");
+    expect(waktuRelatif(lalu(-5e3), T)).toBe("Baru saja");
+    expect(waktuRelatif(lalu(60e3), T)).toBe("1 menit lalu");
+    expect(waktuRelatif(lalu(59 * 60e3), T)).toBe("59 menit lalu");
+    expect(waktuRelatif(lalu(3 * 3600e3 + 59 * 60e3), T)).toBe("3 jam lalu");
+    expect(waktuRelatif(lalu(2 * 86400e3), T)).toBe("2 hari lalu");
+  });
+  it("7 hari atau lebih -> tanggal WIB", () => {
+    expect(waktuRelatif("2026-11-05T20:00:00Z", T)).toBe("6 Nov 2026");
   });
 });
