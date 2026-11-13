@@ -13,10 +13,14 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), replace, push }),
   usePathname: () => "/admin/tiket",
   useSearchParams: () => new URLSearchParams(url.q),
+  notFound: () => { throw new Error("NEXT_NOT_FOUND"); },
 }));
-import type { TiketRingkas } from "@/types/admin";
+vi.mock("@/app/actions/admin/tiket", () => ({ balasTiket: vi.fn(), tutupTiket: vi.fn() }));
+import type { DetailTiket, TiketRingkas } from "@/types/admin";
 import { TiketTable } from "./components/TiketTable";
 import TiketPage from "./page";
+import DetailPage from "./[code]/page";
+import TiketTidakDitemukan from "./[code]/not-found";
 
 const SEKARANG = Date.parse("2026-11-13T03:00:00.000Z");
 const tiket = (o: Partial<TiketRingkas> = {}): TiketRingkas => ({
@@ -177,5 +181,111 @@ describe("TiketTable", () => {
     tabel();
     await userEvent.click(within(screen.getByRole("table", { name: "Daftar tiket" })).getByText("Budi Santoso"));
     expect(push).toHaveBeenCalledWith("/admin/tiket/TK-20261113-7QPX");
+  });
+});
+
+const detail = (o: Partial<DetailTiket> = {}): DetailTiket => ({
+  code: "TK-20261113-7QPX", category: "pembayaran", subject: "VA sudah dibayar tapi status belum lunas", status: "answered",
+  order_code: "KK-20261113-DC4T", created_at: "2026-11-13T02:00:00.000Z", last_message_at: "2026-11-13T02:30:00.000Z", last_sender_role: "admin",
+  closed_at: null, closed_by: null,
+  customer: { id: 7, full_name: "Budi Santoso", phone: "081234567890", email: "budi@mail.com" },
+  order: { code: "KK-20261113-DC4T", status: "holding", total: 32_000, merchant_name: "Dapur Siti", created_at: "2026-11-13T01:50:00.000Z" },
+  messages: [
+    { id: 1, sender_role: "customer", sender_name: "Budi Santoso", body: "Sudah saya bayar jam 9 pagi.\nTolong dicek.", created_at: "2026-11-13T02:00:00.000Z" },
+    { id: 2, sender_role: "admin", sender_name: "Dina", body: "Baik, kami cek ke Midtrans.", created_at: "2026-11-13T02:30:00.000Z" },
+  ],
+  ...o,
+});
+const buka = async (code = "TK-20261113-7QPX") => render(await DetailPage({ params: Promise.resolve({ code }) }));
+
+describe("/admin/tiket/[code] detail", () => {
+  beforeEach(() => adminFetch.mockResolvedValue({ ok: true, status: 200, data: detail() }));
+
+  it("header: judul, kode, kategori, status; requireAdmin semua tingkat", async () => {
+    await buka();
+    expect(requireAdmin).toHaveBeenCalledWith();
+    expect(adminFetch).toHaveBeenCalledWith("/tickets/TK-20261113-7QPX");
+    expect(screen.getByRole("heading", { level: 1, name: "VA sudah dibayar tapi status belum lunas" })).toBeInTheDocument();
+    expect(screen.getByText("TK-20261113-7QPX")).toBeInTheDocument();
+    expect(screen.getByText("Kategori Pembayaran")).toBeInTheDocument();
+    expect(screen.getByText("Dibalas")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Semua tiket" })).toHaveAttribute("href", "/admin/tiket");
+  });
+
+  it("percakapan: urutan dipertahankan, pembeli kiri vs admin kanan, nama pengirim, peran, waktu WIB, baris baru", async () => {
+    await buka();
+    const pesan = within(screen.getByRole("list", { name: "Pesan tiket" })).getAllByRole("listitem");
+    expect(pesan).toHaveLength(2);
+    expect(pesan[0]).toHaveTextContent("Budi Santoso · Pembeli");
+    expect(pesan[0]).toHaveClass("items-start");
+    expect(within(pesan[0]).getByText(/Sudah saya bayar jam 9 pagi\.\s+Tolong dicek\./)).toHaveClass("whitespace-pre-wrap");
+    expect(within(pesan[0]).getByText("13 Nov 2026, 09.00 WIB")).toHaveAttribute("dateTime", "2026-11-13T02:00:00.000Z");
+    expect(pesan[1]).toHaveTextContent("Dina · Admin");
+    expect(pesan[1]).toHaveClass("items-end");
+    expect(within(pesan[1]).getByText("Baik, kami cek ke Midtrans.")).toBeInTheDocument();
+    expect(within(pesan[1]).getByText("13 Nov 2026, 09.30 WIB")).toBeInTheDocument();
+  });
+
+  it("pembeli: nama, WhatsApp wa.me aman, email, tautan tiket lain; pesanan terkait", async () => {
+    await buka();
+    const wa = screen.getByRole("link", { name: "0812-3456-7890" });
+    expect(wa).toHaveAttribute("href", "https://wa.me/6281234567890");
+    expect(wa).toHaveAttribute("target", "_blank");
+    expect(wa.getAttribute("rel")).toContain("noopener");
+    expect(screen.getByText("budi@mail.com")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Tiket lain dari pembeli ini" })).toHaveAttribute("href", "/admin/tiket?status=semua&q=081234567890");
+    const order = within(screen.getByRole("heading", { name: "Pesanan terkait" }).parentElement!);
+    expect(order.getByText("KK-20261113-DC4T")).toBeInTheDocument();
+    expect(order.getByText("Belum dikonfirmasi")).toBeInTheDocument();
+    expect(order.getByText("Rp 32.000")).toBeInTheDocument();
+    expect(order.getByText("Dapur Siti")).toBeInTheDocument();
+  });
+
+  it("belum ditutup: formulir balas + tombol Tutup tiket; tanpa pesanan dan tanpa email", async () => {
+    adminFetch.mockResolvedValue({ ok: true, status: 200, data: detail({ status: "open", order: null, order_code: null, customer: { id: 7, full_name: "Budi Santoso", phone: "081234567890", email: null } }) });
+    await buka();
+    expect(screen.getByRole("textbox", { name: /Balasan untuk pembeli/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Kirim balasan" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Tutup tiket" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Pesanan terkait" })).toBeNull();
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.getByText("Menunggu")).toBeInTheDocument();
+  });
+
+  it("ditutup: info penutupan tampil; formulir balas dan tombol tutup disembunyikan", async () => {
+    adminFetch.mockResolvedValue({ ok: true, status: 200, data: detail({ status: "closed", closed_by: "customer", closed_at: "2026-11-13T05:00:00.000Z" }) });
+    await buka();
+    expect(screen.getByRole("status")).toHaveTextContent("Tiket ditutup oleh pembeli pada 13 Nov 2026, 12.00 WIB.");
+    expect(screen.getByText("Ditutup")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Kirim balasan" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tutup tiket" })).toBeNull();
+    // percakapan tetap terbaca
+    expect(screen.getByText("Baik, kami cek ke Midtrans.")).toBeInTheDocument();
+  });
+
+  it("404 dari backend atau kode tidak valid -> notFound (kode tidak valid tanpa panggilan backend)", async () => {
+    await expect(DetailPage({ params: Promise.resolve({ code: "../users" }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(adminFetch).not.toHaveBeenCalled();
+    adminFetch.mockResolvedValue({ ok: false, status: 404, error: { code: "NOT_FOUND", message: "Tiket tidak ditemukan." } });
+    await expect(DetailPage({ params: Promise.resolve({ code: "TK-20261113-ZZZZ" }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(adminFetch).toHaveBeenCalledWith("/tickets/TK-20261113-ZZZZ");
+  });
+
+  it("halaman tidak ditemukan: pesan + kembali ke daftar", () => {
+    render(<TiketTidakDitemukan />);
+    expect(screen.getByRole("heading", { level: 1, name: "Tiket tidak ditemukan" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Kembali ke daftar tiket" })).toHaveAttribute("href", "/admin/tiket");
+  });
+
+  it("gagal selain 404: pesan + Coba lagi; tanpa admin: backend tidak dipanggil", async () => {
+    adminFetch.mockResolvedValue({ ok: false, status: 500, error: { code: "X", message: "x" } });
+    await buka();
+    expect(screen.getByRole("alert")).toHaveTextContent("Tiket belum bisa dimuat");
+    expect(screen.getByRole("button", { name: "Coba lagi" })).toBeInTheDocument();
+    adminFetch.mockClear();
+    requireAdmin.mockRejectedValue(new Error("NEXT_NOT_FOUND"));
+    await expect(DetailPage({ params: Promise.resolve({ code: "TK-20261113-7QPX" }) })).rejects.toThrow();
+    expect(adminFetch).not.toHaveBeenCalled();
   });
 });
