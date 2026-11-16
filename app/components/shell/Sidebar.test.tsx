@@ -9,11 +9,11 @@ import { StoreStatusProvider } from "./StoreStatus";
 const store = { isOpen: true, buka: "07:00", tutup: "16:00" };
 
 describe("SH-N1 sidebar", () => {
-  it("4 grup dan 9 tautan; tautan aktif aria-current", () => {
+  it("4 grup dan 10 tautan (termasuk Banner); tautan aktif aria-current", () => {
     render(<StoreStatusProvider store={store}><Sidebar store={store} badge={2} /></StoreStatusProvider>);
     const nav = screen.getByRole("navigation", { name: "Menu utama" });
     expect(within(nav).getAllByRole("heading", { level: 2 })).toHaveLength(4);
-    expect(within(nav).getAllByRole("link")).toHaveLength(9);
+    expect(within(nav).getAllByRole("link")).toHaveLength(10);
     const aktif = within(nav).getByRole("link", { name: /Menu & Stok/ });
     expect(aktif).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: /Pesanan/ })).not.toHaveAttribute("aria-current");

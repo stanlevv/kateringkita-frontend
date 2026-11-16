@@ -2,7 +2,8 @@ import { requestUpload } from "@/app/actions/menus";
 import { panggil } from "./aksi";
 import type { ActionResult } from "@/types/api";
 
-type Tujuan = "menu" | "logo";
+type Tujuan = "menu" | "logo" | "banner" | "popup";
+type MintaUnggah = (b: { purpose: Tujuan; content_type: string; size: number }) => Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>>;
 
 const MAKS_UNGGAH = 5 * 1024 * 1024; // sama dengan uploadSchema backend
 
@@ -10,6 +11,9 @@ const MAKS_UNGGAH = 5 * 1024 * 1024; // sama dengan uploadSchema backend
 const ATURAN: Record<Tujuan, { sisi: number; latar: string | null; cadangan: "image/jpeg" | "image/png" }> = {
   menu: { sisi: 1600, latar: "#fff", cadangan: "image/jpeg" },
   logo: { sisi: 512, latar: null, cadangan: "image/png" },
+  // banner beranda 2:1 & pop-up 3:4 tampil selebar layar HP
+  banner: { sisi: 1600, latar: "#fff", cadangan: "image/jpeg" },
+  popup: { sisi: 1200, latar: "#fff", cadangan: "image/jpeg" },
 };
 
 const keBlob = (c: HTMLCanvasElement, type: string, mutu: number) => new Promise<Blob | null>((r) => c.toBlob(r, type, mutu));
@@ -52,11 +56,12 @@ export async function kecilkanFoto(file: File, tujuan: Tujuan): Promise<Blob> {
 }
 
 /** Browser -> penyimpanan: perkecil foto, minta URL bertanda tangan ke server, lalu PUT berkas langsung (FE-08). */
-export async function unggahFoto(file: File, purpose: Tujuan): Promise<ActionResult<{ public_url: string }>> {
+export async function unggahFoto(file: File, purpose: Tujuan, minta?: MintaUnggah): Promise<ActionResult<{ public_url: string }>> {
   const berkas = await kecilkanFoto(file, purpose);
   // Hanya terjadi bila browser gagal memperkecil berkas asli yang besar
   if (berkas.size > MAKS_UNGGAH) return { error: { code: "VALIDATION_ERROR", message: "Ukuran foto maksimal 5 MB." } };
-  const r = await panggil(() => requestUpload({ purpose, content_type: berkas.type, size: berkas.size }));
+  // penjual: POST /merchant/uploads (menu, logo, banner); admin: POST /admin/uploads (banner, popup) lewat `minta`
+  const r = await panggil(() => (minta ?? (requestUpload as MintaUnggah))({ purpose, content_type: berkas.type, size: berkas.size }));
   if ("error" in r) return r;
   try {
     // Content-Type dan Content-Length ikut ditandatangani (be/src/upload/r2.ts): berkas tidak boleh diubah ukuran/dikompres

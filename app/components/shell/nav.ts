@@ -1,4 +1,4 @@
-import { BadgeCheck, Banknote, BookOpen, BarChart3, Calculator, Database, Flag, LayoutGrid, LifeBuoy, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, UserCog, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Banknote, BookOpen, ImageIcon, BarChart3, Calculator, Database, Flag, LayoutGrid, LifeBuoy, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, UserCog, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: boolean; exact?: boolean };
 export type NavGroup = { grup: string; items: NavItem[] };
@@ -16,6 +16,8 @@ export const adminNav: NavGroup[] = [
       { href: "/admin/tiket", label: "Tiket", icon: LifeBuoy },
       { href: "/admin/data-master", label: "Data master", icon: Database },
       { href: "/admin/promo", label: "Promo & biaya", icon: Tag },
+      // Banner beranda: semua tingkat melihat, super & ops memutuskan (bukan KHUSUS_SUPER)
+      { href: "/admin/banner", label: "Banner", icon: ImageIcon },
       { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
       { href: "/admin/pencairan", label: "Pencairan", icon: Banknote },
       { href: "/admin/pengumuman", label: "Pengumuman", icon: Megaphone },
@@ -44,6 +46,7 @@ export const NAV: NavGroup[] = [
     grup: "Pemasaran",
     items: [
       { href: "/promo", label: "Promo", icon: Tag },
+      { href: "/banner", label: "Banner", icon: ImageIcon },
       { href: "/ulasan", label: "Ulasan", icon: Star },
     ],
   },

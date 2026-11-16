@@ -43,6 +43,7 @@ describe("shell admin", () => {
       ["Tiket", "/admin/tiket"],
       ["Data master", "/admin/data-master"],
       ["Promo & biaya", "/admin/promo"],
+      ["Banner", "/admin/banner"],
       ["Keuangan", "/admin/keuangan"],
       ["Pencairan", "/admin/pencairan"],
       ["Pengumuman", "/admin/pengumuman"],
