@@ -9,6 +9,7 @@ import { Card } from "@/app/components/ui/Card";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
 import { panggil } from "@/lib/aksi";
+import type { JawabanAsisten } from "@/types/hasil-ai";
 
 const CONTOH = [
   "Menu mana yang margin-nya paling tipis dan berapa harga yang lebih sehat?",
@@ -25,7 +26,7 @@ const pesanGagal: Record<string, string> = {
 // F17: tanya-jawab dengan konteks menu, HPP, dan penjualan toko sendiri
 export function AsistenPanel() {
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<JawabanAsisten | null>(null);
   const [gagal, setGagal] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -37,8 +38,9 @@ export function AsistenPanel() {
     setGagal(null);
     start(async () => {
       const r = await panggil(() => tanyaAsisten(q));
-      if ("data" in r) return setAnswer(r.data.answer);
-      setGagal(pesanGagal[r.error.code] ?? r.error.message ?? "Terjadi kesalahan. Coba lagi.");
+      if ("data" in r) return setAnswer(r.data);
+      // alasan per kolom dulu (mis. ditolak filter keamanan), lalu pesan umum
+      setGagal(r.error.fields?.question?.[0] ?? pesanGagal[r.error.code] ?? r.error.message ?? "Terjadi kesalahan. Coba lagi.");
     });
   }
 
@@ -63,7 +65,15 @@ export function AsistenPanel() {
       </form>
       {gagal && <Banner tone="danger">{gagal}</Banner>}
       {answer && !pending && (
-        <div aria-live="polite" className="whitespace-pre-wrap rounded-lg border border-line bg-subtle p-4 text-ink">{answer}</div>
+        <div aria-live="polite" className="flex flex-col gap-3 rounded-lg border border-line bg-subtle p-4 text-ink">
+          <p className="whitespace-pre-wrap">{answer.answer}</p>
+          {answer.points?.length ? (
+            <ul aria-label="Poin penting" className="list-disc space-y-1 pl-5">
+              {answer.points.map((p, i) => <li key={i}>{p}</li>)}
+            </ul>
+          ) : null}
+          {answer.assumption && <p className="text-sm text-ink-muted">Asumsi: {answer.assumption}</p>}
+        </div>
       )}
     </Card>
   );
