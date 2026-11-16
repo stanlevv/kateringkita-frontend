@@ -123,7 +123,8 @@ export function StatusPesanan({ code }: { code: string }) {
       {!gagal && (
         <ol className="flex flex-col gap-0">
           {LANGKAH.map((l, i) => {
-            const selesai = URUT[d.status] > i || (i === 0 && d.payment_status === "paid");
+            // pesanan selesai: langkah terakhir pun tercentang (URUT completed = indeks langkah terakhir)
+            const selesai = d.status === "completed" || URUT[d.status] > i || (i === 0 && d.payment_status === "paid");
             const kini = URUT[d.status] === i && !selesai;
             return (
               <li key={l.s} className="flex items-center gap-3 py-1.5">

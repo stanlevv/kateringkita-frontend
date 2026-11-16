@@ -11,7 +11,7 @@ import { StatusBadge } from "@/app/components/ui/StatusBadge";
 import { toast } from "@/app/components/ui/Toast";
 import { cx } from "@/app/components/ui/cx";
 import { formatJam, formatRupiah, formatTanggal, formatTelepon, tanggalWib } from "@/lib/format";
-import { statusView, tampilanStatus, teksAksi, type AksiPesanan } from "@/lib/order-status";
+import { statusViewPesanan, teksAksi, teksSukses, type AksiPesanan } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 import { ChatWaLink, galatAksi, StokDialog, TombolTolak } from "./galatAksi";
 import { RejectDialog } from "./RejectDialog";
@@ -37,14 +37,14 @@ function Aksi({ order }: { order: MerchantOrder }) {
   const [kirim, setKirim] = useState<AksiPesanan | null>(null);
   const [tolak, setTolak] = useState(false);
   const [stok, setStok] = useState(false);
-  const v = statusView[tampilanStatus(order)];
+  const v = statusViewPesanan(order);
 
   async function jalankan(a: AksiPesanan, reason?: string) {
     setKirim(a);
     const r = await panggil(() => orderAction(order.code, a, reason));
     if ("data" in r) {
       // Tombol tetap terkunci sampai status pada prop berubah (Aksi di-key status); jangan buka kunci di jeda refresh.
-      toast({ tone: "success", message: `Pesanan ${order.code} ${teksAksi[a].sukses}` });
+      toast({ tone: "success", message: `Pesanan ${order.code} ${teksSukses(a, order)}` });
     } else {
       setKirim(null);
       const g = galatAksi(r.error.code, a, r.error.message);

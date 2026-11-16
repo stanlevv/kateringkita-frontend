@@ -9,7 +9,7 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { dismissToast, toast } from "@/app/components/ui/Toast";
 import { antrean, ganti, jumlahTab, sisaHold, type Optimis, type TabAntrean } from "@/lib/dashboard";
-import { nextStatus, teksAksi, type AksiPesanan } from "@/lib/order-status";
+import { nextStatus, teksAksi, teksSukses, type AksiPesanan } from "@/lib/order-status";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
 import { galatAksi, StokDialog } from "@/app/components/orders/galatAksi";
@@ -89,7 +89,7 @@ export function OrderQueue({ orders, menus, sekarang, baru, onOptimis, onFokusKu
     }
     const t: Tunda = { aksi: a, order: o };
     onOptimis(o.code, { aksi: a, dasar: o.updated_at });
-    const pesan = `Pesanan ${o.code} ${teksAksi[a].sukses}`;
+    const pesan = `Pesanan ${o.code} ${teksSukses(a, o)}`;
     const sisa = sisaHold(o, sekarang);
     if (a === "confirm" && sisa !== null && sisa <= KIRIM_LANGSUNG_DETIK) {
       void kirimAksi(o.code, t).then((ok) => ok && toast({ tone: "success", message: pesan }));

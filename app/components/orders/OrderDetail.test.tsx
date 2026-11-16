@@ -64,6 +64,16 @@ describe("PS-N2 rincian", () => {
     expect(screen.getByText(/Sambal dipisah/)).toBeInTheDocument();
     expect(screen.getByText(/Titik ambil/)).toBeInTheDocument();
   });
+  it("F21 pesanan meja: tombol & riwayat memakai 'Siap diantar'", () => {
+    const masak = { ...cari("E2HV"), table: { id: 1, label: "5" } };
+    const { rerender } = render(<OrderDetail order={masak} />);
+    expect(screen.getByRole("button", { name: "Siap diantar" })).toBeInTheDocument();
+    const siap = { ...masak, status: "ready" as const, ready_at: new Date().toISOString(), updated_at: new Date(Date.parse(masak.updated_at) + 60000).toISOString() };
+    rerender(<OrderDetail order={siap} />);
+    const t = screen.getByRole("list", { name: "Riwayat status" });
+    expect(within(t).getByText("Siap diantar")).toBeInTheDocument();
+    expect(screen.queryByText("Siap diambil")).not.toBeInTheDocument();
+  });
   it("garis waktu memuat tahap yang sudah dilalui", () => {
     tampil("E2HV"); // cooking
     const t = screen.getByRole("list", { name: "Riwayat status" });

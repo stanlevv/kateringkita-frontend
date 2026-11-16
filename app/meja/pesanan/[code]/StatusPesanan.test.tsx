@@ -42,4 +42,12 @@ describe("status pesanan meja", () => {
     expect(screen.queryByRole("button", { name: /Bayar/ })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Tambah pesanan lain" })).toHaveAttribute("href", "/meja/t0k3n");
   });
+
+  it("selesai: kelima langkah tercentang, tidak ada langkah bernomor", async () => {
+    localStorage.setItem("kk-tamu:KK-1", JSON.stringify({ tamu: "tamu-1", meja: "t0k3n" }));
+    statusPesananMeja.mockResolvedValueOnce({ data: pesanan({ status: "completed", payment_status: "paid", payment_url: null }) });
+    render(<StatusPesanan code="KK-1" />);
+    expect(await screen.findByText("Selamat menikmati")).toBeInTheDocument();
+    for (const n of ["1", "2", "3", "4", "5"]) expect(screen.queryByText(n)).not.toBeInTheDocument();
+  });
 });

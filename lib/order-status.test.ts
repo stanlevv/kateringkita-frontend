@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextStatus, statusView, tampilanStatus } from "./order-status";
+import { nextStatus, statusView, statusViewPesanan, tampilanStatus, teksSukses } from "./order-status";
 import type { MerchantOrder } from "@/types/order";
 
 const base = {
@@ -9,6 +9,21 @@ const base = {
   payment_status: "unpaid",
 } as MerchantOrder;
 const o = (p: Partial<MerchantOrder>): MerchantOrder => ({ ...base, ...p });
+
+describe("F21 pesanan meja diantar ke meja, bukan diambil", () => {
+  const meja = { table: { id: 1, label: "5" } };
+  it("dimasak: tombol utama 'Siap diantar'; siap: label 'Siap diantar'; toast 'siap diantar'", () => {
+    expect(statusViewPesanan(o({ status: "cooking", ...meja })).primaryLabel).toBe("Siap diantar");
+    expect(statusViewPesanan(o({ status: "ready", ...meja })).label).toBe("Siap diantar");
+    expect(teksSukses("ready", o(meja))).toBe("siap diantar");
+  });
+  it("pesanan titik temu tetap 'Siap diambil'", () => {
+    expect(statusViewPesanan(o({ status: "cooking", table: null })).primaryLabel).toBe("Siap diambil");
+    expect(statusViewPesanan(o({ status: "ready", table: null })).label).toBe("Siap diambil");
+    expect(teksSukses("ready", o({ table: null }))).toBe("siap diambil");
+    expect(teksSukses("cook", o(meja))).toBe("mulai dimasak");
+  });
+});
 
 describe("nextStatus", () => {
   it("holding+cod confirm -> confirmed", () => {

@@ -57,6 +57,23 @@ export function tampilanStatus(o: Kunci): TampilanStatus {
   return o.status;
 }
 
+// F21: pesanan dari meja diantar ke meja; "Siap diambil" hanya untuk titik temu.
+const SIAP_MEJA = "Siap diantar";
+type PunyaMeja = Partial<Pick<MerchantOrder, "table">>;
+
+/** `statusView` untuk satu pesanan; pesanan meja memakai "Siap diantar". */
+export function statusViewPesanan(o: Kunci & PunyaMeja): StatusView {
+  const v = statusView[tampilanStatus(o)];
+  if (!o.table) return v;
+  return { ...v, label: v === statusView.ready ? SIAP_MEJA : v.label, primaryLabel: v.primary === "ready" ? SIAP_MEJA : v.primaryLabel };
+}
+
+/** Akhir toast sukses ("Pesanan KK-… siap diantar"). */
+export const teksSukses = (a: AksiPesanan, o: PunyaMeja) => (a === "ready" && o.table ? "siap diantar" : teksAksi[a].sukses);
+
+/** Label tahap "siap" di riwayat status. */
+export const labelTahapSiap = (o: PunyaMeja) => (o.table ? SIAP_MEJA : "Siap diambil");
+
 const DARI: Record<AksiPesanan, { dari: MerchantOrder["status"][]; ke: MerchantOrder["status"]; stamp: keyof MerchantOrder }> = {
   confirm: { dari: ["holding"], ke: "confirmed", stamp: "confirmed_at" },
   cook: { dari: ["confirmed"], ke: "cooking", stamp: "cooking_at" },

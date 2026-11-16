@@ -78,6 +78,31 @@ describe("menu pesan dari meja", () => {
     expect(JSON.parse(localStorage.getItem("kk-tamu:KK-1")!)).toEqual({ tamu: "tamu-1", meja: "t0k3n" });
   });
 
+  it("selama menunggu tautan bayar, isi & subtotal pesanan tidak hilang; baru dikosongkan saat diteruskan", async () => {
+    const u = userEvent.setup();
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, origin: "http://localhost:3000", assign });
+    pesanDariMeja.mockResolvedValue({ data: { code: "KK-2", guest_token: "tamu-2" } });
+    let bayar!: (v: unknown) => void;
+    bayarPesananMeja.mockReturnValue(new Promise((r) => { bayar = r; }));
+    render(<MenuMejaApp token="t0k3n" data={data} />);
+
+    await u.click(screen.getByRole("button", { name: "Tambah Nasi Ayam" }));
+    await u.click(screen.getByRole("button", { name: /Lihat pesanan/ }));
+    const keranjang = screen.getByRole("dialog", { name: "Pesanan Meja 5" });
+    await u.type(within(keranjang).getByLabelText(/Nama pemesan/), "Andi");
+    await u.click(within(keranjang).getByRole("button", { name: "Pesan & bayar" }));
+
+    expect(bayarPesananMeja).toHaveBeenCalled();
+    expect(within(keranjang).getByText("Nasi Ayam")).toBeInTheDocument();
+    expect(within(keranjang).queryByText("Rp 0")).not.toBeInTheDocument();
+    expect(localStorage.getItem("kk-keranjang:t0k3n")).not.toBeNull();
+
+    bayar({ data: { payment_url: "https://app.sandbox.midtrans.com/snap/y" } });
+    await vi.waitFor(() => expect(assign).toHaveBeenCalledWith("https://app.sandbox.midtrans.com/snap/y"));
+    expect(localStorage.getItem("kk-keranjang:t0k3n")).toBeNull();
+  });
+
   it("toko tutup → semua tombol tambah mati dan ada pemberitahuan", () => {
     render(<MenuMejaApp token="t0k3n" data={{ ...data, merchant: { ...data.merchant, is_open: false } }} />);
     expect(screen.getByRole("status")).toHaveTextContent("Toko sedang tutup");

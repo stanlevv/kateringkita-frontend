@@ -7,7 +7,7 @@ import { PaymentBadge } from "@/app/components/ui/PaymentBadge";
 import { StatusBadge } from "@/app/components/ui/StatusBadge";
 import { cx } from "@/app/components/ui/cx";
 import { formatJam, formatRupiah, formatTelepon } from "@/lib/format";
-import { statusView, tampilanStatus, teksAksi, type AksiPesanan } from "@/lib/order-status";
+import { statusViewPesanan, teksAksi, type AksiPesanan } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 import { ChatWaLink, TombolTolak } from "@/app/components/orders/galatAksi";
 
@@ -28,7 +28,7 @@ type Props = {
 
 /** Brief v3 §4. Satu aksi utama per status dari `statusView`. */
 export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onTolak, onSlip }: Props) {
-  const v = statusView[tampilanStatus(o)];
+  const v = statusViewPesanan(o);
   const segera = sisa !== null && sisa < 60;
   const totalTahan = o.hold_until ? Math.max(1, (Date.parse(o.hold_until) - Date.parse(o.created_at)) / 1000) : 300;
   const menitMasak = o.status === "cooking" && o.cooking_at && sekarang ? Math.max(0, Math.floor((sekarang - Date.parse(o.cooking_at)) / 60000)) : null;

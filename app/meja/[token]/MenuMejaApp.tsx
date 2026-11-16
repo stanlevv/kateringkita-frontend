@@ -185,8 +185,9 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
     const { code, guest_token } = r.data;
     simpanTamu(code, { tamu: guest_token, meja: token });
     simpanNama(nama.trim());
-    setBaris([]);
     const b = await panggil(() => bayarPesananMeja(code, guest_token, `${window.location.origin}/meja/pesanan/${code}`));
+    // dikosongkan saat diteruskan, bukan selagi form masih terbuka menunggu tautan bayar (sempat tampil "Rp 0")
+    setBaris([]);
     if ("data" in b) return window.location.assign(b.data.payment_url);
     router.push(`/meja/pesanan/${code}`); // halaman status menyediakan tombol bayar ulang
   }

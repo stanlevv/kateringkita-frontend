@@ -1,20 +1,21 @@
 import { Ban, CheckCircle2, TimerOff } from "lucide-react";
 import { cx } from "@/app/components/ui/cx";
 import { formatJam, formatTanggal } from "@/lib/format";
+import { labelTahapSiap } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 
-const TAHAP: [keyof MerchantOrder, string][] = [
+const TAHAP: [keyof MerchantOrder, string | null][] = [
   ["created_at", "Dipesan"],
   ["confirmed_at", "Dikonfirmasi"],
   ["cooking_at", "Mulai dimasak"],
-  ["ready_at", "Siap diambil"],
+  ["ready_at", null], // labelTahapSiap: pesanan meja diantar, titik temu diambil
   ["completed_at", "Selesai"],
 ];
 const OLEH = { merchant: "penjual", customer: "pembeli", system: "sistem" } as const;
 
 /** PS-N2/PS-A1: tahap yang sudah dilalui dari cap waktu; dibatalkan/kadaluarsa menutup dengan pelaku + alasan. */
 export function StatusTimeline({ order: o }: { order: MerchantOrder }) {
-  const langkah = TAHAP.filter(([k]) => o[k]).map(([k, label]) => ({ label, waktu: o[k] as string, detail: null as string | null, buruk: false }));
+  const langkah = TAHAP.filter(([k]) => o[k]).map(([k, label]) => ({ label: label ?? labelTahapSiap(o), waktu: o[k] as string, detail: null as string | null, buruk: false }));
   if (o.status === "cancelled" || o.status === "expired") {
     langkah.push({
       label: o.cancelled_by ? `Dibatalkan oleh ${OLEH[o.cancelled_by]}` : o.status === "expired" ? "Kadaluarsa" : "Dibatalkan",
