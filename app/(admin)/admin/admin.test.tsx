@@ -44,6 +44,7 @@ describe("shell admin", () => {
       ["Data master", "/admin/data-master"],
       ["Promo & biaya", "/admin/promo"],
       ["Banner", "/admin/banner"],
+      ["Pop-up", "/admin/popup"],
       ["Keuangan", "/admin/keuangan"],
       ["Pencairan", "/admin/pencairan"],
       ["Pengumuman", "/admin/pengumuman"],

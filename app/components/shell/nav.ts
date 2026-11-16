@@ -18,6 +18,7 @@ export const adminNav: NavGroup[] = [
       { href: "/admin/promo", label: "Promo & biaya", icon: Tag },
       // Banner beranda: semua tingkat melihat, super & ops memutuskan (bukan KHUSUS_SUPER)
       { href: "/admin/banner", label: "Banner", icon: ImageIcon },
+      { href: "/admin/popup", label: "Pop-up", icon: Megaphone },
       { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
       { href: "/admin/pencairan", label: "Pencairan", icon: Banknote },
       { href: "/admin/pengumuman", label: "Pengumuman", icon: Megaphone },
