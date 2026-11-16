@@ -45,12 +45,16 @@ export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
     () => false,
   );
 
+  // Status yang dilihat pembeli (sama dengan backend D2): saklar menyala DAN di dalam jam buka.
+  // Saklar menyala di luar jam = toko buka otomatis saat jam buka tiba.
+  const bukaUntukPembeli = isOpen && !luarJam;
+
   return (
     <div className={cx("flex flex-col gap-1", rail && "items-center sb-lebar:items-stretch")}>
       <div className="flex items-center justify-between gap-2">
         <div className={cx(rail && "hidden sb-lebar:block")}>
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Status dapur</p>
-          <p className={cx("text-sm font-semibold", isOpen ? "text-success" : "text-ink-muted")}>{isOpen ? "Buka" : "Tutup"}</p>
+          <p className={cx("text-sm font-semibold", bukaUntukPembeli ? "text-success" : "text-ink-muted")}>{bukaUntukPembeli ? "Buka" : "Tutup"}</p>
         </div>
         <Switch
           checked={isOpen}
@@ -59,7 +63,11 @@ export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
           onChange={(v) => (v ? ubah(true) : setKonfirmasi(true))}
         />
       </div>
-      {luarJam && <p className={cx("text-xs text-warning", rail && "hidden sb-lebar:block")}>Di luar jam buka ({labelJamBuka(buka, tutup)})</p>}
+      {isOpen && luarJam && (
+        <p className={cx("text-xs text-warning", rail && "hidden sb-lebar:block")}>
+          Di luar jam buka ({labelJamBuka(buka, tutup)}) · pembeli belum bisa memesan
+        </p>
+      )}
       <ConfirmDialog
         open={konfirmasi}
         onClose={() => setKonfirmasi(false)}

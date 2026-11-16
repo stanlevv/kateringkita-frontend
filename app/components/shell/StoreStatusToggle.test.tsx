@@ -72,11 +72,23 @@ describe("SH-N3 / SH-E1 status dapur", () => {
     selesai({ data: { is_open: true } });
     await waitFor(() => expect(sw()).not.toBeDisabled());
   });
-  it("SH-A1 label di luar jam buka", async () => {
+  it("SH-A1 saklar menyala tapi di luar jam buka: status Tutup seperti yang dilihat pembeli", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-30T22:30:00Z")); // 05.30 WIB
     tampil(<StoreStatusToggle />);
-    expect(await screen.findByText("Di luar jam buka (07.00–16.00)")).toBeInTheDocument();
+    expect(await screen.findByText("Di luar jam buka (07.00–16.00) · pembeli belum bisa memesan")).toBeInTheDocument();
+    expect(screen.getByText("Tutup")).toBeInTheDocument();
+    expect(screen.queryByText("Buka")).not.toBeInTheDocument();
+    // saklar tetap menyala: toko buka otomatis saat jam buka tiba
+    expect(sw()).toHaveAttribute("aria-checked", "true");
+    vi.useRealTimers();
+  });
+  it("saklar menyala di dalam jam buka: status Buka", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-30T03:00:00Z")); // 10.00 WIB
+    tampil(<StoreStatusToggle />);
+    expect(screen.getByText("Buka")).toBeInTheDocument();
+    expect(screen.queryByText(/Di luar jam buka/)).not.toBeInTheDocument();
     vi.useRealTimers();
   });
 });

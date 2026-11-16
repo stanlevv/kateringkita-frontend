@@ -127,7 +127,7 @@ function Isi({ orders: awalOrders, menus: awalMenus, adaTitikTemu, dimuat, galat
         )}
         {diLuarJamBuka(kini, buka, tutup) && (
           <Banner tone="info" action={<Link href="/pengaturan" className={`inline-flex min-h-11 items-center font-medium underline underline-offset-4 ${fokus}`}>Ubah jam buka</Link>}>
-            Di luar jam buka ({labelJamBuka(buka, tutup)})
+            {`Di luar jam buka (${labelJamBuka(buka, tutup)}) — pembeli belum bisa memesan sampai ${buka.replace(":", ".")}`}
           </Banner>
         )}
         {(!adaTitikTemu || menus.length === 0) && (

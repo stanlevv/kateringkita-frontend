@@ -256,3 +256,13 @@ describe("DB-N3 kuota", () => {
     expect(diperbarui()).toHaveTextContent("Diperbarui 10 detik lalu");
   });
 });
+
+describe("status dapur di luar jam buka", () => {
+  it("saklar menyala di luar jam buka: banner menyebut pembeli belum bisa memesan", () => {
+    vi.setSystemTime(new Date("2026-10-30T22:30:00Z")); // 05.30 WIB
+    render(
+      <StoreStatusProvider store={{ isOpen: true, buka: "07:00", tutup: "16:00" }}><Toaster /><DashboardLive data={muat()} galat={false} /></StoreStatusProvider>,
+    );
+    expect(screen.getByText("Di luar jam buka (07.00–16.00) — pembeli belum bisa memesan sampai 07.00")).toBeInTheDocument();
+  });
+});
