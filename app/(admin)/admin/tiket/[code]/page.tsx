@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { GagalMuat } from "@/app/components/GagalMuat";
+import { MuatUlangBerkala } from "@/app/components/MuatUlangBerkala";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { kodeTiketValid } from "@/services/adminTiketService";
@@ -27,6 +28,8 @@ export default async function TiketDetailPage({ params }: { params: Promise<{ co
   const t = res.data;
   return (
     <PageHeader title={t.subject} actions={<>{t.status !== "closed" && <TutupTiket code={t.code} />}{kembali}</>}>
+      {/* balasan pembeli muncul sendiri selama tiket belum ditutup */}
+      {t.status !== "closed" && <MuatUlangBerkala />}
       <TiketDetail t={t} />
     </PageHeader>
   );
