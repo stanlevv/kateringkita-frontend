@@ -4,7 +4,7 @@ import { PROMO_STATUS, promoStatus, teksJenis } from "./promo-status";
 import type { Promo } from "@/types/promo";
 
 const NOW = Date.parse("2026-10-31T00:00:00Z");
-const dasar: Promo = { id: 1, code: "A", description: null, type: "percent", value: 10, max_discount: null, min_subtotal: 0, quota: 10, used_count: 0, per_user_limit: 1, starts_at: "2026-10-01T00:00:00Z", ends_at: "2026-11-30T00:00:00Z", is_active: true };
+const dasar: Promo = { id: 1, code: "A", description: null, type: "percent", value: 10, max_discount: null, min_subtotal: 0, quota: 10, used_count: 0, per_user_limit: 1, starts_at: "2026-10-01T00:00:00Z", ends_at: "2026-11-30T00:00:00Z", is_active: true, is_public: true };
 const st = (p: Partial<Promo>) => promoStatus({ ...dasar, ...p }, NOW);
 
 describe("promoStatus (PR-N1)", () => {

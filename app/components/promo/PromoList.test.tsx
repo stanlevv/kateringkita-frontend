@@ -33,6 +33,11 @@ describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
     expect(within(screen.getByRole("article", { name: "GRATISBIAYA" })).getByText("Nonaktif")).toBeInTheDocument();
   });
 
+  it("voucher disembunyikan dari halaman toko → lencana Tersembunyi", () => {
+    tampil([{ ...semua[0], is_public: false }, { ...semua[1], is_public: true }]);
+    expect(screen.getAllByText("Tersembunyi")).toHaveLength(1);
+  });
+
   it("PR-S1 kosong", () => {
     tampil([]);
     expect(screen.getByText("Belum ada promo")).toBeInTheDocument();

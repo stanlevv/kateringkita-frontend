@@ -47,12 +47,40 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
   });
 
   it("jenis gratis biaya layanan menyembunyikan nilai; potongan Rupiah menyembunyikan maks potongan", async () => {
-    tampil();
+    render(<PromoForm admin onSaved={onSaved} onClose={onClose} />);
     expect(screen.getByLabelText(/Maks potongan/)).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText(/Jenis promo/), "fixed");
     expect(screen.queryByLabelText(/Maks potongan/)).toBeNull();
     await userEvent.selectOptions(screen.getByLabelText(/Jenis promo/), "free_service_fee");
     expect(screen.queryByLabelText(/^Nilai/)).toBeNull();
+  });
+
+  it("C2: penjual tidak punya opsi gratis biaya layanan; admin tetap punya; promo toko lama jenis itu tetap bisa diubah", () => {
+    const opsi = () => Array.from((screen.getByLabelText(/Jenis promo/) as HTMLSelectElement).options).map((o) => o.value);
+    const { unmount } = tampil();
+    expect(opsi()).toEqual(["percent", "fixed"]);
+    unmount();
+    const a = render(<PromoForm admin onSaved={onSaved} onClose={onClose} />);
+    expect(opsi()).toEqual(["percent", "fixed", "free_service_fee"]);
+    a.unmount();
+    tampil({ ...promos()[0], type: "free_service_fee", value: 0 });
+    expect(opsi()).toContain("free_service_fee");
+  });
+
+  it("sakelar tampil di halaman toko: bawaan menyala, dimatikan → is_public false terkirim", async () => {
+    savePromo.mockResolvedValue({ data: { ...promos()[0], id: 9, code: "RAMADAN", is_public: false } });
+    tampil();
+    const sak = screen.getByRole("switch", { name: "Tampilkan di halaman toko" });
+    expect(sak).toHaveAttribute("aria-checked", "true");
+    await userEvent.click(sak);
+    await isiValid();
+    await simpan();
+    await waitFor(() => expect(savePromo).toHaveBeenCalledWith(null, expect.objectContaining({ is_public: false })));
+  });
+
+  it("admin: sakelar bernama 'Tampilkan di daftar voucher'", () => {
+    render(<PromoForm admin onSaved={onSaved} onClose={onClose} />);
+    expect(screen.getByRole("switch", { name: "Tampilkan di daftar voucher" })).toHaveAttribute("aria-checked", "true");
   });
 
   it("submit valid mengirim kode kapital, waktu ISO UTC, kuota kosong = null", async () => {

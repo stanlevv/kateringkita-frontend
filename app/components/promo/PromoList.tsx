@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Power, TicketPercent, Trash2 } from "lucide-react";
+import { EyeOff, Pencil, Plus, Power, TicketPercent, Trash2 } from "lucide-react";
 import { deletePromo, setPromoActive } from "@/app/actions/promos";
 import { panggil } from "@/lib/aksi";
 import { GagalMuat } from "@/app/components/GagalMuat";
@@ -77,7 +77,10 @@ export function PromoList({ promos, galat, admin, simpan, setAktifAksi }: {
                   <article aria-label={p.code} className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-4">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-mono text-lg font-semibold text-ink">{p.code}</p>
-                      <Badge tone={st.tone} icon={st.icon}>{st.label}</Badge>
+                      <div className="flex flex-wrap justify-end gap-1">
+                        <Badge tone={st.tone} icon={st.icon}>{st.label}</Badge>
+                        {p.is_public === false && <Badge tone="neutral" icon={EyeOff}>Tersembunyi</Badge>}
+                      </div>
                     </div>
                     {p.description && <p className="text-ink-muted">{p.description}</p>}
                     <p className="font-medium text-ink">{teksJenis(p)}</p>

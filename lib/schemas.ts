@@ -155,6 +155,7 @@ const promoForm = z.object({
   starts_at: waktu("Waktu mulai wajib diisi."),
   ends_at: waktu("Waktu selesai wajib diisi."),
   is_active: z.boolean(),
+  is_public: z.boolean().default(true),
 });
 
 /** Satu pintu validasi promo untuk form dan server action. `terpakai` = used_count promo yang diubah. */

@@ -21,7 +21,7 @@ const LABEL: Record<string, string> = {
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const opsional = (s: string) => (s.trim() === "" ? null : Number(s));
 
-type Isian = { code: string; description: string; type: Promo["type"]; value: string; max_discount: string; min_subtotal: string; quota: string; per_user_limit: string; starts: string; ends: string; is_active: boolean };
+type Isian = { code: string; description: string; type: Promo["type"]; value: string; max_discount: string; min_subtotal: string; quota: string; per_user_limit: string; starts: string; ends: string; is_active: boolean; is_public: boolean };
 
 const awalDari = (p?: Promo | null): Isian => {
   const sekarang = new Date().toISOString();
@@ -37,6 +37,7 @@ const awalDari = (p?: Promo | null): Isian => {
     starts: isoKeInputWib(p?.starts_at ?? sekarang),
     ends: isoKeInputWib(p?.ends_at ?? new Date(Date.now() + 30 * 86400e3).toISOString()),
     is_active: p?.is_active ?? true,
+    is_public: p?.is_public ?? true,
   };
 };
 
@@ -58,7 +59,7 @@ export function PromoForm({ promo, onSaved, onClose, simpan = savePromo, admin }
     value: v.type === "free_service_fee" ? 0 : num(v.value),
     max_discount: persen ? opsional(v.max_discount) : null,
     min_subtotal: num(v.min_subtotal), quota: opsional(v.quota), per_user_limit: num(v.per_user_limit),
-    starts_at: inputWibKeIso(v.starts), ends_at: inputWibKeIso(v.ends), is_active: v.is_active,
+    starts_at: inputWibKeIso(v.starts), ends_at: inputWibKeIso(v.ends), is_active: v.is_active, is_public: v.is_public,
   };
   const semua = cekPromo(input, promo?.used_count ?? 0);
   const galatSemua = dicoba ? { ...server, ...semua } : semua;
@@ -103,7 +104,8 @@ export function PromoForm({ promo, onSaved, onClose, simpan = savePromo, admin }
         <Select value={v.type} onChange={(e) => set("type", e.target.value as Promo["type"])} onBlur={blur("type")}>
           <option value="percent">Persen</option>
           <option value="fixed">Potongan Rupiah</option>
-          <option value="free_service_fee">Gratis biaya layanan</option>
+          {/* C2: biaya layanan milik platform — hanya admin, atau promo toko lama yang sudah berjenis ini */}
+          {(admin || promo?.type === "free_service_fee") && <option value="free_service_fee">Gratis biaya layanan</option>}
         </Select>
       </Field>
       {v.type !== "free_service_fee" && (
@@ -136,6 +138,11 @@ export function PromoForm({ promo, onSaved, onClose, simpan = savePromo, admin }
         <Field label="Selesai (WIB)" id="pf-ends_at" required error={galat("ends_at")}>
           <Input type="datetime-local" value={v.ends} onChange={(e) => set("ends", e.target.value)} onBlur={blur("ends_at")} />
         </Field>
+      </div>
+      <div className="flex items-center gap-3">
+        <Switch checked={v.is_public} onChange={(x) => set("is_public", x)} label={admin ? "Tampilkan di daftar voucher" : "Tampilkan di halaman toko"} />
+        <span className="text-ink">{admin ? "Tampilkan di daftar voucher" : "Tampilkan di halaman toko"}</span>
+        <span className="text-sm text-ink-muted">Bila mati, voucher tetap bisa dipakai dengan mengetik kodenya.</span>
       </div>
       {!admin && (
         <div className="flex items-center gap-3">

@@ -12,4 +12,6 @@ export type Promo = {
   starts_at: string;
   ends_at: string;
   is_active: boolean;
+  /** Voucher tampil di halaman toko / daftar voucher & bisa diklaim (false = kode rahasia). */
+  is_public: boolean;
 };

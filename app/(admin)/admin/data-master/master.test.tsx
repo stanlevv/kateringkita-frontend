@@ -39,7 +39,7 @@ const kat = [
   { id: 2, name: "Kue", icon: null, sort_order: 2, is_active: true },
 ];
 const titik = [{ id: 7, name: "Kantin A", description: "Dekat gerbang", is_active: true }];
-const promo: Promo = { id: 3, code: "PLAT10", description: null, type: "percent", value: 10, max_discount: null, min_subtotal: 0, quota: null, used_count: 0, per_user_limit: 1, starts_at: "2026-11-01T00:00:00.000Z", ends_at: "2027-12-01T00:00:00.000Z", is_active: true };
+const promo: Promo = { id: 3, code: "PLAT10", description: null, type: "percent", value: 10, max_discount: null, min_subtotal: 0, quota: null, used_count: 0, per_user_limit: 1, starts_at: "2026-11-01T00:00:00.000Z", ends_at: "2027-12-01T00:00:00.000Z", is_active: true, is_public: true };
 
 beforeEach(() => {
   for (const m of [requireAdmin, adminFetch, replace, refresh, tukarUrutan, setAktifMaster, simpanMaster, simpanBiayaLayanan, simpanPromoPlatform, setAktifPromoPlatform]) m.mockReset();
