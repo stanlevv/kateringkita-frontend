@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import { Minus, Plus, ScanLine, ShoppingBag, UtensilsCrossed } from "lucide-react";
 import { bayarPesananMeja, pesanDariMeja } from "@/app/actions/meja";
 import { Button } from "@/app/components/ui/Button";
 import { cx, fokus } from "@/app/components/ui/cx";
@@ -210,6 +211,9 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
               <span className={cx("rounded-full px-3 py-1 text-sm font-semibold", toko.is_open ? "bg-success-bg text-success" : "bg-danger-bg text-danger")}>
                 {toko.is_open ? `Buka · sampai ${jamTitik(toko.close_time)}` : `Tutup · buka ${jamTitik(toko.open_time)}`}
               </span>
+              <Link href="/meja?pindai=1" className={cx("inline-flex items-center gap-1 rounded-full bg-surface/90 px-3 py-1 text-sm font-semibold text-ink hover:bg-surface", fokus)}>
+                <ScanLine aria-hidden className="size-4" />Scan meja lain
+              </Link>
             </div>
           </div>
         </div>

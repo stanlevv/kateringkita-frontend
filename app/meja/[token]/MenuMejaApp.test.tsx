@@ -44,6 +44,7 @@ describe("menu pesan dari meja", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Dapur Siti" })).toBeInTheDocument();
     expect(screen.getByText("MEJA 5")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tambah Tumis Habis" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Scan meja lain" })).toHaveAttribute("href", "/meja?pindai=1");
   });
 
   it("tambah menu (dengan opsi lewat panel) → baki menghitung total → pesan & bayar diteruskan ke Midtrans", async () => {
