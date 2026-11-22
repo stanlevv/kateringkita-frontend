@@ -40,3 +40,18 @@ describe("F20 CSV keuangan", () => {
     expect((await minta(`?dari=${hariIni}&sampai=${hariIni}`)).status).toBe(500);
   });
 });
+
+// AUD-48: navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
+describe("XS-Leak", () => {
+  it.each(["cross-site", "same-site", "none"])("sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca", async (asal) => {
+    getSession.mockClear();
+    const res = await GET(new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": asal } }));
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
+    expect(getSession).not.toHaveBeenCalled();
+  });
+  it("same-origin tetap mengunduh", async () => {
+    const res = await GET(new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": "same-origin" } }));
+    expect(res.status).toBe(200);
+  });
+});
