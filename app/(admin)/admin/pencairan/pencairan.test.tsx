@@ -22,8 +22,8 @@ const rek = { bank: "bca", bank_name: "BCA", account_number: "012345678901", acc
 const SALDO = {
   as_of: AS_OF,
   rows: [
-    { merchant_id: 1, business_name: "Dapur Siti", account: rek, amount: 58_000, orders: 3, since: "2026-11-08T03:00:00.000Z" },
-    { merchant_id: 2, business_name: "Dapur Andi", account: null, amount: 15_000, orders: 1, since: "2026-11-09T03:00:00.000Z" },
+    { merchant_id: 1, business_name: "Dapur Siti", account: rek, amount: 58_000, orders: 3, platform_discount: 6_000, since: "2026-11-08T03:00:00.000Z" },
+    { merchant_id: 2, business_name: "Dapur Andi", account: null, amount: 15_000, orders: 1, platform_discount: 0, since: "2026-11-09T03:00:00.000Z" },
   ],
 };
 const REFUND = [{
@@ -54,6 +54,9 @@ describe("/admin/pencairan (F26)", () => {
     expect(adminFetch.mock.calls.map((c) => c[0]).sort()).toEqual(["/payouts/balances", "/payouts?page=1", "/refunds"]);
     const saldo = screen.getByRole("table", { name: "Saldo per toko" });
     expect(within(saldo).getByText("Rp 58.000")).toBeInTheDocument();
+    // AUD-25: porsi voucher platform tampil sebelum admin mentransfer
+    expect(within(saldo).getByRole("columnheader", { name: "Voucher platform" })).toBeInTheDocument();
+    expect(within(saldo).getByText("Rp 6.000")).toBeInTheDocument();
     expect(within(saldo).getByText("Rekening belum diisi")).toBeInTheDocument();
     expect(within(screen.getByRole("table", { name: "Dana yang harus dikembalikan" })).getByText("Dibatalkan penjual: Stok habis")).toBeInTheDocument();
     expect(within(screen.getByRole("table", { name: "Riwayat pencairan" })).getByText("TRF-0001")).toBeInTheDocument();

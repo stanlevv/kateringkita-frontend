@@ -27,7 +27,9 @@ export type PencairanSaya = {
 };
 
 // as_of dikirim balik sebagai `until` saat mencatat pencairan
-export type SaldoPenjual = { merchant_id: number; business_name: string; account: RekeningPencairan | null; amount: number; orders: number; since: string };
+export type SaldoPenjual = { merchant_id: number; business_name: string; account: RekeningPencairan | null; amount: number; orders: number;
+  /** AUD-25: total voucher platform di pesanan saldo ini; opsional selama backend lama belum mengirimnya */
+  platform_discount?: number; since: string };
 export type DaftarSaldo = { as_of: string; rows: SaldoPenjual[] };
 
 export type RiwayatPencairan = { data: Pencairan[]; meta: { page: number; limit: number; total: number } };
