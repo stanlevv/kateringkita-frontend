@@ -46,9 +46,14 @@ describe("antrean verifikasi", () => {
     expect(screen.getAllByText("Ada menu aktif")[1].parentElement).toHaveTextContent("belum terpenuhi");
     expect(screen.getAllByText("Menunggu").length).toBe(2);
   });
-  it("checklist lengkap: Verifikasi langsung dikirim", async () => {
+  // AUD-35: checklist diisi penjual sendiri; verifikasi sekali klik bisa dipicu clickjacking, jadi tetap lewat konfirmasi
+  it("checklist lengkap: Verifikasi tetap meminta konfirmasi", async () => {
     render(<VerificationQueue rows={[antrian({})]} />);
     await userEvent.click(screen.getByRole("button", { name: "Verifikasi" }));
+    expect(aksiPenjual).not.toHaveBeenCalled();
+    const dlg = within(screen.getByRole("dialog", { name: "Verifikasi penjual" }));
+    expect(dlg.getByText("Checklist lengkap. Verifikasi toko ini? Toko akan tampil untuk pembeli.")).toBeInTheDocument();
+    await userEvent.click(dlg.getByRole("button", { name: "Ya, verifikasi" }));
     expect(aksiPenjual).toHaveBeenCalledWith(1, "verify", undefined);
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
@@ -80,6 +85,7 @@ describe("antrean verifikasi", () => {
     aksiPenjual.mockResolvedValue({ error: { code: "CONFLICT", message: "Status penjual sudah berubah." } });
     render(<><Toaster /><VerificationQueue rows={[antrian({})]} /></>);
     await userEvent.click(screen.getByRole("button", { name: "Verifikasi" }));
+    await userEvent.click(screen.getByRole("button", { name: "Ya, verifikasi" }));
     await waitFor(() => expect(screen.getByText(/Status penjual sudah berubah/)).toBeInTheDocument());
     expect(refresh).toHaveBeenCalled();
   });

@@ -32,6 +32,8 @@ describe("BannerAdmin", () => {
     const k = within(screen.getByRole("article"));
     expect(k.getByText("Dapur Siti")).toBeInTheDocument();
     await userEvent.click(k.getByRole("button", { name: "Setujui" }));
+    expect(tinjauBannerAdmin).not.toHaveBeenCalled(); // AUD-35: lewat konfirmasi dulu
+    await userEvent.click(screen.getByRole("button", { name: "Ya, setujui" }));
     expect(tinjauBannerAdmin).toHaveBeenCalledWith(1, { status: "disetujui" });
     expect(await screen.findByText("Banner disetujui.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();

@@ -21,6 +21,13 @@ import type { ActionResult } from "@/types/api";
 
 const LEVEL = Object.keys(LABEL_LEVEL) as AdminLevel[];
 
+// AUD-35: setiap aksi akun lewat konfirmasi; "Aktifkan" tanpa konfirmasi bisa dipicu clickjacking dua kali klik
+const KONFIRMASI = {
+  reset: { judul: "Reset kata sandi?", tombol: "Reset sandi", isi: (n: string) => `${n} dikeluarkan dari semua perangkat dan harus masuk dengan kata sandi sementara baru.` },
+  nonaktif: { judul: "Nonaktifkan admin?", tombol: "Nonaktifkan", isi: (n: string) => `${n} tidak bisa masuk lagi dan dikeluarkan dari semua perangkat.` },
+  aktif: { judul: "Aktifkan admin?", tombol: "Ya, aktifkan", isi: (n: string) => `${n} bisa masuk lagi dengan kata sandinya yang lama.` },
+};
+
 function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => void; onClose: () => void }) {
   const [v, setV] = useState({ full_name: "", phone: "", admin_level: "ops" as AdminLevel });
   const [galat, setGalat] = useState<Record<string, string>>({});
@@ -90,7 +97,7 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
   const router = useRouter();
   const [form, setForm] = useState(false);
   const [sandi, setSandi] = useState<AdminDenganSandi | null>(null);
-  const [konfirmasi, setKonfirmasi] = useState<{ a: AkunAdmin; aksi: "nonaktif" | "reset" } | null>(null);
+  const [konfirmasi, setKonfirmasi] = useState<{ a: AkunAdmin; aksi: keyof typeof KONFIRMASI } | null>(null);
   const [sibuk, setSibuk] = useState(false);
 
   async function jalankan<T>(fn: () => Promise<ActionResult<T>>, pesan: string) {
@@ -132,7 +139,7 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
             <Button variant="secondary" aria-label={`Nonaktifkan ${a.full_name}`} onClick={() => setKonfirmasi({ a, aksi: "nonaktif" })}>Nonaktifkan</Button>
           </>
         ) : (
-          <Button variant="secondary" aria-label={`Aktifkan ${a.full_name}`} disabled={sibuk} onClick={() => void jalankan(() => setAktifAdmin(a.id, true), "Diaktifkan")}>Aktifkan</Button>
+          <Button variant="secondary" aria-label={`Aktifkan ${a.full_name}`} disabled={sibuk} onClick={() => setKonfirmasi({ a, aksi: "aktif" })}>Aktifkan</Button>
         )}
       </div>
     ) },
@@ -156,15 +163,14 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
       <Dialog open={!!sandi} onClose={() => setSandi(null)} title="Akun admin siap">
         {sandi && <SandiSementara data={sandi} onClose={() => setSandi(null)} />}
       </Dialog>
-      <ConfirmDialog open={!!k} onClose={() => setKonfirmasi(null)} tone="danger" busy={sibuk}
-        title={k?.aksi === "reset" ? "Reset kata sandi?" : "Nonaktifkan admin?"}
-        body={k?.aksi === "reset"
-          ? `${k.a.full_name} dikeluarkan dari semua perangkat dan harus masuk dengan kata sandi sementara baru.`
-          : `${k?.a.full_name ?? ""} tidak bisa masuk lagi dan dikeluarkan dari semua perangkat.`}
-        confirmLabel={k?.aksi === "reset" ? "Reset sandi" : "Nonaktifkan"}
+      <ConfirmDialog open={!!k} onClose={() => setKonfirmasi(null)} tone={k?.aksi === "aktif" ? "primary" : "danger"} busy={sibuk}
+        title={KONFIRMASI[k?.aksi ?? "nonaktif"].judul}
+        body={KONFIRMASI[k?.aksi ?? "nonaktif"].isi(k?.a.full_name ?? "")}
+        confirmLabel={KONFIRMASI[k?.aksi ?? "nonaktif"].tombol}
         onConfirm={() => {
           if (!k) return;
           if (k.aksi === "nonaktif") void jalankan(() => setAktifAdmin(k.a.id, false), "Dinonaktifkan");
+          else if (k.aksi === "aktif") void jalankan(() => setAktifAdmin(k.a.id, true), "Diaktifkan");
           else void jalankan(() => resetSandiAdmin(k.a.id), "Kata sandi direset").then((d) => d && setSandi(d));
         }} />
     </div>

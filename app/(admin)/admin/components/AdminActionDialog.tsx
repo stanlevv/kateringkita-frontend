@@ -60,7 +60,8 @@ export function AdminActionDialog({ id, status, lengkap }: { id: number; status:
     router.refresh();
   }
 
-  const klik = (aksi: AksiPenjual) => (aksi === "verify" && lengkap ? void kirim(aksi) : setDialog(aksi));
+  // AUD-35: semua aksi lewat dialog, termasuk verifikasi dengan checklist lengkap (checklist diisi penjual sendiri)
+  const klik = (aksi: AksiPenjual) => setDialog(aksi);
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -71,8 +72,10 @@ export function AdminActionDialog({ id, status, lengkap }: { id: number; status:
         {(dialog === "request-fix" || dialog === "suspend") && <FormAlasan aksi={dialog} sibuk={sibuk} onClose={() => setDialog(null)} onKirim={(al) => kirim(dialog, al)} />}
       </Dialog>
       <ConfirmDialog
-        open={dialog === "verify"} onClose={() => setDialog(null)} title="Verifikasi penjual" tone="primary" confirmLabel="Tetap verifikasi" busy={sibuk}
-        body="Checklist belum lengkap. Tetap verifikasi?" onConfirm={() => kirim("verify")}
+        open={dialog === "verify"} onClose={() => setDialog(null)} title="Verifikasi penjual" tone="primary"
+        confirmLabel={lengkap ? "Ya, verifikasi" : "Tetap verifikasi"} busy={sibuk}
+        body={lengkap ? "Checklist lengkap. Verifikasi toko ini? Toko akan tampil untuk pembeli." : "Checklist belum lengkap. Tetap verifikasi?"}
+        onConfirm={() => kirim("verify")}
       />
       <ConfirmDialog
         open={dialog === "reactivate"} onClose={() => setDialog(null)} title="Aktifkan lagi toko" tone="primary" confirmLabel="Aktifkan lagi" busy={sibuk}
