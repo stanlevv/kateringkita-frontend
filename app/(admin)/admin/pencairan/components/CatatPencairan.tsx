@@ -31,7 +31,10 @@ export function CatatPencairan({ saldo, asOf }: { saldo: SaldoPenjual; asOf: str
     e.preventDefault();
     if (sibuk) return;
     setSibuk(true);
-    const h = await panggil(() => catatPencairan({ merchant_id: saldo.merchant_id, amount: saldo.amount, until: asOf, reference: referensi, note: catatan }));
+    const h = await panggil(() => catatPencairan({
+      merchant_id: saldo.merchant_id, amount: saldo.amount, until: asOf, reference: referensi, note: catatan,
+      account_updated_at: saldo.account?.updated_at, // AUD-34: rekening yang tampil di dialog ini
+    }));
     setSibuk(false);
     if ("error" in h) {
       if (h.error.fields) return setGalat({ reference: h.error.fields.reference?.[0], note: h.error.fields.note?.[0] });

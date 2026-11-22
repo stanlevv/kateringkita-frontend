@@ -69,7 +69,10 @@ describe("/admin/pencairan (F26)", () => {
     const dialog = screen.getByRole("dialog", { name: "Catat pencairan" });
     await userEvent.type(within(dialog).getByLabelText(/Nomor referensi transfer/), "TRF-0002");
     await userEvent.click(within(dialog).getByRole("button", { name: "Catat pencairan" }));
-    expect(catatPencairan).toHaveBeenCalledWith({ merchant_id: 1, amount: 58_000, until: AS_OF, reference: "TRF-0002", note: "" });
+    // AUD-34: versi rekening yang tampil ikut dikirim; backend menolak bila rekening sudah diganti
+    expect(catatPencairan).toHaveBeenCalledWith({
+      merchant_id: 1, amount: 58_000, until: AS_OF, reference: "TRF-0002", note: "", account_updated_at: rek.updated_at,
+    });
     expect(await screen.findByText("Pencairan Rp 58.000 untuk Dapur Siti tercatat.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
   });
