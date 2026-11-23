@@ -1,3 +1,5 @@
+// Test BannerAdmin: setujui lewat konfirmasi, tolak wajib alasan, nonaktifkan banner tayang, support hanya melihat,
+// dan dialog buat banner platform. Server action dan unggah foto diganti tiruan (mock).
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

@@ -1,3 +1,8 @@
+// Halaman /admin/banner: banner beranda aplikasi pembeli (mobile). Banner = gambar promosi dengan masa tayang (tanggal
+// mulai dan selesai); di luar masa itu banner tidak tampil walau sudah disetujui. Ada dua sumber: pengajuan penjual yang
+// menunggu persetujuan admin, dan banner platform yang dibuat admin dan langsung tayang.
+// Server component: mengambil banner (GET /admin/banners) dan voucher platform (GET /admin/promos) bersamaan, lalu
+// menyerahkannya ke BannerAdmin. Semua tingkat admin melihat; hanya super dan ops yang memutuskan dan membuat banner.
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { voucherOptions } from "@/lib/voucher-options";
@@ -7,7 +12,11 @@ import type { Banner } from "@/types/banner";
 import type { Promo } from "@/types/promo";
 import { BannerAdmin } from "./components/BannerAdmin";
 
-// Banner beranda mobile: pengajuan penjual (setujui / tolak) + banner platform. Semua tingkat melihat; super & ops memutuskan.
+/**
+ * Halaman banner admin. Voucher dipakai sebagai pilihan tujuan banner platform; gagal memuat voucher tidak menggagalkan
+ * halaman (pilihannya kosong saja).
+ * @returns PageHeader berisi BannerAdmin, atau LoadError bila banner gagal dimuat
+ */
 export default async function BannerAdminPage() {
   const session = await requireAdmin();
   const [banners, promos] = await Promise.all([adminFetch<Banner[]>("/banners"), adminFetch<Promo[]>("/promos")]);

@@ -1,3 +1,8 @@
+// Komponen BannerAdmin: isi halaman /admin/banner. Tombol "Buat banner platform" (membuka BannerForm di dialog) dan
+// kartu setiap banner: gambar, pemilik (toko atau platform), tujuan, masa tayang, status, dan tombol tinjau
+// (setujui, tolak dengan alasan, nonaktifkan). Tinjauan lewat server action reviewAdminBanner dan banner platform lewat
+// createAdminBanner (app/actions/admin/banner.ts). Data banner dan voucher diambil page.tsx.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, dialog, dan router.
 "use client";
 
 import { useState } from "react";
@@ -18,9 +23,19 @@ import { bannerStatus } from "@/lib/banner";
 import { formatDate } from "@/lib/format";
 import type { Banner, VoucherOption } from "@/types/banner";
 
+// Pesan galat bila alasan penolakan terlalu pendek.
 const REASON_HINT = "Tulis alasan penolakan (3–300 karakter).";
 
+/**
+ * Kartu satu banner beserta tombol tinjaunya. Tombol yang muncul mengikuti status: menunggu -> tolak dan setujui;
+ * ditolak atau nonaktif -> setujui; disetujui -> nonaktifkan.
+ * @param props.banner banner dari backend
+ * @param props.now waktu acuan untuk status tayang/terjadwal/berakhir
+ * @param props.canEdit true bila admin boleh meninjau (super dan ops)
+ * @returns article
+ */
 function BannerCard({ banner, now, canEdit }: { banner: Banner; now: number; canEdit: boolean }) {
+  // 1. State alasan tolak, galat alasan, tanda sedang mengirim, dan dialog konfirmasi setujui.
   const router = useRouter();
   const [reason, setReason] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -28,17 +43,22 @@ function BannerCard({ banner, now, canEdit }: { banner: Banner; now: number; can
   const [confirmOpen, setConfirmOpen] = useState(false);
   const statusView = bannerStatus(banner, now);
 
+  // 2. Kirim tinjauan; "disetujui"/"ditolak"/"nonaktif" adalah nilai yang diterima backend.
   async function review(status: "disetujui" | "ditolak" | "nonaktif") {
+    // 1. Tolak wajib beralasan minimal 3 karakter; berhenti di sini dengan galat di isian alasan.
     if (status === "ditolak" && reason.trim().length < 3) return setErrorMessage(REASON_HINT);
+    // 2. Panggil server action; alasan hanya dikirim saat menolak.
     setBusy(true);
     const result = await callAction(() =>
       reviewAdminBanner(banner.id, status === "ditolak" ? { status, catatan: reason.trim() } : { status }),
     );
     setBusy(false);
+    // 3. Gagal: galat alasan dari backend tampil di isian, galat lain jadi toast.
     if ("error" in result) {
       if (result.error.fields?.catatan) return setErrorMessage(result.error.fields.catatan[0]);
       return toast({ tone: "danger", message: result.error.message });
     }
+    // 4. Berhasil: toast sesuai keputusan, lalu muat ulang data halaman.
     toast({
       tone: "success",
       message:
@@ -111,7 +131,7 @@ function BannerCard({ banner, now, canEdit }: { banner: Banner; now: number; can
           </div>
         </div>
       )}
-      {/* AUD-35: persetujuan tidak jalan dengan sekali klik */}
+      {/* Setujui lewat konfirmasi dulu: banner yang disetujui tampil ke semua pembeli, jadi salah klik bisa dibatalkan */}
       <ConfirmDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
@@ -129,7 +149,13 @@ function BannerCard({ banner, now, canEdit }: { banner: Banner; now: number; can
   );
 }
 
-/** Banner beranda: antrean pengajuan penjual + banner platform. Super & ops memutuskan; support hanya melihat. */
+/**
+ * Banner beranda: antrean pengajuan penjual + banner platform. Super & ops memutuskan; support hanya melihat.
+ * @param props.banners semua banner dari backend
+ * @param props.vouchers voucher platform yang bisa jadi tujuan banner baru
+ * @param props.canEdit true bila admin boleh meninjau dan membuat banner (super dan ops)
+ * @returns tombol buat banner, kartu banner, dan dialog BannerForm
+ */
 export function BannerAdmin({
   banners,
   vouchers,

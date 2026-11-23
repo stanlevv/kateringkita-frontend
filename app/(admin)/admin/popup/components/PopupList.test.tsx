@@ -1,3 +1,5 @@
+// Test popupStatus (Tayang, Terjadwal, Berakhir, Nonaktif) dan PopupList: nonaktifkan pop-up, buat pop-up baru dengan
+// unggah gambar, voucher, dan masa tayang WIB, serta support hanya melihat. Server action dan unggah diganti tiruan.
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

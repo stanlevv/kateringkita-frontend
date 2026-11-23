@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/popup. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList } from "@/app/components/ui/Skeleton";
 
-// PopupList: tombol buat + kartu pop-up
+/**
+ * Kerangka PopupList: tombol buat + kartu pop-up.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

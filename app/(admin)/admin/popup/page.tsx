@@ -1,3 +1,7 @@
+// Halaman /admin/popup: pop-up promo yang muncul saat aplikasi pembeli (mobile) dibuka. Pop-up punya masa tayang
+// (mulai dan selesai, WIB); di dalam masa itu pop-up aktif terbaru tampil sekali sehari per pembeli dan berhenti
+// setelah vouchernya diklaim. Server component: mengambil pop-up (GET /admin/popups) dan voucher platform
+// (GET /admin/promos) bersamaan, lalu menyerahkannya ke PopupList. Semua tingkat admin melihat; super dan ops mengatur.
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { voucherOptions } from "@/lib/voucher-options";
@@ -7,7 +11,10 @@ import type { Popup } from "@/types/popup";
 import type { Promo } from "@/types/promo";
 import { PopupList } from "./components/PopupList";
 
-// Pop-up promo aplikasi mobile (rancangan voucher 2026-11-16 §5.5): semua tingkat melihat; super & ops mengatur.
+/**
+ * Halaman pop-up admin. Gagal memuat voucher tidak menggagalkan halaman (pilihan voucher kosong saja).
+ * @returns PageHeader berisi PopupList, atau LoadError bila pop-up gagal dimuat
+ */
 export default async function PopupPage() {
   const session = await requireAdmin();
   // GET /admin/promos = promo platform saja (voucher pop-up harus voucher platform)

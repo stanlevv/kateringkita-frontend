@@ -1,3 +1,8 @@
+// Komponen PopupList: isi halaman /admin/popup. Tombol "Buat pop-up" (formulir di dialog: judul, gambar, voucher
+// platform opsional, masa tayang, aktif) dan kartu setiap pop-up dengan statusnya serta tombol nonaktifkan/aktifkan.
+// Simpan lewat server action savePopup (app/actions/admin/popup.ts); gambar diunggah langsung dari peramban
+// (lib/upload.ts) dengan alamat unggah dari requestAdminUpload. Data pop-up dan voucher diambil page.tsx.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, dialog, dan router.
 "use client";
 
 import { useState } from "react";
@@ -22,6 +27,12 @@ import { uploadPhoto } from "@/lib/upload";
 import type { VoucherOption } from "@/types/banner";
 import type { Popup } from "@/types/popup";
 
+/**
+ * Menentukan status tayang pop-up pada waktu tertentu: Nonaktif, Berakhir, Terjadwal (belum mulai), atau Tayang.
+ * @param popup data pop-up
+ * @param now waktu sekarang dalam milidetik
+ * @returns label status, nada warna, dan ikon
+ */
 export function popupStatus(popup: Popup, now: number): { label: string; tone: Tone; icon: LucideIcon } {
   if (!popup.is_active) return { label: "Nonaktif", tone: "neutral", icon: EyeOff };
   if (Date.parse(popup.ends_at) <= now) return { label: "Berakhir", tone: "neutral", icon: EyeOff };
@@ -29,6 +40,13 @@ export function popupStatus(popup: Popup, now: number): { label: string; tone: T
   return { label: "Tayang", tone: "success", icon: CheckCircle2 };
 }
 
+/**
+ * Formulir pop-up baru. Masa tayang bawaan: sekarang sampai 7 hari lagi; jam diisi dan ditampilkan dalam WIB.
+ * @param props.vouchers voucher platform yang bisa ditautkan
+ * @param props.onSaved dipanggil setelah pop-up tersimpan
+ * @param props.onClose dipanggil saat tombol Batal ditekan
+ * @returns form
+ */
 function PopupForm({
   vouchers,
   onSaved,
@@ -38,6 +56,7 @@ function PopupForm({
   onSaved: () => void;
   onClose: () => void;
 }) {
+  // 1. State isian, galat per isian, galat umum (tanpa isian), dan tanda sedang mengirim.
   const [title, setTitle] = useState("");
   const [image, setImage] = useState("");
   const [promoId, setPromoId] = useState("");
@@ -48,13 +67,16 @@ function PopupForm({
   const [generalError, setGeneralError] = useState<string>();
   const [busy, setBusy] = useState(false);
 
+  // 2. Unggah gambar begitu dipilih; alamat publiknya disimpan untuk pratinjau dan dikirim saat simpan.
   async function uploadImage(file: File) {
     const result = await uploadPhoto(file, "popup", requestAdminUpload);
     if ("error" in result) return setErrors((previous) => ({ ...previous, image_url: result.error.message }));
     setImage(result.data.public_url);
   }
 
+  // 3. Simpan pop-up baru.
   async function submit(event: React.FormEvent) {
+    // 1. Cegah kirim ganda, lalu kirim isian; jam WIB dari isian diubah ke waktu ISO.
     event.preventDefault();
     if (busy) return;
     setBusy(true);
@@ -69,6 +91,7 @@ function PopupForm({
       }),
     );
     setBusy(false);
+    // 2. Gagal: galat per isian tampil di bawah isiannya; galat lain tampil di atas formulir.
     if ("error" in result) {
       if (result.error.fields)
         setErrors(
@@ -77,6 +100,7 @@ function PopupForm({
       else setGeneralError(result.error.message);
       return;
     }
+    // 3. Berhasil: serahkan ke pemanggil (tutup dialog, toast, muat ulang).
     onSaved();
   }
 
@@ -143,7 +167,13 @@ function PopupForm({
   );
 }
 
-/** Pop-up promo aplikasi mobile: daftar + status, buat baru, nonaktifkan / aktifkan. Support hanya melihat. */
+/**
+ * Pop-up promo aplikasi mobile: daftar + status, buat baru, nonaktifkan / aktifkan. Support hanya melihat.
+ * @param props.popups semua pop-up dari backend
+ * @param props.vouchers voucher platform yang bisa ditautkan ke pop-up baru
+ * @param props.canEdit true bila admin boleh membuat dan mengubah pop-up (super dan ops)
+ * @returns tombol buat, kartu pop-up, dan dialog PopupForm
+ */
 export function PopupList({
   popups,
   vouchers,
@@ -153,11 +183,13 @@ export function PopupList({
   vouchers: VoucherOption[];
   canEdit: boolean;
 }) {
+  // 1. State dialog buat pop-up dan waktu acuan status.
   const router = useRouter();
   const [createOpen, setCreateOpen] = useState(false);
   // eslint-disable-next-line react-hooks/purity -- status tayang dihitung saat render
   const now = Date.now();
 
+  // 2. Nonaktifkan/aktifkan satu pop-up (PATCH is_active), lalu muat ulang data halaman.
   async function togglePopupActive(popup: Popup, active: boolean) {
     const result = await callAction(() => savePopup(popup.id, { is_active: active }));
     if ("error" in result) return toast({ tone: "danger", message: result.error.message });

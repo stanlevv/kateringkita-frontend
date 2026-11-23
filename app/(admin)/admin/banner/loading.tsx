@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/banner. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList } from "@/app/components/ui/Skeleton";
 
-// BannerAdmin: tombol buat banner platform + kartu banner
+/**
+ * Kerangka BannerAdmin: tombol buat banner platform + kartu banner.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame
