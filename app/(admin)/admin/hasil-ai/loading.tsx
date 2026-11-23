@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/hasil-ai. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList, SkeletonTabs } from "@/app/components/ui/Skeleton";
 
-// AiResultList: tab status + pilihan fitur, lalu kartu hasil AI.
+/**
+ * Kerangka AiResultList: tab status + pilihan fitur, lalu kartu hasil AI.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

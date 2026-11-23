@@ -1,3 +1,8 @@
+// Komponen AiResultCard: satu kartu hasil AI di /admin/hasil-ai. Menampilkan fitur (asisten toko atau rekomendasi
+// pembeli), pengguna dan toko, masukan yang data pribadinya sudah disamarkan backend, keluaran AI, status verifikasi,
+// dan tombol Setujui/Tolak. Keputusan dikirim lewat server action verifyAiResult (app/actions/admin/ai-results.ts,
+// PATCH /admin/hasil-ai/<id>). Dipakai AiResultList.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState } from "react";
@@ -14,15 +19,22 @@ import { formatTime, formatRupiah, formatDate } from "@/lib/format";
 import type { Tone } from "@/lib/order-status";
 import type { AiResult, AssistantOutput, RecommendationOutput, AiResultStatus } from "@/types/ai-result";
 
+/** Label, warna, dan ikon status verifikasi; kuncinya nilai `status` dari backend. */
 export const STATUS_LABELS: Record<AiResultStatus, { label: string; tone: Tone; icon: LucideIcon }> = {
   menunggu: { label: "Menunggu", tone: "warning", icon: Clock },
   disetujui: { label: "Disetujui", tone: "success", icon: CheckCircle2 },
   ditolak: { label: "Ditolak", tone: "danger", icon: XCircle },
 };
 const FEATURE_LABELS = { asisten: "Asisten toko", rekomendasi: "Rekomendasi pembeli" } as const;
+// Pesan galat bila alasan penolakan kosong atau terlalu panjang.
 const REASON_HINT = "Tulis alasan penolakan (3–300 karakter).";
 const formatDateTime = (iso: string) => `${formatDate(iso)} · ${formatTime(iso)} WIB`;
 
+/**
+ * Keluaran asisten toko: jawaban, poin-poin, dan asumsi.
+ * @param props.output keluaran asisten yang sudah lolos validasi format
+ * @returns isi keluaran
+ */
 function AssistantOutputView({ output }: { output: AssistantOutput }) {
   return (
     <div className="flex flex-col gap-2">
@@ -39,6 +51,11 @@ function AssistantOutputView({ output }: { output: AssistantOutput }) {
   );
 }
 
+/**
+ * Keluaran rekomendasi pembeli: ringkasan, menu pilihan AI (jumlah, toko, subtotal, alasan), dan total.
+ * @param props.output keluaran rekomendasi yang sudah lolos validasi format
+ * @returns isi keluaran
+ */
 function RecommendationOutputView({ output }: { output: RecommendationOutput }) {
   return (
     <div className="flex flex-col gap-2">
@@ -60,28 +77,40 @@ function RecommendationOutputView({ output }: { output: RecommendationOutput }) 
   );
 }
 
-/** Satu hasil AI tersimpan: konteks, masukan (sudah disamarkan), keluaran tervalidasi, status, dan aksi verifikasi. */
+/**
+ * Satu hasil AI tersimpan: konteks, masukan (sudah disamarkan), keluaran tervalidasi, status, dan aksi verifikasi.
+ * Catatan wajib diisi 3–300 karakter bila menolak; boleh kosong bila menyetujui.
+ * @param props.aiResult hasil AI dari backend
+ * @param props.canEdit true bila admin boleh memutuskan (super dan ops); support hanya melihat
+ * @returns article
+ */
 export function AiResultCard({ aiResult, canEdit }: { aiResult: AiResult; canEdit: boolean }) {
+  // 1. State catatan, galat catatan, dan keputusan yang sedang dikirim (untuk animasi tombol yang ditekan).
   const router = useRouter();
   const [note, setNote] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>();
   const [busy, setBusy] = useState<"disetujui" | "ditolak" | null>(null);
   const statusView = STATUS_LABELS[aiResult.status];
 
+  // 2. Kirim keputusan; "disetujui"/"ditolak" adalah nilai yang diterima backend.
   async function decide(status: "disetujui" | "ditolak") {
+    // 1. Cegah kirim ganda; tolak tanpa alasan yang sah berhenti di sini dengan galat di isian catatan.
     if (busy) return;
     const trimmedNote = note.trim();
     if (status === "ditolak" && (trimmedNote.length < 3 || trimmedNote.length > 300))
       return setErrorMessage(REASON_HINT);
+    // 2. Panggil server action.
     setBusy(status);
     const result = await callAction(() => verifyAiResult(aiResult.id, status, trimmedNote));
     setBusy(null);
+    // 3. Gagal: galat catatan dari backend tampil di isian, galat lain jadi toast.
     if ("error" in result) {
       if (result.error.code === "VALIDATION_ERROR" && result.error.fields?.catatan)
         return setErrorMessage(result.error.fields.catatan[0]);
       toast({ tone: "danger", message: result.error.message });
       return;
     }
+    // 4. Berhasil: kosongkan catatan, toast, dan muat ulang data halaman.
     setErrorMessage(undefined);
     setNote("");
     toast({ tone: "success", message: status === "disetujui" ? "Hasil AI disetujui." : "Hasil AI ditolak." });

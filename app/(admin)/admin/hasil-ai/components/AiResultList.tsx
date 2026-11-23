@@ -1,3 +1,7 @@
+// Komponen AiResultList: isi halaman /admin/hasil-ai. Tab status verifikasi (Menunggu, Disetujui, Ditolak, Semua),
+// pilihan fitur AI, daftar kartu hasil AI (AiResultCard), dan paginasi. Data diambil page.tsx; komponen ini hanya
+// mengganti URL (?status=&fitur=&page=) agar page.tsx memuat ulang dengan penyaring baru.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai router.
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -11,6 +15,7 @@ import { LIMIT_AI_RESULTS, AI_RESULT_TABS, type AiResultTab } from "@/lib/ai-res
 import type { AiResult } from "@/types/ai-result";
 import { AiResultCard } from "./AiResultCard";
 
+// Judul pesan kosong per tab; kuncinya nilai ?status= di URL.
 const EMPTY_TITLES: Record<AiResultTab, string> = {
   menunggu: "Tidak ada hasil AI yang menunggu verifikasi",
   disetujui: "Belum ada hasil AI yang disetujui",
@@ -18,7 +23,17 @@ const EMPTY_TITLES: Record<AiResultTab, string> = {
   semua: "Belum ada hasil AI tersimpan",
 };
 
-/** Tab status + filter fitur di URL (tab Menunggu tanpa ?status); setiap kartu bisa disetujui / ditolak. */
+/**
+ * Daftar hasil AI dengan tab status dan penyaring fitur di URL (tab Menunggu tanpa ?status); setiap kartu bisa
+ * disetujui / ditolak. Mengganti tab atau fitur selalu kembali ke halaman 1.
+ * @param props.rows hasil AI di halaman ini
+ * @param props.tab tab status yang sedang dibuka
+ * @param props.feature fitur yang dipilih ("asisten", "rekomendasi", atau "" untuk semua)
+ * @param props.page nomor halaman sekarang
+ * @param props.total jumlah semua hasil yang cocok, untuk paginasi
+ * @param props.canEdit true bila admin boleh menyetujui/menolak (super dan ops)
+ * @returns tab, pilihan fitur, kartu hasil AI, dan paginasi
+ */
 export function AiResultList({
   rows,
   tab,
@@ -35,10 +50,13 @@ export function AiResultList({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  // Menyusun alamat halaman dari keadaan sekarang ditambah perubahan; nilai bawaan tidak ditulis di URL.
   const buildHref = (changes: { status?: string; feature?: string; page?: number }) => {
+    // 1. Ambil nilai baru, atau nilai sekarang bila tidak diubah.
     const query = new URLSearchParams();
     const nextStatus = changes.status ?? tab;
     const nextFeature = changes.feature ?? feature;
+    // 2. Tulis hanya yang bukan bawaan: status selain "menunggu", fitur yang dipilih, halaman di atas 1.
     if (nextStatus !== "menunggu") query.set("status", nextStatus);
     if (nextFeature) query.set("fitur", nextFeature);
     if (changes.page && changes.page > 1) query.set("page", String(changes.page));

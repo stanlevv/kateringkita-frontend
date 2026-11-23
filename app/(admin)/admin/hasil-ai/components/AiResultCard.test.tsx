@@ -1,3 +1,5 @@
+// Test AiResultCard: isi kartu asisten toko dan rekomendasi pembeli, support hanya melihat, serta verifikasi
+// (setujui, tolak wajib alasan, galat server). Server action verifyAiResult diganti tiruan (mock).
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
