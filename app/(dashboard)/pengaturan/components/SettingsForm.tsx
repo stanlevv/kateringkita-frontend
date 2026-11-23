@@ -296,8 +296,8 @@ type Props = {
   pickupPoints: PickupPoint[] | null;
   user: { full_name: string; phone: string; email: string };
   incompleteSection?: string;
-  tables?: Table[] | null; // F21; undefined = belum dimuat (pratinjau)
-  payouts?: MyPayouts | null; // F26; null = gagal dimuat
+  tables?: Table[] | null; // meja untuk pesan dari meja; tidak diisi = daftar kosong
+  payouts?: MyPayouts | null; // data pencairan; null = gagal dimuat
 };
 
 /**
