@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Activity, CircleX, Coins, Timer } from "lucide-react";
-import { GrafikBatang } from "@/app/components/ui/GrafikBatang";
+import { BarChart } from "@/app/components/ui/BarChart";
 import { KpiCard } from "@/app/components/ui/KpiCard";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { formatTime, formatDate } from "@/lib/format";
 import type { AiFeature, AiUsage as Data } from "@/types/ai";
 
@@ -61,7 +61,7 @@ export function PemakaianAi({ data }: { data: Data }) {
               className={cx(
                 "rounded px-3 py-1.5 text-sm font-medium",
                 h === data.hari ? "bg-steel text-on-steel" : "text-ink-muted hover:text-ink",
-                fokus,
+                focusRing,
               )}
             >
               {h} hari
@@ -92,14 +92,14 @@ export function PemakaianAi({ data }: { data: Data }) {
         <KpiCard label="Rata-rata respons" value={ms(r.rata_ms)} icon={Timer} hint="Dari panggilan yang berhasil" />
       </div>
 
-      <GrafikBatang
-        judul="Token per hari"
-        keterangan={`${data.hari} hari terakhir, tanggal WIB. Angka sesuai laporan penyedia.`}
-        seri={[{ kunci: "token", nama: "Token", pendek: "token", warna: "var(--color-primary)" }]}
-        data={data.per_hari.map((h) => ({ label: tanggalPendek(h.tanggal), nilai: { token: h.token } }))}
-        sumbu={n <= 7 ? data.per_hari.map((_, i) => i) : [0, 7, 14, 21, n - 1]}
-        kolomLabel="Tanggal"
-        kosong={
+      <BarChart
+        title="Token per hari"
+        description={`${data.hari} hari terakhir, tanggal WIB. Angka sesuai laporan penyedia.`}
+        series={[{ key: "token", name: "Token", shortName: "token", color: "var(--color-primary)" }]}
+        data={data.per_hari.map((h) => ({ label: tanggalPendek(h.tanggal), values: { token: h.token } }))}
+        axisTicks={n <= 7 ? data.per_hari.map((_, i) => i) : [0, 7, 14, 21, n - 1]}
+        columnLabel="Tanggal"
+        empty={
           <p className="rounded-lg border border-dashed border-line-strong p-6 text-center text-ink-muted">
             {r.panggilan ? "Penyedia tidak melaporkan token di rentang ini." : "Belum ada pemakaian AI di rentang ini."}
           </p>

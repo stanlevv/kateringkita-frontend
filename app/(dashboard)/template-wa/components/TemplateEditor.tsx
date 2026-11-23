@@ -5,7 +5,7 @@ import { saveProfile } from "@/app/actions/profile";
 import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
@@ -86,7 +86,7 @@ export function TemplateEditor({
                     onClick={() => sisip(p.code)}
                     className={cx(
                       "flex min-h-11 w-full flex-col items-start justify-center rounded-md border border-line-strong bg-surface px-3 py-1 text-left hover:bg-subtle",
-                      fokus,
+                      focusRing,
                     )}
                   >
                     <span className="font-mono text-sm font-semibold text-ink">{p.code}</span>

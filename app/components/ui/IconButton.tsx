@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 import type { LucideIcon } from "lucide-react";
-import { cx, fokus } from "./cx";
+import { cx, focusRing } from "./cx";
 
 export function IconButton({
   icon: Icon,
@@ -17,7 +17,7 @@ export function IconButton({
       {...rest}
       className={cx(
         "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-ink hover:bg-subtle disabled:opacity-50",
-        fokus,
+        focusRing,
         className,
       )}
     >

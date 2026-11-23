@@ -3,110 +3,115 @@
 import { useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Card } from "./Card";
-import { cx, fokus } from "./cx";
+import { cx, focusRing } from "./cx";
 
-export type SeriBatang = { kunci: string; nama: string; pendek: string; warna: string; ikon?: LucideIcon };
+export type BarSeries = { key: string; name: string; shortName: string; color: string; icon?: LucideIcon };
 /** `label` untuk sumbu & tabel; `lengkap` untuk tooltip/pembaca layar (bawaan = label). */
-export type TitikBatang = { label: string; lengkap?: string; nilai: Record<string, number> };
+export type BarPoint = { label: string; fullLabel?: string; values: Record<string, number> };
 
-const TINGGI = 160;
-const angka = (n: number) => n.toLocaleString("id-ID");
+const CHART_HEIGHT = 160;
+const formatNumber = (value: number) => value.toLocaleString("id-ID");
 
 /**
  * Batang (bertumpuk bila > 1 seri, seri[0] di bawah) dengan tooltip saat disorot/difokus dan tabel "Lihat tabel".
  * Spek dataviz: batang ≤ 24px di tengah slot (slot = area sentuh), celah 2px antarsegmen, ujung atas membulat 4px,
  * legenda (ikon + nama + total) hanya untuk ≥ 2 seri; satu seri cukup dinamai judul.
  */
-export function GrafikBatang({
-  judul,
-  keterangan,
-  seri,
+export function BarChart({
+  title,
+  description,
+  series,
   data,
-  sumbu,
-  kolomLabel,
-  kosong,
+  axisTicks,
+  columnLabel,
+  empty,
 }: {
-  judul: string;
-  keterangan: string;
-  seri: SeriBatang[];
-  data: TitikBatang[];
-  sumbu: number[];
-  kolomLabel: string;
-  kosong: ReactNode;
+  title: string;
+  description: string;
+  series: BarSeries[];
+  data: BarPoint[];
+  axisTicks: number[];
+  columnLabel: string;
+  empty: ReactNode;
 }) {
-  const [aktif, setAktif] = useState<number | null>(null);
-  const jumlah = (d: TitikBatang) => seri.reduce((s, x) => s + (d.nilai[x.kunci] ?? 0), 0);
-  const puncak = Math.max(1, ...data.map(jumlah));
-  const total = (k: string) => data.reduce((s, d) => s + (d.nilai[k] ?? 0), 0);
-  const tengah = (i: number) => ((i + 0.5) / data.length) * 100;
-  const rinci = (d: TitikBatang, pisah: string) =>
-    seri.map((x) => `${angka(d.nilai[x.kunci] ?? 0)} ${x.pendek}`).join(pisah);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const pointTotal = (point: BarPoint) =>
+    series.reduce((sum, seriesItem) => sum + (point.values[seriesItem.key] ?? 0), 0);
+  const peak = Math.max(1, ...data.map(pointTotal));
+  const seriesTotal = (seriesKey: string) => data.reduce((sum, point) => sum + (point.values[seriesKey] ?? 0), 0);
+  const slotCenter = (i: number) => ((i + 0.5) / data.length) * 100;
+  const describePoint = (point: BarPoint, separator: string) =>
+    series
+      .map((seriesItem) => `${formatNumber(point.values[seriesItem.key] ?? 0)} ${seriesItem.shortName}`)
+      .join(separator);
 
   return (
     <Card className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg font-semibold">{judul}</h2>
-          <p className="text-sm text-ink-muted">{keterangan}</p>
+          <h2 className="font-display text-lg font-semibold">{title}</h2>
+          <p className="text-sm text-ink-muted">{description}</p>
         </div>
-        {seri.length > 1 && (
+        {series.length > 1 && (
           <ul aria-label="Legenda" className="flex flex-wrap gap-4 text-sm">
-            {seri.map((x) => (
-              <li key={x.kunci} className="inline-flex items-center gap-1.5">
-                {x.ikon ? (
-                  <x.ikon aria-hidden className="size-4" style={{ color: x.warna }} />
+            {series.map((seriesItem) => (
+              <li key={seriesItem.key} className="inline-flex items-center gap-1.5">
+                {seriesItem.icon ? (
+                  <seriesItem.icon aria-hidden className="size-4" style={{ color: seriesItem.color }} />
                 ) : (
-                  <span aria-hidden className="size-3 rounded-sm" style={{ background: x.warna }} />
+                  <span aria-hidden className="size-3 rounded-sm" style={{ background: seriesItem.color }} />
                 )}
-                {x.nama} <span className="font-mono font-semibold">{angka(total(x.kunci))}</span>
+                {seriesItem.name}{" "}
+                <span className="font-mono font-semibold">{formatNumber(seriesTotal(seriesItem.key))}</span>
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      {data.every((d) => jumlah(d) === 0) ? (
-        kosong
+      {data.every((point) => pointTotal(point) === 0) ? (
+        empty
       ) : (
         <div className="relative pt-10">
-          {aktif !== null && (
+          {activeIndex !== null && (
             <div
               role="status"
-              style={{ left: `clamp(7.5rem, ${tengah(aktif)}%, calc(100% - 7.5rem))` }}
+              style={{ left: `clamp(7.5rem, ${slotCenter(activeIndex)}%, calc(100% - 7.5rem))` }}
               className="pointer-events-none absolute top-0 -translate-x-1/2 whitespace-nowrap rounded-md bg-steel px-3 py-1.5 text-sm text-on-steel shadow-lg"
             >
-              <span className="font-semibold">{data[aktif].lengkap ?? data[aktif].label}</span> ·{" "}
-              {rinci(data[aktif], " · ")}
+              <span className="font-semibold">{data[activeIndex].fullLabel ?? data[activeIndex].label}</span> ·{" "}
+              {describePoint(data[activeIndex], " · ")}
             </div>
           )}
           <div
             className="flex items-end gap-1 border-b border-line"
-            style={{ height: TINGGI }}
-            onMouseLeave={() => setAktif(null)}
+            style={{ height: CHART_HEIGHT }}
+            onMouseLeave={() => setActiveIndex(null)}
           >
-            {data.map((d, i) => (
+            {data.map((point, i) => (
               <button
-                key={`${d.label}-${i}`}
+                key={`${point.label}-${i}`}
                 type="button"
-                aria-label={`${d.lengkap ?? d.label}: ${rinci(d, ", ")}`}
-                onMouseEnter={() => setAktif(i)}
-                onFocus={() => setAktif(i)}
-                onBlur={() => setAktif(null)}
-                className={cx("flex h-full min-w-0 flex-1 flex-col justify-end", fokus)}
+                aria-label={`${point.fullLabel ?? point.label}: ${describePoint(point, ", ")}`}
+                onMouseEnter={() => setActiveIndex(i)}
+                onFocus={() => setActiveIndex(i)}
+                onBlur={() => setActiveIndex(null)}
+                className={cx("flex h-full min-w-0 flex-1 flex-col justify-end", focusRing)}
               >
                 <span
                   className="mx-auto flex w-full max-w-6 flex-col-reverse gap-[2px]"
-                  style={{ height: (jumlah(d) / puncak) * TINGGI }}
+                  style={{ height: (pointTotal(point) / peak) * CHART_HEIGHT }}
                 >
-                  {seri.map((x) => {
-                    const v = d.nilai[x.kunci] ?? 0;
-                    const atas = seri.findLast((y) => (d.nilai[y.kunci] ?? 0) > 0)?.kunci === x.kunci;
+                  {series.map((seriesItem) => {
+                    const value = point.values[seriesItem.key] ?? 0;
+                    const isTop =
+                      series.findLast((otherItem) => (point.values[otherItem.key] ?? 0) > 0)?.key === seriesItem.key;
                     return (
-                      v > 0 && (
+                      value > 0 && (
                         <span
-                          key={x.kunci}
-                          className={cx("w-full", atas && "rounded-t-[4px]")}
-                          style={{ flexGrow: v, background: x.warna }}
+                          key={seriesItem.key}
+                          className={cx("w-full", isTop && "rounded-t-[4px]")}
+                          style={{ flexGrow: value, background: seriesItem.color }}
                         />
                       )
                     );
@@ -116,10 +121,14 @@ export function GrafikBatang({
             ))}
           </div>
           <div aria-hidden className="relative mt-1 h-4 text-xs text-ink-muted">
-            {sumbu
+            {axisTicks
               .filter((i) => i >= 0 && i < data.length)
               .map((i) => (
-                <span key={i} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${tengah(i)}%` }}>
+                <span
+                  key={i}
+                  className="absolute -translate-x-1/2 whitespace-nowrap"
+                  style={{ left: `${slotCenter(i)}%` }}
+                >
                   {data[i].label}
                 </span>
               ))}
@@ -128,24 +137,24 @@ export function GrafikBatang({
       )}
 
       <details className="text-sm">
-        <summary className={cx("cursor-pointer font-medium text-primary", fokus)}>Lihat tabel</summary>
+        <summary className={cx("cursor-pointer font-medium text-primary", focusRing)}>Lihat tabel</summary>
         <table className="mt-2 w-full text-left">
           <thead className="text-ink-muted">
             <tr>
-              <th className="py-1 font-medium">{kolomLabel}</th>
-              {seri.map((x) => (
-                <th key={x.kunci} className="py-1 font-medium">
-                  {x.nama}
+              <th className="py-1 font-medium">{columnLabel}</th>
+              {series.map((seriesItem) => (
+                <th key={seriesItem.key} className="py-1 font-medium">
+                  {seriesItem.name}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="font-mono">
-            {data.map((d, i) => (
-              <tr key={`${d.label}-${i}`} className="border-t border-line">
-                <td className="py-1">{d.label}</td>
-                {seri.map((x) => (
-                  <td key={x.kunci}>{angka(d.nilai[x.kunci] ?? 0)}</td>
+            {data.map((point, i) => (
+              <tr key={`${point.label}-${i}`} className="border-t border-line">
+                <td className="py-1">{point.label}</td>
+                {series.map((seriesItem) => (
+                  <td key={seriesItem.key}>{formatNumber(point.values[seriesItem.key] ?? 0)}</td>
                 ))}
               </tr>
             ))}

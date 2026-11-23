@@ -2,12 +2,12 @@
 
 import { useRef, type DragEvent } from "react";
 import { ImagePlus } from "lucide-react";
-import { cx, fokus } from "./cx";
+import { cx, focusRing } from "./cx";
 
-const FORMAT = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export function FileDrop({
-  accept = FORMAT,
+  accept = ACCEPTED_TYPES,
   maxBytes,
   onFile,
   onError,
@@ -16,28 +16,28 @@ export function FileDrop({
 }: {
   accept?: string[];
   maxBytes: number;
-  onFile: (f: File) => void;
-  onError: (msg: string) => void;
+  onFile: (file: File) => void;
+  onError: (message: string) => void;
   label?: string;
   id?: string;
 }) {
   const input = useRef<HTMLInputElement>(null);
 
-  const terima = (f?: File) => {
-    if (!f) return;
-    if (!accept.includes(f.type)) return onError("Format foto harus JPG, PNG, atau WebP.");
-    if (f.size > maxBytes) return onError(`Ukuran foto maksimal ${Math.round(maxBytes / (1024 * 1024))} MB.`);
-    onFile(f);
+  const acceptFile = (file?: File) => {
+    if (!file) return;
+    if (!accept.includes(file.type)) return onError("Format foto harus JPG, PNG, atau WebP.");
+    if (file.size > maxBytes) return onError(`Ukuran foto maksimal ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+    onFile(file);
   };
-  const lepas = (e: DragEvent) => {
-    e.preventDefault();
-    terima(e.dataTransfer.files[0]);
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    acceptFile(event.dataTransfer.files[0]);
   };
 
   return (
     <div
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={lepas}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={handleDrop}
       className="rounded-md border border-dashed border-line-strong bg-subtle p-4"
     >
       <button
@@ -46,7 +46,7 @@ export function FileDrop({
         onClick={() => input.current?.click()}
         className={cx(
           "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md font-medium text-ink",
-          fokus,
+          focusRing,
         )}
       >
         <ImagePlus aria-hidden className="size-5" />
@@ -59,9 +59,9 @@ export function FileDrop({
         accept={accept.join(",")}
         hidden
         tabIndex={-1}
-        onChange={(e) => {
-          terima(e.target.files?.[0]);
-          e.target.value = "";
+        onChange={(event) => {
+          acceptFile(event.target.files?.[0]);
+          event.target.value = "";
         }}
       />
     </div>

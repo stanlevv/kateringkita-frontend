@@ -6,7 +6,7 @@ import { Dialog } from "./Dialog";
 import { Field } from "./Field";
 import { Textarea } from "./Input";
 
-const LAINNYA = "Lainnya";
+const OTHER_REASON = "Lainnya";
 
 type Props = {
   open: boolean;
@@ -22,7 +22,7 @@ type Props = {
   onConfirm: (reason?: string) => void;
 };
 
-function Isi({
+function ConfirmDialogBody({
   onClose,
   body,
   confirmLabel,
@@ -33,11 +33,11 @@ function Isi({
   busy,
   onConfirm,
 }: Omit<Props, "open" | "title">) {
-  const [pilih, setPilih] = useState<string | null>(null);
-  const [teks, setTeks] = useState("");
-  const lainnya = pilih === LAINNYA;
-  const alasan = lainnya ? teks.trim() : (pilih ?? undefined);
-  const kurang = !!requireReason && !alasan;
+  const [selected, setSelected] = useState<string | null>(null);
+  const [otherText, setOtherText] = useState("");
+  const isOther = selected === OTHER_REASON;
+  const reason = isOther ? otherText.trim() : (selected ?? undefined);
+  const missingReason = !!requireReason && !reason;
 
   return (
     <>
@@ -45,31 +45,31 @@ function Isi({
       {reasons && (
         <fieldset className="flex flex-col">
           <legend className="mb-1 text-sm font-medium">Alasan</legend>
-          {[...reasons, LAINNYA].map((r) => (
-            <label key={r} className="flex min-h-11 cursor-pointer items-center gap-3">
+          {[...reasons, OTHER_REASON].map((reasonOption) => (
+            <label key={reasonOption} className="flex min-h-11 cursor-pointer items-center gap-3">
               <input
                 type="radio"
                 name="alasan"
-                value={r}
-                checked={pilih === r}
-                onChange={() => setPilih(r)}
+                value={reasonOption}
+                checked={selected === reasonOption}
+                onChange={() => setSelected(reasonOption)}
                 className="size-5 accent-primary"
               />
-              {r}
+              {reasonOption}
             </label>
           ))}
         </fieldset>
       )}
-      {lainnya && (
+      {isOther && (
         <Field label="Tulis alasan" required>
-          <Textarea autoFocus value={teks} onChange={(e) => setTeks(e.target.value)} />
+          <Textarea autoFocus value={otherText} onChange={(event) => setOtherText(event.target.value)} />
         </Field>
       )}
       <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose}>
           {cancelLabel}
         </Button>
-        <Button variant={tone} disabled={kurang || busy} onClick={() => onConfirm(alasan)} className="sm:ml-4">
+        <Button variant={tone} disabled={missingReason || busy} onClick={() => onConfirm(reason)} className="sm:ml-4">
           {confirmLabel}
         </Button>
       </div>
@@ -80,7 +80,7 @@ function Isi({
 export function ConfirmDialog({ open, onClose, title, ...rest }: Props) {
   return (
     <Dialog open={open} onClose={onClose} title={title}>
-      <Isi onClose={onClose} {...rest} />
+      <ConfirmDialogBody onClose={onClose} {...rest} />
     </Dialog>
   );
 }

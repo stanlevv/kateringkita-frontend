@@ -6,7 +6,7 @@ import { CircleCheck, CircleX, ExternalLink, KeyRound, Loader2, Pencil, Plus, Sp
 import { deleteAiProvider, createAiProvider, updateAiProvider, testAiProvider } from "@/app/actions/admin/ai";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
@@ -73,7 +73,7 @@ function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () 
                 value={j}
                 checked={jenis === j}
                 onChange={() => pilih(j)}
-                className={cx("size-4 accent-primary", fokus)}
+                className={cx("size-4 accent-primary", focusRing)}
               />
               {AI_PROVIDER_INFO[j].name}
             </label>
@@ -89,7 +89,10 @@ function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () 
         href={info.keyUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className={cx("inline-flex items-center gap-1 self-start text-sm font-medium text-primary underline", fokus)}
+        className={cx(
+          "inline-flex items-center gap-1 self-start text-sm font-medium text-primary underline",
+          focusRing,
+        )}
       >
         Buat API key gratis di {info.name}
         <ExternalLink aria-hidden className="size-3.5" />

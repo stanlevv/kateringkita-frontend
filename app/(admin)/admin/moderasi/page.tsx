@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ModerasiTable } from "@/app/(admin)/admin/components/ModerasiTable";
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { Input } from "@/app/components/ui/Input";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { adminFetch } from "@/services/api";
@@ -17,7 +17,7 @@ type Jenis = keyof typeof JENIS;
 const pil = (aktif: boolean) =>
   cx(
     "inline-flex min-h-11 items-center rounded-md border px-4 font-medium",
-    fokus,
+    focusRing,
     aktif ? "border-primary bg-primary text-surface" : "border-line-strong bg-surface text-ink hover:bg-subtle",
   );
 

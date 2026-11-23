@@ -3,7 +3,7 @@ import { Banknote, CheckCircle2, ChevronRight, Hourglass, PauseCircle, Store, Ti
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
 import { Card } from "@/app/components/ui/Card";
-import { fokus } from "@/app/components/ui/cx";
+import { focusRing } from "@/app/components/ui/cx";
 import { KpiCard } from "@/app/components/ui/KpiCard";
 import { actionLabel, targetLabel } from "@/services/admin-log.service";
 import type { AdminSummary, AdminOrderStatus } from "@/types/admin";
@@ -28,7 +28,7 @@ const PENJUAL: { key: keyof AdminSummary["merchants"]; label: string; href: stri
   { key: "open_now", label: "Buka sekarang", href: "/admin/penjual?status=verified&open=1", icon: Store },
 ];
 
-const tautan = `block rounded-lg ${fokus}`;
+const tautan = `block rounded-lg ${focusRing}`;
 
 export function SummaryCards({ data }: { data: AdminSummary }) {
   return (
@@ -87,7 +87,7 @@ export function SummaryCards({ data }: { data: AdminSummary }) {
             <h2 className="text-lg font-semibold text-ink">Aksi admin terakhir</h2>
             <Link
               href="/admin/log"
-              className={`inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-sm font-medium text-primary ${fokus}`}
+              className={`inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-sm font-medium text-primary ${focusRing}`}
             >
               Lihat semua log
               <ChevronRight aria-hidden className="size-4" />

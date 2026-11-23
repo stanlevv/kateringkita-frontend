@@ -2,11 +2,11 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { cx, fokus } from "./cx";
+import { cx, focusRing } from "./cx";
 
-const tombol = cx(
+const buttonClass = cx(
   "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-line-strong bg-surface text-ink hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-50",
-  fokus,
+  focusRing,
 );
 
 export function Stepper({
@@ -21,69 +21,77 @@ export function Stepper({
   value: number;
   min: number;
   max?: number;
-  onChange: (n: number) => void;
+  onChange: (nextValue: number) => void;
   onDelta?: (delta: number) => void;
   disabledReason?: string;
   label: string;
 }) {
-  const alasanId = useId();
+  const reasonId = useId();
   const [draft, setDraft] = useState<string | null>(null);
-  const terbaru = useRef({ value, onChange, onDelta });
+  const latest = useRef({ value, onChange, onDelta });
   useEffect(() => {
-    terbaru.current = { value, onChange, onDelta };
+    latest.current = { value, onChange, onDelta };
   });
-  const timer = useRef<{ t?: ReturnType<typeof setTimeout>; i?: ReturnType<typeof setInterval> }>({});
+  const timer = useRef<{ holdDelay?: ReturnType<typeof setTimeout>; repeatInterval?: ReturnType<typeof setInterval> }>(
+    {},
+  );
   const viaPointer = useRef(false);
 
   const atMin = value <= min;
   const atMax = max !== undefined && value >= max;
 
-  const langkah = (d: 1 | -1) => {
-    const { value: v, onChange: oc, onDelta: od } = terbaru.current;
-    const n = v + d;
-    if (n < min || (max !== undefined && n > max)) return;
+  const step = (direction: 1 | -1) => {
+    const { value: currentValue, onChange: notifyChange, onDelta: notifyDelta } = latest.current;
+    const nextValue = currentValue + direction;
+    if (nextValue < min || (max !== undefined && nextValue > max)) return;
     setDraft(null);
-    terbaru.current.value = n; // agar ketukan beruntun tidak membaca nilai lama sebelum render ulang
-    if (od) od(d);
-    else oc(n);
+    latest.current.value = nextValue; // agar ketukan beruntun tidak membaca nilai lama sebelum render ulang
+    if (notifyDelta) notifyDelta(direction);
+    else notifyChange(nextValue);
   };
-  const berhenti = () => {
-    clearTimeout(timer.current.t);
-    clearInterval(timer.current.i);
+  const stopRepeat = () => {
+    clearTimeout(timer.current.holdDelay);
+    clearInterval(timer.current.repeatInterval);
   };
-  useEffect(() => berhenti, []);
+  useEffect(() => stopRepeat, []);
   // Dibatalkan: tidak akan ada klik, jadi aktivasi papan ketik berikutnya tidak boleh tertelan.
-  const batal = () => {
-    berhenti();
+  const cancelPress = () => {
+    stopRepeat();
     viaPointer.current = false;
   };
   // Keluar: pada sentuhan, pointerleave datang SEBELUM klik sintetis (buttons 0) -> jangan reset;
   // hanya saat masih ditekan (seret keluar) klik tidak akan menyusul.
-  const keluar = (e: { buttons: number }) => {
-    if (e.buttons !== 0) batal();
-    else berhenti();
+  const leavePointer = (event: { buttons: number }) => {
+    if (event.buttons !== 0) cancelPress();
+    else stopRepeat();
   };
-  const tahan = (d: 1 | -1) => {
+  const startHold = (direction: 1 | -1) => {
     viaPointer.current = true;
-    langkah(d);
-    berhenti();
-    timer.current.t = setTimeout(() => {
-      timer.current.i = setInterval(() => langkah(d), 80);
+    step(direction);
+    stopRepeat();
+    timer.current.holdDelay = setTimeout(() => {
+      timer.current.repeatInterval = setInterval(() => step(direction), 80);
     }, 400);
   };
-  const klik = (d: 1 | -1) => {
+  const clickStep = (direction: 1 | -1) => {
     if (viaPointer.current) {
       viaPointer.current = false;
       return;
     }
-    langkah(d); // lewat papan ketik
+    step(direction); // lewat papan ketik
   };
 
-  const simpan = () => {
+  const commitDraft = () => {
     if (draft === null) return;
-    const n = Number(draft);
+    const nextValue = Number(draft);
     // shortcut: nilai tak valid dikembalikan diam-diam; tambah pesan galat bila UX meminta.
-    if (/^\d+$/.test(draft.trim()) && n >= min && (max === undefined || n <= max) && n !== value) onChange(n);
+    if (
+      /^\d+$/.test(draft.trim()) &&
+      nextValue >= min &&
+      (max === undefined || nextValue <= max) &&
+      nextValue !== value
+    )
+      onChange(nextValue);
     setDraft(null);
   };
 
@@ -94,13 +102,13 @@ export function Stepper({
           type="button"
           aria-label={`Kurangi ${label}`}
           disabled={atMin}
-          aria-describedby={atMin && disabledReason ? alasanId : undefined}
-          onPointerDown={(e) => e.button === 0 && !atMin && tahan(-1)}
-          onPointerUp={berhenti}
-          onPointerLeave={keluar}
-          onPointerCancel={batal}
-          onClick={() => klik(-1)}
-          className={tombol}
+          aria-describedby={atMin && disabledReason ? reasonId : undefined}
+          onPointerDown={(event) => event.button === 0 && !atMin && startHold(-1)}
+          onPointerUp={stopRepeat}
+          onPointerLeave={leavePointer}
+          onPointerCancel={cancelPress}
+          onClick={() => clickStep(-1)}
+          className={buttonClass}
         >
           <Minus aria-hidden className="size-4" />
         </button>
@@ -109,30 +117,30 @@ export function Stepper({
           inputMode="numeric"
           aria-label={label}
           value={draft ?? String(value)}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={simpan}
-          onKeyDown={(e) => e.key === "Enter" && simpan()}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={commitDraft}
+          onKeyDown={(event) => event.key === "Enter" && commitDraft()}
           className={cx(
             "min-h-11 w-20 rounded-md border border-line-strong bg-surface text-center font-mono text-ink",
-            fokus,
+            focusRing,
           )}
         />
         <button
           type="button"
           aria-label={`Tambah ${label}`}
           disabled={atMax}
-          onPointerDown={(e) => e.button === 0 && !atMax && tahan(1)}
-          onPointerUp={berhenti}
-          onPointerLeave={keluar}
-          onPointerCancel={batal}
-          onClick={() => klik(1)}
-          className={tombol}
+          onPointerDown={(event) => event.button === 0 && !atMax && startHold(1)}
+          onPointerUp={stopRepeat}
+          onPointerLeave={leavePointer}
+          onPointerCancel={cancelPress}
+          onClick={() => clickStep(1)}
+          className={buttonClass}
         >
           <Plus aria-hidden className="size-4" />
         </button>
       </div>
       {atMin && disabledReason && (
-        <p id={alasanId} className="text-sm text-ink-muted">
+        <p id={reasonId} className="text-sm text-ink-muted">
           {disabledReason}
         </p>
       )}

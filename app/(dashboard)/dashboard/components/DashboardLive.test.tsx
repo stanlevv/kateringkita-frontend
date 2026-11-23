@@ -22,7 +22,7 @@ import type { MerchantOrder } from "@/types/order";
 import { DashboardLive, type DataDashboard } from "./DashboardLive";
 
 const KODE = "KK-20261031-7QF2";
-const STORE = { isOpen: true, buka: "00:00", tutup: "23:59" };
+const STORE = { isOpen: true, openTime: "00:00", closeTime: "23:59" };
 const muat = (): DataDashboard => ({ orders: orders(), menus: menus(), adaTitikTemu: true, dimuat: Date.now() });
 const ui = (data: DataDashboard | null, galat = false) => (
   <StoreStatusProvider store={STORE}>
@@ -319,7 +319,7 @@ describe("status dapur di luar jam buka", () => {
   it("saklar menyala di luar jam buka: banner menyebut pembeli belum bisa memesan", () => {
     vi.setSystemTime(new Date("2026-10-30T22:30:00Z")); // 05.30 WIB
     render(
-      <StoreStatusProvider store={{ isOpen: true, buka: "07:00", tutup: "16:00" }}>
+      <StoreStatusProvider store={{ isOpen: true, openTime: "07:00", closeTime: "16:00" }}>
         <Toaster />
         <DashboardLive data={muat()} galat={false} />
       </StoreStatusProvider>,

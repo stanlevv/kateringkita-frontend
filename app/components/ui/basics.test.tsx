@@ -16,9 +16,9 @@ describe("Button (G-3)", () => {
         Simpan
       </Button>,
     );
-    const b = screen.getByRole("button", { name: "Menyimpan…" });
-    expect(b).toBeDisabled();
-    expect(b).toHaveAttribute("aria-busy", "true");
+    const button = screen.getByRole("button", { name: "Menyimpan…" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
   });
 });
 
@@ -32,9 +32,9 @@ describe("Field (G-2)", () => {
     const input = screen.getByLabelText("Nama");
     expect(input).toHaveAttribute("aria-invalid", "true");
     const ids = input.getAttribute("aria-describedby")!.split(" ");
-    const teks = ids.map((i) => document.getElementById(i)?.textContent);
-    expect(teks).toContain("Nama wajib diisi");
-    expect(teks).toContain("Bantuan");
+    const texts = ids.map((id) => document.getElementById(id)?.textContent);
+    expect(texts).toContain("Nama wajib diisi");
+    expect(texts).toContain("Bantuan");
   });
   it("tanpa error -> tidak aria-invalid", () => {
     render(
@@ -61,8 +61,8 @@ describe("Badge status (G-7)", () => {
 describe("ErrorSummary (G-2)", () => {
   it("role alert, daftar tautan ke field, fokus pindah ke ringkasan", () => {
     render(<ErrorSummary errors={[{ id: "nama", message: "Nama wajib diisi" }]} />);
-    const a = screen.getByRole("alert");
-    expect(a).toHaveFocus();
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveFocus();
     expect(screen.getByText("Periksa isian berikut")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Nama wajib diisi" })).toHaveAttribute("href", "#nama");
   });
@@ -78,25 +78,25 @@ describe("ErrorSummary (G-2)", () => {
     expect(document.getElementById("nama")).toHaveFocus();
   });
   it("render ulang dengan array errors baru tidak merebut fokus; focusKey baru memfokuskan", () => {
-    const e = () => [{ id: "nama", message: "Nama wajib diisi" }];
+    const buildErrors = () => [{ id: "nama", message: "Nama wajib diisi" }];
     const { rerender } = render(
       <>
-        <ErrorSummary errors={e()} focusKey={1} />
+        <ErrorSummary errors={buildErrors()} focusKey={1} />
         <input aria-label="x" />
       </>,
     );
-    const x = screen.getByLabelText("x");
-    x.focus();
+    const otherInput = screen.getByLabelText("x");
+    otherInput.focus();
     rerender(
       <>
-        <ErrorSummary errors={e()} focusKey={1} />
+        <ErrorSummary errors={buildErrors()} focusKey={1} />
         <input aria-label="x" />
       </>,
     );
-    expect(x).toHaveFocus();
+    expect(otherInput).toHaveFocus();
     rerender(
       <>
-        <ErrorSummary errors={e()} focusKey={2} />
+        <ErrorSummary errors={buildErrors()} focusKey={2} />
         <input aria-label="x" />
       </>,
     );
@@ -110,13 +110,13 @@ describe("ErrorSummary (G-2)", () => {
 
 describe("Pagination (G-1)", () => {
   it("menampilkan Halaman X dari Y dan tautan berikutnya", () => {
-    render(<Pagination page={2} total={45} limit={20} hrefFor={(p) => `/x?page=${p}`} />);
+    render(<Pagination page={2} total={45} limit={20} hrefFor={(pageNumber) => `/x?page=${pageNumber}`} />);
     expect(screen.getByText("Halaman 2 dari 3")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Berikutnya" })).toHaveAttribute("href", "/x?page=3");
     expect(screen.getByRole("link", { name: "Sebelumnya" })).toHaveAttribute("href", "/x?page=1");
   });
   it("halaman pertama: Sebelumnya nonaktif", () => {
-    render(<Pagination page={1} total={45} limit={20} hrefFor={(p) => `/x?page=${p}`} />);
+    render(<Pagination page={1} total={45} limit={20} hrefFor={(pageNumber) => `/x?page=${pageNumber}`} />);
     expect(screen.queryByRole("link", { name: "Sebelumnya" })).toBeNull();
     expect(screen.getByText("Sebelumnya")).toHaveAttribute("aria-disabled", "true");
   });
@@ -128,11 +128,11 @@ describe("DataTable", () => {
     render(
       <DataTable
         caption="Transaksi"
-        rowKey={(r: { id: string; total: number }) => r.id}
+        rowKey={(row: { id: string; total: number }) => row.id}
         rows={[{ id: "a", total: 5000 }]}
         columns={[
-          { key: "id", header: "Kode", cell: (r) => r.id },
-          { key: "total", header: "Total", align: "right", cell: (r) => r.total },
+          { key: "id", header: "Kode", cell: (row) => row.id },
+          { key: "total", header: "Total", align: "right", cell: (row) => row.total },
         ]}
         onRowClick={onRowClick}
       />,
@@ -144,28 +144,28 @@ describe("DataTable", () => {
   });
   it("baris dapat difokus; Enter dan Spasi mengaktifkan; kontrol interaktif di sel diabaikan", () => {
     const onRowClick = vi.fn();
-    const onBtn = vi.fn();
+    const onDeleteClick = vi.fn();
     render(
       <DataTable
         caption="Pesanan"
-        rowKey={(r: { id: string }) => r.id}
+        rowKey={(row: { id: string }) => row.id}
         rows={[{ id: "a" }]}
         columns={[
-          { key: "id", header: "Kode", cell: (r) => r.id },
-          { key: "aksi", header: "Aksi", cell: () => <button onClick={onBtn}>Hapus</button> },
+          { key: "id", header: "Kode", cell: (row) => row.id },
+          { key: "aksi", header: "Aksi", cell: () => <button onClick={onDeleteClick}>Hapus</button> },
         ]}
         onRowClick={onRowClick}
       />,
     );
-    const baris = screen.getAllByRole("row")[1];
-    expect(baris).toHaveAttribute("tabindex", "0");
-    fireEvent.keyDown(baris, { key: "Enter" });
-    fireEvent.keyDown(baris, { key: " " });
+    const dataRow = screen.getAllByRole("row")[1];
+    expect(dataRow).toHaveAttribute("tabindex", "0");
+    fireEvent.keyDown(dataRow, { key: "Enter" });
+    fireEvent.keyDown(dataRow, { key: " " });
     expect(onRowClick).toHaveBeenCalledTimes(2);
-    const btn = screen.getByRole("button", { name: "Hapus" });
-    fireEvent.click(btn);
-    fireEvent.keyDown(btn, { key: "Enter" });
-    expect(onBtn).toHaveBeenCalledOnce();
+    const deleteButton = screen.getByRole("button", { name: "Hapus" });
+    fireEvent.click(deleteButton);
+    fireEvent.keyDown(deleteButton, { key: "Enter" });
+    expect(onDeleteClick).toHaveBeenCalledOnce();
     expect(onRowClick).toHaveBeenCalledTimes(2);
   });
 });

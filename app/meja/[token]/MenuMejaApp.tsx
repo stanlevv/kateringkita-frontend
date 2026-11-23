@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Minus, Plus, ScanLine, ShoppingBag, UtensilsCrossed } from "lucide-react";
 import { payTableOrder, createTableOrder } from "@/app/actions/table";
 import { Button } from "@/app/components/ui/Button";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
 import { Input, Textarea } from "@/app/components/ui/Input";
@@ -55,7 +55,7 @@ function Stepper({
 }) {
   const tombol = cx(
     "flex size-10 items-center justify-center rounded-full border border-line-strong bg-surface text-ink hover:bg-subtle",
-    fokus,
+    focusRing,
   );
   return (
     <div className="inline-flex items-center gap-3" role="group" aria-label={`Jumlah ${label}`}>
@@ -149,7 +149,7 @@ function KartuMenu({ m, qty, buka, onTambah }: { m: TableMenuItem; qty: number; 
             aria-label={`Tambah ${m.name}`}
             className={cx(
               "flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-ink shadow hover:bg-accent-pressed disabled:bg-line disabled:text-ink-muted disabled:shadow-none",
-              fokus,
+              focusRing,
             )}
           >
             <Plus aria-hidden className="size-5" />
@@ -180,7 +180,7 @@ function PilihOpsi({ menu, onTambah }: { menu: TableMenuItem; onTambah: (opsi: M
               className={cx(
                 "flex min-h-12 items-center justify-between rounded-xl border px-4 text-left",
                 aktif ? "border-accent bg-primary-soft font-semibold" : "border-line bg-surface",
-                fokus,
+                focusRing,
               )}
             >
               <span>{o.name}</span>
@@ -341,7 +341,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: TableMenu })
                 href="/meja?pindai=1"
                 className={cx(
                   "inline-flex items-center gap-1 rounded-full bg-surface/90 px-3 py-1 text-sm font-semibold text-ink hover:bg-surface",
-                  fokus,
+                  focusRing,
                 )}
               >
                 <ScanLine aria-hidden className="size-4" />
@@ -372,7 +372,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: TableMenu })
                   className={cx(
                     "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold",
                     aktifKat === k.slug ? "border-steel bg-steel text-on-steel" : "border-line bg-surface text-ink",
-                    fokus,
+                    focusRing,
                   )}
                 >
                   {k.name}
@@ -421,7 +421,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: TableMenu })
             onClick={() => setLihat(true)}
             className={cx(
               "mx-auto flex w-full max-w-2xl items-center gap-3 rounded-2xl bg-steel px-4 py-3 text-left text-on-steel shadow-xl",
-              fokus,
+              focusRing,
             )}
           >
             <span className="relative">

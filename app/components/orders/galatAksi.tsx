@@ -1,7 +1,7 @@
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Dialog } from "@/app/components/ui/Dialog";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { actionTexts, type OrderAction } from "@/lib/order-status";
 
 /** Cara menampilkan galat orderAction; dipakai antrean dashboard dan detail pesanan. */
@@ -25,7 +25,7 @@ export function ChatWaLink({ code }: { code: string }) {
       rel="noopener noreferrer"
       className={cx(
         "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle",
-        fokus,
+        focusRing,
       )}
     >
       <MessageCircle aria-hidden className="size-4" />

@@ -6,7 +6,7 @@ import { LinkButton } from "@/app/components/ui/LinkButton";
 import { sortMenusByStock } from "@/lib/dashboard";
 import type { MerchantMenu } from "@/types/menu";
 import { QuotaRow } from "@/app/components/menu/QuotaRow";
-import { useKuota } from "@/hooks/useKuota";
+import { useQuota } from "@/hooks/useQuota";
 
 /** DB-N3 / DB-E4: perilaku ubah kuota ada di useKuota. */
 /** `terakhir`: waktu klien penyegaran sukses terakhir (dasar "Diperbarui N detik lalu"). */
@@ -21,7 +21,7 @@ export function QuotaPanel({
   terakhir: number;
   onBerubah: (m: MerchantMenu) => void;
 }) {
-  const { ubahDelta, ubahMutlak, dengan } = useKuota(onBerubah, menus);
+  const { changeQuotaBy: ubahDelta, setQuota: ubahMutlak, withDraft: dengan } = useQuota(onBerubah, menus);
 
   // Urutan dari nilai tersimpan agar baris tidak melompat saat sedang diubah.
   const daftar = sortMenusByStock(menus).map(dengan);

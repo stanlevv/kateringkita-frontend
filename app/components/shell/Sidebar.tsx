@@ -2,7 +2,7 @@ import type { SidebarMode } from "@/lib/shell";
 import { Brand } from "./Brand";
 import { MobileNav } from "./MobileNav";
 import { NavList } from "./NavList";
-import { SidebarLipat } from "./SidebarLipat";
+import { CollapsibleSidebar } from "./CollapsibleSidebar";
 import type { StoreInfo } from "./StoreStatus";
 import { StoreStatusToggle } from "./StoreStatusToggle";
 
@@ -13,30 +13,37 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
 export function Sidebar({
   store,
   badge,
-  notif = 0,
+  unreadNotifications = 0,
   admin = false,
   level,
   mode = "lebar",
 }: {
   store: StoreInfo | null;
   badge: number;
-  notif?: number;
+  unreadNotifications?: number;
   admin?: boolean;
   level?: unknown;
   mode?: SidebarMode;
 }) {
   return (
-    <SidebarLipat
+    <CollapsibleSidebar
       mode={mode}
-      atas={
+      topContent={
         <>
           <Brand rail />
-          <MobileNav rail store={store} badge={badge} notif={notif} admin={admin} level={level} />
+          <MobileNav
+            rail
+            store={store}
+            badge={badge}
+            unreadNotifications={unreadNotifications}
+            admin={admin}
+            level={level}
+          />
         </>
       }
     >
       <div className="flex-1">
-        <NavList rail badge={badge} notif={notif} admin={admin} level={level} />
+        <NavList rail badge={badge} unreadNotifications={unreadNotifications} admin={admin} level={level} />
       </div>
       {!admin && (
         <div className="border-t border-line pt-3">
@@ -47,6 +54,6 @@ export function Sidebar({
           )}
         </div>
       )}
-    </SidebarLipat>
+    </CollapsibleSidebar>
   );
 }

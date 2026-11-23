@@ -22,13 +22,13 @@ export function Dialog({
   const titleId = useId();
 
   useEffect(() => {
-    const el = ref.current;
-    if (!open || !el) return;
-    const pembuka = document.activeElement as HTMLElement | null;
-    el.showModal();
+    const dialog = ref.current;
+    if (!open || !dialog) return;
+    const opener = document.activeElement as HTMLElement | null;
+    dialog.showModal();
     return () => {
-      el.close();
-      pembuka?.focus();
+      dialog.close();
+      opener?.focus();
     };
   }, [open]);
 
@@ -37,8 +37,8 @@ export function Dialog({
       ref={ref}
       aria-labelledby={titleId}
       // Esc: biarkan induk yang menutup agar state tetap satu sumber.
-      onCancel={(e) => {
-        e.preventDefault();
+      onCancel={(event) => {
+        event.preventDefault();
         onClose();
       }}
       className={cx(

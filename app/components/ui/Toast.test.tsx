@@ -34,13 +34,13 @@ describe("Toast (G-6)", () => {
     act(() => {
       toast({ tone: "info", message: "Menu dinonaktifkan", action: { label: "Batalkan", onClick: vi.fn() } });
     });
-    const kartu = screen.getByText("Menu dinonaktifkan").parentElement!;
-    fireEvent.mouseEnter(kartu);
+    const card = screen.getByText("Menu dinonaktifkan").parentElement!;
+    fireEvent.mouseEnter(card);
     act(() => {
       vi.advanceTimersByTime(10000);
     });
     expect(screen.getByText("Menu dinonaktifkan")).toBeInTheDocument();
-    fireEvent.mouseLeave(kartu);
+    fireEvent.mouseLeave(card);
     act(() => {
       screen.getByRole("button", { name: "Batalkan" }).focus();
     });

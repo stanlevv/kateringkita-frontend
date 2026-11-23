@@ -3,16 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const adjustQuota = vi.fn();
 vi.mock("@/app/actions/menus", () => ({
-  adjustQuota: (...a: unknown[]) => adjustQuota(...a),
+  adjustQuota: (...args: unknown[]) => adjustQuota(...args),
 }));
 
 import { menus } from "@/lib/fixtures/menus";
 import type { MerchantMenu } from "@/types/menu";
-import { useKuota } from "./useKuota";
+import { useQuota } from "./useQuota";
 
-const ayam = menus()[0]; // kuota 40, terjual 22, ditahan 3 -> tersedia 15
+const baseMenu = menus()[0]; // kuota 40, terjual 22, ditahan 3 -> tersedia 15
 // Referensi array stabil untuk mencegah reset draf akibat menus !== dariMenus
-const STABLE_MENUS: MerchantMenu[] = [{ ...ayam, id: 1, quota_today: 10, sold_today: 0, held_today: 0, available: 10 }];
+const STABLE_MENUS: MerchantMenu[] = [
+  { ...baseMenu, id: 1, quota_today: 10, sold_today: 0, held_today: 0, available: 10 },
+];
 
 describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
   beforeEach(() => {
@@ -27,9 +29,9 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
   it("regresi AUD-04: demonstrasi mengapa pengiriman kuota mutlak menyebabkan lost update", async () => {
     let serverQuota = 10;
     // Server simulasi: jika klien mengirim quota_today absolut, nilai langsung ditimpa
-    adjustQuota.mockImplementation(async (_id, ubah) => {
-      if ("quota_today" in ubah) {
-        serverQuota = ubah.quota_today;
+    adjustQuota.mockImplementation(async (_id, change) => {
+      if ("quota_today" in change) {
+        serverQuota = change.quota_today;
       }
       return { data: { ...STABLE_MENUS[0], quota_today: serverQuota, available: serverQuota } };
     });
@@ -44,31 +46,31 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
 
   it("AUD-04: dua klien menekan +1 mengirim delta sehingga server mengakumulasikan menjadi 12", async () => {
     let serverQuota = 10;
-    adjustQuota.mockImplementation(async (_id, ubah) => {
-      if ("delta" in ubah) {
-        serverQuota += ubah.delta;
-      } else if ("quota_today" in ubah) {
-        serverQuota = ubah.quota_today;
+    adjustQuota.mockImplementation(async (_id, change) => {
+      if ("delta" in change) {
+        serverQuota += change.delta;
+      } else if ("quota_today" in change) {
+        serverQuota = change.quota_today;
       }
       return { data: { ...STABLE_MENUS[0], quota_today: serverQuota, available: serverQuota } };
     });
 
-    const onBerubahA = vi.fn();
-    const onBerubahB = vi.fn();
-    const { result: clientA } = renderHook(() => useKuota(onBerubahA, STABLE_MENUS));
-    const { result: clientB } = renderHook(() => useKuota(onBerubahB, STABLE_MENUS));
+    const onMenuSavedA = vi.fn();
+    const onMenuSavedB = vi.fn();
+    const { result: clientA } = renderHook(() => useQuota(onMenuSavedA, STABLE_MENUS));
+    const { result: clientB } = renderHook(() => useQuota(onMenuSavedB, STABLE_MENUS));
 
     // Klien A menekan +1
     act(() => {
-      clientA.current.ubahDelta(1, 1);
+      clientA.current.changeQuotaBy(1, 1);
     });
-    expect(clientA.current.dengan(STABLE_MENUS[0]).quota_today).toBe(11);
+    expect(clientA.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(11);
 
     // Klien B menekan +1 (sebelum respons server tiba)
     act(() => {
-      clientB.current.ubahDelta(1, 1);
+      clientB.current.changeQuotaBy(1, 1);
     });
-    expect(clientB.current.dengan(STABLE_MENUS[0]).quota_today).toBe(11);
+    expect(clientB.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(11);
 
     // Debounce selesai dan kedua request dikirim
     await act(async () => {
@@ -82,13 +84,13 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
 
   it("operasi campuran: ketik 20 lalu +1 sebelum debounce -> kirim absolut 21", async () => {
     adjustQuota.mockResolvedValue({ data: { ...STABLE_MENUS[0], quota_today: 21, available: 21 } });
-    const { result } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     act(() => {
-      result.current.ubahMutlak(1, 20);
-      result.current.ubahDelta(1, 1);
+      result.current.setQuota(1, 20);
+      result.current.changeQuotaBy(1, 1);
     });
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(21);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(21);
 
     await act(async () => {
       vi.advanceTimersByTime(600);
@@ -99,13 +101,13 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
 
   it("operasi campuran: +1 lalu ketik 20 sebelum debounce -> kirim absolut 20", async () => {
     adjustQuota.mockResolvedValue({ data: { ...STABLE_MENUS[0], quota_today: 20, available: 20 } });
-    const { result } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     act(() => {
-      result.current.ubahDelta(1, 1);
-      result.current.ubahMutlak(1, 20);
+      result.current.changeQuotaBy(1, 1);
+      result.current.setQuota(1, 20);
     });
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(20);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(20);
 
     await act(async () => {
       vi.advanceTimersByTime(600);
@@ -115,13 +117,13 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
   });
 
   it("supresi delta nol: +1 lalu -1 sebelum debounce tidak memanggil adjustQuota", async () => {
-    const { result } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     act(() => {
-      result.current.ubahDelta(1, 1);
-      result.current.ubahDelta(1, -1);
+      result.current.changeQuotaBy(1, 1);
+      result.current.changeQuotaBy(1, -1);
     });
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(10);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(10);
 
     await act(async () => {
       vi.advanceTimersByTime(600);
@@ -131,7 +133,7 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
   });
 
   it("serialisasi in-flight: mutasi saat request berjalan ditahan dan dieksekusi sekuensial (max 1 in-flight)", async () => {
-    let resolveFirst: (v: unknown) => void;
+    let resolveFirst: (value: unknown) => void;
     const firstPromise = new Promise((resolve) => {
       resolveFirst = resolve;
     });
@@ -140,11 +142,11 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
       .mockReturnValueOnce(firstPromise)
       .mockResolvedValueOnce({ data: { ...STABLE_MENUS[0], quota_today: 12, available: 12 } });
 
-    const { result } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     // Request pertama: +1
     act(() => {
-      result.current.ubahDelta(1, 1);
+      result.current.changeQuotaBy(1, 1);
     });
     await act(async () => {
       vi.advanceTimersByTime(600);
@@ -153,7 +155,7 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
 
     // Saat request pertama in-flight, user klik +1 lagi
     act(() => {
-      result.current.ubahDelta(1, 1);
+      result.current.changeQuotaBy(1, 1);
     });
     await act(async () => {
       vi.advanceTimersByTime(600);
@@ -173,7 +175,7 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
   });
 
   it("rollback granular: kegagalan request delta tidak membatalkan mutasi pending berikutnya", async () => {
-    let rejectFirst: (v: unknown) => void;
+    let rejectFirst: (value: unknown) => void;
     const firstPromise = new Promise((resolve) => {
       rejectFirst = resolve;
     });
@@ -182,22 +184,22 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
       .mockReturnValueOnce(firstPromise)
       .mockResolvedValueOnce({ data: { ...STABLE_MENUS[0], quota_today: 11, available: 11 } });
 
-    const { result } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     // Request pertama: +2
     act(() => {
-      result.current.ubahDelta(1, 2);
+      result.current.changeQuotaBy(1, 2);
     });
     await act(async () => {
       vi.advanceTimersByTime(600);
     });
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(12);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(12);
 
     // Mutasi kedua saat in-flight: +1 -> draf lokal menjadi 13
     act(() => {
-      result.current.ubahDelta(1, 1);
+      result.current.changeQuotaBy(1, 1);
     });
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(13);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(13);
 
     // Request pertama gagal (ditolak 409)
     await act(async () => {
@@ -205,13 +207,13 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
     });
 
     // Efek +2 dibatalkan (13 - 2 = 11), draf menjadi 11, dan request kedua (+1) otomatis dikirim
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(11);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(11);
     expect(adjustQuota).toHaveBeenCalledTimes(2);
     expect(adjustQuota).toHaveBeenLastCalledWith(1, { delta: 1 });
   });
 
   it("rekonstruksi draf: baseline 10, request +2 in-flight, ketik 25, request +2 ditolak -> draf tetap 25, kirim absolut 25", async () => {
-    let rejectFirst: (v: unknown) => void;
+    let rejectFirst: (value: unknown) => void;
     const firstPromise = new Promise((resolve) => {
       rejectFirst = resolve;
     });
@@ -220,22 +222,22 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
       .mockReturnValueOnce(firstPromise)
       .mockResolvedValueOnce({ data: { ...STABLE_MENUS[0], quota_today: 25, available: 25 } });
 
-    const { result } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     // Request pertama: +2 in-flight
     act(() => {
-      result.current.ubahDelta(1, 2);
+      result.current.changeQuotaBy(1, 2);
     });
     await act(async () => {
       vi.advanceTimersByTime(600);
     });
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(12);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(12);
 
     // Pengguna mengetik 25 saat request pertama in-flight
     act(() => {
-      result.current.ubahMutlak(1, 25);
+      result.current.setQuota(1, 25);
     });
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(25);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(25);
 
     // Request pertama ditolak
     await act(async () => {
@@ -243,7 +245,7 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
     });
 
     // Draf TETAP 25 (nilai mutlak tidak boleh dikurangi oleh delta gagal)
-    expect(result.current.dengan(STABLE_MENUS[0]).quota_today).toBe(25);
+    expect(result.current.withDraft(STABLE_MENUS[0]).quota_today).toBe(25);
 
     // Request berikutnya mengirim nilai absolut 25
     expect(adjustQuota).toHaveBeenCalledTimes(2);
@@ -251,7 +253,7 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
   });
 
   it("unmount saat request in-flight: pending tetap dikirim sekali secara berurutan tanpa request paralel atau ganda", async () => {
-    let resolveFirst: (v: unknown) => void;
+    let resolveFirst: (value: unknown) => void;
     const firstPromise = new Promise((resolve) => {
       resolveFirst = resolve;
     });
@@ -260,11 +262,11 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
       .mockReturnValueOnce(firstPromise)
       .mockResolvedValueOnce({ data: { ...STABLE_MENUS[0], quota_today: 12, available: 12 } });
 
-    const { result, unmount } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result, unmount } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     // Request 1 in-flight
     act(() => {
-      result.current.ubahDelta(1, 1);
+      result.current.changeQuotaBy(1, 1);
     });
     await act(async () => {
       vi.advanceTimersByTime(600);
@@ -273,7 +275,7 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
 
     // Klik +1 lagi
     act(() => {
-      result.current.ubahDelta(1, 1);
+      result.current.changeQuotaBy(1, 1);
     });
 
     // Unmount komponen saat Request 1 masih in-flight
@@ -293,10 +295,10 @@ describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
 
   it("unmount saat debounce: pending di-flush seketika", () => {
     adjustQuota.mockResolvedValue({ data: { ...STABLE_MENUS[0], quota_today: 13, available: 13 } });
-    const { result, unmount } = renderHook(() => useKuota(vi.fn(), STABLE_MENUS));
+    const { result, unmount } = renderHook(() => useQuota(vi.fn(), STABLE_MENUS));
 
     act(() => {
-      result.current.ubahDelta(1, 3);
+      result.current.changeQuotaBy(1, 3);
     });
     expect(adjustQuota).not.toHaveBeenCalled();
 

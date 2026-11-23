@@ -9,21 +9,21 @@ import { SIDEBAR_COOKIE, type SidebarMode } from "@/lib/shell";
  * SH-N1: bingkai sidebar. Di ≥ 1280 px tombolnya menciutkan/melebarkan sidebar dan pilihan disimpan di cookie
  * setahun. Lebar diganti seketika (tanpa animasi width) supaya konten tidak reflow berkali-kali.
  */
-export function SidebarLipat({
-  mode: awal,
-  atas,
+export function CollapsibleSidebar({
+  mode: initialMode,
+  topContent,
   children,
 }: {
   mode: SidebarMode;
-  atas: ReactNode;
+  topContent: ReactNode;
   children: ReactNode;
 }) {
-  const [mode, setMode] = useState(awal);
-  const lebar = mode === "lebar";
-  function ubah() {
-    const baru = lebar ? "ringkas" : "lebar";
-    setMode(baru);
-    document.cookie = `${SIDEBAR_COOKIE}=${baru}; path=/; max-age=31536000; samesite=lax`;
+  const [mode, setMode] = useState(initialMode);
+  const isWide = mode === "lebar";
+  function toggleMode() {
+    const nextMode = isWide ? "ringkas" : "lebar";
+    setMode(nextMode);
+    document.cookie = `${SIDEBAR_COOKIE}=${nextMode}; path=/; max-age=31536000; samesite=lax`;
   }
   return (
     <aside
@@ -31,12 +31,12 @@ export function SidebarLipat({
       className="sticky top-0 hidden h-dvh w-16 shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-surface p-2 md:flex sb-lebar:w-64 sb-lebar:p-3"
     >
       <div className="flex flex-col items-center gap-2 sb-lebar:flex-row sb-lebar:justify-between">
-        {atas}
+        {topContent}
         <div className="hidden xl:block">
           <IconButton
-            icon={lebar ? PanelLeftClose : PanelLeftOpen}
-            label={lebar ? "Ciutkan menu" : "Lebarkan menu"}
-            onClick={ubah}
+            icon={isWide ? PanelLeftClose : PanelLeftOpen}
+            label={isWide ? "Ciutkan menu" : "Lebarkan menu"}
+            onClick={toggleMode}
           />
         </div>
       </div>

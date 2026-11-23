@@ -26,13 +26,19 @@ import {
 } from "lucide-react";
 
 // badge: true = jumlah pesanan perlu tindakan; "notif" = notifikasi belum dibaca
-export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: boolean | "notif"; exact?: boolean };
-export type NavGroup = { grup: string; items: NavItem[] };
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  badge?: boolean | "notifications";
+  exact?: boolean;
+};
+export type NavGroup = { title: string; items: NavItem[] };
 
 // F18: navigasi panel admin; halaman Verifikasi s.d. Promo dibangun bertahap.
-export const adminNav: NavGroup[] = [
+export const ADMIN_NAV: NavGroup[] = [
   {
-    grup: "Admin",
+    title: "Admin",
     items: [
       { href: "/admin", label: "Ringkasan", icon: LayoutGrid, exact: true },
       { href: "/admin/verifikasi", label: "Verifikasi", icon: ShieldCheck },
@@ -59,9 +65,9 @@ export const adminNav: NavGroup[] = [
 ];
 
 // SH-N1: satu definisi untuk sidebar, rail tablet, dan drawer ponsel.
-export const NAV: NavGroup[] = [
+export const MERCHANT_NAV: NavGroup[] = [
   {
-    grup: "Operasional",
+    title: "Operasional",
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, badge: true },
       { href: "/menu", label: "Menu & Stok", icon: BookOpen },
@@ -70,7 +76,7 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    grup: "Pemasaran",
+    title: "Pemasaran",
     items: [
       { href: "/promo", label: "Promo", icon: Tag },
       { href: "/banner", label: "Banner", icon: ImageIcon },
@@ -78,12 +84,12 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    grup: "Pengaturan",
+    title: "Pengaturan",
     items: [
-      { href: "/notifikasi", label: "Notifikasi", icon: Bell, badge: "notif" },
+      { href: "/notifikasi", label: "Notifikasi", icon: Bell, badge: "notifications" },
       { href: "/pengaturan", label: "Toko", icon: Store },
       { href: "/template-wa", label: "Template WA", icon: MessageCircle },
     ],
   },
-  { grup: "Alat", items: [{ href: "/copilot", label: "Kalkulator HPP", icon: Calculator }] },
+  { title: "Alat", items: [{ href: "/copilot", label: "Kalkulator HPP", icon: Calculator }] },
 ];

@@ -22,7 +22,7 @@ describe("shell dashboard", () => {
   it("badge pesanan = jumlah menunggu + terkonfirmasi dari server (M-04)", async () => {
     const el = await DashboardLayout({ children: null });
     expect(JSON.stringify(el)).toContain('"badge":7');
-    expect(JSON.stringify(el)).toContain('"notif":4');
+    expect(JSON.stringify(el)).toContain('"unreadNotifications":4');
   });
   it("SH-N1: lebar sidebar dari cookie kk-sidebar sudah dirender server (tanpa kedip)", async () => {
     kuki = "ringkas";

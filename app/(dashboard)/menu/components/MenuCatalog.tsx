@@ -24,7 +24,7 @@ import type { Category } from "@/types/meta";
 import type { MerchantMenu } from "@/types/menu";
 import { buildUrl } from "@/lib/url";
 import { MenuCard } from "./MenuCard";
-import { useKuota } from "@/hooks/useKuota";
+import { useQuota } from "@/hooks/useQuota";
 
 const LABEL: Record<MenuStatusFilter, string> = {
   semua: "Semua",
@@ -64,7 +64,11 @@ export function MenuCatalog({
   const [konfirmasi, setKonfirmasi] = useState<MerchantMenu | null>(null);
 
   // Baris dari server disalin utuh (terjual & ditahan ikut berubah).
-  const { ubahDelta, ubahMutlak, dengan } = useKuota((m) => setLokal((l) => ({ ...l, [m.id]: m })), menus);
+  const {
+    changeQuotaBy: ubahDelta,
+    setQuota: ubahMutlak,
+    withDraft: dengan,
+  } = useQuota((m) => setLokal((l) => ({ ...l, [m.id]: m })), menus);
 
   // Nilai terbaru untuk timer/handler; state di closure bisa basi saat timer berjalan.
   const terbaru = useRef({ params: params.toString(), qInput });

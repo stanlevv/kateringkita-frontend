@@ -7,7 +7,7 @@ import { setDineIn, createTable, updateTable } from "@/app/actions/table";
 import { gambarQr, QrMeja } from "@/app/components/meja/QrMeja";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { Switch } from "@/app/components/ui/Switch";
@@ -107,7 +107,7 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
                 rel="noopener"
                 className={cx(
                   "inline-flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle",
-                  fokus,
+                  focusRing,
                 )}
               >
                 <Printer aria-hidden className="size-4" />

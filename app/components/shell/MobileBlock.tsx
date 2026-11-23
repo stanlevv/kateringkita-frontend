@@ -2,7 +2,7 @@ import { MonitorSmartphone } from "lucide-react";
 
 // Aturan: dashboard penjual & admin hanya untuk tablet/desktop (lebar ≥ 768 px). Di bawah itu layar penuh ini menutup
 // halaman. Hanya CSS (md:hidden), tanpa deteksi perangkat: tablet yang diputar ke lanskap langsung bisa dipakai.
-export function BlokPonsel() {
+export function MobileBlock() {
   return (
     <div
       role="alertdialog"

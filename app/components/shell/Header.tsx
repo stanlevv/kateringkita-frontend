@@ -5,25 +5,25 @@ import { MobileNav } from "./MobileNav";
 import type { StoreInfo } from "./StoreStatus";
 
 export function Header({
-  nama,
-  toko,
+  userName,
+  storeName,
   store,
   badge,
-  notif = 0,
+  unreadNotifications = 0,
   admin = false,
   level,
 }: {
-  nama: string;
-  toko: string;
+  userName: string;
+  storeName: string;
   store: StoreInfo | null;
   badge: number;
-  notif?: number;
+  unreadNotifications?: number;
   admin?: boolean;
   level?: unknown;
 }) {
   return (
     <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-surface px-4">
-      <MobileNav store={store} badge={badge} notif={notif} admin={admin} level={level} />
+      <MobileNav store={store} badge={badge} unreadNotifications={unreadNotifications} admin={admin} level={level} />
       {!admin && (
         <form action="/pesanan" method="get" role="search" className="relative min-w-0 max-w-md flex-1">
           <label htmlFor="cari-pesanan" className="sr-only">
@@ -46,7 +46,7 @@ export function Header({
         <span className="hidden md:block">
           <Clock />
         </span>
-        <AccountMenu nama={nama} toko={toko} admin={admin} />
+        <AccountMenu userName={userName} storeName={storeName} admin={admin} />
       </div>
     </header>
   );

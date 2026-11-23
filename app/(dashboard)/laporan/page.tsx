@@ -29,7 +29,7 @@ export default async function LaporanPage({
   ]);
 
   const picker = (
-    <RangePicker key={`${dari}|${sampai}|${galat}`} dari={dari} sampai={sampai} hariIni={hariIni} galat={galat} />
+    <RangePicker key={`${dari}|${sampai}|${galat}`} from={dari} to={sampai} today={hariIni} error={galat} />
   );
   if ("error" in ringkasan || "error" in transaksi || (perHari && "error" in perHari)) {
     return (

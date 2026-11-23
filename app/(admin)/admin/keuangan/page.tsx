@@ -2,7 +2,7 @@ import { Download, Landmark, ReceiptText, Store, Tag } from "lucide-react";
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { Card } from "@/app/components/ui/Card";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { DataTable, type Column } from "@/app/components/ui/DataTable";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { KpiCard } from "@/app/components/ui/KpiCard";
@@ -39,13 +39,13 @@ export default async function KeuanganPage({
   const res = await getFinanceSummary({ from: dari, to: sampai });
   const unduh = cx(
     "inline-flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle",
-    fokus,
+    focusRing,
   );
 
   return (
     <PageHeader title="Keuangan" description="Omzet, diskon, dan biaya layanan dari pesanan selesai, per toko.">
       <div className="flex flex-col gap-6">
-        <RangePicker key={`${dari}|${sampai}|${galat}`} dari={dari} sampai={sampai} hariIni={hariIni} galat={galat} />
+        <RangePicker key={`${dari}|${sampai}|${galat}`} from={dari} to={sampai} today={hariIni} error={galat} />
         {"error" in res ? (
           <GagalMuat
             judul="Rekap keuangan belum bisa dimuat"

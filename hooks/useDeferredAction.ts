@@ -8,53 +8,53 @@ import { useCallback, useEffect, useRef, useState } from "react";
  */
 export function useDeferredAction<A>(run: (key: string, arg: A) => void, delayMs = 5000) {
   const [pending, setPending] = useState<Record<string, A>>({});
-  const antre = useRef(new Map<string, { arg: A; t: ReturnType<typeof setTimeout> }>());
+  const queue = useRef(new Map<string, { arg: A; timer: ReturnType<typeof setTimeout> }>());
   const runRef = useRef(run);
   useEffect(() => {
     runRef.current = run;
   });
 
-  const lepas = useCallback((key: string) => {
-    const p = antre.current.get(key);
-    if (!p) return null;
-    clearTimeout(p.t);
-    antre.current.delete(key); // dihapus sebelum run agar tidak mungkin jalan dua kali
-    setPending((lama) => {
-      const baru = { ...lama };
-      delete baru[key];
-      return baru;
+  const release = useCallback((key: string) => {
+    const entry = queue.current.get(key);
+    if (!entry) return null;
+    clearTimeout(entry.timer);
+    queue.current.delete(key); // dihapus sebelum run agar tidak mungkin jalan dua kali
+    setPending((previousPending) => {
+      const nextPending = { ...previousPending };
+      delete nextPending[key];
+      return nextPending;
     });
-    return p;
+    return entry;
   }, []);
 
-  const jalankan = useCallback(
+  const runNow = useCallback(
     (key: string) => {
-      const p = lepas(key);
-      if (p) runRef.current(key, p.arg);
+      const entry = release(key);
+      if (entry) runRef.current(key, entry.arg);
     },
-    [lepas],
+    [release],
   );
 
   const schedule = useCallback(
     (key: string, arg: A) => {
-      jalankan(key);
-      antre.current.set(key, { arg, t: setTimeout(() => jalankan(key), delayMs) });
-      setPending((p) => ({ ...p, [key]: arg }));
+      runNow(key);
+      queue.current.set(key, { arg, timer: setTimeout(() => runNow(key), delayMs) });
+      setPending((previousPending) => ({ ...previousPending, [key]: arg }));
     },
-    [delayMs, jalankan],
+    [delayMs, runNow],
   );
 
   /** `true` bila aksi masih tertunda dan berhasil dibatalkan. */
-  const undo = useCallback((key: string) => !!lepas(key), [lepas]);
+  const undo = useCallback((key: string) => !!release(key), [release]);
 
   useEffect(() => {
-    const semua = () => [...antre.current.keys()].forEach(jalankan);
-    window.addEventListener("pagehide", semua);
+    const runAll = () => [...queue.current.keys()].forEach(runNow);
+    window.addEventListener("pagehide", runAll);
     return () => {
-      window.removeEventListener("pagehide", semua);
-      semua();
+      window.removeEventListener("pagehide", runAll);
+      runAll();
     };
-  }, [jalankan]);
+  }, [runNow]);
 
   return { schedule, undo, pending };
 }

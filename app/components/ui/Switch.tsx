@@ -1,4 +1,4 @@
-import { cx, fokus } from "./cx";
+import { cx, focusRing } from "./cx";
 
 export function Switch({
   checked,
@@ -7,7 +7,7 @@ export function Switch({
   disabled,
 }: {
   checked: boolean;
-  onChange: (v: boolean) => void;
+  onChange: (nextChecked: boolean) => void;
   label: string;
   disabled?: boolean;
 }) {
@@ -21,7 +21,7 @@ export function Switch({
       onClick={() => onChange(!checked)}
       className={cx(
         "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full disabled:opacity-50",
-        fokus,
+        focusRing,
       )}
     >
       <span

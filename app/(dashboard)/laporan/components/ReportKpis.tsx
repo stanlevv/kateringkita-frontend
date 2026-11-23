@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, Coins, PiggyBank, Target } from "lucide-react";
 import { KpiCard } from "@/app/components/ui/KpiCard";
-import { fokus } from "@/app/components/ui/cx";
+import { focusRing } from "@/app/components/ui/cx";
 import { formatRupiah } from "@/lib/format";
 import type { ReportSummary } from "@/types/report";
 
@@ -33,7 +33,7 @@ export function ReportKpis({ summary }: { summary: ReportSummary }) {
             Target harian belum diisi.{" "}
             <Link
               href="/pengaturan#operasional"
-              className={`inline-flex min-h-11 items-center rounded-md font-medium text-primary underline ${fokus}`}
+              className={`inline-flex min-h-11 items-center rounded-md font-medium text-primary underline ${focusRing}`}
             >
               Atur target
             </Link>

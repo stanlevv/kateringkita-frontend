@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 
 type Props = {
   adaTitikTemu: boolean;
@@ -13,7 +13,7 @@ type Props = {
 
 const tautan = cx(
   "inline-flex min-h-11 items-center font-medium text-primary underline-offset-4 hover:underline",
-  fokus,
+  focusRing,
 );
 
 /** DB-A5: kartu Siapkan toko, langkah dicentang otomatis dari data. */

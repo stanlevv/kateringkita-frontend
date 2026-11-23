@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
-import { cx, fokus } from "./cx";
+import { cx, focusRing } from "./cx";
 
-const varian = {
+const variantClasses = {
   primary: "bg-accent text-ink hover:bg-accent-pressed",
   secondary: "border border-line-strong bg-surface text-ink hover:bg-subtle",
 };
@@ -13,15 +13,15 @@ export function LinkButton({
   size = "md",
   className,
   ...rest
-}: ComponentProps<typeof Link> & { variant?: keyof typeof varian; size?: "md" | "lg" }) {
+}: ComponentProps<typeof Link> & { variant?: keyof typeof variantClasses; size?: "md" | "lg" }) {
   return (
     <Link
       {...rest}
       className={cx(
         "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 font-semibold transition-colors motion-reduce:transition-none",
         size === "lg" && "min-h-12 px-6 text-lg",
-        varian[variant],
-        fokus,
+        variantClasses[variant],
+        focusRing,
         className,
       )}
     />

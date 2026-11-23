@@ -45,12 +45,12 @@ describe("kerangka memuat", () => {
       const berkas = join(d, "loading.tsx");
       if (!existsSync(berkas)) continue;
       const kerangka = baca(berkas);
-      const judul = /\bjudul="([^"]+)"/.exec(kerangka)?.[1];
+      const judul = /\btitle="([^"]+)"/.exec(kerangka)?.[1];
       if (!judul) continue; // judul dari data (kode pesanan, nama toko) ikut dikerangkakan
       const header = [...sumber(d).matchAll(/<PageHeader\s+title="([^"]+)"(?:\s+description="([^"]+)")?/g)].filter(
         (m) => m[1] === judul,
       );
-      const deskripsi = /\bdeskripsi="([^"]+)"/.exec(kerangka)?.[1];
+      const deskripsi = /\bdescription="([^"]+)"/.exec(kerangka)?.[1];
       const harus = header.map((m) => m[2]).find(Boolean);
       if (header.length === 0) beda.push(`${relatif(berkas)}: tidak ada <PageHeader title="${judul}">`);
       else if (deskripsi !== harus)

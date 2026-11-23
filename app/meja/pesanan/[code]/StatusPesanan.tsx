@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Check, ChefHat, CircleX, Clock, PartyPopper, Utensils } from "lucide-react";
 import { payTableOrder, getTableOrderStatus } from "@/app/actions/table";
 import { Button } from "@/app/components/ui/Button";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { callAction } from "@/lib/action";
 import { formatRupiah } from "@/lib/format";
 import { subscribe, readGuestRaw, parseGuest } from "@/lib/table-storage";
@@ -235,7 +235,7 @@ export function StatusPesanan({ code }: { code: string }) {
         href={`/meja/${tamu.meja}`}
         className={cx(
           "inline-flex min-h-11 items-center justify-center rounded-xl border border-line-strong bg-surface font-semibold text-ink hover:bg-subtle",
-          fokus,
+          focusRing,
         )}
       >
         {gagal || d.status === "completed" ? "Pesan lagi" : "Tambah pesanan lain"}

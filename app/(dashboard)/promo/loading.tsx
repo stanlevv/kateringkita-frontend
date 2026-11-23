@@ -1,10 +1,10 @@
 import { RangkaPromo } from "@/app/components/promo/RangkaPromo";
-import { RangkaHalaman } from "@/app/components/shell/RangkaHalaman";
+import { PageFrame } from "@/app/components/shell/PageFrame";
 
 export default function Loading() {
   return (
-    <RangkaHalaman judul="Promo">
+    <PageFrame title="Promo">
       <RangkaPromo />
-    </RangkaHalaman>
+    </PageFrame>
   );
 }

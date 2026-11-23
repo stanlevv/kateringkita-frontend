@@ -7,7 +7,7 @@ import { cx } from "./cx";
 import { IconButton } from "./IconButton";
 import { toneClass, toneIcon } from "./tone";
 
-type Item = {
+type ToastItem = {
   id: number;
   tone: Tone;
   message: string;
@@ -16,74 +16,74 @@ type Item = {
 };
 
 // Store kecil di sisi klien (bukan state server); cukup untuk antrean toast.
-let items: Item[] = [];
+let items: ToastItem[] = [];
 let nextId = 1;
-const subs = new Set<() => void>();
-const emit = () => subs.forEach((f) => f());
+const subscribers = new Set<() => void>();
+const emit = () => subscribers.forEach((listener) => listener());
 
-export function toast(t: Omit<Item, "id">): number {
+export function toast(options: Omit<ToastItem, "id">): number {
   const id = nextId++;
-  items = [...items, { ...t, id }];
+  items = [...items, { ...options, id }];
   emit();
   return id;
 }
 export function dismissToast(id: number) {
-  items = items.filter((i) => i.id !== id);
+  items = items.filter((item) => item.id !== id);
   emit();
 }
 
-function Kartu({ t }: { t: Item }) {
-  const [tampil, setTampil] = useState(false);
+function ToastCard({ item }: { item: ToastItem }) {
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const r = requestAnimationFrame(() => setTampil(true));
-    return () => cancelAnimationFrame(r);
+    const frameId = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(frameId);
   }, []);
-  const durasi = t.duration ?? (t.tone === "danger" ? 0 : 4000); // 0 = tetap sampai ditutup
+  const duration = item.duration ?? (item.tone === "danger" ? 0 : 4000); // 0 = tetap sampai ditutup
   // Jeda saat kursor di atas atau fokus di dalam; lanjut dari awal durasi setelah lepas.
-  const [jeda, setJeda] = useState(false);
+  const [paused, setPaused] = useState(false);
   useEffect(() => {
-    if (!durasi || jeda) return;
-    const h = setTimeout(() => dismissToast(t.id), durasi);
-    return () => clearTimeout(h);
-  }, [durasi, t.id, jeda]);
-  const Icon = toneIcon[t.tone];
+    if (!duration || paused) return;
+    const timer = setTimeout(() => dismissToast(item.id), duration);
+    return () => clearTimeout(timer);
+  }, [duration, item.id, paused]);
+  const Icon = toneIcon[item.tone];
   return (
     <div
-      onMouseEnter={() => setJeda(true)}
-      onMouseLeave={() => setJeda(false)}
-      onFocus={() => setJeda(true)}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setJeda(false);
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
       }}
       className={cx(
         "pointer-events-auto flex items-center gap-3 rounded-md border border-line py-1 pl-4 shadow-lg transition duration-200 motion-reduce:transition-none",
-        toneClass[t.tone],
-        tampil ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
+        toneClass[item.tone],
+        visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
       )}
     >
       <Icon aria-hidden className="size-5 shrink-0" />
-      <p className="flex-1 py-2 text-sm font-medium">{t.message}</p>
-      {t.action && (
+      <p className="flex-1 py-2 text-sm font-medium">{item.message}</p>
+      {item.action && (
         <button
           type="button"
           onClick={() => {
-            t.action!.onClick();
-            dismissToast(t.id);
+            item.action!.onClick();
+            dismissToast(item.id);
           }}
           className="min-h-11 rounded-md px-3 text-sm font-semibold underline focus-visible:ring-2 focus-visible:ring-focus"
         >
-          {t.action.label}
+          {item.action.label}
         </button>
       )}
-      <IconButton icon={X} label="Tutup" onClick={() => dismissToast(t.id)} />
+      <IconButton icon={X} label="Tutup" onClick={() => dismissToast(item.id)} />
     </div>
   );
 }
 
-const subscribe = (f: () => void) => {
-  subs.add(f);
+const subscribe = (listener: () => void) => {
+  subscribers.add(listener);
   return () => {
-    subs.delete(f);
+    subscribers.delete(listener);
   };
 };
 
@@ -100,8 +100,8 @@ export function Toaster() {
       aria-live="polite"
       className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col items-center gap-2 sm:left-auto sm:w-96"
     >
-      {list.map((t) => (
-        <Kartu key={t.id} t={t} />
+      {list.map((item) => (
+        <ToastCard key={item.id} item={item} />
       ))}
     </div>
   );

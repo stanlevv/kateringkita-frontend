@@ -1,16 +1,16 @@
-import { RangkaHalaman } from "@/app/components/shell/RangkaHalaman";
-import { SkeletonIsian, SkeletonTabel } from "@/app/components/ui/Skeleton";
+import { PageFrame } from "@/app/components/shell/PageFrame";
+import { SkeletonField, SkeletonTable } from "@/app/components/ui/Skeleton";
 
 // LogFilters (4 isian) lalu tabel log.
 export default function Loading() {
   return (
-    <RangkaHalaman judul="Log aksi admin" deskripsi="Setiap perubahan oleh admin tercatat di sini. Hanya untuk dibaca.">
+    <PageFrame title="Log aksi admin" description="Setiap perubahan oleh admin tercatat di sini. Hanya untuk dibaca.">
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <SkeletonIsian key={i} label="w-20" />
+          <SkeletonField key={i} label="w-20" />
         ))}
       </div>
-      <SkeletonTabel baris={8} kolom={5} />
-    </RangkaHalaman>
+      <SkeletonTable rows={8} columns={5} />
+    </PageFrame>
   );
 }

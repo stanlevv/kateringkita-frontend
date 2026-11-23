@@ -4,9 +4,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("next/navigation", () => ({ usePathname: () => "/menu", useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/actions/store", () => ({ setStoreOpen: vi.fn() }));
 import { Sidebar } from "./Sidebar";
-import { SidebarLipat } from "./SidebarLipat";
+import { CollapsibleSidebar } from "./CollapsibleSidebar";
 
-const aside = (c: HTMLElement) => c.querySelector("aside")!;
+const aside = (container: HTMLElement) => container.querySelector("aside")!;
 
 describe("SH-N1 sidebar bisa diciutkan/dilebarkan", () => {
   afterEach(() => {
@@ -15,9 +15,9 @@ describe("SH-N1 sidebar bisa diciutkan/dilebarkan", () => {
 
   it("mulai dari mode cookie; tombol mengganti mode dan menyimpannya di cookie", () => {
     const { container } = render(
-      <SidebarLipat mode="lebar" atas={null}>
+      <CollapsibleSidebar mode="lebar" topContent={null}>
         isi
-      </SidebarLipat>,
+      </CollapsibleSidebar>,
     );
     expect(aside(container)).toHaveAttribute("data-sidebar", "lebar");
 
@@ -32,9 +32,9 @@ describe("SH-N1 sidebar bisa diciutkan/dilebarkan", () => {
 
   it("mode ringkas dari server langsung dirender ringkas (tanpa kedip)", () => {
     const { container } = render(
-      <SidebarLipat mode="ringkas" atas={null}>
+      <CollapsibleSidebar mode="ringkas" topContent={null}>
         isi
-      </SidebarLipat>,
+      </CollapsibleSidebar>,
     );
     expect(aside(container)).toHaveAttribute("data-sidebar", "ringkas");
   });

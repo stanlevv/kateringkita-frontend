@@ -7,10 +7,10 @@ export function StatusBadge({
 }: {
   order: Pick<MerchantOrder, "status" | "payment_method" | "payment_status"> & Partial<Pick<MerchantOrder, "table">>;
 }) {
-  const v = orderStatusView(order);
+  const view = orderStatusView(order);
   return (
-    <Badge tone={v.tone} icon={v.icon}>
-      {v.label}
+    <Badge tone={view.tone} icon={view.icon}>
+      {view.label}
     </Badge>
   );
 }

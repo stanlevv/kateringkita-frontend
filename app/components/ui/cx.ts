@@ -1,3 +1,3 @@
-export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
+export const cx = (...classNames: (string | false | null | undefined)[]) => classNames.filter(Boolean).join(" ");
 
-export const fokus = "focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2";
+export const focusRing = "focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2";

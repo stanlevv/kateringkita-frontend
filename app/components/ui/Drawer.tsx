@@ -9,13 +9,13 @@ export function Drawer({
   onClose,
   title,
   children,
-  side = "kanan",
+  side = "right",
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
-  side?: "kiri" | "kanan";
+  side?: "left" | "right";
 }) {
   return (
     <Dialog
@@ -23,7 +23,7 @@ export function Drawer({
       onClose={onClose}
       title={title}
       className={
-        side === "kiri"
+        side === "left"
           ? "ml-0 mr-auto h-dvh max-h-none w-full rounded-none md:w-72"
           : "mr-0 ml-auto h-dvh max-h-none w-full rounded-none md:w-[28rem]"
       }

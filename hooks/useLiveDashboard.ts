@@ -5,21 +5,21 @@ import { updatedSinceCursor, mergeOrders, clockOffsetMs } from "@/lib/dashboard"
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
 
-const TERLIHAT_MS = 5000;
-const TERSEMBUNYI_MS = 30_000;
-const MAKS_MUNDUR_MS = 60_000;
-const BATAS_MS = 15_000; // permintaan menggantung dihitung gagal
+const VISIBLE_INTERVAL_MS = 5000;
+const HIDDEN_INTERVAL_MS = 30_000;
+const MAX_BACKOFF_MS = 60_000;
+const REQUEST_TIMEOUT_MS = 15_000; // permintaan menggantung dihitung gagal
 
-const langganOnline = (f: () => void) => {
-  window.addEventListener("online", f);
-  window.addEventListener("offline", f);
+const subscribeOnline = (listener: () => void) => {
+  window.addEventListener("online", listener);
+  window.addEventListener("offline", listener);
   return () => {
-    window.removeEventListener("online", f);
-    window.removeEventListener("offline", f);
+    window.removeEventListener("online", listener);
+    window.removeEventListener("offline", listener);
   };
 };
 
-type Awal = { orders: MerchantOrder[]; menus: MerchantMenu[]; dimuat: number };
+type InitialData = { orders: MerchantOrder[]; menus: MerchantMenu[]; loadedAt: number };
 
 /**
  * M-04, D5–D8: store antrean dashboard yang disegarkan bertahap lewat `GET /api/dashboard/sinkron`.
@@ -27,128 +27,137 @@ type Awal = { orders: MerchantOrder[]; menus: MerchantMenu[]; dimuat: number };
  * mundur `min(5 dtk × 2^n, 60 dtk)` saat galat; langsung saat tab terlihat lagi, `online`, atau `segarkan()`.
  */
 // shortcut: antrean & kuota "hari ini" tetap saat tab lewat tengah malam WIB; muat ulang bila tanggal berganti, tambah bila lintas hari (D14)
-export function useLangsung(awal: Awal) {
-  const [orders, setOrders] = useState(awal.orders);
-  const [menus, setMenus] = useState(awal.menus);
-  const [dari, setDari] = useState(awal);
-  if (awal.orders !== dari.orders || awal.menus !== dari.menus) {
+export function useLiveDashboard(initial: InitialData) {
+  const [orders, setOrders] = useState(initial.orders);
+  const [menus, setMenus] = useState(initial.menus);
+  const [previousInitial, setPreviousInitial] = useState(initial);
+  if (initial.orders !== previousInitial.orders || initial.menus !== previousInitial.menus) {
     // D11: data baru dari halaman server (router.refresh) disatukan, tidak mengganti store.
-    setDari(awal);
-    setOrders((l) => mergeOrders(l, awal.orders));
-    if (awal.menus !== dari.menus) setMenus(awal.menus);
+    setPreviousInitial(initial);
+    setOrders((currentOrders) => mergeOrders(currentOrders, initial.orders));
+    if (initial.menus !== previousInitial.menus) setMenus(initial.menus);
   }
-  const [terakhir, setTerakhir] = useState(awal.dimuat);
-  const [gagal, setGagal] = useState(false);
-  const [selisih, setSelisih] = useState(0);
+  const [lastSyncedAt, setLastSyncedAt] = useState(initial.loadedAt);
+  const [failed, setFailed] = useState(false);
+  const [clockOffset, setClockOffset] = useState(0);
   const online = useSyncExternalStore(
-    langganOnline,
+    subscribeOnline,
     () => navigator.onLine,
     () => true,
   );
 
   // Nilai terbaru untuk siklus penyegaran (timer & klik) tanpa memasang ulang efek.
-  const terkini = useRef({ orders, dimuat: awal.dimuat });
+  const latest = useRef({ orders, loadedAt: initial.loadedAt });
   useEffect(() => {
-    terkini.current = { orders, dimuat: awal.dimuat };
+    latest.current = { orders, loadedAt: initial.loadedAt };
   });
   // Naik setiap kuota disimpan; respons penyegaran yang berangkat sebelumnya tidak menimpa menu (D10).
-  const versiMenu = useRef(0);
-  const picu = useRef<() => void>(() => {});
+  const menuVersion = useRef(0);
+  const triggerRefresh = useRef<() => void>(() => {});
 
   useEffect(() => {
-    const ctl = new AbortController();
+    const unmountController = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let jalan = false;
-    let lagi = false;
-    let galatBeruntun = 0;
-    const jeda = () =>
-      galatBeruntun
-        ? Math.min(TERLIHAT_MS * 2 ** galatBeruntun, MAKS_MUNDUR_MS)
+    let running = false;
+    let rerunRequested = false;
+    let consecutiveErrors = 0;
+    const nextDelay = () =>
+      consecutiveErrors
+        ? Math.min(VISIBLE_INTERVAL_MS * 2 ** consecutiveErrors, MAX_BACKOFF_MS)
         : document.visibilityState === "visible"
-          ? TERLIHAT_MS
-          : TERSEMBUNYI_MS;
+          ? VISIBLE_INTERVAL_MS
+          : HIDDEN_INTERVAL_MS;
 
     // D8: semai selisih jam dari data awal halaman (jam perangkat saat dipasang, ±1 dtk).
-    const semai = clockOffsetMs(terkini.current.orders, Date.now());
-    if (semai !== null) setSelisih(semai);
+    const seededOffset = clockOffsetMs(latest.current.orders, Date.now());
+    if (seededOffset !== null) setClockOffset(seededOffset);
 
-    async function tarik() {
-      if (jalan) {
-        lagi = true; // sudah ada yang berjalan: ulangi segera setelah selesai
+    async function poll() {
+      if (running) {
+        rerunRequested = true; // sudah ada yang berjalan: ulangi segera setelah selesai
         return;
       }
       clearTimeout(timer);
-      jalan = true;
-      const versi = versiMenu.current;
+      running = true;
+      const versionAtStart = menuVersion.current;
       // D3: antrean kosong -> batas dari jam server halaman (`dimuat`), tidak pernah dari jam perangkat.
-      const sejak = updatedSinceCursor(terkini.current.orders, terkini.current.dimuat);
+      const since = updatedSinceCursor(latest.current.orders, latest.current.loadedAt);
       // Per permintaan: batal saat dilepas atau setelah BATAS_MS (tanpa AbortSignal.any/timeout, belum ada di peramban lama).
-      const minta = new AbortController();
-      const batal = () => minta.abort();
-      ctl.signal.addEventListener("abort", batal);
-      const batasWaktu = setTimeout(batal, BATAS_MS);
+      const requestController = new AbortController();
+      const abortRequest = () => requestController.abort();
+      unmountController.signal.addEventListener("abort", abortRequest);
+      const timeoutTimer = setTimeout(abortRequest, REQUEST_TIMEOUT_MS);
       try {
-        const res = await fetch(`/api/dashboard/sinkron?sejak=${encodeURIComponent(sejak)}`, {
-          signal: minta.signal,
+        const response = await fetch(`/api/dashboard/sinkron?sejak=${encodeURIComponent(since)}`, {
+          signal: requestController.signal,
           cache: "no-store",
         });
-        if (res.redirected) {
+        if (response.redirected) {
           // D7: sesi habis -> muat ulang halaman agar login kembali ke /dashboard, bukan ke rute data ini.
-          ctl.abort();
+          unmountController.abort();
           location.reload();
           return;
         }
-        if (!res.ok) throw new Error(String(res.status));
-        const { data } = (await res.json()) as { data: { orders: MerchantOrder[]; menus: MerchantMenu[] } };
-        const diterima = Date.now();
-        galatBeruntun = 0;
-        setOrders((l) => mergeOrders(l, data.orders));
-        if (versiMenu.current === versi) setMenus(data.menus);
-        const s = clockOffsetMs(data.orders, diterima);
-        if (s !== null) setSelisih(s);
-        setTerakhir(diterima);
-        setGagal(false);
+        if (!response.ok) throw new Error(String(response.status));
+        const { data } = (await response.json()) as { data: { orders: MerchantOrder[]; menus: MerchantMenu[] } };
+        const receivedAt = Date.now();
+        consecutiveErrors = 0;
+        setOrders((currentOrders) => mergeOrders(currentOrders, data.orders));
+        if (menuVersion.current === versionAtStart) setMenus(data.menus);
+        const offset = clockOffsetMs(data.orders, receivedAt);
+        if (offset !== null) setClockOffset(offset);
+        setLastSyncedAt(receivedAt);
+        setFailed(false);
       } catch {
-        if (ctl.signal.aborted) return; // dilepas; batas waktu permintaan tetap dihitung galat
-        galatBeruntun++;
-        setGagal(true);
+        if (unmountController.signal.aborted) return; // dilepas; batas waktu permintaan tetap dihitung galat
+        consecutiveErrors++;
+        setFailed(true);
       } finally {
-        clearTimeout(batasWaktu);
-        ctl.signal.removeEventListener("abort", batal);
-        jalan = false;
+        clearTimeout(timeoutTimer);
+        unmountController.signal.removeEventListener("abort", abortRequest);
+        running = false;
       }
-      if (ctl.signal.aborted) return;
-      if (lagi) {
-        lagi = false;
-        void tarik();
-      } else timer = setTimeout(tarik, jeda());
+      if (unmountController.signal.aborted) return;
+      if (rerunRequested) {
+        rerunRequested = false;
+        void poll();
+      } else timer = setTimeout(poll, nextDelay());
     }
 
-    const segera = () => void tarik();
-    const saatTerlihat = () => document.visibilityState === "visible" && segera();
-    picu.current = segera;
-    document.addEventListener("visibilitychange", saatTerlihat);
-    window.addEventListener("online", segera);
-    timer = setTimeout(tarik, jeda());
+    const pollNow = () => void poll();
+    const onVisible = () => document.visibilityState === "visible" && pollNow();
+    triggerRefresh.current = pollNow;
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", pollNow);
+    timer = setTimeout(poll, nextDelay());
     return () => {
-      ctl.abort();
+      unmountController.abort();
       clearTimeout(timer);
-      picu.current = () => {};
-      document.removeEventListener("visibilitychange", saatTerlihat);
-      window.removeEventListener("online", segera);
+      triggerRefresh.current = () => {};
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", pollNow);
     };
   }, []);
 
-  const terima = useCallback((o: MerchantOrder) => {
-    setOrders((l) => mergeOrders(l, [o]));
-    const s = clockOffsetMs([o], Date.now());
-    if (s !== null) setSelisih(s);
+  const receiveOrder = useCallback((order: MerchantOrder) => {
+    setOrders((currentOrders) => mergeOrders(currentOrders, [order]));
+    const offset = clockOffsetMs([order], Date.now());
+    if (offset !== null) setClockOffset(offset);
   }, []);
-  const terimaMenu = useCallback((m: MerchantMenu) => {
-    versiMenu.current++;
-    setMenus((l) => l.map((x) => (x.id === m.id ? m : x)));
+  const receiveMenu = useCallback((menu: MerchantMenu) => {
+    menuVersion.current++;
+    setMenus((currentMenus) => currentMenus.map((current) => (current.id === menu.id ? menu : current)));
   }, []);
-  const segarkan = useCallback(() => picu.current(), []);
+  const refresh = useCallback(() => triggerRefresh.current(), []);
 
-  return { orders, menus, terakhir, putus: gagal || !online, selisih, terima, terimaMenu, segarkan };
+  return {
+    orders,
+    menus,
+    lastSyncedAt,
+    disconnected: failed || !online,
+    clockOffset,
+    receiveOrder,
+    receiveMenu,
+    refresh,
+  };
 }

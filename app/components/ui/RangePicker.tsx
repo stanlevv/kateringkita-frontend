@@ -3,84 +3,98 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { validateRange, daysBefore } from "@/lib/report";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { Input } from "@/app/components/ui/Input";
 
 /** LP-N1, LP-E1. Rentang tinggal di URL (`dari`, `sampai`); isian tidak sah ditolak di sini dan tidak mengubah URL. */
 export function RangePicker({
-  dari,
-  sampai,
-  hariIni,
-  galat,
+  from,
+  to,
+  today,
+  error,
 }: {
-  dari: string;
-  sampai: string;
-  hariIni: string;
-  galat: string | null;
+  from: string;
+  to: string;
+  today: string;
+  error: string | null;
 }) {
   const router = useRouter();
   const path = usePathname();
-  const preset = [
-    { label: "Hari ini", dari: hariIni },
-    { label: "7 hari", dari: daysBefore(hariIni, 6) },
-    { label: "30 hari", dari: daysBefore(hariIni, 29) },
+  const presets = [
+    { label: "Hari ini", from: today },
+    { label: "7 hari", from: daysBefore(today, 6) },
+    { label: "30 hari", from: daysBefore(today, 29) },
   ];
-  const aktif = preset.find((p) => p.dari === dari && sampai === hariIni)?.label;
-  const [kustom, setKustom] = useState(!aktif || !!galat);
-  const [isi, setIsi] = useState({ dari, sampai });
-  const [galatLokal, setGalatLokal] = useState<string | null>(null);
-  const pesan = galatLokal ?? galat;
+  const activePreset = presets.find((option) => option.from === from && to === today)?.label;
+  const [showCustom, setShowCustom] = useState(!activePreset || !!error);
+  const [draftRange, setDraftRange] = useState({ from, to });
+  const [localError, setLocalError] = useState<string | null>(null);
+  const shownError = localError ?? error;
 
-  const ke = (d: string, s: string) => router.replace(`${path}?dari=${d}&sampai=${s}`, { scroll: false });
+  const navigate = (rangeFrom: string, rangeTo: string) =>
+    router.replace(`${path}?dari=${rangeFrom}&sampai=${rangeTo}`, { scroll: false });
 
-  function ubah(bagian: "dari" | "sampai", nilai: string) {
-    const baru = { ...isi, [bagian]: nilai };
-    setIsi(baru);
-    const g = validateRange(baru.dari, baru.sampai, hariIni);
-    setGalatLokal(g);
-    if (!g) ke(baru.dari, baru.sampai);
+  function updateField(field: "from" | "to", value: string) {
+    const nextRange = { ...draftRange, [field]: value };
+    setDraftRange(nextRange);
+    const rangeError = validateRange(nextRange.from, nextRange.to, today);
+    setLocalError(rangeError);
+    if (!rangeError) navigate(nextRange.from, nextRange.to);
   }
 
-  function pilih(p: (typeof preset)[number]) {
-    setKustom(false);
-    setGalatLokal(null);
-    setIsi({ dari: p.dari, sampai: hariIni });
-    ke(p.dari, hariIni);
+  function choosePreset(option: (typeof presets)[number]) {
+    setShowCustom(false);
+    setLocalError(null);
+    setDraftRange({ from: option.from, to: today });
+    navigate(option.from, today);
   }
 
-  const tombol = (on: boolean) =>
+  const buttonClass = (pressed: boolean) =>
     cx(
       "inline-flex min-h-11 items-center rounded-md border px-4 font-medium",
-      fokus,
-      on ? "border-primary bg-primary-soft text-primary" : "border-line-strong bg-surface text-ink hover:bg-subtle",
+      focusRing,
+      pressed
+        ? "border-primary bg-primary-soft text-primary"
+        : "border-line-strong bg-surface text-ink hover:bg-subtle",
     );
 
   return (
     <div className="flex flex-col gap-3">
       <div role="group" aria-label="Rentang laporan" className="flex flex-wrap gap-2">
-        {preset.map((p) => {
-          const on = !kustom && aktif === p.label;
+        {presets.map((option) => {
+          const pressed = !showCustom && activePreset === option.label;
           return (
-            <button key={p.label} type="button" aria-pressed={on} onClick={() => pilih(p)} className={tombol(on)}>
-              {p.label}
+            <button
+              key={option.label}
+              type="button"
+              aria-pressed={pressed}
+              onClick={() => choosePreset(option)}
+              className={buttonClass(pressed)}
+            >
+              {option.label}
             </button>
           );
         })}
-        <button type="button" aria-pressed={kustom} onClick={() => setKustom(true)} className={tombol(kustom)}>
+        <button
+          type="button"
+          aria-pressed={showCustom}
+          onClick={() => setShowCustom(true)}
+          className={buttonClass(showCustom)}
+        >
           Pilih tanggal
         </button>
       </div>
-      {kustom && (
+      {showCustom && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
             Dari tanggal
             <Input
               type="date"
-              value={isi.dari}
-              max={hariIni}
-              aria-invalid={!!pesan}
-              aria-describedby={pesan ? "galat-rentang" : undefined}
-              onChange={(e) => ubah("dari", e.target.value)}
+              value={draftRange.from}
+              max={today}
+              aria-invalid={!!shownError}
+              aria-describedby={shownError ? "galat-rentang" : undefined}
+              onChange={(event) => updateField("from", event.target.value)}
               className="sm:w-44"
             />
           </label>
@@ -88,19 +102,19 @@ export function RangePicker({
             Sampai tanggal
             <Input
               type="date"
-              value={isi.sampai}
-              max={hariIni}
-              aria-invalid={!!pesan}
-              aria-describedby={pesan ? "galat-rentang" : undefined}
-              onChange={(e) => ubah("sampai", e.target.value)}
+              value={draftRange.to}
+              max={today}
+              aria-invalid={!!shownError}
+              aria-describedby={shownError ? "galat-rentang" : undefined}
+              onChange={(event) => updateField("to", event.target.value)}
               className="sm:w-44"
             />
           </label>
         </div>
       )}
-      {pesan && (
+      {shownError && (
         <p id="galat-rentang" role="alert" className="text-sm font-medium text-danger">
-          {pesan}
+          {shownError}
         </p>
       )}
     </div>

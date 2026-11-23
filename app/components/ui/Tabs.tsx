@@ -1,6 +1,6 @@
 "use client";
 
-import { cx, fokus } from "./cx";
+import { cx, focusRing } from "./cx";
 
 export type Tab = { id: string; label: string; count?: number };
 
@@ -15,36 +15,36 @@ export function Tabs({
   onChange: (id: string) => void;
   label: string;
 }) {
-  const pindah = (e: React.KeyboardEvent, i: number) => {
-    const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-    if (!d) return;
-    const t = tabs[(i + d + tabs.length) % tabs.length];
-    onChange(t.id);
-    document.getElementById(`tab-${t.id}`)?.focus();
+  const moveFocus = (event: React.KeyboardEvent, i: number) => {
+    const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+    if (!step) return;
+    const nextTab = tabs[(i + step + tabs.length) % tabs.length];
+    onChange(nextTab.id);
+    document.getElementById(`tab-${nextTab.id}`)?.focus();
   };
   return (
     <div role="tablist" aria-label={label} className="flex gap-1 overflow-x-auto border-b border-line">
-      {tabs.map((t, i) => {
-        const aktif = t.id === value;
+      {tabs.map((tab, i) => {
+        const selected = tab.id === value;
         return (
           <button
-            key={t.id}
-            id={`tab-${t.id}`}
+            key={tab.id}
+            id={`tab-${tab.id}`}
             role="tab"
             type="button"
-            aria-selected={aktif}
-            tabIndex={aktif ? 0 : -1}
-            onClick={() => onChange(t.id)}
-            onKeyDown={(e) => pindah(e, i)}
+            aria-selected={selected}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => onChange(tab.id)}
+            onKeyDown={(event) => moveFocus(event, i)}
             className={cx(
               "inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-2 px-4 font-medium",
-              fokus,
-              aktif ? "border-primary text-primary" : "border-transparent text-ink-muted hover:text-ink",
+              focusRing,
+              selected ? "border-primary text-primary" : "border-transparent text-ink-muted hover:text-ink",
             )}
           >
-            {t.label}
-            {t.count !== undefined && (
-              <span className="rounded-md bg-subtle px-1.5 font-mono text-sm text-ink">{t.count}</span>
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className="rounded-md bg-subtle px-1.5 font-mono text-sm text-ink">{tab.count}</span>
             )}
           </button>
         );

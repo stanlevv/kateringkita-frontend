@@ -32,8 +32,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Header
             admin
             level={user.admin_level}
-            nama={String(user.full_name ?? "Admin")}
-            toko="Admin"
+            userName={String(user.full_name ?? "Admin")}
+            storeName="Admin"
             store={null}
             badge={0}
           />

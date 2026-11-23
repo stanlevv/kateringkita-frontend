@@ -8,11 +8,11 @@ import { QuotaPanel } from "@/app/(dashboard)/dashboard/components/QuotaPanel";
 import { OrderQueue } from "@/app/(dashboard)/dashboard/components/OrderQueue";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { useStoreStatus } from "@/app/components/shell/StoreStatus";
-import { useUbahStatusDapur } from "@/app/components/shell/StoreStatusToggle";
+import { useStoreOpenToggle } from "@/app/components/shell/StoreStatusToggle";
 import { Banner } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
 import { IconButton } from "@/app/components/ui/IconButton";
-import { fokus } from "@/app/components/ui/cx";
+import { focusRing } from "@/app/components/ui/cx";
 import {
   setOrDeleteKey,
   pruneOptimisticActions,
@@ -28,8 +28,8 @@ import { KpiRow } from "./KpiRow";
 import { SetupChecklist } from "./SetupChecklist";
 import { SyncBanner } from "./SyncBanner";
 import { GagalMuat } from "@/app/components/GagalMuat";
-import { useLangsung } from "@/hooks/useLangsung";
-import { useNotifikasi } from "@/hooks/useNotifikasi";
+import { useLiveDashboard } from "@/hooks/useLiveDashboard";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const TABLET = "(min-width: 768px) and (max-width: 1279px)";
 const adaMedia = () => typeof window.matchMedia === "function";
@@ -75,15 +75,15 @@ function Isi({
   const {
     orders,
     menus,
-    terakhir,
-    putus: terputus,
-    selisih,
-    terima,
-    terimaMenu,
-    segarkan,
-  } = useLangsung({ orders: awalOrders, menus: awalMenus, dimuat });
-  const { isOpen, buka, tutup } = useStoreStatus();
-  const { ubah: ubahDapur, pending: membuka } = useUbahStatusDapur();
+    lastSyncedAt: terakhir,
+    disconnected: terputus,
+    clockOffset: selisih,
+    receiveOrder: terima,
+    receiveMenu: terimaMenu,
+    refresh: segarkan,
+  } = useLiveDashboard({ orders: awalOrders, menus: awalMenus, loadedAt: dimuat });
+  const { isOpen, openTime: buka, closeTime: tutup } = useStoreStatus();
+  const { changeStoreOpen: ubahDapur, pending: membuka } = useStoreOpenToggle();
   const [sekarang, setSekarang] = useState(dimuat);
   useEffect(() => {
     const i = setInterval(() => setSekarang(Date.now()), 1000);
@@ -103,7 +103,12 @@ function Isi({
   const putus = terputus || (galatSaat !== null && galatSaat === terakhir);
   const lokal = Math.max(sekarang, dimuat);
   const kini = lokal + selisih; // D8: jam server (timer tahan, "hari ini")
-  const { baru, umumkan, suara, setSuara } = useNotifikasi(orders, dimuat, kini);
+  const {
+    newOrderCodes: baru,
+    announcement: umumkan,
+    soundOn: suara,
+    setSoundOn: setSuara,
+  } = useNotifications(orders, dimuat, kini);
 
   // D11: badge sidebar dihitung di layout server; segarkan halaman hanya saat angkanya berubah.
   const tindakan = countNeedsAction(orders);
@@ -198,7 +203,7 @@ function Isi({
             action={
               <Link
                 href="/pengaturan"
-                className={`inline-flex min-h-11 items-center font-medium underline underline-offset-4 ${fokus}`}
+                className={`inline-flex min-h-11 items-center font-medium underline underline-offset-4 ${focusRing}`}
               >
                 Ubah jam buka
               </Link>

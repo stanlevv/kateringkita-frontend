@@ -16,14 +16,14 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
 export function MobileNav({
   store,
   badge,
-  notif = 0,
+  unreadNotifications = 0,
   admin = false,
   level,
   rail = false,
 }: {
   store: StoreInfo | null;
   badge: number;
-  notif?: number;
+  unreadNotifications?: number;
   admin?: boolean;
   level?: unknown;
   rail?: boolean;
@@ -39,8 +39,14 @@ export function MobileNav({
           onClick={() => setOpen(true)}
         />
       </div>
-      <Drawer open={open} onClose={() => setOpen(false)} title="Menu" side={rail ? "kiri" : "kanan"}>
-        <NavList badge={badge} notif={notif} onNavigate={() => setOpen(false)} admin={admin} level={level} />
+      <Drawer open={open} onClose={() => setOpen(false)} title="Menu" side={rail ? "left" : "right"}>
+        <NavList
+          badge={badge}
+          unreadNotifications={unreadNotifications}
+          onNavigate={() => setOpen(false)}
+          admin={admin}
+          level={level}
+        />
         {store && !admin && (
           <div className="border-t border-line pt-3">
             <StoreStatusToggle />

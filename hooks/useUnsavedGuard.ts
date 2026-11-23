@@ -7,41 +7,55 @@ import { useRouter } from "next/navigation";
 // Tombol kembali browser tidak dicegat.
 export function useUnsavedGuard(dirty: boolean) {
   const router = useRouter();
-  const [tujuan, setTujuan] = useState<string | null>(null);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
     if (!dirty) return;
-    const sebelum = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
     };
-    const klik = (e: MouseEvent) => {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const a = (e.target as Element).closest?.("a[href]") as HTMLAnchorElement | null;
-      const href = a?.getAttribute("href");
-      if (!a || !href || href.startsWith("#") || (a.target && a.target !== "_self") || a.hasAttribute("download"))
+    const onLinkClick = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
         return;
-      const url = new URL(a.href, window.location.href);
+      const anchor = (event.target as Element).closest?.("a[href]") as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute("href");
+      if (
+        !anchor ||
+        !href ||
+        href.startsWith("#") ||
+        (anchor.target && anchor.target !== "_self") ||
+        anchor.hasAttribute("download")
+      )
+        return;
+      const url = new URL(anchor.href, window.location.href);
       if (url.origin !== window.location.origin) return;
-      e.preventDefault();
-      e.stopPropagation();
-      setTujuan(url.pathname + url.search + url.hash);
+      event.preventDefault();
+      event.stopPropagation();
+      setPendingHref(url.pathname + url.search + url.hash);
     };
-    window.addEventListener("beforeunload", sebelum);
-    document.addEventListener("click", klik, true);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    document.addEventListener("click", onLinkClick, true);
     return () => {
-      window.removeEventListener("beforeunload", sebelum);
-      document.removeEventListener("click", klik, true);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      document.removeEventListener("click", onLinkClick, true);
     };
   }, [dirty]);
 
   return {
-    open: tujuan !== null,
-    cancel: () => setTujuan(null),
+    open: pendingHref !== null,
+    cancel: () => setPendingHref(null),
     confirm: () => {
-      const t = tujuan;
-      setTujuan(null);
-      if (t) router.push(t);
+      const target = pendingHref;
+      setPendingHref(null);
+      if (target) router.push(target);
     },
   };
 }

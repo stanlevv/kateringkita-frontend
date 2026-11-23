@@ -7,11 +7,11 @@ import { CircleAlert } from "lucide-react";
 // atau saat `focusKey` berubah (mis. penghitung submit); render ulang biasa tidak merebut fokus.
 export function ErrorSummary({ errors, focusKey }: { errors: { id: string; message: string }[]; focusKey?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const ada = errors.length > 0;
+  const hasErrors = errors.length > 0;
   useEffect(() => {
-    if (ada) ref.current?.focus();
-  }, [ada, focusKey]);
-  if (!ada) return null;
+    if (hasErrors) ref.current?.focus();
+  }, [hasErrors, focusKey]);
+  if (!hasErrors) return null;
   return (
     <div
       ref={ref}
@@ -24,17 +24,17 @@ export function ErrorSummary({ errors, focusKey }: { errors: { id: string; messa
         Periksa isian berikut
       </h2>
       <ul className="mt-2 list-disc pl-10">
-        {errors.map((e) => (
-          <li key={e.id}>
+        {errors.map((error) => (
+          <li key={error.id}>
             <a
-              href={`#${e.id}`}
-              onClick={(ev) => {
-                ev.preventDefault();
-                document.getElementById(e.id)?.focus();
+              href={`#${error.id}`}
+              onClick={(event) => {
+                event.preventDefault();
+                document.getElementById(error.id)?.focus();
               }}
               className="inline-flex min-h-11 items-center underline"
             >
-              {e.message}
+              {error.message}
             </a>
           </li>
         ))}

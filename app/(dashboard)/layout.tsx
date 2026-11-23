@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ]);
   const store: StoreInfo | null =
     "data" in profil
-      ? { isOpen: profil.data.is_open, buka: profil.data.open_time, tutup: profil.data.close_time }
+      ? { isOpen: profil.data.is_open, openTime: profil.data.open_time, closeTime: profil.data.close_time }
       : null;
   const nama = String(user.full_name ?? "Penjual");
   const toko = String(merchant?.business_name ?? "");
@@ -43,9 +43,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
         Lewati ke konten
       </a>
       <div className="flex min-h-dvh bg-canvas text-ink">
-        <Sidebar store={store} badge={badge} notif={notif} mode={parseSidebarMode(kuki.get(SIDEBAR_COOKIE)?.value)} />
+        <Sidebar
+          store={store}
+          badge={badge}
+          unreadNotifications={notif}
+          mode={parseSidebarMode(kuki.get(SIDEBAR_COOKIE)?.value)}
+        />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Header nama={nama} toko={toko} store={store} badge={badge} notif={notif} />
+          <Header userName={nama} storeName={toko} store={store} badge={badge} unreadNotifications={notif} />
           <div className="px-4 pt-4 empty:hidden md:px-6">
             <StatusToko merchant={merchant} />
           </div>

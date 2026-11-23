@@ -2,25 +2,25 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 
-export type StoreInfo = { isOpen: boolean; buka: string; tutup: string };
-type Nilai = StoreInfo & { setIsOpen: (v: boolean) => void };
+export type StoreInfo = { isOpen: boolean; openTime: string; closeTime: string };
+type StoreStatusValue = StoreInfo & { setIsOpen: (nextIsOpen: boolean) => void };
 
-const Konteks = createContext<Nilai | null>(null);
+const StoreStatusContext = createContext<StoreStatusValue | null>(null);
 
 /** Satu sumber status dapur untuk sidebar dan drawer; disinkronkan ulang bila nilai dari server berubah. */
 export function StoreStatusProvider({ store, children }: { store: StoreInfo | null; children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(store?.isOpen ?? true);
-  const [dariServer, setDariServer] = useState(store?.isOpen);
-  if (store && store.isOpen !== dariServer) {
-    setDariServer(store.isOpen);
+  const [serverIsOpen, setServerIsOpen] = useState(store?.isOpen);
+  if (store && store.isOpen !== serverIsOpen) {
+    setServerIsOpen(store.isOpen);
     setIsOpen(store.isOpen);
   }
   if (!store) return <>{children}</>;
-  return <Konteks.Provider value={{ ...store, isOpen, setIsOpen }}>{children}</Konteks.Provider>;
+  return <StoreStatusContext.Provider value={{ ...store, isOpen, setIsOpen }}>{children}</StoreStatusContext.Provider>;
 }
 
-export function useStoreStatus(): Nilai {
-  const v = useContext(Konteks);
-  if (!v) throw new Error("StoreStatusProvider belum dipasang.");
-  return v;
+export function useStoreStatus(): StoreStatusValue {
+  const value = useContext(StoreStatusContext);
+  if (!value) throw new Error("StoreStatusProvider belum dipasang.");
+  return value;
 }

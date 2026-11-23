@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { summarizeByMenu, summarizeReviews, reviewsUrl } from "@/lib/review";
 import type { Review } from "@/types/review";
 
@@ -69,7 +69,7 @@ export function MenuRatings({
     "flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md px-3 py-2 text-ink hover:bg-subtle aria-[current=true]:bg-info-bg aria-[current=true]:font-semibold";
   return (
     <nav aria-label="Ulasan per menu" className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-2">
-      <Link href="/ulasan" aria-current={menuId === undefined ? "true" : undefined} className={cx(baris, fokus)}>
+      <Link href="/ulasan" aria-current={menuId === undefined ? "true" : undefined} className={cx(baris, focusRing)}>
         Semua menu
       </Link>
       {summarizeByMenu(reviews, menus).map((m) => (
@@ -77,7 +77,7 @@ export function MenuRatings({
           key={m.menu_id}
           href={reviewsUrl({ menu: m.menu_id })}
           aria-current={menuId === m.menu_id ? "true" : undefined}
-          className={cx(baris, fokus)}
+          className={cx(baris, focusRing)}
         >
           <span title={m.menu_name} className="min-w-0 break-words">
             {m.menu_name}

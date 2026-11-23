@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MessageSquareOff, SearchX } from "lucide-react";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { Pagination } from "@/app/components/ui/Pagination";
@@ -42,7 +42,7 @@ export function ReviewList({
         <Link
           href={reviewsUrl({ menu: filter.menu })}
           aria-current={filter.bintang === undefined ? "true" : undefined}
-          className={cx(chip, fokus)}
+          className={cx(chip, focusRing)}
         >
           Semua bintang
         </Link>
@@ -51,7 +51,7 @@ export function ReviewList({
             key={b}
             href={reviewsUrl({ menu: filter.menu, stars: b })}
             aria-current={filter.bintang === b ? "true" : undefined}
-            className={cx(chip, fokus)}
+            className={cx(chip, focusRing)}
           >
             {b} bintang
           </Link>

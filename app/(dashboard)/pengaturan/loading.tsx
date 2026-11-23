@@ -1,12 +1,12 @@
-import { RangkaHalaman } from "@/app/components/shell/RangkaHalaman";
-import { Skeleton, SkeletonBagian } from "@/app/components/ui/Skeleton";
+import { PageFrame } from "@/app/components/shell/PageFrame";
+import { Skeleton, SkeletonSection } from "@/app/components/ui/Skeleton";
 
 // Navigasi bagian (atas di tablet, kiri di ≥ 1024 px) lalu bagian-bagian formulir.
 export default function Loading() {
   return (
-    <RangkaHalaman
-      judul="Pengaturan toko"
-      deskripsi="Atur profil, jam buka, titik temu, rekening pencairan, pesan dari meja, dan akun."
+    <PageFrame
+      title="Pengaturan toko"
+      description="Atur profil, jam buka, titik temu, rekening pencairan, pesan dari meja, dan akun."
     >
       <div className="grid items-start gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]">
         <div className="flex flex-wrap gap-1 lg:flex-col">
@@ -17,10 +17,10 @@ export default function Loading() {
           ))}
         </div>
         <div className="flex flex-col gap-6">
-          <SkeletonBagian isian={4} />
-          <SkeletonBagian isian={2} />
+          <SkeletonSection fields={4} />
+          <SkeletonSection fields={2} />
         </div>
       </div>
-    </RangkaHalaman>
+    </PageFrame>
   );
 }

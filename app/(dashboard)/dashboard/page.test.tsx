@@ -38,7 +38,8 @@ import DashboardPage from "./page";
 async function tampil(skenario: string | null) {
   getScenario.mockResolvedValue(skenario);
   const p = await getProfile();
-  const store = "data" in p ? { isOpen: p.data.is_open, buka: p.data.open_time, tutup: p.data.close_time } : null;
+  const store =
+    "data" in p ? { isOpen: p.data.is_open, openTime: p.data.open_time, closeTime: p.data.close_time } : null;
   const ui = await DashboardPage();
   return render(
     <StoreStatusProvider store={store}>

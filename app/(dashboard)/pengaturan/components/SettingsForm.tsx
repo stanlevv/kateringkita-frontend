@@ -8,7 +8,7 @@ import { callAction } from "@/lib/action";
 import { saveProfile } from "@/app/actions/profile";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
 import { Field } from "@/app/components/ui/Field";
 import { FileDrop } from "@/app/components/ui/FileDrop";
@@ -345,7 +345,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
                   href={`#${b.id}`}
                   className={cx(
                     "inline-flex min-h-11 items-center rounded-md px-3 font-medium text-ink hover:bg-subtle",
-                    fokus,
+                    focusRing,
                   )}
                 >
                   {b.judul}
@@ -443,7 +443,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
                       value={m.v}
                       checked={v.service_mode === m.v}
                       onChange={() => set("service_mode", m.v)}
-                      className={cx("size-5 accent-primary", fokus)}
+                      className={cx("size-5 accent-primary", focusRing)}
                     />
                     <span>
                       {m.label} <span className="text-sm text-ink-muted">· {m.info}</span>
