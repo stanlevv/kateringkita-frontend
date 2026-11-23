@@ -6,15 +6,15 @@ import userEvent from "@testing-library/user-event";
 import { Stepper } from "./Stepper";
 
 function TestStepper({
-  awal: initial = 8,
+  initial = 8,
   min = 8,
   max,
-  alasan: reason,
+  reason,
 }: {
-  awal?: number;
+  initial?: number;
   min?: number;
   max?: number;
-  alasan?: string;
+  reason?: string;
 }) {
   const [value, setValue] = useState(initial);
   return <Stepper label="Kuota" value={value} min={min} max={max} onChange={setValue} disabledReason={reason} />;
@@ -22,7 +22,7 @@ function TestStepper({
 
 describe("Stepper (Review Focus 3)", () => {
   it("value=min -> tombol kurang nonaktif dan alasan terbaca", () => {
-    render(<TestStepper alasan="Sudah terjual dan ditahan 8 porsi." />);
+    render(<TestStepper reason="Sudah terjual dan ditahan 8 porsi." />);
     const minus = screen.getByRole("button", { name: /kurangi/i });
     expect(minus).toBeDisabled();
     expect(minus).toHaveAccessibleDescription("Sudah terjual dan ditahan 8 porsi.");
@@ -38,7 +38,7 @@ describe("Stepper (Review Focus 3)", () => {
   });
   it("ketik 2.5 lalu blur -> ditolak, kembali ke nilai sebelumnya", async () => {
     const user = userEvent.setup();
-    render(<TestStepper awal={10} />);
+    render(<TestStepper initial={10} />);
     const input = screen.getByRole("spinbutton", { name: "Kuota" });
     await user.clear(input);
     await user.type(input, "2.5");
@@ -47,7 +47,7 @@ describe("Stepper (Review Focus 3)", () => {
   });
   it("ketik 20 (valid) lalu blur -> tersimpan; lebih dari max -> kembali", async () => {
     const user = userEvent.setup();
-    render(<TestStepper awal={10} max={30} />);
+    render(<TestStepper initial={10} max={30} />);
     const input = screen.getByRole("spinbutton", { name: "Kuota" });
     await user.clear(input);
     await user.type(input, "20");
@@ -60,7 +60,7 @@ describe("Stepper (Review Focus 3)", () => {
   });
   it("tahan tombol tambah mengulang setelah 400 ms setiap 80 ms", () => {
     vi.useFakeTimers();
-    render(<TestStepper awal={10} />);
+    render(<TestStepper initial={10} />);
     const plus = screen.getByRole("button", { name: /tambah/i });
     fireEvent.pointerDown(plus);
     expect(screen.getByRole("spinbutton")).toHaveValue(11);
@@ -77,13 +77,13 @@ describe("Stepper (Review Focus 3)", () => {
   });
   it("klik biasa menambah satu kali saja", async () => {
     const user = userEvent.setup();
-    render(<TestStepper awal={10} />);
+    render(<TestStepper initial={10} />);
     await user.click(screen.getByRole("button", { name: /tambah/i }));
     expect(screen.getByRole("spinbutton")).toHaveValue(11);
   });
   it("klik kanan/tengah tidak mengubah nilai dan tidak memulai pengulangan", () => {
     vi.useFakeTimers();
-    render(<TestStepper awal={10} />);
+    render(<TestStepper initial={10} />);
     const plus = screen.getByRole("button", { name: /tambah/i });
     fireEvent.pointerDown(plus, { button: 2 });
     fireEvent.pointerDown(plus, { button: 1 });
@@ -94,7 +94,7 @@ describe("Stepper (Review Focus 3)", () => {
     vi.useRealTimers();
   });
   it("sentuh: pointerdown, pointerup, pointerleave (tanpa tombol), lalu klik -> melangkah tepat sekali", () => {
-    render(<TestStepper awal={10} />);
+    render(<TestStepper initial={10} />);
     const plus = screen.getByRole("button", { name: /tambah/i });
     fireEvent.pointerDown(plus, { button: 0, buttons: 1 });
     fireEvent.pointerUp(plus, { button: 0, buttons: 0 });
@@ -103,7 +103,7 @@ describe("Stepper (Review Focus 3)", () => {
     expect(screen.getByRole("spinbutton")).toHaveValue(11);
   });
   it("seret keluar tombol (masih ditekan) -> tanpa klik; aktivasi papan ketik berikutnya melangkah sekali", () => {
-    render(<TestStepper awal={10} />);
+    render(<TestStepper initial={10} />);
     const plus = screen.getByRole("button", { name: /tambah/i });
     fireEvent.pointerDown(plus, { button: 0, buttons: 1 });
     fireEvent.pointerLeave(plus, { buttons: 1 });
@@ -112,7 +112,7 @@ describe("Stepper (Review Focus 3)", () => {
     expect(screen.getByRole("spinbutton")).toHaveValue(12);
   });
   it("pointer dibatalkan tanpa klik -> aktivasi papan ketik berikutnya tidak tertelan", () => {
-    render(<TestStepper awal={10} />);
+    render(<TestStepper initial={10} />);
     const plus = screen.getByRole("button", { name: /tambah/i });
     fireEvent.pointerDown(plus);
     fireEvent.pointerCancel(plus);
