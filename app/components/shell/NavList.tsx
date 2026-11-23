@@ -8,7 +8,7 @@ import { NAV, adminNav } from "./nav";
 
 /** `rail`: hanya ikon (tooltip lewat title/aria-label) kecuali sidebar sedang lebar (varian sb-lebar); tanpa `rail` selalu penuh (drawer). */
 /** `level`: tingkat admin; menu khusus super disembunyikan untuk tingkat lain. */
-export function NavList({ badge = 0, rail = false, onNavigate, admin = false, level }: { badge?: number; rail?: boolean; onNavigate?: () => void; admin?: boolean; level?: unknown }) {
+export function NavList({ badge = 0, notif = 0, rail = false, onNavigate, admin = false, level }: { badge?: number; notif?: number; rail?: boolean; onNavigate?: () => void; admin?: boolean; level?: unknown }) {
   const nav = admin ? adminNav.map((g) => ({ ...g, items: g.items.filter((i) => halamanBoleh(level, i.href)) })) : NAV;
   const path = usePathname();
   const teks = rail ? "hidden sb-lebar:inline" : "";
@@ -21,6 +21,7 @@ export function NavList({ badge = 0, rail = false, onNavigate, admin = false, le
           <ul className="flex flex-col gap-1">
             {g.items.map(({ href, label, icon: Icon, badge: punyaBadge, exact }) => {
               const aktif = path === href || (!exact && path.startsWith(`${href}/`));
+              const jumlah = punyaBadge === "notif" ? notif : punyaBadge ? badge : 0;
               return (
                 <li key={href}>
                   <Link
@@ -37,10 +38,10 @@ export function NavList({ badge = 0, rail = false, onNavigate, admin = false, le
                   >
                     <Icon aria-hidden className="size-5 shrink-0" />
                     <span className={cx("flex-1", teks)}>{label}</span>
-                    {punyaBadge && badge > 0 && (
+                    {jumlah > 0 && (
                       <span className={cx("min-w-5 rounded-full bg-warning-bg px-1.5 text-center text-xs font-bold text-warning", rail && "absolute right-0 top-0 sb-lebar:static")}>
-                        <span aria-hidden>{badge}</span>
-                        <span className="sr-only">{badge} perlu tindakan</span>
+                        <span aria-hidden>{jumlah}</span>
+                        <span className="sr-only">{jumlah} {punyaBadge === "notif" ? "belum dibaca" : "perlu tindakan"}</span>
                       </span>
                     )}
                   </Link>

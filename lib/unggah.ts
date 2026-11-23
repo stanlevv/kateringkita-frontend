@@ -2,7 +2,7 @@ import { requestUpload } from "@/app/actions/menus";
 import { panggil } from "./aksi";
 import type { ActionResult } from "@/types/api";
 
-type Tujuan = "menu" | "logo" | "banner" | "popup";
+type Tujuan = "menu" | "logo" | "banner" | "popup" | "cover";
 type MintaUnggah = (b: { purpose: Tujuan; content_type: string; size: number }) => Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>>;
 
 const MAKS_UNGGAH = 5 * 1024 * 1024; // sama dengan uploadSchema backend
@@ -14,6 +14,8 @@ const ATURAN: Record<Tujuan, { sisi: number; latar: string | null; cadangan: "im
   // banner beranda 2:1 & pop-up 3:4 tampil selebar layar HP
   banner: { sisi: 1600, latar: "#fff", cadangan: "image/jpeg" },
   popup: { sisi: 1200, latar: "#fff", cadangan: "image/jpeg" },
+  // background profil toko: lebar penuh layar HP
+  cover: { sisi: 1600, latar: "#fff", cadangan: "image/jpeg" },
 };
 
 const keBlob = (c: HTMLCanvasElement, type: string, mutu: number) => new Promise<Blob | null>((r) => c.toBlob(r, type, mutu));

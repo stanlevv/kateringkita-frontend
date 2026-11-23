@@ -59,7 +59,7 @@ export type UlasanModerasi = {
   menu: { id: number; name: string }; merchant: { id: number; business_name: string }; customer_name: string; order_code: string;
 };
 export type MenuModerasi = {
-  id: number; name: string; price: number; image_url: string | null; is_active: boolean; moderated: boolean; moderated_at: string | null;
+  id: number; name: string; price: number; image_url: string | null; gallery?: string[]; is_active: boolean; moderated: boolean; moderated_at: string | null;
   moderation_reason: string | null; created_at: string; merchant: { id: number; business_name: string };
 };
 export type AksiModerasi = "hide" | "unhide" | "takedown" | "restore";

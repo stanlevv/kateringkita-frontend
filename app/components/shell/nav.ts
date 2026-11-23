@@ -1,6 +1,7 @@
-import { BadgeCheck, Banknote, BookOpen, ImageIcon, BarChart3, Calculator, Database, Flag, LayoutGrid, LifeBuoy, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, UserCog, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Banknote, Bell, BookOpen, ImageIcon, BarChart3, Calculator, Database, Flag, LayoutGrid, LifeBuoy, Megaphone, Wallet, MessageCircle, ScrollText, Server, ShieldCheck, Sparkles, Star, Store, Tag, ClipboardList, UserCog, type LucideIcon } from "lucide-react";
 
-export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: boolean; exact?: boolean };
+// badge: true = jumlah pesanan perlu tindakan; "notif" = notifikasi belum dibaca
+export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: boolean | "notif"; exact?: boolean };
 export type NavGroup = { grup: string; items: NavItem[] };
 
 // F18: navigasi panel admin; halaman Verifikasi s.d. Promo dibangun bertahap.
@@ -54,6 +55,7 @@ export const NAV: NavGroup[] = [
   {
     grup: "Pengaturan",
     items: [
+      { href: "/notifikasi", label: "Notifikasi", icon: Bell, badge: "notif" },
       { href: "/pengaturan", label: "Toko", icon: Store },
       { href: "/template-wa", label: "Template WA", icon: MessageCircle },
     ],

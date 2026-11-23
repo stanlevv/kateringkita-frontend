@@ -5,8 +5,9 @@ import { ModerasiTable } from "./ModerasiTable";
 import type { MenuModerasi, UlasanModerasi } from "@/types/admin";
 
 const moderasi = vi.fn();
+const hapusFotoMenu = vi.fn();
 const refresh = vi.fn();
-vi.mock("@/app/actions/admin/moderasi", () => ({ moderasi: (...a: unknown[]) => moderasi(...a) }));
+vi.mock("@/app/actions/admin/moderasi", () => ({ moderasi: (...a: unknown[]) => moderasi(...a), hapusFotoMenu: (...a: unknown[]) => hapusFotoMenu(...a) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 
 const ulasan: UlasanModerasi = {
@@ -18,7 +19,7 @@ const menu: MenuModerasi = {
   moderation_reason: "Foto melanggar", created_at: "2026-10-01T03:00:00.000Z", merchant: { id: 2, business_name: "Dapur Siti" },
 };
 
-beforeEach(() => { moderasi.mockReset(); refresh.mockReset(); moderasi.mockResolvedValue({ data: {} }); });
+beforeEach(() => { moderasi.mockReset(); hapusFotoMenu.mockReset(); refresh.mockReset(); moderasi.mockResolvedValue({ data: {} }); });
 
 describe("F19 ModerasiTable", () => {
   it("sembunyikan ulasan: dialog alasan, tombol mati sampai diisi, lalu refresh", async () => {
@@ -41,6 +42,29 @@ describe("F19 ModerasiTable", () => {
     expect(moderasi).not.toHaveBeenCalled();
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Ya, pulihkan" })); });
     expect(moderasi).toHaveBeenCalledWith(9, "restore", undefined);
+  });
+  it("kolom Foto: foto utama lalu foto tambahan, tiap foto membuka ukuran penuh; tanpa foto → teks", () => {
+    const g = ["https://foto.test/b.jpg", "https://foto.test/c.jpg"];
+    const { unmount } = render(<ModerasiTable jenis="menu" rows={[{ ...menu, image_url: "https://foto.test/a.jpg", gallery: g }]} />);
+    const links = screen.getAllByRole("link", { name: /Buka foto/ });
+    expect(links.map((l) => l.getAttribute("href"))).toEqual(["https://foto.test/a.jpg", ...g]);
+    expect(links[0]).toHaveAccessibleName("Buka foto 1 Es Teh (utama)");
+    expect(links[0]).toHaveAttribute("target", "_blank");
+    unmount();
+    render(<ModerasiTable jenis="menu" rows={[menu]} />);
+    expect(screen.getByText("Tanpa foto")).toBeInTheDocument();
+  });
+  it("hapus satu foto: dialog alasan wajib, kirim url + alasan, lalu refresh", async () => {
+    hapusFotoMenu.mockResolvedValue({ data: { ...menu } });
+    render(<><ModerasiTable jenis="menu" rows={[{ ...menu, image_url: "https://foto.test/a.jpg", gallery: ["https://foto.test/b.jpg"] }]} /><Toaster /></>);
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Hapus foto 2 Es Teh" })); });
+    const tombol = screen.getByRole("button", { name: "Hapus foto" });
+    expect(tombol).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Alasan/), { target: { value: " Bukan makanan " } });
+    await act(async () => { fireEvent.click(tombol); });
+    expect(hapusFotoMenu).toHaveBeenCalledWith(9, "https://foto.test/b.jpg", "Bukan makanan");
+    expect(refresh).toHaveBeenCalled();
+    expect(screen.getByText("Foto dihapus dari menu.")).toBeInTheDocument();
   });
   it("kosong -> empty state", () => {
     render(<ModerasiTable jenis="menu" rows={[]} />);

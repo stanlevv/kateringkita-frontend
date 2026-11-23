@@ -176,9 +176,9 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
   const pilih = (i: number) => fireEvent.change(document.querySelectorAll("input[type=file]")[i] as HTMLInputElement, { target: { files: [png()] } });
   const dgn = { logo_url: "https://cdn.test/logo.png" };
 
-  it("hanya pemilih berkas logo; gambar server tampil; tidak ada unggah QRIS", () => {
+  it("pemilih berkas logo & background saja; gambar server tampil; tidak ada unggah QRIS", () => {
     tampil({ profile: { ...profile(), ...dgn } });
-    expect(document.querySelectorAll("input[type=file]")).toHaveLength(1);
+    expect(document.querySelectorAll("input[type=file]")).toHaveLength(2);
     expect(screen.getByAltText("Logo toko")).toBeInTheDocument();
     expect(screen.queryByText(/QRIS statis/)).not.toBeInTheDocument();
     expect(screen.queryByText(/setelah fitur unggah/)).not.toBeInTheDocument();
@@ -193,6 +193,17 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
     await waitFor(() => expect(saveProfile).toHaveBeenCalled());
     expect(saveProfile.mock.calls[0][0]).toMatchObject({ logo_url: "https://cdn.test/baru.png" });
     expect(saveProfile.mock.calls[0][0]).not.toHaveProperty("qris_image_url");
+  });
+  it("unggah background -> unggahFoto(berkas, 'cover'); simpan mengirim cover_url baru", async () => {
+    unggahFoto.mockResolvedValue({ data: { public_url: "https://cdn.test/cover.jpg" } });
+    tampil({ profile: { ...profile(), ...dgn } });
+    pilih(1);
+    await waitFor(() => expect(bar()).toBeInTheDocument());
+    expect(unggahFoto.mock.calls[0][1]).toBe("cover");
+    expect(screen.getByAltText("Background toko")).toBeInTheDocument();
+    await userEvent.click(bar()!);
+    await waitFor(() => expect(saveProfile).toHaveBeenCalled());
+    expect(saveProfile.mock.calls[0][0]).toMatchObject({ cover_url: "https://cdn.test/cover.jpg" });
   });
   it("tanpa perubahan gambar: logo sama dengan profil", async () => {
     tampil({ profile: { ...profile(), ...dgn } });

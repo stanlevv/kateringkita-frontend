@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: { business_name: "Dapur" } }) }));
 vi.mock("@/services/profileService", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
 vi.mock("@/services/orderService", () => ({ getJumlahTindakan: async () => 7 }));
+vi.mock("@/services/notifikasiService", () => ({ getJumlahNotif: async () => 4 }));
 let kuki: string | undefined;
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: (k: string) => (k === "kk-sidebar" && kuki ? { value: kuki } : undefined) }) }));
 import DashboardLayout from "./layout";
@@ -15,6 +16,7 @@ describe("shell dashboard", () => {
   it("badge pesanan = jumlah menunggu + terkonfirmasi dari server (M-04)", async () => {
     const el = await DashboardLayout({ children: null });
     expect(JSON.stringify(el)).toContain('"badge":7');
+    expect(JSON.stringify(el)).toContain('"notif":4');
   });
   it("SH-N1: lebar sidebar dari cookie kk-sidebar sudah dirender server (tanpa kedip)", async () => {
     kuki = "ringkas";

@@ -21,13 +21,14 @@ import { marginPersen } from "@/lib/menu-filter";
 import { cekField, menuFormSchema } from "@/lib/schemas";
 import type { Category } from "@/types/meta";
 import type { MerchantMenu } from "@/types/menu";
+import { FotoTambahan } from "./FotoTambahan";
 import { MenuPreview } from "./MenuPreview";
 import { OptionsEditor, type BarisOpsi } from "./OptionsEditor";
 
 const MB = 1024 * 1024;
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const LABEL: Record<string, string> = {
-  image_url: "Foto", name: "Nama menu", category_id: "Kategori", description: "Deskripsi", unit_label: "Satuan", price: "Harga jual", hpp: "HPP",
+  image_url: "Foto", gallery: "Foto tambahan", name: "Nama menu", category_id: "Kategori", description: "Deskripsi", unit_label: "Satuan", price: "Harga jual", hpp: "HPP",
   daily_quota: "Kuota harian", prep_minutes: "Estimasi siap", min_order_qty: "Minimum pesan", preorder_days: "Hari pre-order",
 };
 const labelKey = (k: string) => {
@@ -75,6 +76,8 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
   const [v, setV] = useState<Isian>(() => awalDari(menu, prefill));
   const [imageUrl, setImageUrl] = useState<string | null>(menu?.image_url ?? null);
   const [foto, setFoto] = useState<Foto | null>(null);
+  const [gallery, setGallery] = useState<string[]>(menu?.gallery ?? []);
+  const [galeriSibuk, setGaleriSibuk] = useState(false);
   const [fotoGalat, setFotoGalat] = useState<string | null>(null);
   const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
   const [dicoba, setDicoba] = useState(false);
@@ -87,13 +90,14 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
   useEffect(() => { fotoRef.current = foto; });
   useEffect(() => () => { if (fotoRef.current) URL.revokeObjectURL(fotoRef.current.preview); }, []);
 
-  const dirty = kunci(v) !== awal || (foto !== null && foto.status !== "gagal") || imageUrl !== (menu?.image_url ?? null);
+  const dirty = kunci(v) !== awal || (foto !== null && foto.status !== "gagal") || imageUrl !== (menu?.image_url ?? null)
+    || JSON.stringify(gallery) !== JSON.stringify(menu?.gallery ?? []);
   const guard = useUnsavedGuard(dirty && !tersimpan);
 
   const set = <K extends keyof Isian>(k: K, nilai: Isian[K]) => { setServer({}); setV((p) => ({ ...p, [k]: nilai })); };
   const sentuh = (k: string) => setTersentuh((p) => new Set(p).add(k));
   const input = {
-    name: v.name, category_id: num(v.category_id), description: v.description, image_url: imageUrl, unit_label: v.unit_label,
+    name: v.name, category_id: num(v.category_id), description: v.description, image_url: imageUrl, gallery, unit_label: v.unit_label,
     price: num(v.price), hpp: num(v.hpp), daily_quota: num(v.daily_quota), prep_minutes: num(v.prep_minutes),
     is_preorder: v.is_preorder, preorder_days: v.is_preorder ? num(v.preorder_days) : 0, min_order_qty: num(v.min_order_qty),
     options: v.options.map((o) => ({ name: o.name, extra_price: num(o.extra_price) })),
@@ -109,7 +113,7 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
   const hitungOk = Number.isFinite(price) && Number.isFinite(hpp) && price > 0;
   const margin = hitungOk ? marginPersen({ price, hpp }) : null;
   const namaKategori = categories.find((c) => String(c.id) === v.category_id)?.name ?? "";
-  const uploading = foto?.status === "mengunggah";
+  const uploading = foto?.status === "mengunggah" || galeriSibuk;
 
   async function unggah(file: File, preview: string) {
     const id = ++unggahKe.current;
@@ -193,7 +197,7 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
                 <Image src={tampilFoto} alt="Pratinjau foto menu" fill unoptimized sizes="384px" className="object-cover" />
               </div>
             )}
-            {uploading && (
+            {foto?.status === "mengunggah" && (
               <p role="status" className="flex items-center gap-2 text-sm text-ink-muted">
                 <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />Mengunggah foto…
               </p>
@@ -209,6 +213,8 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
             {/* foto HP besar diperkecil di lib/unggah.ts sebelum diunggah (batas backend 5 MB) */}
             <FileDrop id="mf-image_url" maxBytes={20 * MB} onFile={pilihFoto} onError={setFotoGalat} label={tampilFoto ? "Ganti foto" : "Pilih foto"} />
             {tampilFoto && <div><Button variant="ghost" onClick={hapusFoto}><X aria-hidden className="size-4" />Hapus foto</Button></div>}
+            <p className="mt-2 text-sm font-medium text-ink">Foto tambahan</p>
+            <FotoTambahan urls={gallery} onChange={(l) => { setServer({}); setGallery(l); }} onBusy={setGaleriSibuk} error={galat("gallery")} />
           </Bagian>
 
           <Bagian judul="Harga">

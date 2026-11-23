@@ -21,3 +21,12 @@ export async function moderasi(id: number, aksi: AksiModerasi, alasan?: string):
   }
   return hasil(await adminFetch<UlasanModerasi | MenuModerasi>(`/${JENIS[aksi]}/${id}/${aksi}`, { method: "POST", body }));
 }
+
+// Hapus satu foto menu (utama atau tambahan) tanpa menurunkan menunya; alasan wajib seperti takedown
+export async function hapusFotoMenu(id: number, url: string, alasan: string): Promise<ActionResult<MenuModerasi>> {
+  await requireAdmin();
+  if (!Number.isInteger(id) || id <= 0 || typeof url !== "string" || !url || url.length > 500) return galat("VALIDATION_ERROR", "Data moderasi tidak valid.");
+  const reason = typeof alasan === "string" ? alasan.trim() : "";
+  if (reason.length < 1 || reason.length > 500) return galatField({ reason: "Alasan wajib diisi, maksimal 500 karakter." }, "Periksa kembali alasan.");
+  return hasil(await adminFetch<MenuModerasi>(`/menus/${id}/photos/remove`, { method: "POST", body: JSON.stringify({ url, reason }) }));
+}
