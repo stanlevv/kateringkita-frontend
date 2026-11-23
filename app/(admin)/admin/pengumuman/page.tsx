@@ -1,4 +1,4 @@
-import { PengumumanForm } from "@/app/(admin)/admin/components/PengumumanForm";
+import { PengumumanForm } from "@/app/(admin)/admin/components/AnnouncementForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { requireAdmin } from "@/services/auth.service";
 

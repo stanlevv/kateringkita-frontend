@@ -6,7 +6,7 @@ import type { VerificationQueueItem } from "@/types/admin";
 import { formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { StatusVerifikasi } from "./StatusVerifikasi";
+import { StatusVerifikasi } from "./VerificationStatus";
 
 /** A-05 — antrean verifikasi, terlama dulu (urutan dari backend). */
 export function VerificationQueue({ rows }: { rows: VerificationQueueItem[] }) {

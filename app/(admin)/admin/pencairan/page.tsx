@@ -9,8 +9,8 @@ import { formatTime, formatRupiah, formatDate, formatPhone } from "@/lib/format"
 import { requireAdmin } from "@/services/auth.service";
 import { getPendingRefunds, getPayoutHistory, getMerchantBalances, LIMIT_PAYOUTS } from "@/services/payout.service";
 import type { Payout, PendingRefund, MerchantBalance } from "@/types/payout";
-import { CatatPencairan } from "./components/CatatPencairan";
-import { TandaiRefund } from "./components/TandaiRefund";
+import { CatatPencairan } from "./components/RecordPayoutDialog";
+import { TandaiRefund } from "./components/MarkRefundDialog";
 
 const waktu = (iso: string) => `${formatDate(iso)} ${formatTime(iso)}`;
 const METODE: Record<PendingRefund["method"], string> = {

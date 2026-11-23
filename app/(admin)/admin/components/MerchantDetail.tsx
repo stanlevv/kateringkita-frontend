@@ -5,7 +5,7 @@ import type { AdminMerchantDetail } from "@/types/admin";
 import { formatTime, formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { StatusVerifikasi } from "./StatusVerifikasi";
+import { StatusVerifikasi } from "./VerificationStatus";
 
 const Baris = ({ k, children }: { k: string; children: React.ReactNode }) => (
   <div className="flex flex-col sm:flex-row sm:gap-4">

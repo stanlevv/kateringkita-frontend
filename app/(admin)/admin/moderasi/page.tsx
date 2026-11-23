@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ModerasiTable } from "@/app/(admin)/admin/components/ModerasiTable";
+import { ModerasiTable } from "@/app/(admin)/admin/components/ModerationTable";
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { cx, focusRing } from "@/app/components/ui/cx";

@@ -1,7 +1,7 @@
 import { savePlatformPromo, setPlatformPromoActive } from "@/app/actions/admin/promos";
 import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
-import { CsContactForm } from "@/app/(admin)/admin/components/CsContactForm";
-import { PemeliharaanForm } from "@/app/(admin)/admin/components/PemeliharaanForm";
+import { CsContactForm } from "@/app/(admin)/admin/components/CustomerServiceContactForm";
+import { PemeliharaanForm } from "@/app/(admin)/admin/components/MaintenanceForm";
 import { LoadError } from "@/app/components/LoadError";
 import { PromoList } from "@/app/components/promo/PromoList";
 import { PageHeader } from "@/app/components/shell/PageHeader";

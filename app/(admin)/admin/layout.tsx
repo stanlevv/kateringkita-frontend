@@ -5,7 +5,7 @@ import { Sidebar } from "@/app/components/shell/Sidebar";
 import { Toaster } from "@/app/components/ui/Toast";
 import { requireAdmin } from "@/services/auth.service";
 import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
-import { GantiSandiWajib } from "./components/GantiSandiWajib";
+import { GantiSandiWajib } from "./components/ForcedPasswordChange";
 
 export const metadata: Metadata = { title: "Panel admin", robots: { index: false, follow: false } };
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { ModerasiTable } from "./ModerasiTable";
+import { ModerasiTable } from "./ModerationTable";
 import type { ModerationMenu, ModerationReview } from "@/types/admin";
 
 const moderate = vi.fn();

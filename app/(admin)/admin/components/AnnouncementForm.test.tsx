@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { PengumumanForm } from "./PengumumanForm";
+import { PengumumanForm } from "./AnnouncementForm";
 
 const sendAnnouncement = vi.fn();
 vi.mock("@/app/actions/admin/announcements", () => ({ sendAnnouncement: (...a: unknown[]) => sendAnnouncement(...a) }));

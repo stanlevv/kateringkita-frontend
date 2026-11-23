@@ -14,7 +14,7 @@ import { LIMIT_MERCHANTS, VERIFICATION_STATUSES } from "@/services/admin-merchan
 import type { MerchantSummary } from "@/types/admin";
 import { formatPhone } from "@/lib/format";
 import { buildUrl } from "@/lib/url";
-import { StatusVerifikasi } from "./StatusVerifikasi";
+import { StatusVerifikasi } from "./VerificationStatus";
 
 const detail = (m: MerchantSummary) => `/admin/penjual/${m.id}`;
 const buka = (m: MerchantSummary) => (m.is_open ? "Buka" : "Tutup");

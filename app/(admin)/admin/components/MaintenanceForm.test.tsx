@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { PemeliharaanForm } from "./PemeliharaanForm";
+import { PemeliharaanForm } from "./MaintenanceForm";
 
 const saveMaintenance = vi.fn();
 const refresh = vi.fn();
