@@ -15,19 +15,19 @@ export const metadata: Metadata = {
 type Params = { next?: string; alasan?: string; registered?: string; reset?: string };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Params> }) {
-  const { next, alasan, registered, reset } = await searchParams;
+  const { next, alasan: reason, registered, reset } = await searchParams;
   // LG-A3: sudah masuk -> dashboard. Backend mati -> tetap tampilkan form (LG-E4 menangani saat kirim).
   const session = await getSession().catch(() => null);
   if (session?.user.role === "merchant") redirect("/dashboard");
   if (session?.user.role === "admin") redirect("/admin");
-  const pemeliharaan = await getMaintenance();
+  const maintenance = await getMaintenance();
   return (
     <LoginForm
       next={next}
-      alasan={alasan === "sesi-habis" || alasan === "bukan-penjual" ? alasan : undefined}
+      reason={reason === "sesi-habis" || reason === "bukan-penjual" ? reason : undefined}
       registered={registered === "1"}
       reset={reset === "1"}
-      pemeliharaan={pemeliharaan.aktif ? (pemeliharaan.pesan ?? DEFAULT_MAINTENANCE_MESSAGE) : undefined}
+      maintenanceMessage={maintenance.aktif ? (maintenance.pesan ?? DEFAULT_MAINTENANCE_MESSAGE) : undefined}
     />
   );
 }

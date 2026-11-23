@@ -18,6 +18,6 @@ export default async function RegisterPage() {
   const session = await getSession().catch(() => null);
   if (session?.user.role === "merchant") redirect("/dashboard");
   if (session?.user.role === "admin") redirect("/admin");
-  const res = await apiFetch<{ id: number; name: string }[]>("/meta/merchant-types");
-  return <RegisterForm types={res.data ?? []} typesFailed={!res.ok} />;
+  const merchantTypes = await apiFetch<{ id: number; name: string }[]>("/meta/merchant-types");
+  return <RegisterForm types={merchantTypes.data ?? []} typesFailed={!merchantTypes.ok} />;
 }

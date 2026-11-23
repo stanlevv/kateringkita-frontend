@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function proxy(req: NextRequest) {
-  if (!req.cookies.get("kk_session")) {
-    const to = new URL("/login", req.url);
-    const dari = new URL(req.nextUrl); // salinan; _rsc hanya parameter internal Next
-    dari.searchParams.delete("_rsc");
-    to.searchParams.set("next", dari.pathname + dari.search);
-    return NextResponse.redirect(to);
+export function proxy(request: NextRequest) {
+  if (!request.cookies.get("kk_session")) {
+    const loginUrl = new URL("/login", request.url);
+    const requestedUrl = new URL(request.nextUrl); // salinan; _rsc hanya parameter internal Next
+    requestedUrl.searchParams.delete("_rsc");
+    loginUrl.searchParams.set("next", requestedUrl.pathname + requestedUrl.search);
+    return NextResponse.redirect(loginUrl);
   }
   // ID yang sama terlihat di DevTools (header response) dan diteruskan ke backend lewat apiFetch
-  const id = crypto.randomUUID();
-  const headers = new Headers(req.headers);
-  headers.set("x-request-id", id);
-  const res = NextResponse.next({ request: { headers } });
-  res.headers.set("x-request-id", id);
-  return res;
+  const requestId = crypto.randomUUID();
+  const headers = new Headers(request.headers);
+  headers.set("x-request-id", requestId);
+  const response = NextResponse.next({ request: { headers } });
+  response.headers.set("x-request-id", requestId);
+  return response;
 }
 
 export const config = {

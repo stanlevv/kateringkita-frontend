@@ -4,33 +4,33 @@ import { createFinanceCsv } from "@/lib/finance";
 import { todayWib } from "@/lib/format";
 import { getSession } from "@/services/auth.service";
 
-const galat = (status: number, message: string) => Response.json({ message }, { status });
+const errorResponse = (status: number, message: string) => Response.json({ message }, { status });
 
 // F20: unduhan CSV rekap keuangan; pola sama dengan /api/laporan/csv (tanpa sesi admin = 401, bukan redirect)
-export async function GET(req: Request) {
-  if (isCrossSiteRequest(req)) return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
+export async function GET(request: Request) {
+  if (isCrossSiteRequest(request)) return errorResponse(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
   let session;
   try {
     session = await getSession();
   } catch {
-    return galat(503, "Server tidak dapat dihubungi. Coba lagi sesaat lagi.");
+    return errorResponse(503, "Server tidak dapat dihubungi. Coba lagi sesaat lagi.");
   }
-  if (session?.user.role !== "admin") return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
+  if (session?.user.role !== "admin") return errorResponse(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
 
-  const p = new URL(req.url).searchParams;
-  const dari = p.get("dari") ?? "";
-  const sampai = p.get("sampai") ?? "";
-  const salah = validateRange(dari, sampai, todayWib());
-  if (salah) return galat(400, salah);
+  const searchParams = new URL(request.url).searchParams;
+  const startDate = searchParams.get("dari") ?? "";
+  const endDate = searchParams.get("sampai") ?? "";
+  const rangeError = validateRange(startDate, endDate, todayWib());
+  if (rangeError) return errorResponse(400, rangeError);
 
-  const r = await getFinanceSummary({ from: dari, to: sampai });
-  if ("error" in r) return galat(500, r.error.message);
+  const result = await getFinanceSummary({ from: startDate, to: endDate });
+  if ("error" in result) return errorResponse(500, result.error.message);
 
-  return new Response(`﻿${createFinanceCsv(r.data)}`, {
+  return new Response(`﻿${createFinanceCsv(result.data)}`, {
     headers: {
       "Cache-Control": "no-store",
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="keuangan-${dari}-${sampai}.csv"`,
+      "Content-Disposition": `attachment; filename="keuangan-${startDate}-${endDate}.csv"`,
     },
   });
 }

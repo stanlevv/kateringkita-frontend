@@ -4,30 +4,36 @@ import { config, proxy } from "./proxy";
 
 describe("G-10 proxy", () => {
   it("tanpa sesi -> /login?next= berisi path + query", () => {
-    const res = proxy(new NextRequest("http://localhost:3000/menu?q=a"));
-    expect(res.status).toBe(307);
-    const to = new URL(res.headers.get("location")!);
-    expect(to.pathname).toBe("/login");
-    expect(to.searchParams.get("next")).toBe("/menu?q=a");
+    const response = proxy(new NextRequest("http://localhost:3000/menu?q=a"));
+    expect(response.status).toBe(307);
+    const loginUrl = new URL(response.headers.get("location")!);
+    expect(loginUrl.pathname).toBe("/login");
+    expect(loginUrl.searchParams.get("next")).toBe("/menu?q=a");
   });
   it("parameter _rsc dibuang dari next", () => {
-    const to = new URL(proxy(new NextRequest("http://localhost:3000/menu?q=a&_rsc=abc")).headers.get("location")!);
-    expect(to.searchParams.get("next")).toBe("/menu?q=a");
-    const polos = new URL(proxy(new NextRequest("http://localhost:3000/menu?_rsc=abc")).headers.get("location")!);
-    expect(polos.searchParams.get("next")).toBe("/menu");
+    const loginUrl = new URL(
+      proxy(new NextRequest("http://localhost:3000/menu?q=a&_rsc=abc")).headers.get("location")!,
+    );
+    expect(loginUrl.searchParams.get("next")).toBe("/menu?q=a");
+    const plainLoginUrl = new URL(
+      proxy(new NextRequest("http://localhost:3000/menu?_rsc=abc")).headers.get("location")!,
+    );
+    expect(plainLoginUrl.searchParams.get("next")).toBe("/menu");
   });
   it("dengan sesi -> lanjut", () => {
-    const res = proxy(new NextRequest("http://localhost:3000/menu", { headers: { cookie: "kk_session=x" } }));
-    expect(res.headers.get("location")).toBeNull();
+    const response = proxy(new NextRequest("http://localhost:3000/menu", { headers: { cookie: "kk_session=x" } }));
+    expect(response.headers.get("location")).toBeNull();
   });
   it("/admin/verifikasi tanpa sesi -> /login dengan next", () => {
-    const to = new URL(proxy(new NextRequest("http://localhost:3000/admin/verifikasi?s=1")).headers.get("location")!);
-    expect(to.pathname).toBe("/login");
-    expect(to.searchParams.get("next")).toBe("/admin/verifikasi?s=1");
+    const loginUrl = new URL(
+      proxy(new NextRequest("http://localhost:3000/admin/verifikasi?s=1")).headers.get("location")!,
+    );
+    expect(loginUrl.pathname).toBe("/login");
+    expect(loginUrl.searchParams.get("next")).toBe("/admin/verifikasi?s=1");
     expect(config.matcher).toContain("/admin/:path*");
   });
   it("matcher mencakup semua rute dashboard", () => {
-    for (const r of [
+    for (const route of [
       "dashboard",
       "menu",
       "pesanan",
@@ -39,7 +45,7 @@ describe("G-10 proxy", () => {
       "copilot",
       "pratinjau",
     ]) {
-      expect(config.matcher).toContain(`/${r}/:path*`);
+      expect(config.matcher).toContain(`/${route}/:path*`);
     }
   });
 });

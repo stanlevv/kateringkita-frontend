@@ -3,8 +3,8 @@ import { ImageResponse } from "next/og";
 
 // F21: ikon PWA pesan dari meja (PNG 192/512 px) dibuat dari kode, tidak bergantung berkas gambar.
 // Latar penuh tanpa sudut transparan sehingga aman sebagai ikon maskable Android.
-export async function GET(_req: Request, { params }: { params: Promise<{ ukuran: string }> }) {
-  const n = (await params).ukuran === "512" ? 512 : 192;
+export async function GET(_request: Request, { params }: { params: Promise<{ ukuran: string }> }) {
+  const size = (await params).ukuran === "512" ? 512 : 192;
   return new ImageResponse(
     createElement(
       "div",
@@ -17,12 +17,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ ukuran:
           justifyContent: "center",
           background: "linear-gradient(135deg, #FF6B35, #FF8243)",
           color: "#262017",
-          fontSize: n * 0.5,
+          fontSize: size * 0.5,
           fontWeight: 800,
         },
       },
       "K",
     ),
-    { width: n, height: n, headers: { "Cache-Control": "public, max-age=604800, immutable" } },
+    { width: size, height: size, headers: { "Cache-Control": "public, max-age=604800, immutable" } },
   );
 }

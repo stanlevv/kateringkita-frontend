@@ -5,14 +5,14 @@ const getSession = vi.fn();
 vi.mock("@/services/auth.service", () => ({ getSession: () => getSession() }));
 const getFinanceSummary = vi.fn();
 vi.mock("@/services/admin-finance.service", () => ({
-  getFinanceSummary: (...a: unknown[]) => getFinanceSummary(...a),
+  getFinanceSummary: (...args: unknown[]) => getFinanceSummary(...args),
 }));
 import { wibDate } from "@/lib/format";
 import { GET } from "./route";
 
-const hariIni = wibDate(new Date().toISOString());
-const minta = (q: string) => GET(new Request(`http://localhost/api/admin/keuangan/csv${q}`));
-const angka = {
+const today = wibDate(new Date().toISOString());
+const callRoute = (query: string) => GET(new Request(`http://localhost/api/admin/keuangan/csv${query}`));
+const amounts = {
   orders: 2,
   subtotal: 30000,
   discount_merchant: 2000,
@@ -26,31 +26,31 @@ const angka = {
 beforeEach(() => {
   getSession.mockResolvedValue({ user: { role: "admin" }, merchant: null });
   getFinanceSummary.mockResolvedValue({
-    data: { rows: [{ merchant_id: 1, business_name: "=Dapur, Siti", ...angka }], totals: angka },
+    data: { rows: [{ merchant_id: 1, business_name: "=Dapur, Siti", ...amounts }], totals: amounts },
   });
 });
 
 describe("F20 CSV keuangan", () => {
   it("BOM + header + baris toko (aman dari rumus) + baris TOTAL", async () => {
-    const res = await minta(`?dari=${hariIni}&sampai=${hariIni}`);
-    expect(res.status).toBe(200);
-    expect(res.headers.get("content-disposition")).toBe(`attachment; filename="keuangan-${hariIni}-${hariIni}.csv"`);
-    const isi = new TextDecoder("utf-8", { ignoreBOM: true }).decode(await res.arrayBuffer());
-    expect(isi.startsWith("﻿")).toBe(true);
-    expect(isi.slice(1).trim().split("\r\n")).toEqual([
+    const response = await callRoute(`?dari=${today}&sampai=${today}`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-disposition")).toBe(`attachment; filename="keuangan-${today}-${today}.csv"`);
+    const csvText = new TextDecoder("utf-8", { ignoreBOM: true }).decode(await response.arrayBuffer());
+    expect(csvText.startsWith("﻿")).toBe(true);
+    expect(csvText.slice(1).trim().split("\r\n")).toEqual([
       "toko,pesanan,subtotal,diskon_toko,diskon_platform,biaya_layanan,total,pendapatan_toko,pendapatan_platform",
       `"'=Dapur, Siti",2,30000,2000,1000,2000,29000,28000,1000`,
       "TOTAL,2,30000,2000,1000,2000,29000,28000,1000",
     ]);
-    expect(getFinanceSummary).toHaveBeenCalledWith({ from: hariIni, to: hariIni });
+    expect(getFinanceSummary).toHaveBeenCalledWith({ from: today, to: today });
   });
   it("bukan admin -> 401; rentang salah -> 400; API gagal -> 500", async () => {
     getSession.mockResolvedValue({ user: { role: "merchant" }, merchant: {} });
-    expect((await minta(`?dari=${hariIni}&sampai=${hariIni}`)).status).toBe(401);
+    expect((await callRoute(`?dari=${today}&sampai=${today}`)).status).toBe(401);
     getSession.mockResolvedValue({ user: { role: "admin" }, merchant: null });
-    expect((await minta("?dari=x&sampai=y")).status).toBe(400);
+    expect((await callRoute("?dari=x&sampai=y")).status).toBe(400);
     getFinanceSummary.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Dari server" } });
-    expect((await minta(`?dari=${hariIni}&sampai=${hariIni}`)).status).toBe(500);
+    expect((await callRoute(`?dari=${today}&sampai=${today}`)).status).toBe(500);
   });
 });
 
@@ -58,24 +58,24 @@ describe("F20 CSV keuangan", () => {
 describe("XS-Leak", () => {
   it.each(["cross-site", "same-site", "none"])(
     "sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca",
-    async (asal) => {
+    async (fetchSite) => {
       getSession.mockClear();
-      const res = await GET(
-        new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, {
-          headers: { "sec-fetch-site": asal },
+      const response = await GET(
+        new Request(`http://localhost/api/admin/keuangan/csv?dari=${today}&sampai=${today}`, {
+          headers: { "sec-fetch-site": fetchSite },
         }),
       );
-      expect(res.status).toBe(401);
-      expect(await res.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
+      expect(response.status).toBe(401);
+      expect(await response.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
       expect(getSession).not.toHaveBeenCalled();
     },
   );
   it("same-origin tetap mengunduh", async () => {
-    const res = await GET(
-      new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, {
+    const response = await GET(
+      new Request(`http://localhost/api/admin/keuangan/csv?dari=${today}&sampai=${today}`, {
         headers: { "sec-fetch-site": "same-origin" },
       }),
     );
-    expect(res.status).toBe(200);
+    expect(response.status).toBe(200);
   });
 });

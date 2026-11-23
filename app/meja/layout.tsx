@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { DaftarSw } from "./RegisterServiceWorker";
+import { RegisterServiceWorker } from "./RegisterServiceWorker";
 
 // F21: area publik pelanggan (tanpa login, di luar matcher proxy). Ramah HP; dashboard tetap untuk layar lebar.
 export const metadata: Metadata = {
@@ -11,12 +11,12 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#FF6B35", viewportFit: "cover" };
 
-export default function MejaLayout({ children }: { children: ReactNode }) {
+export default function TableLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-canvas text-ink">
       {children}
       <Toaster />
-      <DaftarSw />
+      <RegisterServiceWorker />
     </div>
   );
 }

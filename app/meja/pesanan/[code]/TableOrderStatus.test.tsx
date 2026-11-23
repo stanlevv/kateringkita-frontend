@@ -4,13 +4,13 @@ import type { TableOrder } from "@/types/table";
 
 const getTableOrderStatus = vi.fn();
 vi.mock("@/app/actions/table", () => ({
-  getTableOrderStatus: (...a: unknown[]) => getTableOrderStatus(...a),
+  getTableOrderStatus: (...args: unknown[]) => getTableOrderStatus(...args),
   payTableOrder: vi.fn(),
 }));
 
-import { StatusPesanan } from "./TableOrderStatus";
+import { TableOrderStatus } from "./TableOrderStatus";
 
-const pesanan = (o: Partial<TableOrder> = {}): TableOrder => ({
+const buildOrder = (overrides: Partial<TableOrder> = {}): TableOrder => ({
   code: "KK-1",
   status: "holding",
   payment_status: "pending",
@@ -26,7 +26,7 @@ const pesanan = (o: Partial<TableOrder> = {}): TableOrder => ({
   seconds_left: 125,
   payment_url: "https://snap/x",
   created_at: "",
-  ...o,
+  ...overrides,
 });
 
 beforeEach(() => localStorage.clear());
@@ -34,15 +34,15 @@ afterEach(() => vi.clearAllMocks());
 
 describe("status pesanan meja", () => {
   it("tanpa token tamu di perangkat ini → tidak memanggil server", () => {
-    render(<StatusPesanan code="KK-1" />);
+    render(<TableOrderStatus code="KK-1" />);
     expect(screen.getByText("Pesanan tidak bisa dibuka di sini")).toBeInTheDocument();
     expect(getTableOrderStatus).not.toHaveBeenCalled();
   });
 
   it("menunggu bayar: hitung mundur & tombol bayar; dikonfirmasi: langkah pembayaran tercentang", async () => {
     localStorage.setItem("kk-tamu:KK-1", JSON.stringify({ tamu: "tamu-1", meja: "t0k3n" }));
-    getTableOrderStatus.mockResolvedValueOnce({ data: pesanan() });
-    const { unmount } = render(<StatusPesanan code="KK-1" />);
+    getTableOrderStatus.mockResolvedValueOnce({ data: buildOrder() });
+    const { unmount } = render(<TableOrderStatus code="KK-1" />);
     expect(await screen.findByText("Menunggu pembayaran")).toBeInTheDocument();
     expect(screen.getByText("Bayar dalam 02:05")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Bayar Rp 30.000" })).toBeInTheDocument();
@@ -50,9 +50,9 @@ describe("status pesanan meja", () => {
     unmount();
 
     getTableOrderStatus.mockResolvedValueOnce({
-      data: pesanan({ status: "confirmed", payment_status: "paid", payment_url: null }),
+      data: buildOrder({ status: "confirmed", payment_status: "paid", payment_url: null }),
     });
-    render(<StatusPesanan code="KK-1" />);
+    render(<TableOrderStatus code="KK-1" />);
     expect(await screen.findByText("Pesanan diterima")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Bayar/ })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Tambah pesanan lain" })).toHaveAttribute("href", "/meja/t0k3n");
@@ -61,10 +61,10 @@ describe("status pesanan meja", () => {
   it("selesai: kelima langkah tercentang, tidak ada langkah bernomor", async () => {
     localStorage.setItem("kk-tamu:KK-1", JSON.stringify({ tamu: "tamu-1", meja: "t0k3n" }));
     getTableOrderStatus.mockResolvedValueOnce({
-      data: pesanan({ status: "completed", payment_status: "paid", payment_url: null }),
+      data: buildOrder({ status: "completed", payment_status: "paid", payment_url: null }),
     });
-    render(<StatusPesanan code="KK-1" />);
+    render(<TableOrderStatus code="KK-1" />);
     expect(await screen.findByText("Selamat menikmati")).toBeInTheDocument();
-    for (const n of ["1", "2", "3", "4", "5"]) expect(screen.queryByText(n)).not.toBeInTheDocument();
+    for (const stepNumber of ["1", "2", "3", "4", "5"]) expect(screen.queryByText(stepNumber)).not.toBeInTheDocument();
   });
 });

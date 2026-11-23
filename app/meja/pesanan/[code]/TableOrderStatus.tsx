@@ -10,133 +10,139 @@ import { callAction } from "@/lib/action";
 import { formatRupiah } from "@/lib/format";
 import { subscribe, readGuestRaw, parseGuest } from "@/lib/table-storage";
 import type { TableOrder } from "@/types/table";
-import { MejaPesan } from "../../TableMessage";
+import { TableMessage } from "../../TableMessage";
 
-const LANGKAH = [
-  { s: "holding", label: "Pembayaran" },
-  { s: "confirmed", label: "Diterima toko" },
-  { s: "cooking", label: "Sedang dimasak" },
-  { s: "ready", label: "Siap diantar" },
-  { s: "completed", label: "Selesai" },
+const STEPS = [
+  { status: "holding", label: "Pembayaran" },
+  { status: "confirmed", label: "Diterima toko" },
+  { status: "cooking", label: "Sedang dimasak" },
+  { status: "ready", label: "Siap diantar" },
+  { status: "completed", label: "Selesai" },
 ] as const;
-const URUT: Record<string, number> = { holding: 0, confirmed: 1, cooking: 2, ready: 3, completed: 4 };
-const AKHIR = ["completed", "cancelled", "expired"];
-const JUDUL: Record<string, { judul: string; isi: string }> = {
-  confirmed: { judul: "Pesanan diterima", isi: "Pembayaran lunas. Dapur akan segera memasak pesananmu." },
-  cooking: { judul: "Sedang dimasak", isi: "Pesananmu sedang disiapkan dapur." },
-  ready: { judul: "Siap!", isi: "Pesananmu segera diantar ke meja." },
-  completed: { judul: "Selamat menikmati", isi: "Terima kasih sudah memesan." },
-  expired: { judul: "Waktu bayar habis", isi: "Pesanan dibatalkan karena belum dibayar. Silakan pesan lagi." },
+const STEP_INDEX: Record<string, number> = { holding: 0, confirmed: 1, cooking: 2, ready: 3, completed: 4 };
+const FINAL_STATUSES = ["completed", "cancelled", "expired"];
+const STATUS_TEXT: Record<string, { title: string; body: string }> = {
+  confirmed: { title: "Pesanan diterima", body: "Pembayaran lunas. Dapur akan segera memasak pesananmu." },
+  cooking: { title: "Sedang dimasak", body: "Pesananmu sedang disiapkan dapur." },
+  ready: { title: "Siap!", body: "Pesananmu segera diantar ke meja." },
+  completed: { title: "Selamat menikmati", body: "Terima kasih sudah memesan." },
+  expired: { title: "Waktu bayar habis", body: "Pesanan dibatalkan karena belum dibayar. Silakan pesan lagi." },
   cancelled: {
-    judul: "Pesanan dibatalkan",
-    isi: "Pesanan ini dibatalkan toko. Bila sudah membayar, hubungi kasir untuk pengembalian dana.",
+    title: "Pesanan dibatalkan",
+    body: "Pesanan ini dibatalkan toko. Bila sudah membayar, hubungi kasir untuk pengembalian dana.",
   },
 };
-const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+const formatCountdown = (seconds: number) =>
+  `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
-export function StatusPesanan({ code }: { code: string }) {
+export function TableOrderStatus({ code }: { code: string }) {
   // undefined = render server; null = pesanan dibuat di perangkat lain
-  const mentah = useSyncExternalStore(
+  const rawGuest = useSyncExternalStore(
     subscribe,
     () => readGuestRaw(code),
     () => undefined,
   );
-  const tamu = useMemo(() => (mentah === undefined ? undefined : parseGuest(mentah)), [mentah]);
+  const guest = useMemo(() => (rawGuest === undefined ? undefined : parseGuest(rawGuest)), [rawGuest]);
   // kembali dari Midtrans membawa ?transaction_status=...; notifikasi lunas bisa tiba beberapa detik kemudian
-  const baruBayar = useSyncExternalStore(
+  const justPaid = useSyncExternalStore(
     subscribe,
     () => /transaction_status=(settlement|capture)/.test(window.location.search),
     () => false,
   );
-  const [d, setD] = useState<TableOrder | null>(null);
-  const [galat, setGalat] = useState<string | null>(null);
-  const [sisa, setSisa] = useState<number | null>(null);
-  const [membayar, setMembayar] = useState(false);
-  const akhir = useRef(false);
+  const [order, setOrder] = useState<TableOrder | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [paying, setPaying] = useState(false);
+  const finishedRef = useRef(false);
 
-  const muat = useCallback(async () => {
-    if (!tamu || akhir.current) return;
-    const r = await callAction(() => getTableOrderStatus(code, tamu.tamu));
-    if ("error" in r) return setGalat(r.error.message);
-    setGalat(null);
-    setD(r.data);
-    setSisa(r.data.seconds_left);
-    akhir.current = AKHIR.includes(r.data.status);
-  }, [code, tamu]);
+  const loadOrder = useCallback(async () => {
+    if (!guest || finishedRef.current) return;
+    const result = await callAction(() => getTableOrderStatus(code, guest.tamu));
+    if ("error" in result) return setErrorMessage(result.error.message);
+    setErrorMessage(null);
+    setOrder(result.data);
+    setSecondsLeft(result.data.seconds_left);
+    finishedRef.current = FINAL_STATUSES.includes(result.data.status);
+  }, [code, guest]);
 
   // pantau tiap 5 detik sampai selesai/batal/kedaluwarsa
   useEffect(() => {
-    if (!tamu) return;
-    const awal = setTimeout(() => void muat(), 0);
-    const t = setInterval(() => void muat(), 5000);
+    if (!guest) return;
+    const firstLoad = setTimeout(() => void loadOrder(), 0);
+    const poller = setInterval(() => void loadOrder(), 5000);
     return () => {
-      clearTimeout(awal);
-      clearInterval(t);
+      clearTimeout(firstLoad);
+      clearInterval(poller);
     };
-  }, [tamu, muat]);
+  }, [guest, loadOrder]);
 
   useEffect(() => {
-    if (sisa === null || sisa <= 0) return;
-    const t = setTimeout(() => setSisa((s) => (s === null ? s : Math.max(s - 1, 0))), 1000);
-    return () => clearTimeout(t);
-  }, [sisa]);
+    if (secondsLeft === null || secondsLeft <= 0) return;
+    const timer = setTimeout(
+      () => setSecondsLeft((seconds) => (seconds === null ? seconds : Math.max(seconds - 1, 0))),
+      1000,
+    );
+    return () => clearTimeout(timer);
+  }, [secondsLeft]);
 
-  async function bayar() {
-    if (!tamu || !d) return;
-    if (d.payment_url) return window.location.assign(d.payment_url);
-    setMembayar(true);
-    const r = await callAction(() => payTableOrder(code, tamu.tamu, `${window.location.origin}/meja/pesanan/${code}`));
-    if ("data" in r) return window.location.assign(r.data.payment_url);
-    setMembayar(false);
-    setGalat(r.error.message);
+  async function pay() {
+    if (!guest || !order) return;
+    if (order.payment_url) return window.location.assign(order.payment_url);
+    setPaying(true);
+    const result = await callAction(() =>
+      payTableOrder(code, guest.tamu, `${window.location.origin}/meja/pesanan/${code}`),
+    );
+    if ("data" in result) return window.location.assign(result.data.payment_url);
+    setPaying(false);
+    setErrorMessage(result.error.message);
   }
 
-  if (tamu === undefined) return null;
-  if (tamu === null) {
+  if (guest === undefined) return null;
+  if (guest === null) {
     return (
-      <MejaPesan
-        judul="Pesanan tidak bisa dibuka di sini"
-        isi="Status pesanan hanya bisa dilihat dari HP yang dipakai memesan. Tanyakan ke kasir bila perlu."
+      <TableMessage
+        title="Pesanan tidak bisa dibuka di sini"
+        body="Status pesanan hanya bisa dilihat dari HP yang dipakai memesan. Tanyakan ke kasir bila perlu."
       />
     );
   }
-  if (!d) {
-    return galat ? (
-      <MejaPesan
-        judul="Pesanan belum bisa dimuat"
-        isi={galat}
-        aksi={<Button onClick={() => void muat()}>Coba lagi</Button>}
+  if (!order) {
+    return errorMessage ? (
+      <TableMessage
+        title="Pesanan belum bisa dimuat"
+        body={errorMessage}
+        action={<Button onClick={() => void loadOrder()}>Coba lagi</Button>}
       />
     ) : (
       <p className="p-8 text-center text-ink-muted">Memuat pesanan…</p>
     );
   }
 
-  const menunggu = d.status === "holding";
-  const info = menunggu
-    ? baruBayar
-      ? { judul: "Memeriksa pembayaran…", isi: "Pembayaranmu sedang dikonfirmasi. Halaman ini berganti otomatis." }
-      : { judul: "Menunggu pembayaran", isi: "Selesaikan pembayaran agar pesanan diteruskan ke dapur." }
-    : JUDUL[d.status];
-  const gagal = d.status === "expired" || d.status === "cancelled";
-  const Ikon = gagal
+  const awaitingPayment = order.status === "holding";
+  const statusText = awaitingPayment
+    ? justPaid
+      ? { title: "Memeriksa pembayaran…", body: "Pembayaranmu sedang dikonfirmasi. Halaman ini berganti otomatis." }
+      : { title: "Menunggu pembayaran", body: "Selesaikan pembayaran agar pesanan diteruskan ke dapur." }
+    : STATUS_TEXT[order.status];
+  const failed = order.status === "expired" || order.status === "cancelled";
+  const StatusIcon = failed
     ? CircleX
-    : d.status === "completed"
+    : order.status === "completed"
       ? PartyPopper
-      : d.status === "ready"
+      : order.status === "ready"
         ? Utensils
-        : d.status === "cooking"
+        : order.status === "cooking"
           ? ChefHat
-          : menunggu
+          : awaitingPayment
             ? Clock
             : Check;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 p-4 pt-[max(1.5rem,env(safe-area-inset-top))]">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold">{d.merchant.business_name}</span>
+        <span className="font-semibold">{order.merchant.business_name}</span>
         <span className="rounded-md border-2 border-dashed border-ink/60 px-2 py-0.5 font-mono font-bold">
-          MEJA {d.table.label}
+          MEJA {order.table.label}
         </span>
       </div>
 
@@ -144,58 +150,61 @@ export function StatusPesanan({ code }: { code: string }) {
         aria-live="polite"
         className={cx(
           "flex flex-col items-center gap-3 rounded-2xl p-6 text-center",
-          gagal ? "bg-danger-bg" : "bg-gradient-to-br from-accent to-accent-pressed",
+          failed ? "bg-danger-bg" : "bg-gradient-to-br from-accent to-accent-pressed",
         )}
       >
         <span className="flex size-16 items-center justify-center rounded-full bg-surface">
-          <Ikon aria-hidden className={cx("size-8", gagal ? "text-danger" : "text-primary")} />
+          <StatusIcon aria-hidden className={cx("size-8", failed ? "text-danger" : "text-primary")} />
         </span>
-        <h1 className="font-display text-2xl font-bold">{info.judul}</h1>
-        <p className={gagal ? "text-danger" : "text-ink/80"}>{info.isi}</p>
-        {menunggu && sisa !== null && sisa > 0 && !baruBayar && (
-          <p className="font-mono text-lg font-bold">Bayar dalam {mmss(sisa)}</p>
+        <h1 className="font-display text-2xl font-bold">{statusText.title}</h1>
+        <p className={failed ? "text-danger" : "text-ink/80"}>{statusText.body}</p>
+        {awaitingPayment && secondsLeft !== null && secondsLeft > 0 && !justPaid && (
+          <p className="font-mono text-lg font-bold">Bayar dalam {formatCountdown(secondsLeft)}</p>
         )}
-        {menunggu && !baruBayar && (
+        {awaitingPayment && !justPaid && (
           <Button
             size="lg"
             variant="secondary"
             className="w-full"
-            loading={membayar}
+            loading={paying}
             loadingText="Membuka halaman bayar…"
-            onClick={bayar}
+            onClick={pay}
           >
-            Bayar {formatRupiah(d.total)}
+            Bayar {formatRupiah(order.total)}
           </Button>
         )}
       </section>
 
-      {galat && (
+      {errorMessage && (
         <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
-          {galat}
+          {errorMessage}
         </p>
       )}
 
-      {!gagal && (
+      {!failed && (
         <ol className="flex flex-col gap-0">
-          {LANGKAH.map((l, i) => {
+          {STEPS.map((step, i) => {
             // pesanan selesai: langkah terakhir pun tercentang (URUT completed = indeks langkah terakhir)
-            const selesai = d.status === "completed" || URUT[d.status] > i || (i === 0 && d.payment_status === "paid");
-            const kini = URUT[d.status] === i && !selesai;
+            const done =
+              order.status === "completed" ||
+              STEP_INDEX[order.status] > i ||
+              (i === 0 && order.payment_status === "paid");
+            const current = STEP_INDEX[order.status] === i && !done;
             return (
-              <li key={l.s} className="flex items-center gap-3 py-1.5">
+              <li key={step.status} className="flex items-center gap-3 py-1.5">
                 <span
                   className={cx(
                     "flex size-7 items-center justify-center rounded-full border-2 text-xs font-bold",
-                    selesai
+                    done
                       ? "border-success bg-success text-surface"
-                      : kini
+                      : current
                         ? "border-accent bg-primary-soft text-primary"
                         : "border-line text-ink-muted",
                   )}
                 >
-                  {selesai ? <Check aria-hidden className="size-4" /> : i + 1}
+                  {done ? <Check aria-hidden className="size-4" /> : i + 1}
                 </span>
-                <span className={cx(selesai || kini ? "font-semibold text-ink" : "text-ink-muted")}>{l.label}</span>
+                <span className={cx(done || current ? "font-semibold text-ink" : "text-ink-muted")}>{step.label}</span>
               </li>
             );
           })}
@@ -203,42 +212,42 @@ export function StatusPesanan({ code }: { code: string }) {
       )}
 
       <section className="rounded-2xl border border-line bg-surface p-4">
-        <p className="mb-2 font-mono text-xs text-ink-muted">{d.code}</p>
+        <p className="mb-2 font-mono text-xs text-ink-muted">{order.code}</p>
         <ul className="flex flex-col gap-2">
-          {d.items.map((it, i) => (
+          {order.items.map((item, i) => (
             <li key={i} className="flex justify-between gap-3 text-sm">
               <span>
-                {it.qty}× {it.menu_name}
-                {it.options.length > 0 && (
-                  <span className="text-ink-muted"> (+{it.options.map((o) => o.name).join(", ")})</span>
+                {item.qty}× {item.menu_name}
+                {item.options.length > 0 && (
+                  <span className="text-ink-muted"> (+{item.options.map((option) => option.name).join(", ")})</span>
                 )}
               </span>
-              <span className="font-mono">{formatRupiah(it.line_total)}</span>
+              <span className="font-mono">{formatRupiah(item.line_total)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-3 flex flex-col gap-1 border-t border-dashed border-line-strong pt-3 text-sm">
-          {d.service_fee > 0 && (
+          {order.service_fee > 0 && (
             <p className="flex justify-between text-ink-muted">
               <span>Biaya layanan</span>
-              <span className="font-mono">{formatRupiah(d.service_fee)}</span>
+              <span className="font-mono">{formatRupiah(order.service_fee)}</span>
             </p>
           )}
           <p className="flex justify-between text-base font-bold">
             <span>Total</span>
-            <span className="font-mono">{formatRupiah(d.total)}</span>
+            <span className="font-mono">{formatRupiah(order.total)}</span>
           </p>
         </div>
       </section>
 
       <Link
-        href={`/meja/${tamu.meja}`}
+        href={`/meja/${guest.meja}`}
         className={cx(
           "inline-flex min-h-11 items-center justify-center rounded-xl border border-line-strong bg-surface font-semibold text-ink hover:bg-subtle",
           focusRing,
         )}
       >
-        {gagal || d.status === "completed" ? "Pesan lagi" : "Tambah pesanan lain"}
+        {failed || order.status === "completed" ? "Pesan lagi" : "Tambah pesanan lain"}
       </Link>
     </main>
   );

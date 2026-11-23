@@ -8,102 +8,103 @@ import { tableTokenFromQr } from "@/lib/table-qr";
 
 // Pemindai bawaan peramban (Chrome/Samsung Internet di Android). iPhone/Firefox belum punya:
 // di sana pelanggan memakai aplikasi kamera HP, yang membuka tautan QR dengan sendirinya.
-type Pendeteksi = { detect: (v: HTMLVideoElement) => Promise<{ rawValue: string }[]> };
-type KelasPendeteksi = new (o: { formats: string[] }) => Pendeteksi;
-const kelasPendeteksi = () => (window as unknown as { BarcodeDetector?: KelasPendeteksi }).BarcodeDetector;
-const bisaPindai = () => !!kelasPendeteksi() && !!navigator.mediaDevices?.getUserMedia;
-const tanpaLangganan = () => () => {};
+type QrDetector = { detect: (video: HTMLVideoElement) => Promise<{ rawValue: string }[]> };
+type QrDetectorClass = new (options: { formats: string[] }) => QrDetector;
+const getDetectorClass = () => (window as unknown as { BarcodeDetector?: QrDetectorClass }).BarcodeDetector;
+const canScan = () => !!getDetectorClass() && !!navigator.mediaDevices?.getUserMedia;
+const subscribeNever = () => () => {};
 
-const JEDA_MS = 300;
+const SCAN_INTERVAL_MS = 300;
 
-function pesanGalat(e: unknown) {
-  const nama = (e as { name?: string })?.name;
-  if (nama === "NotAllowedError" || nama === "SecurityError")
+function cameraErrorMessage(error: unknown) {
+  const errorName = (error as { name?: string })?.name;
+  if (errorName === "NotAllowedError" || errorName === "SecurityError")
     return "Izin kamera ditolak. Izinkan kamera untuk situs ini di pengaturan browser, atau buka aplikasi kamera HP dan arahkan ke QR di meja.";
-  if (nama === "NotFoundError" || nama === "OverconstrainedError") return "Kamera tidak ditemukan di perangkat ini.";
+  if (errorName === "NotFoundError" || errorName === "OverconstrainedError")
+    return "Kamera tidak ditemukan di perangkat ini.";
   return "Kamera tidak bisa dibuka. Coba lagi, atau pakai aplikasi kamera HP.";
 }
 
 /** F21: scan QR meja langsung dari halaman (meminta izin kamera), lalu buka menu meja itu. */
-export function PindaiQr() {
+export function QrScanner() {
   const router = useRouter();
   // pemindaian tidak boleh diulang (dan kamera dimatikan) hanya karena identitas router berubah
   const routerRef = useRef(router);
   useEffect(() => {
     routerRef.current = router;
   }, [router]);
-  const didukung = useSyncExternalStore(tanpaLangganan, bisaPindai, () => false);
-  const [aktif, setAktif] = useState(false);
-  const [galat, setGalat] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const video = useRef<HTMLVideoElement>(null);
-  const arus = useRef<MediaStream | null>(null);
-  const putaran = useRef<ReturnType<typeof setInterval> | null>(null);
+  const supported = useSyncExternalStore(subscribeNever, canScan, () => false);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  function matikan() {
-    if (putaran.current) clearInterval(putaran.current);
-    putaran.current = null;
-    arus.current?.getTracks().forEach((t) => t.stop());
-    arus.current = null;
+  function stopCamera() {
+    if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+    scanTimerRef.current = null;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
   }
-  useEffect(() => matikan, []);
+  useEffect(() => stopCamera, []);
 
-  async function mulai() {
-    setGalat(null);
-    setInfo(null);
+  async function startCamera() {
+    setErrorMessage(null);
+    setHint(null);
     try {
-      arus.current = await navigator.mediaDevices.getUserMedia({
+      streamRef.current = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: "environment" } },
         audio: false,
       });
-    } catch (e) {
-      return setGalat(pesanGalat(e));
+    } catch (error) {
+      return setErrorMessage(cameraErrorMessage(error));
     }
-    setAktif(true);
+    setCameraOn(true);
   }
 
   useEffect(() => {
-    const v = video.current;
-    if (!aktif || !v || !arus.current) return;
-    v.srcObject = arus.current;
-    void v.play().catch(() => {});
-    const Kelas = kelasPendeteksi()!;
-    const pendeteksi = new Kelas({ formats: ["qr_code"] });
-    let sibuk = false;
-    putaran.current = setInterval(async () => {
-      if (sibuk || v.readyState < 2) return;
-      sibuk = true;
+    const videoElement = videoRef.current;
+    if (!cameraOn || !videoElement || !streamRef.current) return;
+    videoElement.srcObject = streamRef.current;
+    void videoElement.play().catch(() => {});
+    const DetectorConstructor = getDetectorClass()!;
+    const detector = new DetectorConstructor({ formats: ["qr_code"] });
+    let busy = false;
+    scanTimerRef.current = setInterval(async () => {
+      if (busy || videoElement.readyState < 2) return;
+      busy = true;
       try {
-        for (const { rawValue } of await pendeteksi.detect(v)) {
+        for (const { rawValue } of await detector.detect(videoElement)) {
           const token = tableTokenFromQr(rawValue);
           if (!token) {
-            setInfo("QR ini bukan QR meja KateringKita.");
+            setHint("QR ini bukan QR meja KateringKita.");
             continue;
           }
-          matikan();
+          stopCamera();
           routerRef.current.replace(`/meja/${token}`);
           return;
         }
       } catch {
         // bingkai belum siap; coba lagi di putaran berikutnya
       } finally {
-        sibuk = false;
+        busy = false;
       }
-    }, JEDA_MS);
+    }, SCAN_INTERVAL_MS);
     // kamera dimatikan oleh tutup()/hasil pindai/lepas komponen, bukan oleh pembersihan efek ini
     return () => {
-      if (putaran.current) clearInterval(putaran.current);
-      putaran.current = null;
+      if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+      scanTimerRef.current = null;
     };
-  }, [aktif]);
+  }, [cameraOn]);
 
-  function tutup() {
-    matikan();
-    setAktif(false);
-    setInfo(null);
+  function closeCamera() {
+    stopCamera();
+    setCameraOn(false);
+    setHint(null);
   }
 
-  if (!didukung) {
+  if (!supported) {
     return (
       <p className="text-sm text-ink-muted">
         Buka aplikasi kamera HP dan arahkan ke QR di meja; menu akan terbuka sendiri.
@@ -113,29 +114,29 @@ export function PindaiQr() {
 
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      {aktif ? (
+      {cameraOn ? (
         <>
           <div className="relative aspect-square w-full max-w-xs overflow-hidden rounded-2xl bg-ink">
-            <video ref={video} muted playsInline aria-label="Tampilan kamera" className="size-full object-cover" />
+            <video ref={videoRef} muted playsInline aria-label="Tampilan kamera" className="size-full object-cover" />
             <span aria-hidden className="pointer-events-none absolute inset-8 rounded-xl border-4 border-surface/80" />
           </div>
           <p aria-live="polite" className="text-sm text-ink-muted">
-            {info ?? "Arahkan kamera ke QR di meja."}
+            {hint ?? "Arahkan kamera ke QR di meja."}
           </p>
-          <Button variant="secondary" onClick={tutup}>
+          <Button variant="secondary" onClick={closeCamera}>
             <X aria-hidden className="size-4" />
             Tutup kamera
           </Button>
         </>
       ) : (
-        <Button size="lg" onClick={() => void mulai()}>
+        <Button size="lg" onClick={() => void startCamera()}>
           <Camera aria-hidden className="size-5" />
           Scan QR meja
         </Button>
       )}
-      {galat && (
+      {errorMessage && (
         <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
-          {galat}
+          {errorMessage}
         </p>
       )}
     </div>

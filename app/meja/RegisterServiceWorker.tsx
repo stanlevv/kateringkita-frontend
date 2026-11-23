@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 // Service worker hanya untuk /meja (lihat public/sw-meja.js); gagal daftar tidak mengganggu pemesanan
-export function DaftarSw() {
+export function RegisterServiceWorker() {
   useEffect(() => {
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw-meja.js", { scope: "/meja" }).catch(() => {});
