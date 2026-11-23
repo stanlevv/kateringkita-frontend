@@ -14,7 +14,7 @@ vi.mock("@/app/actions/admin/ai", () => ({
   testAiProvider: vi.fn(),
 }));
 
-import { PenyediaAiPanel } from "./PenyediaAiPanel";
+import { PenyediaAiPanel } from "./AiProvidersPanel";
 
 const p = (o: Partial<AiProvider>): AiProvider => ({
   id: 1,

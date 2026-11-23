@@ -4,7 +4,7 @@ import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { AiResult } from "@/types/ai-result";
 import { LIMIT_AI_RESULTS, parseAiResultTab } from "@/lib/ai-result";
-import { DaftarHasilAi } from "./components/DaftarHasilAi";
+import { DaftarHasilAi } from "./components/AiResultList";
 
 // Rubrik AI: verifikasi manual hasil AI tersimpan. Semua tingkat admin melihat; super & ops menyetujui / menolak.
 export default async function HasilAiPage({

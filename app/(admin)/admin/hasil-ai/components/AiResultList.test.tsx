@@ -6,7 +6,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 vi.mock("@/app/actions/admin/ai-results", () => ({ verifyAiResult: vi.fn() }));
 import type { AiResult } from "@/types/ai-result";
 import { parseAiResultTab } from "@/lib/ai-result";
-import { DaftarHasilAi } from "./DaftarHasilAi";
+import { DaftarHasilAi } from "./AiResultList";
 
 const H: AiResult = {
   id: 5,

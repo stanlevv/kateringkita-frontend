@@ -2,8 +2,8 @@ import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { getAiUsage, getAiProviders } from "@/services/admin-ai.service";
 import { requireAdmin } from "@/services/auth.service";
-import { PemakaianAi } from "./components/PemakaianAi";
-import { PenyediaAiPanel } from "./components/PenyediaAiPanel";
+import { PemakaianAi } from "./components/AiUsagePanel";
+import { PenyediaAiPanel } from "./components/AiProvidersPanel";
 
 // F22 penyedia AI (gratis) dengan fallback otomatis + F25 pemakaian (token, panggilan, gagal). ?hari=7|30
 export default async function AdminAiPage({

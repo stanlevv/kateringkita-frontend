@@ -11,7 +11,7 @@ vi.mock("@/app/actions/admin/banner", () => ({ requestAdminUpload: vi.fn() }));
 vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { Popup } from "@/types/popup";
-import { DaftarPopup, statusPopup } from "./DaftarPopup";
+import { DaftarPopup, statusPopup } from "./PopupList";
 
 const NOW = Date.now();
 const iso = (h: number) => new Date(NOW + h * 3600e3).toISOString();

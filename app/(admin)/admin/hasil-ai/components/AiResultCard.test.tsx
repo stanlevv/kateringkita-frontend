@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/app/actions/admin/ai-results", () => ({ verifyAiResult: (...a: unknown[]) => verifyAiResult(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { AiResult } from "@/types/ai-result";
-import { KartuHasilAi } from "./KartuHasilAi";
+import { KartuHasilAi } from "./AiResultCard";
 
 const ASISTEN: AiResult = {
   id: 5,

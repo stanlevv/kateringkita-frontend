@@ -22,7 +22,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/app/actions/admin/tickets", () => ({ replyToTicket: vi.fn(), closeTicket: vi.fn() }));
 import type { TicketDetail, TicketSummary } from "@/types/admin";
-import { TiketTable } from "./components/TiketTable";
+import { TiketTable } from "./components/TicketTable";
 import TiketPage from "./page";
 import DetailPage from "./[code]/page";
 import TiketTidakDitemukan from "./[code]/not-found";

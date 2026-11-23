@@ -5,7 +5,7 @@ import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { Popup } from "@/types/popup";
 import type { Promo } from "@/types/promo";
-import { DaftarPopup } from "./components/DaftarPopup";
+import { DaftarPopup } from "./components/PopupList";
 
 // Pop-up promo aplikasi mobile (rancangan voucher 2026-11-16 §5.5): semua tingkat melihat; super & ops mengatur.
 export default async function PopupPage() {

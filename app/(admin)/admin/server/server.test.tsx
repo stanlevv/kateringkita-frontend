@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 import ServerPage from "./page";
-import { GrafikPerJam } from "./components/GrafikPerJam";
+import { GrafikPerJam } from "./components/HourlyIssuesChart";
 
 const jam = (n: number, e = 0, l = 0) => ({
   jam: new Date(Date.UTC(2026, 10, 10, n)).toISOString(),

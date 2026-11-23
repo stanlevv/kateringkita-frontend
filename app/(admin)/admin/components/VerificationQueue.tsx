@@ -9,7 +9,7 @@ import type { VerificationQueueItem } from "@/types/admin";
 import { formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { VerificationStatus } from "./VerificationStatus";
+import { VerificationStatus } from "./VerificationBadge";
 
 /**
  * Antrean verifikasi, terlama dulu (urutan dari backend). Label "Diperbarui penjual" muncul bila penjual mengubah

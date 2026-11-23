@@ -9,7 +9,7 @@ import { Pagination } from "@/app/components/ui/Pagination";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { LIMIT_AI_RESULTS, AI_RESULT_TABS as TAB, type AiResultTab } from "@/lib/ai-result";
 import type { AiResult } from "@/types/ai-result";
-import { KartuHasilAi } from "./KartuHasilAi";
+import { KartuHasilAi } from "./AiResultCard";
 
 const KOSONG: Record<AiResultTab, string> = {
   menunggu: "Tidak ada hasil AI yang menunggu verifikasi",

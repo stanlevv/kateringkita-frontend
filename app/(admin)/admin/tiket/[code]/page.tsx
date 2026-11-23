@@ -7,8 +7,8 @@ import { isValidTicketCode } from "@/services/admin-ticket.service";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { TicketDetail } from "@/types/admin";
-import { TiketDetail } from "../components/TiketDetail";
-import { TutupTiket } from "../components/TutupTiket";
+import { TiketDetail } from "../components/TicketDetailView";
+import { TutupTiket } from "../components/CloseTicketButton";
 
 // Detail tiket bantuan: percakapan, balas, tutup. Kode tidak valid atau 404 -> not-found.tsx segmen ini.
 export default async function TiketDetailPage({ params }: { params: Promise<{ code: string }> }) {

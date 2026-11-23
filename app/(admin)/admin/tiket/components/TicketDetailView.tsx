@@ -6,8 +6,8 @@ import { formatRupiah, formatPhone } from "@/lib/format";
 import { whatsappLink } from "@/services/admin-merchant.service";
 import { SENDER_LABELS, categoryLabel, ticketOrderStatus } from "@/services/admin-ticket.service";
 import type { TicketDetail, TicketMessage } from "@/types/admin";
-import { BalasTiket } from "./BalasTiket";
-import { StatusTiket, waktuLengkap } from "./StatusTiket";
+import { BalasTiket } from "./TicketReplyForm";
+import { StatusTiket, waktuLengkap } from "./TicketStatusBadge";
 
 const Baris = ({ k, children }: { k: string; children: React.ReactNode }) => (
   <div className="flex flex-col">

@@ -11,8 +11,8 @@ vi.mock("@/app/actions/admin/tickets", () => ({
   closeTicket: (...a: unknown[]) => closeTicket(...a),
 }));
 import { Toaster } from "@/app/components/ui/Toast";
-import { BalasTiket } from "./BalasTiket";
-import { TutupTiket } from "./TutupTiket";
+import { BalasTiket } from "./TicketReplyForm";
+import { TutupTiket } from "./CloseTicketButton";
 
 const KODE = "TK-20261113-7QPX";
 const isian = () => screen.getByRole("textbox", { name: /Balasan untuk pembeli/ });

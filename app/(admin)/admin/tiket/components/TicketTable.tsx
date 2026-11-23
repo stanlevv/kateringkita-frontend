@@ -20,7 +20,7 @@ import {
   type TicketTab,
 } from "@/services/admin-ticket.service";
 import type { TicketMeta, TicketSummary } from "@/types/admin";
-import { StatusTiket, WaktuRelatif } from "./StatusTiket";
+import { StatusTiket, WaktuRelatif } from "./TicketStatusBadge";
 
 const detail = (t: TicketSummary) => `/admin/tiket/${encodeURIComponent(t.code)}`;
 

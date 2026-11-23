@@ -7,7 +7,7 @@ import type { AdminMerchantDetail } from "@/types/admin";
 import { formatTime, formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { VerificationStatus } from "./VerificationStatus";
+import { VerificationStatus } from "./VerificationBadge";
 
 // Satu baris label–nilai di daftar deskripsi (dl).
 const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (

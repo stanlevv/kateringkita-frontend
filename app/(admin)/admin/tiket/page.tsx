@@ -5,7 +5,7 @@ import { LIMIT_TICKETS, parseTicketTab } from "@/services/admin-ticket.service";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { TicketMeta, TicketSummary } from "@/types/admin";
-import { TiketTable } from "./components/TiketTable";
+import { TiketTable } from "./components/TicketTable";
 
 // Tiket bantuan pembeli (semua tingkat admin). Tab status, cari, dan halaman di URL; tanpa ?status = Menunggu.
 export default async function TiketPage({

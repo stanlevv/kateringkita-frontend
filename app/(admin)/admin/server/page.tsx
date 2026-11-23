@@ -9,8 +9,8 @@ import { formatTime, formatDate } from "@/lib/format";
 import { getServerLogs, getServerStatus, LIMIT_SERVER_LOGS } from "@/services/admin-server.service";
 import { requireAdmin } from "@/services/auth.service";
 import type { ServerLog } from "@/types/server";
-import { FilterLogServer } from "./components/FilterLogServer";
-import { GrafikPerJam } from "./components/GrafikPerJam";
+import { FilterLogServer } from "./components/ServerLogFilters";
+import { GrafikPerJam } from "./components/HourlyIssuesChart";
 
 const lama = (s: number) => {
   const h = Math.floor(s / 86400),

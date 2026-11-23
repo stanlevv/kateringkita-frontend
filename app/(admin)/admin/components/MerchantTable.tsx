@@ -17,7 +17,7 @@ import { LIMIT_MERCHANTS, VERIFICATION_STATUSES } from "@/services/admin-merchan
 import type { MerchantSummary } from "@/types/admin";
 import { formatPhone } from "@/lib/format";
 import { buildUrl } from "@/lib/url";
-import { VerificationStatus } from "./VerificationStatus";
+import { VerificationStatus } from "./VerificationBadge";
 
 // Alamat detail penjual dan label status dapur.
 const detailHref = (merchant: MerchantSummary) => `/admin/penjual/${merchant.id}`;
