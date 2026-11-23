@@ -1,3 +1,8 @@
+// Komponen OrderCard: kartu satu pesanan di antrean dashboard (timer tahan, item, titik temu, total, tombol aksi).
+// Dipakai OrderQueue.
+// Status pesanan: holding = menunggu konfirmasi (atau menunggu pembayaran online), confirmed = dikonfirmasi,
+// cooking = dimasak, ready = siap diambil/diantar, completed = selesai, cancelled = dibatalkan, expired = kadaluarsa.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { BellRing, FileText, MapPin, Timer } from "lucide-react";
@@ -11,14 +16,17 @@ import { orderStatusView, actionTexts, type OrderAction } from "@/lib/order-stat
 import type { MerchantOrder } from "@/types/order";
 import { ChatWaLink, RejectButton } from "@/app/components/orders/action-error";
 
+/** Detik menjadi "mm:ss". */
 const formatCountdown = (seconds: number) =>
   `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
 type Props = {
   order: MerchantOrder;
-  /** Detik tahan tersisa (holding saja), dihitung induk. */
+  /** Detik tahan tersisa (hanya pesanan holding), dihitung komponen induk. */
   holdSecondsLeft: number | null;
+  /** Jam server sekarang (ms), untuk lama memasak. */
   now?: number;
+  /** Pesanan baru masuk: kartu disorot. */
   isNew?: boolean;
   /** Aksi yang sedang ditunda/dikirim untuk kartu ini. */
   pending?: OrderAction;
@@ -27,13 +35,28 @@ type Props = {
   onSlip: () => void;
 };
 
-/** Brief v3 §4. Satu aksi utama per status dari `statusView`. */
+/**
+ * Kartu pesanan. Tiap status punya paling banyak satu tombol aksi utama (dari orderStatusView), misalnya Konfirmasi
+ * untuk pesanan holding. Pesanan holding menampilkan garis dan timer sisa waktu tahan; di bawah 60 detik berwarna merah.
+ * @param props.order data pesanan
+ * @param props.holdSecondsLeft detik tahan tersisa, atau null
+ * @param props.now jam server sekarang (opsional)
+ * @param props.isNew sorot sebagai pesanan baru (opsional)
+ * @param props.pending aksi yang sedang ditunda/dikirim; semua tombol aksi nonaktif selama ada
+ * @param props.onAction dipanggil dengan aksi utama yang ditekan
+ * @param props.onReject membuka dialog tolak
+ * @param props.onSlip membuka laci slip
+ * @returns elemen `article`
+ */
 export function OrderCard({ order, holdSecondsLeft, now, isNew, pending, onAction, onReject, onSlip }: Props) {
+  // 1. Tombol dan keterangan untuk status ini.
   const view = orderStatusView(order);
+  // 2. Timer tahan: segera bila kurang dari 60 detik; panjang total tahan untuk garis kemajuan (bawaan 5 menit).
   const urgent = holdSecondsLeft !== null && holdSecondsLeft < 60;
   const totalHoldSeconds = order.hold_until
     ? Math.max(1, (Date.parse(order.hold_until) - Date.parse(order.created_at)) / 1000)
     : 300;
+  // 3. Lama memasak (menit) dan apakah pesanan sudah batal.
   const cookingMinutes =
     order.status === "cooking" && order.cooking_at && now
       ? Math.max(0, Math.floor((now - Date.parse(order.cooking_at)) / 60000))

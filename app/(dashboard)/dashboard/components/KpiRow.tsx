@@ -1,9 +1,16 @@
+// Komponen KpiRow: empat angka ringkasan hari ini di atas antrean dashboard. Dipakai DashboardLive.
+// KPI = key performance indicator, angka utama yang dipantau penjual.
 import { ClipboardList, Gauge, Timer, Wallet } from "lucide-react";
 import { KpiCard } from "@/app/components/ui/KpiCard";
 import type { TodaySummary } from "@/lib/dashboard";
 import { formatRupiah } from "@/lib/format";
 
-/** Brief §3: 4 KPI dari `ringkasHariIni` — data yang sama dengan kartu antrean & panel kuota (D2). */
+/**
+ * Empat KPI hari ini: omzet, kapasitas terpakai, perlu tindakan, dan rata-rata waktu siap. Angkanya dihitung
+ * summarizeToday dari data yang sama dengan kartu antrean dan panel kuota, jadi selalu cocok.
+ * @param props.summary ringkasan hari ini
+ * @returns elemen `section`
+ */
 export function KpiRow({ summary }: { summary: TodaySummary }) {
   const { used, total } = summary.capacity;
   const usedRatio = total ? Math.min(1, used / total) : 0;

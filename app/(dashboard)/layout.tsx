@@ -1,3 +1,8 @@
+// Layout semua halaman penjual (/dashboard, /pesanan, /menu, /pengaturan, dan lainnya): sidebar, header, banner
+// verifikasi toko, dan area konten. Layout = file khusus Next.js yang membungkus semua halaman di folder ini.
+// Ini server component (tanpa "use client"): dijalankan di server dan boleh memanggil services langsung.
+// Data: sesi penjual (requireMerchant), status pemeliharaan, profil toko, jumlah pesanan perlu tindakan, jumlah
+// notifikasi belum dibaca, dan cookie lebar sidebar.
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Header } from "@/app/components/shell/Header";
@@ -15,18 +20,28 @@ import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
 
 export const metadata: Metadata = { title: "Dashboard penjual", robots: { index: false, follow: false } };
 
+/**
+ * Membungkus halaman penjual dengan sidebar, header, dan banner verifikasi. Saat pemeliharaan aktif, seluruh shell
+ * diganti halaman pemberitahuan.
+ * @param props.children halaman yang sedang dibuka
+ * @returns shell dashboard di dalam StoreStatusProvider (status dapur bersama), atau MaintenanceNotice
+ */
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // 1. Pastikan yang masuk adalah penjual. Bila belum masuk atau bukan penjual, requireMerchant memanggil redirect()
+  // (pindah ke halaman login atau panel admin) dan baris berikutnya tidak dijalankan.
   const { user, merchant } = await requireMerchant();
-  // F27: API penjual dibalas 503 selama pemeliharaan, jadi shell diganti halaman pemberitahuan
+  // 2. Selama pemeliharaan, API penjual dibalas 503, jadi shell diganti halaman pemberitahuan.
   const maintenance = await getMaintenance();
   if (maintenance.aktif) return <MaintenanceNotice message={maintenance.pesan} />;
-  // Badge dan status dapur dihitung di layout, jadi hanya segar saat muat penuh atau router.refresh() (polling).
+  // 3. Ambil data shell sekaligus. Badge dan status dapur dihitung di layout, jadi hanya diperbarui saat halaman
+  // dimuat penuh atau saat router.refresh() dipanggil (dashboard memanggilnya ketika jumlah pesanan berubah).
   const [profile, badge, unreadNotifications, cookieStore] = await Promise.all([
     getProfile(),
     getNeedsActionCount(),
     getUnreadNotificationCount(),
     cookies(),
   ]);
+  // 4. Susun status dapur, nama pengguna, dan nama toko untuk sidebar dan header.
   const store: StoreInfo | null =
     "data" in profile
       ? { isOpen: profile.data.is_open, openTime: profile.data.open_time, closeTime: profile.data.close_time }

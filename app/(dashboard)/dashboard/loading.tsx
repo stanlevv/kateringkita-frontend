@@ -1,7 +1,12 @@
+// Kerangka memuat /dashboard. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
+// Bentuknya meniru halaman asli: 4 KPI, tab antrean dengan kartu pesanan, panel kuota dan menu terlaris.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonCard, SkeletonKpi, SkeletonTabs, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Bentuk OrderCard: kode & jam, pembeli, item, titik temu, total + tombol.
+/**
+ * Kerangka satu kartu pesanan, meniru OrderCard: kode dan jam, pembeli, item, titik temu, total dan tombol.
+ * @returns elemen `div`
+ */
 function OrderCardSkeleton() {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 pt-5">
@@ -26,7 +31,11 @@ function OrderCardSkeleton() {
   );
 }
 
-// DB-S1: 4 KPI, tab antrean + kartu pesanan, panel kuota & menu terlaris (panel hanya ≥ 1280 px, di tablet jadi tab).
+/**
+ * Kerangka halaman dashboard. Panel kuota dan menu terlaris hanya tampil di layar ≥ 1280 px; di tablet panel itu
+ * menjadi tab di antrean.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

@@ -1,3 +1,6 @@
+// Komponen DashboardLive: isi halaman /dashboard yang terus diperbarui (antrean, kuota, KPI, banner status).
+// Data awal dari page.tsx; setelah itu useLiveDashboard menanyakan perubahan ke server secara berkala (polling).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -31,8 +34,10 @@ import { LoadError } from "@/app/components/LoadError";
 import { useLiveDashboard } from "@/hooks/useLiveDashboard";
 import { useNotifications } from "@/hooks/useNotifications";
 
+// Lebar tablet: panel kuota pindah menjadi tab di antrean.
 const TABLET_QUERY = "(min-width: 768px) and (max-width: 1279px)";
 const hasMatchMedia = () => typeof window.matchMedia === "function";
+/** Langganan perubahan lebar layar untuk useSyncExternalStore (membaca nilai di luar React secara aman). */
 const subscribeTablet = (onChange: () => void) => {
   if (!hasMatchMedia()) return () => {};
   const query = window.matchMedia(TABLET_QUERY);
@@ -40,19 +45,25 @@ const subscribeTablet = (onChange: () => void) => {
   return () => query.removeEventListener("change", onChange);
 };
 
+/** Data awal dashboard dari page.tsx. */
 export type DashboardData = {
   orders: MerchantOrder[];
   menus: MerchantMenu[];
+  /** Toko sudah memilih titik temu (dipakai kartu "Siapkan toko"). */
   hasPickupPoints: boolean;
   /** Waktu server saat data dirender (ms); dasar "Diperbarui N detik lalu" dan "data terakhir HH.MM". */
   loadedAt: number;
 };
 
 /**
- * Dashboard live v3 (brief §3–§7, DB-*). Menyimpan data baik terakhir: galat saat polling tidak
- * mengganti antrean (banner DB-E5); galat tanpa data sama sekali -> G-1 gagal muat.
+ * Isi dashboard. Data baik terakhir disimpan: bila muat ulang halaman gagal, antrean lama tetap tampil (dengan
+ * banner koneksi terputus). Hanya bila belum pernah ada data sama sekali, tampil layar gagal muat.
+ * @param props.data data awal dari server, atau null bila gagal
+ * @param props.loadFailed pengambilan data di server gagal
+ * @returns layar gagal muat atau isi dashboard
  */
 export function DashboardLive({ data, loadFailed }: { data: DashboardData | null; loadFailed: boolean }) {
+  // Simpan data baik terakhir (pola "state dari prop": diperbarui saat render, bukan di efek).
   const [lastData, setLastData] = useState(data);
   if (data && data !== lastData) setLastData(data);
   const shownData = data ?? lastData;
@@ -65,6 +76,10 @@ export function DashboardLive({ data, loadFailed }: { data: DashboardData | null
   return <DashboardContent {...shownData} loadFailed={loadFailed} />;
 }
 
+/**
+ * Isi dashboard setelah ada data: banner status, KPI, antrean pesanan, panel kuota, dan menu terlaris.
+ * Ukuran layar menentukan letak panel kuota (samping, atau tab di antrean untuk tablet).
+ */
 function DashboardContent({
   orders: initialOrders,
   menus: initialMenus,
@@ -72,6 +87,7 @@ function DashboardContent({
   loadedAt,
   loadFailed,
 }: DashboardData & { loadFailed: boolean }) {
+  // 1. Data live (polling), status dapur bersama, dan jam lokal yang berdetak tiap detik.
   const { orders, menus, lastSyncedAt, disconnected, clockOffset, receiveOrder, receiveMenu, refresh } =
     useLiveDashboard({ orders: initialOrders, menus: initialMenus, loadedAt });
   const { isOpen, openTime, closeTime } = useStoreStatus();
@@ -82,22 +98,25 @@ function DashboardContent({
     return () => clearInterval(intervalId);
   }, []);
   const router = useRouter();
+  // 2. Aksi optimistis: kartu langsung berpindah status sebelum server menjawab. Entri dibuang begitu data
+  // server yang lebih baru tiba.
   const [optimisticActions, setOptimisticActions] = useState<OptimisticActions>({});
   const [seenOrders, setSeenOrders] = useState(orders);
   if (orders !== seenOrders) {
     setSeenOrders(orders);
     setOptimisticActions((previous) => pruneOptimisticActions(orders, previous)); // entri yang sudah digantikan data server dibuang
   }
-  // DB-E5: galat halaman (refresh gagal) tampil sampai penyegaran sukses berikutnya, tidak menetap.
+  // 3. Galat muat ulang halaman tampil sebagai banner sampai sinkron sukses berikutnya, tidak menetap.
   const [loadFailedAt, setLoadFailedAt] = useState<number | null>(loadFailed ? lastSyncedAt : null);
   if (loadFailed && loadFailedAt === null) setLoadFailedAt(lastSyncedAt);
   if (!loadFailed && loadFailedAt !== null) setLoadFailedAt(null);
   const connectionLost = disconnected || (loadFailedAt !== null && loadFailedAt === lastSyncedAt);
   const localNow = Math.max(now, loadedAt);
-  const serverNow = localNow + clockOffset; // D8: jam server (timer tahan, "hari ini")
+  const serverNow = localNow + clockOffset; // jam server: dasar timer tahan dan batas "hari ini"
+  // 4. Notifikasi pesanan baru (sorot kartu, bunyi, pengumuman untuk pembaca layar).
   const { newOrderCodes, announcement, soundOn, setSoundOn } = useNotifications(orders, loadedAt, serverNow);
 
-  // D11: badge sidebar dihitung di layout server; segarkan halaman hanya saat angkanya berubah.
+  // 5. Badge sidebar dihitung di layout server; muat ulang halaman hanya saat jumlah "perlu tindakan" berubah.
   const needsAction = countNeedsAction(orders);
   const previousNeedsAction = useRef(needsAction);
   useEffect(() => {
@@ -105,15 +124,19 @@ function DashboardContent({
     previousNeedsAction.current = needsAction;
     router.refresh();
   }, [needsAction, router]);
+  // 6. Lebar tablet? (server selalu menganggap bukan tablet.)
   const isTablet = useSyncExternalStore(
     subscribeTablet,
     () => hasMatchMedia() && window.matchMedia(TABLET_QUERY).matches,
     () => false,
   );
 
+  // 7. Pesanan efektif = data server + aksi optimistis + waktu tahan yang sudah lewat; KPI dihitung dari sini
+  // supaya angkanya sama dengan kartu.
   const effectiveOrders = applyHoldExpiry(applyOptimisticActions(orders, optimisticActions), serverNow);
   const summary = summarizeToday(effectiveOrders, menus, serverNow);
 
+  /** Memindahkan fokus ke isian kuota satu menu, atau ke panel kuota bila menu tidak disebut. */
   function focusQuota(menuId?: number) {
     // Setelah tab Kuota (tablet) dirender.
     requestAnimationFrame(() => {
@@ -124,6 +147,7 @@ function DashboardContent({
     });
   }
 
+  // Panel kuota dan menu terlaris: di samping antrean, atau di tab "Kuota" pada tablet.
   const sidePanel = (
     <>
       <QuotaPanel

@@ -1,3 +1,5 @@
+// Komponen QuotaPanel: panel "Kuota hari ini" di dashboard, berisi baris kuota per menu. Dipakai DashboardLive.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { UtensilsCrossed } from "lucide-react";
@@ -8,8 +10,15 @@ import type { MerchantMenu } from "@/types/menu";
 import { QuotaRow } from "@/app/components/menu/QuotaRow";
 import { useQuota } from "@/hooks/useQuota";
 
-/** DB-N3 / DB-E4: perilaku ubah kuota ada di useQuota. */
-/** `terakhir`: waktu klien penyegaran sukses terakhir (dasar "Diperbarui N detik lalu"). */
+/**
+ * Panel kuota hari ini, diurutkan dari stok paling kritis (habis, menipis, aman). Cara menyimpan kuota (jeda kirim,
+ * delta atau angka mutlak, kembali bila ditolak server) ada di hook useQuota.
+ * @param props.menus daftar menu dari server
+ * @param props.now jam sekarang (ms)
+ * @param props.lastSyncedAt waktu sinkron sukses terakhir (dasar "Diperbarui N detik lalu")
+ * @param props.onMenuSaved dipanggil dengan menu terbaru setelah kuota tersimpan di server
+ * @returns elemen `section`
+ */
 export function QuotaPanel({
   menus,
   now,

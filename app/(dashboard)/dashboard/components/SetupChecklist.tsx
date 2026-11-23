@@ -1,13 +1,20 @@
+// Komponen SetupChecklist: kartu "Siapkan toko" untuk penjual baru. Dipakai DashboardLive selama toko belum punya
+// titik temu atau menu.
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { cx, focusRing } from "@/app/components/ui/cx";
 
 type Props = {
+  /** Toko sudah memilih titik temu. */
   hasPickupPoints: boolean;
+  /** Toko sudah punya menu. */
   hasMenus: boolean;
+  /** Dapur sedang buka. */
   storeOpen: boolean;
+  /** Membuka dapur. */
   onOpenStore: () => void;
+  /** Permintaan buka dapur sedang berjalan. */
   opening?: boolean;
 };
 
@@ -16,8 +23,18 @@ const LINK_CLASS = cx(
   focusRing,
 );
 
-/** DB-A5: kartu Siapkan toko, langkah dicentang otomatis dari data. */
+/**
+ * Kartu tiga langkah persiapan toko (pengaturan titik temu, menu pertama, buka dapur). Langkah dicentang otomatis
+ * dari data, bukan ditandai manual.
+ * @param props.hasPickupPoints langkah 1 selesai
+ * @param props.hasMenus langkah 2 selesai
+ * @param props.storeOpen langkah 3 selesai
+ * @param props.onOpenStore membuka dapur dari tombol langkah 3
+ * @param props.opening tombol buka dapur sedang memuat
+ * @returns elemen `section`
+ */
 export function SetupChecklist({ hasPickupPoints, hasMenus, storeOpen, onOpenStore, opening }: Props) {
+  // 1. Susun tiga langkah: status selesai dan isi (tautan atau tombol) tiap langkah.
   const steps = [
     {
       done: hasPickupPoints,
