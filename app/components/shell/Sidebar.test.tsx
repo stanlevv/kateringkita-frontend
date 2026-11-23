@@ -9,11 +9,11 @@ import { StoreStatusProvider } from "./StoreStatus";
 const store = { isOpen: true, buka: "07:00", tutup: "16:00" };
 
 describe("SH-N1 sidebar", () => {
-  it("4 grup dan 10 tautan (termasuk Banner); tautan aktif aria-current", () => {
+  it("4 grup dan 11 tautan (termasuk Banner, Notifikasi); tautan aktif aria-current", () => {
     render(<StoreStatusProvider store={store}><Sidebar store={store} badge={2} /></StoreStatusProvider>);
     const nav = screen.getByRole("navigation", { name: "Menu utama" });
     expect(within(nav).getAllByRole("heading", { level: 2 })).toHaveLength(4);
-    expect(within(nav).getAllByRole("link")).toHaveLength(10);
+    expect(within(nav).getAllByRole("link")).toHaveLength(11);
     const aktif = within(nav).getByRole("link", { name: /Menu & Stok/ });
     expect(aktif).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: /Pesanan/ })).not.toHaveAttribute("aria-current");
@@ -21,6 +21,13 @@ describe("SH-N1 sidebar", () => {
   it("badge perlu tindakan di Dashboard", () => {
     render(<StoreStatusProvider store={store}><Sidebar store={store} badge={2} /></StoreStatusProvider>);
     expect(screen.getByText("2 perlu tindakan")).toBeInTheDocument();
+  });
+  it("badge notifikasi belum dibaca di Notifikasi; 0 → tanpa badge", () => {
+    const { unmount } = render(<StoreStatusProvider store={store}><Sidebar store={store} badge={0} notif={3} /></StoreStatusProvider>);
+    expect(screen.getByRole("link", { name: /Notifikasi/ })).toHaveTextContent("3 belum dibaca");
+    unmount();
+    render(<StoreStatusProvider store={store}><Sidebar store={store} badge={0} notif={0} /></StoreStatusProvider>);
+    expect(screen.queryByText(/belum dibaca/)).not.toBeInTheDocument();
   });
 });
 

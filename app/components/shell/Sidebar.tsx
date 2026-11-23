@@ -10,11 +10,11 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
  * Rail ikon 64 px di 768–1279 (tombol atas membuka drawer berlabel), penuh 256 px di ≥ 1280 kecuali `mode` "ringkas"
  * (pilihan penjual dari cookie), disembunyikan di bawah 768 (diganti MobileNav). Butuh StoreStatusProvider bila `store` ada.
  */
-export function Sidebar({ store, badge, admin = false, level, mode = "lebar" }: { store: StoreInfo | null; badge: number; admin?: boolean; level?: unknown; mode?: ModeSidebar }) {
+export function Sidebar({ store, badge, notif = 0, admin = false, level, mode = "lebar" }: { store: StoreInfo | null; badge: number; notif?: number; admin?: boolean; level?: unknown; mode?: ModeSidebar }) {
   return (
-    <SidebarLipat mode={mode} atas={<><Brand rail /><MobileNav rail store={store} badge={badge} admin={admin} level={level} /></>}>
+    <SidebarLipat mode={mode} atas={<><Brand rail /><MobileNav rail store={store} badge={badge} notif={notif} admin={admin} level={level} /></>}>
       <div className="flex-1">
-        <NavList rail badge={badge} admin={admin} level={level} />
+        <NavList rail badge={badge} notif={notif} admin={admin} level={level} />
       </div>
       {!admin && (
         <div className="border-t border-line pt-3">

@@ -13,7 +13,7 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
  * sebagai drawer kiri. Hanya tombolnya yang disembunyikan per lebar layar, jadi drawer yang sedang terbuka tetap
  * tampil (dan bisa ditutup) saat tablet diputar.
  */
-export function MobileNav({ store, badge, admin = false, level, rail = false }: { store: StoreInfo | null; badge: number; admin?: boolean; level?: unknown; rail?: boolean }) {
+export function MobileNav({ store, badge, notif = 0, admin = false, level, rail = false }: { store: StoreInfo | null; badge: number; notif?: number; admin?: boolean; level?: unknown; rail?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -21,7 +21,7 @@ export function MobileNav({ store, badge, admin = false, level, rail = false }: 
         <IconButton icon={rail ? PanelLeftOpen : Menu} label={rail ? "Lebarkan menu" : "Buka menu"} aria-expanded={open} onClick={() => setOpen(true)} />
       </div>
       <Drawer open={open} onClose={() => setOpen(false)} title="Menu" side={rail ? "kiri" : "kanan"}>
-        <NavList badge={badge} onNavigate={() => setOpen(false)} admin={admin} level={level} />
+        <NavList badge={badge} notif={notif} onNavigate={() => setOpen(false)} admin={admin} level={level} />
         {store && !admin && (
           <div className="border-t border-line pt-3">
             <StoreStatusToggle />
