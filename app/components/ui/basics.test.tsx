@@ -1,3 +1,4 @@
+// Test komponen dasar: Button, Field, StatusBadge, PaymentBadge, ErrorSummary, Pagination, DataTable.
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Button } from "./Button";

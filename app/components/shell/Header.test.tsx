@@ -1,3 +1,5 @@
+// Test Header: kotak cari berupa form GET ke /pesanan dengan parameter q.
+// Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

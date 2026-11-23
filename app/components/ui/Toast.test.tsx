@@ -1,3 +1,4 @@
+// Test Toast: wilayah aria-live, hilang otomatis, jeda saat disorot, danger tetap, dan aksi Batalkan.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster, toast, dismissToast } from "./Toast";

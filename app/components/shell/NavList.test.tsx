@@ -1,3 +1,5 @@
+// Test NavList panel admin: menu aktif sesuai URL dan menu sesuai tingkat admin.
+// Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

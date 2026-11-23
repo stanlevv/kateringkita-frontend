@@ -1,3 +1,5 @@
+// Test CollapsibleSidebar dan rail Sidebar: mode dari cookie kk-sidebar, tombol ciutkan/lebarkan, drawer rail.
+// Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 

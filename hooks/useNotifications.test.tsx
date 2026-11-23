@@ -1,3 +1,4 @@
+// Test useNotifications: hanya pesanan hari ini (WIB) yang baru perlu tindakan yang disorot dan diumumkan.
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { orders as fixOrders } from "@/lib/fixtures/orders";

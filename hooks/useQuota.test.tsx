@@ -1,3 +1,5 @@
+// Test useQuota: delta vs nilai mutlak, gabungan keduanya, satu permintaan per menu, dan pembatalan sebagian.
+// Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,7 +13,7 @@ import type { MerchantMenu } from "@/types/menu";
 import { useQuota } from "./useQuota";
 
 const baseMenu = menus()[0]; // kuota 40, terjual 22, ditahan 3 -> tersedia 15
-// Referensi array stabil untuk mencegah reset draf akibat menus !== dariMenus
+// Referensi array stabil agar draf tidak di-reset (hook membuang draf saat `menus` berganti referensi)
 const STABLE_MENUS: MerchantMenu[] = [
   { ...baseMenu, id: 1, quota_today: 10, sold_today: 0, held_today: 0, available: 10 },
 ];

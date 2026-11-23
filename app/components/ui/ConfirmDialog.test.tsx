@@ -1,3 +1,4 @@
+// Test ConfirmDialog: alasan wajib, pilihan "Lainnya", Esc mengembalikan fokus, dan Batal.
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";

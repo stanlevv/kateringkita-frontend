@@ -1,3 +1,4 @@
+// Test useDeferredAction: aksi tertunda dijalankan tepat sekali (waktu habis, batal, unmount, pagehide).
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeferredAction } from "@/hooks/useDeferredAction";

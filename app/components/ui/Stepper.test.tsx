@@ -1,3 +1,4 @@
+// Test Stepper: batas min/max, ketikan tidak sah, tahan tombol, dan perbedaan sentuh/papan ketik.
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";

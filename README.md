@@ -64,7 +64,7 @@
 
 ### 1. Kuota Atomik Penjual (AUD-04 / F04)
 
-- **Anti Lost-Update:** Menggunakan hook `useKuota` terintegrasi dengan backend atomik delta.
+- **Anti Lost-Update:** Menggunakan hook `useQuota` terintegrasi dengan backend atomik delta.
 - **Serialisasi In-Flight:** Maksimal satu request berjalan per menu secara berurutan. Mutasi tambahan selama request berlangsung diantrekan secara cerdas.
 - **Operasi Campuran:** Mendukung kombinasi pengetikan input langsung (debounce 600ms) dan penekanan tombol step `+` / `-` tanpa konflik.
 - **Rollback Granular & Rekonstruksi Draf:** Jika request jaringan gagal, UI memulihkan draf berdasarkan baseline server dan operasi pending pengguna tanpa menghapus perubahan baru.
@@ -135,7 +135,7 @@ app/
 │   ├── ui/                    # Button, Input, Modal, Stepper, Table, Notification
 │   ├── shell/                 # Sidebar navigasi, Header, ProfileDropdown
 │   └── menu/, orders/, ...    # Komponen domain spesifik (QuotaRow, OrderCard)
-hooks/                         # Custom React Hooks (useKuota, useLangsung, useNotifikasi)
+hooks/                         # Custom React Hooks (useQuota, useLiveDashboard, useNotifications)
 services/                      # API client caller, token handling, domain services
 lib/                           # Logika murni, schema validasi Zod, formatting rupiah
 styles/                        # Theme tokens & custom CSS variables

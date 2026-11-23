@@ -1,3 +1,5 @@
+// Test AccountMenu: tautan akun terpisah dari form Keluar, Esc dan Tab keluar menutup panel.
+// Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";

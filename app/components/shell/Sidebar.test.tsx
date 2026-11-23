@@ -1,3 +1,5 @@
+// Test Sidebar penjual: jumlah grup dan tautan, badge, dan NavList hanya menerima prop sederhana.
+// Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

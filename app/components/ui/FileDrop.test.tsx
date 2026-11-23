@@ -1,3 +1,4 @@
+// Test FileDrop: tolak file terlalu besar dan format selain JPG/PNG/WebP.
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { FileDrop } from "./FileDrop";

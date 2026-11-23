@@ -8,7 +8,7 @@ import type { MerchantMenu } from "@/types/menu";
 import { QuotaRow } from "@/app/components/menu/QuotaRow";
 import { useQuota } from "@/hooks/useQuota";
 
-/** DB-N3 / DB-E4: perilaku ubah kuota ada di useKuota. */
+/** DB-N3 / DB-E4: perilaku ubah kuota ada di useQuota. */
 /** `terakhir`: waktu klien penyegaran sukses terakhir (dasar "Diperbarui N detik lalu"). */
 export function QuotaPanel({
   menus,

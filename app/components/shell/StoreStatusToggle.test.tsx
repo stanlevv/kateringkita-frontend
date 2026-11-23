@@ -1,3 +1,5 @@
+// Test StoreStatusToggle: konfirmasi tutup dapur, galat dikembalikan, jam buka, dan status sama di sidebar & drawer.
+// Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

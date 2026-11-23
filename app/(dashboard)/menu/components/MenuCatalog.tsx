@@ -54,7 +54,7 @@ export function MenuCatalog({
   const status: MenuStatusFilter = MENU_STATUS_FILTERS.find((x) => x === s) ?? "semua";
 
   const [lokal, setLokal] = useState<Record<number, MerchantMenu>>({});
-  // D13: overlay lokal hanya sampai data server berikutnya tiba (pola useKuota).
+  // D13: overlay lokal hanya sampai data server berikutnya tiba (pola useQuota).
   const [dariMenus, setDariMenus] = useState(menus);
   if (menus !== dariMenus) {
     setDariMenus(menus);

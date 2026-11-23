@@ -1,3 +1,5 @@
+// Test useLiveDashboard: jeda polling, galat dan mundur, sesi habis, selisih jam, serta penggabungan data.
+// fetch, jam, dan visibilitas tab dipalsukan agar siklus polling bisa diatur waktunya.
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { menus as fixMenus } from "@/lib/fixtures/menus";
@@ -29,7 +31,7 @@ const okResponse = (orders: MerchantOrder[] = [], menus: MerchantMenu[] = MENUS)
   }) as unknown as Response;
 const errorResponse = () =>
   ({ ok: false, status: 503, redirected: false, url: "", json: async () => ({ error: {} }) }) as unknown as Response;
-/** Fetch yang menggantung sampai `lepas()`; menolak saat dibatalkan. */
+/** Fetch yang menggantung sampai `resolveFetch()` dipanggil; menolak saat dibatalkan. */
 function hangFetch() {
   let resolveFetch: (response: Response) => void = () => {};
   fetchMock.mockImplementationOnce(
