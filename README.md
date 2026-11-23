@@ -6,7 +6,7 @@
 ![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-981%20Tes-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-990%20Tes-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-14%20Scenarios-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)
 
