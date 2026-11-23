@@ -1,3 +1,5 @@
+// Test QuotaPanel: urutan stok, teks "Diperbarui N detik lalu", pengiriman kuota (delta/mutlak) setelah jeda,
+// draf setelah simpan, dan penolakan server. Server action adjustQuota dipalsukan (vi.mock).
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

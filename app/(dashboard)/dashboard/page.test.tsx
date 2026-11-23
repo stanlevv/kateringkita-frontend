@@ -1,4 +1,6 @@
-// Data penjual dari backend ditiru dengan fixture.
+// Test halaman /dashboard: KPI dari data nyata, sakelar suara, dan keadaan per skenario pratinjau (kosong, gagal
+// muat, dapur tutup, luar jam, penjual baru, pesanan baru, offline).
+// Data penjual dari backend ditiru dengan fixture lewat vi.mock pada services/api.
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
   merchantFetch: async (path: string) => ({
@@ -79,7 +81,7 @@ describe("Dashboard berisi (brief §3)", () => {
   it("KPI Perlu tindakan = jumlah tab Perlu tindakan", async () => {
     await renderPage(null);
     const tab = screen.getByRole("tab", { name: /Perlu tindakan/ });
-    expect(tab).toHaveTextContent("4"); // F26: VA belum lunas tidak dihitung
+    expect(tab).toHaveTextContent("4"); // VA belum lunas tidak dihitung
     expect(kpi("Perlu tindakan")).toHaveTextContent("4");
   });
   it("D2: KPI dihitung dari antrean & kuota nyata, bukan data contoh", async () => {

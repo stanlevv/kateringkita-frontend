@@ -1,3 +1,4 @@
+// Test SyncBanner: banner koneksi terputus menyebut jam sinkron sukses terakhir (WIB).
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SyncBanner } from "./SyncBanner";

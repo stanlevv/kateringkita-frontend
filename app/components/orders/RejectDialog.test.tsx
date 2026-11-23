@@ -1,3 +1,4 @@
+// Test RejectDialog: peringatan dana untuk pembayaran online yang lunas dan pilihan alasan untuk pesanan meja.
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { orders } from "@/lib/fixtures/orders";

@@ -1,3 +1,4 @@
+// Test OrderCard: tampilan delapan status pesanan, isi kartu, Chat WA, tombol aksi, timer tahan, dan sorot pesanan baru.
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -6,7 +7,8 @@ import { orders } from "@/lib/fixtures/orders";
 import type { MerchantOrder } from "@/types/order";
 import { OrderCard } from "./OrderCard";
 
-const baseOrder = orders()[0]; // KK-20261031-7QF2, holding tunai, Sambal pisah, catatan
+// Pesanan fixture pertama: KK-20261031-7QF2, holding, bayar tunai, opsi Sambal pisah, ada catatan.
+const baseOrder = orders()[0];
 const orderWith = (patch: Partial<MerchantOrder>): MerchantOrder => ({ ...baseOrder, ...patch });
 const renderCard = (order: MerchantOrder, extra: Partial<React.ComponentProps<typeof OrderCard>> = {}) => {
   const handlers = { onAction: vi.fn(), onReject: vi.fn(), onSlip: vi.fn() };

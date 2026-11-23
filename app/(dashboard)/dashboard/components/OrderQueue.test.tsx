@@ -1,3 +1,5 @@
+// Test OrderQueue: tab antrean, aksi optimistis dengan Batalkan 5 detik, galat aksi, tolak dengan alasan,
+// antrean kosong, dan laci slip. Server action orderAction dipalsukan (vi.mock); jam dipalsukan (vi.useFakeTimers).
 import { useState } from "react";
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -83,7 +85,7 @@ afterEach(() => {
 describe("tab antrean (brief §3)", () => {
   it("Perlu tindakan menghitung holding + confirmed dan tampil pertama", () => {
     setup();
-    // F26: K3MA (VA belum lunas) tetap tampil di daftar, tetapi tidak dihitung karena menunggu pembeli
+    // K3MA (VA belum lunas) tetap tampil di daftar, tetapi tidak dihitung karena yang ditunggu adalah pembayaran pembeli
     expect(screen.getByRole("tab", { name: /Perlu tindakan/ })).toHaveTextContent("4");
     expect(screen.getByRole("tab", { name: /Dimasak/ })).toHaveTextContent("2");
     expect(screen.getByRole("tab", { name: /Siap diambil/ })).toHaveTextContent("2");

@@ -1,3 +1,5 @@
+// Test MenuForm: ringkasan galat, harga dan margin, pre-order dan opsi, simpan (sukses/galat), mode ubah, prefill
+// Kalkulator HPP, unggah foto, dan penjaga perubahan. Router, saveMenu, dan uploadPhoto dipalsukan (vi.mock).
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

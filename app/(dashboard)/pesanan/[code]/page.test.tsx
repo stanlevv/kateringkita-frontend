@@ -1,3 +1,5 @@
+// Test halaman /pesanan/[code]: kode tidak ada, banner ?wa=gagal, dan satu judul h1 dengan rincian.
+// Services dipalsukan dengan fixture (vi.mock).
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

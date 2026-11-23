@@ -1,3 +1,5 @@
+// Test layout dashboard: badge dari server, lebar sidebar dari cookie, dan mode pemeliharaan.
+// Services dan cookie dipalsukan (vi.mock); layout dipanggil langsung sebagai fungsi lalu hasilnya dibaca sebagai JSON.
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/auth.service", () => ({

@@ -1,3 +1,5 @@
+// Test ExtraPhotos: unggah menambah alamat di akhir, hapus dan geser urutan, batas 4 foto, dan galat unggah.
+// uploadPhoto dipalsukan (vi.mock).
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

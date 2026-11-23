@@ -1,3 +1,4 @@
+// Test QuotaRow: isi baris, batas bawah kuota, ketikan di bawah batas ditolak, dan tombol cepat +5/+10.
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";

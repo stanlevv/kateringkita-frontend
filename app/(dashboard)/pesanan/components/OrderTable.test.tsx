@@ -1,3 +1,5 @@
+// Test OrderTable: kolom dan baris tabel, filter dan halaman di URL, keadaan kosong, dan gagal muat.
+// Router Next.js dipalsukan (vi.mock) untuk membaca URL yang ditulis.
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

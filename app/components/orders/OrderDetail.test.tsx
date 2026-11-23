@@ -1,3 +1,5 @@
+// Test OrderDetail: selalu mengikuti prop, rincian harga, riwayat status, dan aksi di detail (sukses, galat, tolak,
+// stok tidak cukup). Server action dan router dipalsukan (vi.mock).
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

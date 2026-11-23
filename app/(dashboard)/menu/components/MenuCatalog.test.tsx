@@ -1,3 +1,5 @@
+// Test MenuCatalog: kartu menu, filter di URL, keadaan kosong/gagal, nonaktifkan/aktifkan, kuota inline, dan
+// salinan lokal yang gugur saat data server baru tiba. Router dan server action dipalsukan (vi.mock).
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -60,7 +62,7 @@ describe("MN-N2 filter di URL", () => {
     params = new URLSearchParams("status=nonaktif");
     renderCatalog();
     expect(screen.getAllByRole("article")).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Aktifkan lagi" })).toBeInTheDocument(); // MN-A2
+    expect(screen.getByRole("button", { name: "Aktifkan lagi" })).toBeInTheDocument(); // menu nonaktif bisa diaktifkan lagi
   });
   it("kategori memperbarui URL", () => {
     renderCatalog();

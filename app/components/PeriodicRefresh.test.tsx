@@ -1,3 +1,4 @@
+// Test PeriodicRefresh: router.refresh tiap 5 detik selama tab terlihat, berhenti saat tersembunyi atau dilepas.
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

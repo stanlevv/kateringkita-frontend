@@ -1,3 +1,4 @@
+// Test KpiRow: angka KPI dan bilah kapasitas dibaca dari ringkasan hari ini, termasuk keadaan kosong.
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { KpiRow } from "./KpiRow";

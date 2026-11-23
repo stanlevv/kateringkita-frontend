@@ -1,3 +1,5 @@
+// Test halaman /pesanan: searchParams diteruskan ke getOrders (nilai tak sah diabaikan) dan hasilnya ke OrderTable.
+// Services dan OrderTable dipalsukan (vi.mock).
 import { describe, expect, it, vi } from "vitest";
 
 const getOrders = vi.fn();

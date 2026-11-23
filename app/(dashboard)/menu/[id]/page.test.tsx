@@ -1,3 +1,5 @@
+// Test halaman /menu/[id]: id bukan angka atau tidak ada -> Menu tidak ditemukan; galat lain -> layar gagal muat.
+// Services dan MenuForm dipalsukan (vi.mock).
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

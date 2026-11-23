@@ -1,3 +1,6 @@
+// Test DashboardLive: aksi pesanan memakai respons server, pesanan baru dari polling, KPI konsisten dengan kartu,
+// timer tahan, galat data (banner koneksi), dan kuota. Jam dipalsukan (vi.useFakeTimers) untuk menjalankan polling.
+// Modul Next.js, server action, dan fetch dipalsukan (vi.mock/vi.stubGlobal) agar test tidak butuh server.
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -129,7 +132,8 @@ describe("DB-N1 / D10 aksi memakai baris dari respons", () => {
     expect(orderAction).toHaveBeenCalledWith(ORDER_CODE, "confirm", undefined);
     expect(card().getByRole("button", { name: "Mulai masak" })).toBeEnabled();
     expect(fetchMock).toHaveBeenCalledTimes(2); // jadwal 5 dtk + segera setelah aksi
-    expect(refresh).not.toHaveBeenCalled(); // holding -> confirmed: angka Perlu tindakan tetap (D11)
+    // holding -> confirmed: angka Perlu tindakan tetap, jadi badge sidebar tidak perlu dimuat ulang
+    expect(refresh).not.toHaveBeenCalled();
   });
   it("Tolak: angka Perlu tindakan turun -> router.refresh sekali (badge sidebar)", async () => {
     const data = loadData();
@@ -308,7 +312,7 @@ describe("DB-N3 kuota", () => {
     await user.click(screen.getAllByRole("button", { name: `Tambah Kuota ${menu.name}` })[0]);
     await advance(600);
     expect(adjustQuota).toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledTimes(1); // D10: sinkron segera setelah kuota tersimpan
+    expect(fetchMock).toHaveBeenCalledTimes(1); // sinkron segera setelah kuota tersimpan
     expect(screen.getAllByRole("spinbutton", { name: `Kuota ${menu.name}` })[0]).toHaveValue(menu.quota_today + 1);
     await advance(5000);
     expect(screen.getAllByRole("spinbutton", { name: `Kuota ${menu.name}` })[0]).toHaveValue(menu.quota_today + 1);
