@@ -1,3 +1,8 @@
+// Komponen AdminActionDialog: tombol aksi admin untuk satu penjual (verifikasi, minta perbaikan, tangguhkan, aktifkan
+// lagi, tutup hari ini) beserta dialog konfirmasi atau alasannya. Dipakai antrean verifikasi dan detail penjual.
+// Aksi dikirim lewat server action applyMerchantAction (app/actions/admin/merchants.ts, POST /admin/merchants/<id>/<aksi>).
+// Tombol yang muncul mengikuti status verifikasi penjual (ALLOWED_ACTIONS di services/admin-merchant.service.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState } from "react";
@@ -13,6 +18,7 @@ import { callAction } from "@/lib/action";
 import { ALLOWED_ACTIONS } from "@/services/admin-merchant.service";
 import type { MerchantAction, VerificationStatus } from "@/types/admin";
 
+// Label, warna tombol, dan pesan sukses per aksi.
 const ACTION_BUTTONS: Record<
   MerchantAction,
   { label: string; variant: "primary" | "secondary" | "danger"; successMessage: string }
@@ -23,11 +29,20 @@ const ACTION_BUTTONS: Record<
   reactivate: { label: "Aktifkan lagi", variant: "primary", successMessage: "Penjual diaktifkan lagi." },
   "close-today": { label: "Tutup hari ini", variant: "secondary", successMessage: "Dapur ditutup untuk hari ini." },
 };
+// Judul dialog untuk aksi yang wajib disertai alasan.
 const REASON_DIALOG_TITLES: Partial<Record<MerchantAction, string>> = {
   "request-fix": "Minta penjual memperbaiki",
   suspend: "Tangguhkan penjual",
 };
 
+/**
+ * Isi dialog alasan (minta perbaikan atau tangguhkan). Alasan wajib diisi, maksimal 500 karakter.
+ * @param props.action aksi yang sedang dikonfirmasi
+ * @param props.busy true saat aksi sedang dikirim (tombol dimatikan)
+ * @param props.onClose menutup dialog
+ * @param props.onSubmit dipanggil dengan alasan yang sudah dipangkas
+ * @returns isian alasan dan tombol Batal/aksi
+ */
 function ReasonForm({
   action,
   busy,
@@ -66,7 +81,15 @@ function ReasonForm({
   );
 }
 
-/** A-05 — tombol aksi penjual sesuai status (K1) dengan konfirmasi/alasan, toast, dan penyegaran data. */
+/**
+ * Tombol aksi penjual sesuai status verifikasinya. Semua aksi lewat dialog: verifikasi, aktifkan lagi, dan tutup hari
+ * ini lewat dialog konfirmasi; minta perbaikan dan tangguhkan lewat dialog alasan. Setelah berhasil tampil toast dan
+ * data halaman dimuat ulang (router.refresh).
+ * @param props.id id penjual
+ * @param props.status status verifikasi penjual saat ini
+ * @param props.checklistComplete true bila semua butir checklist toko terpenuhi (mengubah teks konfirmasi verifikasi)
+ * @returns deretan tombol dan dialog-dialognya
+ */
 export function AdminActionDialog({
   id,
   status,
@@ -76,16 +99,20 @@ export function AdminActionDialog({
   status: VerificationStatus;
   checklistComplete: boolean;
 }) {
+  // 1. Dialog yang sedang terbuka (null = tidak ada) dan tanda sedang mengirim.
   const router = useRouter();
   const [dialog, setDialog] = useState<MerchantAction | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Dialog tetap terbuka (alasan terisi) saat gagal; menutup hanya bila berhasil atau status sudah berubah (409).
+  // 2. Kirim aksi. Dialog tetap terbuka (alasan tetap terisi) saat gagal; menutup hanya bila berhasil atau bila status
+  //    sudah berubah di server (409 CONFLICT).
   async function submit(action: MerchantAction, reason?: string) {
+    // 1. Cegah kirim ganda, lalu panggil server action.
     if (busy) return;
     setBusy(true);
     const result = await callAction(() => applyMerchantAction(id, action, reason));
     setBusy(false);
+    // 2. Gagal: tampilkan pesan; bila status sudah berubah, tutup dialog dan muat ulang data.
     if ("error" in result) {
       const isConflict = result.error.code === "CONFLICT";
       toast({
@@ -98,12 +125,14 @@ export function AdminActionDialog({
       }
       return;
     }
+    // 3. Berhasil: tutup dialog, toast sukses, muat ulang data.
     setDialog(null);
     toast({ tone: "success", message: ACTION_BUTTONS[action].successMessage });
     router.refresh();
   }
 
-  // AUD-35: semua aksi lewat dialog, termasuk verifikasi dengan checklist lengkap (checklist diisi penjual sendiri)
+  // 3. Semua tombol hanya membuka dialog, termasuk verifikasi dengan checklist lengkap: checklist diisi penjual sendiri,
+  //    dan aksi sekali klik bisa dipicu clickjacking.
   const openDialog = (action: MerchantAction) => setDialog(action);
 
   return (

@@ -1,3 +1,8 @@
+// Komponen AdminTable: tabel akun admin di /admin/admin beserta dialog tambah admin, sandi sementara, dan konfirmasi.
+// Perubahan dikirim lewat server action createAdmin, updateAdminLevel, setAdminActive, dan resetAdminPassword
+// (app/actions/admin/accounts.ts). Server action = fungsi di server Next.js yang dipanggil dari peramban.
+// Tingkat admin: super (semua fitur), ops (operasional), support (tiket bantuan), lihat lib/admin-level.ts.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState } from "react";
@@ -19,9 +24,11 @@ import { formatTime, formatDate } from "@/lib/format";
 import type { AdminWithPassword, AdminAccount } from "@/types/admin";
 import type { ActionResult } from "@/types/api";
 
+// Semua tingkat admin, untuk pilihan di formulir dan di tabel.
 const LEVELS = Object.keys(LEVEL_LABELS) as AdminLevel[];
 
-// AUD-35: setiap aksi akun lewat konfirmasi; "Aktifkan" tanpa konfirmasi bisa dipicu clickjacking dua kali klik
+// Teks dialog konfirmasi per aksi akun. Setiap aksi lewat konfirmasi, karena tombol "Aktifkan" tanpa konfirmasi bisa
+// dipicu clickjacking (pengguna ditipu mengeklik dua kali tombol yang disembunyikan di halaman lain).
 const CONFIRMATIONS = {
   reset: {
     title: "Reset kata sandi?",
@@ -41,17 +48,27 @@ const CONFIRMATIONS = {
   },
 };
 
+/**
+ * Formulir tambah admin (nama, nomor HP, tingkat). Backend membuat akun dengan sandi sementara.
+ * @param props.onSaved dipanggil dengan data admin baru dan sandi sementaranya
+ * @param props.onClose menutup dialog
+ * @returns formulir
+ */
 function AdminForm({ onSaved, onClose }: { onSaved: (createdAdmin: AdminWithPassword) => void; onClose: () => void }) {
+  // 1. Isian (kuncinya sama dengan field API), galat per isian dari backend, dan tanda sedang menyimpan.
   const [values, setValues] = useState({ full_name: "", phone: "", admin_level: "ops" as AdminLevel });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  // 2. Kirim ke server; galat per isian tampil di bawah isian, pesan umum jadi toast.
   async function submit(event: React.FormEvent) {
+    // 1. Cegah kirim ganda, lalu panggil server action.
     event.preventDefault();
     if (saving) return;
     setSaving(true);
     const result = await callAction(() => createAdmin(values));
     setSaving(false);
+    // 2. Gagal: tandai isian yang salah dan tampilkan toast. Berhasil: serahkan admin baru ke pemanggil.
     if ("error" in result) {
       if (result.error.fields)
         setErrors(
@@ -62,6 +79,7 @@ function AdminForm({ onSaved, onClose }: { onSaved: (createdAdmin: AdminWithPass
     }
     onSaved(result.data);
   }
+  // 3. Mengubah satu isian sekaligus menghapus galat lama.
   const setField = (field: keyof typeof values, value: string) => {
     setErrors({});
     setValues((previous) => ({ ...previous, [field]: value }));
@@ -112,7 +130,13 @@ function AdminForm({ onSaved, onClose }: { onSaved: (createdAdmin: AdminWithPass
   );
 }
 
-// Sandi sementara tampil sekali; tidak bisa dilihat lagi setelah dialog ditutup.
+/**
+ * Menampilkan nomor HP dan sandi sementara admin (baru dibuat atau direset) dengan tombol salin. Sandi hanya tampil
+ * sekali; setelah dialog ditutup tidak bisa dilihat lagi.
+ * @param props.data admin dan sandi sementaranya dari backend
+ * @param props.onClose menutup dialog
+ * @returns isi dialog
+ */
 function TemporaryPasswordNotice({ data, onClose }: { data: AdminWithPassword; onClose: () => void }) {
   return (
     <div className="flex flex-col gap-4">
@@ -146,8 +170,15 @@ function TemporaryPasswordNotice({ data, onClose }: { data: AdminWithPassword; o
   );
 }
 
-/** Fase 1 — kelola akun admin (khusus super). Akun sendiri tidak bisa diubah di sini. */
+/**
+ * Tabel akun admin dengan aksi ubah tingkat, nonaktifkan/aktifkan, dan reset sandi. Akun sendiri tidak bisa diubah di
+ * sini (diubah lewat Pengaturan akun).
+ * @param props.rows daftar admin dari backend
+ * @param props.currentAdminId id admin yang sedang masuk
+ * @returns tombol tambah, tabel (atau keadaan kosong), dan dialog-dialognya
+ */
 export function AdminTable({ rows, currentAdminId }: { rows: AdminAccount[]; currentAdminId: number }) {
+  // 1. State: dialog tambah terbuka, sandi sementara yang sedang ditampilkan, konfirmasi yang menunggu, tanda sibuk.
   const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
   const [credentials, setCredentials] = useState<AdminWithPassword | null>(null);
@@ -156,6 +187,8 @@ export function AdminTable({ rows, currentAdminId }: { rows: AdminAccount[]; cur
   );
   const [busy, setBusy] = useState(false);
 
+  // 2. Menjalankan satu aksi akun: tutup konfirmasi, tampilkan toast, lalu muat ulang data (router.refresh).
+  //    Mengembalikan data hasil aksi (dipakai reset sandi), atau null bila gagal.
   async function runAction<T>(request: () => Promise<ActionResult<T>>, successMessage: string) {
     setBusy(true);
     const result = await callAction(request);
@@ -170,6 +203,7 @@ export function AdminTable({ rows, currentAdminId }: { rows: AdminAccount[]; cur
     return result.data;
   }
 
+  // 3. Kolom tabel. Akun sendiri tidak punya pilihan tingkat dan tombol aksi; admin nonaktif hanya bisa diaktifkan.
   const columns: Column<AdminAccount>[] = [
     {
       key: "nama",
@@ -270,6 +304,7 @@ export function AdminTable({ rows, currentAdminId }: { rows: AdminAccount[]; cur
     },
   ];
 
+  // 4. Tombol tambah dipakai di dua tempat (keadaan kosong dan di atas tabel).
   const addButton = <Button onClick={() => setFormOpen(true)}>Tambah admin</Button>;
   const activeConfirmation = confirmation;
   return (

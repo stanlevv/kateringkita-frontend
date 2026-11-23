@@ -1,3 +1,7 @@
+// Komponen RecordPayoutDialog: tombol "Catat pencairan" dan dialognya untuk satu baris saldo toko di /admin/pencairan.
+// Pencairan = admin mentransfer saldo toko ke rekening toko di luar aplikasi, lalu mencatat nomor referensinya di sini
+// lewat server action recordPayout (app/actions/payouts.ts, POST /admin/payouts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -12,13 +16,18 @@ import { callAction } from "@/lib/action";
 import { formatTime, formatRupiah, formatDate } from "@/lib/format";
 import type { MerchantBalance } from "@/types/payout";
 
+// Tanggal dan jam (WIB) dari waktu ISO.
 const formatDateTime = (iso: string) => `${formatDate(iso)} ${formatTime(iso)}`;
 
 /**
- * F26: admin mentransfer dulu lewat bank KateringKita, lalu mencatat nomor referensinya di sini.
- * `asOf` = waktu saldo dihitung; backend menolak (409) bila saldo berubah sejak itu atau sudah dicatat.
+ * Tombol dan dialog catat pencairan. Admin mentransfer dulu lewat bank KateringKita, lalu mencatat nomor referensinya.
+ * Backend menolak (409) bila saldo berubah sejak `asOf` atau sudah dicatat admin lain.
+ * @param props.balance saldo satu toko (nominal, jumlah pesanan, rekening)
+ * @param props.asOf waktu saldo dihitung (ISO); dikirim sebagai `until`
+ * @returns tombol dan dialog, atau teks "Rekening belum diisi" bila toko belum punya rekening
  */
 export function RecordPayoutDialog({ balance, asOf }: { balance: MerchantBalance; asOf: string }) {
+  // 1. State dialog, isian referensi dan catatan, galat per isian, dan tanda sedang mengirim.
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reference, setReference] = useState("");
@@ -27,7 +36,9 @@ export function RecordPayoutDialog({ balance, asOf }: { balance: MerchantBalance
   const [busy, setBusy] = useState(false);
   const account = balance.account;
 
+  // 2. Kirim catatan pencairan. Nominal dan waktu saldo yang dikirim adalah yang tampil di dialog.
   async function submit(event: FormEvent) {
+    // 1. Cegah kirim ganda, lalu panggil server action.
     event.preventDefault();
     if (busy) return;
     setBusy(true);
@@ -38,10 +49,11 @@ export function RecordPayoutDialog({ balance, asOf }: { balance: MerchantBalance
         until: asOf,
         reference,
         note,
-        account_updated_at: balance.account?.updated_at, // AUD-34: rekening yang tampil di dialog ini
+        account_updated_at: balance.account?.updated_at, // versi rekening yang tampil; ditolak bila rekening sudah diganti
       }),
     );
     setBusy(false);
+    // 2. Gagal: galat per isian tampil di bawah isian; galat lain jadi toast.
     if ("error" in result) {
       if (result.error.fields)
         return setErrors({ reference: result.error.fields.reference?.[0], note: result.error.fields.note?.[0] });
@@ -53,6 +65,7 @@ export function RecordPayoutDialog({ balance, asOf }: { balance: MerchantBalance
       }
       return;
     }
+    // 3. Berhasil: tutup dialog, tampilkan toast, dan muat ulang data halaman (router.refresh).
     setOpen(false);
     toast({
       tone: "success",
@@ -61,6 +74,7 @@ export function RecordPayoutDialog({ balance, asOf }: { balance: MerchantBalance
     router.refresh();
   }
 
+  // 3. Toko tanpa rekening belum bisa dicairkan.
   if (!account) return <span className="text-sm font-medium text-warning">Rekening belum diisi</span>;
   return (
     <>
