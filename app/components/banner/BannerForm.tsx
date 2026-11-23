@@ -46,7 +46,7 @@ export function BannerForm({ mode, banner, vouchers, simpan, onSaved, onClose, m
     setMengunggah(false);
     if ("error" in r) return setGalat((g) => ({ ...g, image_url: r.error.message }));
     setImage(r.data.public_url);
-    setGalat(({ image_url: _, ...g }) => g);
+    setGalat((g) => Object.fromEntries(Object.entries(g).filter(([k]) => k !== "image_url")));
   }
 
   async function kirim(e: React.FormEvent) {

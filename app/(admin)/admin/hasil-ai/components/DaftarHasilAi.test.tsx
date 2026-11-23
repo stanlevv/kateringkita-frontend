@@ -5,7 +5,8 @@ const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 vi.mock("@/app/actions/admin/hasilAi", () => ({ verifikasiHasilAi: vi.fn() }));
 import type { HasilAi } from "@/types/hasil-ai";
-import { DaftarHasilAi, tabHasilAi } from "./DaftarHasilAi";
+import { tabHasilAi } from "@/lib/hasil-ai";
+import { DaftarHasilAi } from "./DaftarHasilAi";
 
 const H: HasilAi = {
   id: 5, fitur: "asisten", input_text: "Harga risol?", status: "menunggu", catatan: null,

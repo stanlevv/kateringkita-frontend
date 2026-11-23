@@ -6,6 +6,7 @@ import { CheckCircle2, EyeOff, Flag, Star } from "lucide-react";
 import { moderasi } from "@/app/actions/admin/moderasi";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
+import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { DataTable, type Column } from "@/app/components/ui/DataTable";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { EmptyState } from "@/app/components/ui/EmptyState";
@@ -16,11 +17,12 @@ import { panggil } from "@/lib/aksi";
 import { formatRupiah, formatTanggal } from "@/lib/format";
 import type { AksiModerasi, MenuModerasi, UlasanModerasi } from "@/types/admin";
 
-const TEKS: Record<AksiModerasi, { label: string; judul: string; sukses: string }> = {
+// hide/takedown: dialog alasan; unhide/restore: konfirmasi (AUD-35: tidak jalan dengan sekali klik)
+const TEKS: Record<AksiModerasi, { label: string; judul: string; sukses: string; isi?: string; ya?: string }> = {
   hide: { label: "Sembunyikan", judul: "Sembunyikan ulasan", sukses: "Ulasan disembunyikan." },
-  unhide: { label: "Tampilkan lagi", judul: "", sukses: "Ulasan ditampilkan lagi." },
+  unhide: { label: "Tampilkan lagi", judul: "Tampilkan lagi ulasan?", sukses: "Ulasan ditampilkan lagi.", isi: "Ulasan ini tampil lagi untuk pembeli dan ikut dihitung di rating.", ya: "Ya, tampilkan" },
   takedown: { label: "Turunkan", judul: "Turunkan menu", sukses: "Menu diturunkan dari katalog." },
-  restore: { label: "Pulihkan", judul: "", sukses: "Menu dipulihkan. Penjual bisa mengaktifkannya lagi." },
+  restore: { label: "Pulihkan", judul: "Pulihkan menu?", sukses: "Menu dipulihkan. Penjual bisa mengaktifkannya lagi.", isi: "Penjual bisa mengaktifkan menu ini lagi di katalog.", ya: "Ya, pulihkan" },
 };
 
 function Status({ dimoderasi, alasan, label }: { dimoderasi: boolean; alasan: string | null; label: [string, string] }) {
@@ -38,6 +40,7 @@ function Status({ dimoderasi, alasan, label }: { dimoderasi: boolean; alasan: st
 export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] } | { jenis: "menu"; rows: MenuModerasi[] }) {
   const router = useRouter();
   const [dialog, setDialog] = useState<{ id: number; aksi: AksiModerasi } | null>(null);
+  const [pulih, setPulih] = useState<{ id: number; aksi: AksiModerasi } | null>(null);
   const [alasan, setAlasan] = useState("");
   const [sibuk, setSibuk] = useState(false);
 
@@ -48,6 +51,7 @@ export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] }
     setSibuk(false);
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     setDialog(null);
+    setPulih(null);
     setAlasan("");
     toast({ tone: "success", message: TEKS[aksi].sukses });
     router.refresh();
@@ -55,7 +59,7 @@ export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] }
 
   const tombol = (id: number, aksi: AksiModerasi) => (
     <Button variant={aksi === "hide" || aksi === "takedown" ? "danger" : "secondary"} disabled={sibuk}
-      onClick={() => (aksi === "hide" || aksi === "takedown" ? setDialog({ id, aksi }) : void kirim(id, aksi))}>
+      onClick={() => (aksi === "hide" || aksi === "takedown" ? setDialog({ id, aksi }) : setPulih({ id, aksi }))}>
       {TEKS[aksi].label}
     </Button>
   );
@@ -99,6 +103,9 @@ export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] }
           </Button>
         </div>
       </Dialog>
+      <ConfirmDialog open={pulih !== null} onClose={() => setPulih(null)} tone="primary" busy={sibuk}
+        title={pulih ? TEKS[pulih.aksi].judul : ""} body={pulih ? TEKS[pulih.aksi].isi : ""} confirmLabel={pulih ? TEKS[pulih.aksi].ya ?? "" : ""}
+        onConfirm={() => pulih && void kirim(pulih.id, pulih.aksi)} />
     </>
   );
 }

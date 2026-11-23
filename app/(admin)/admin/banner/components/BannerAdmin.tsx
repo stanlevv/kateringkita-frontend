@@ -7,6 +7,7 @@ import { buatBannerAdmin, mintaUnggahAdmin, tinjauBannerAdmin } from "@/app/acti
 import { BannerForm } from "@/app/components/banner/BannerForm";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
+import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Field } from "@/app/components/ui/Field";
@@ -24,6 +25,7 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
   const [alasan, setAlasan] = useState("");
   const [galat, setGalat] = useState<string>();
   const [sibuk, setSibuk] = useState(false);
+  const [yakin, setYakin] = useState(false);
   const st = statusBanner(b, now);
 
   async function tinjau(status: "disetujui" | "ditolak" | "nonaktif") {
@@ -65,12 +67,16 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
           <div className="flex flex-wrap justify-end gap-2">
             {b.status === "menunggu" && <Button variant="secondary" disabled={sibuk} onClick={() => void tinjau("ditolak")}>Tolak</Button>}
             {(b.status === "menunggu" || b.status === "ditolak" || b.status === "nonaktif") && (
-              <Button disabled={sibuk} onClick={() => void tinjau("disetujui")}>Setujui</Button>
+              <Button disabled={sibuk} onClick={() => setYakin(true)}>Setujui</Button>
             )}
             {b.status === "disetujui" && <Button variant="secondary" disabled={sibuk} onClick={() => void tinjau("nonaktif")}>Nonaktifkan</Button>}
           </div>
         </div>
       )}
+      {/* AUD-35: persetujuan tidak jalan dengan sekali klik */}
+      <ConfirmDialog open={yakin} onClose={() => setYakin(false)} tone="primary" busy={sibuk} title="Setujui banner?"
+        body="Banner ini akan tampil di beranda aplikasi pembeli sesuai jadwalnya." confirmLabel="Ya, setujui"
+        onConfirm={() => { setYakin(false); void tinjau("disetujui"); }} />
     </article>
   );
 }

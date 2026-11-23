@@ -81,6 +81,8 @@ export default async function PencairanPage({ searchParams }: { searchParams: Pr
                   { key: "rekening", header: "Rekening", wrap: true, cell: rekening },
                   { key: "pesanan", header: "Pesanan", align: "right", cell: (s) => s.orders },
                   { key: "sejak", header: "Sejak", cell: (s) => formatTanggal(s.since) },
+                  // AUD-25: voucher platform dibayar platform; porsi besar di satu toko bisa berarti akun pembeli palsu, periksa dulu
+                  { key: "platform", header: "Voucher platform", align: "right", cell: (s) => (s.platform_discount ? <span className="font-mono">{formatRupiah(s.platform_discount)}</span> : "—") },
                   { key: "saldo", header: "Saldo", align: "right", cell: (s) => <span className="font-mono font-semibold">{formatRupiah(s.amount)}</span> },
                   { key: "aksi", header: "Aksi", cell: (s) => <CatatPencairan saldo={s} asOf={saldo.data.as_of} /> },
                 ]}

@@ -7,18 +7,10 @@ import { Field } from "@/app/components/ui/Field";
 import { Select } from "@/app/components/ui/Input";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { Tabs } from "@/app/components/ui/Tabs";
+import { LIMIT_HASIL_AI, TAB_HASIL_AI as TAB, type TabHasilAi } from "@/lib/hasil-ai";
 import type { HasilAi } from "@/types/hasil-ai";
 import { KartuHasilAi } from "./KartuHasilAi";
 
-export const LIMIT_HASIL_AI = 20;
-const TAB = [
-  { id: "menunggu", label: "Menunggu" },
-  { id: "disetujui", label: "Disetujui" },
-  { id: "ditolak", label: "Ditolak" },
-  { id: "semua", label: "Semua" },
-] as const;
-export type TabHasilAi = (typeof TAB)[number]["id"];
-export const tabHasilAi = (v: unknown): TabHasilAi => (TAB.some((t) => t.id === v) ? (v as TabHasilAi) : "menunggu");
 
 const KOSONG: Record<TabHasilAi, string> = {
   menunggu: "Tidak ada hasil AI yang menunggu verifikasi",

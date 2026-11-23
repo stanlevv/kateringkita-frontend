@@ -1,5 +1,5 @@
 import { getRekapKeuangan } from "@/services/adminKeuanganService";
-import { cekRentang } from "@/lib/laporan";
+import { cekRentang, dariSitusLain } from "@/lib/laporan";
 import { buatCsvKeuangan } from "@/lib/keuangan";
 import { hariIniWib } from "@/lib/format";
 import { getSession } from "@/services/authService";
@@ -8,6 +8,7 @@ const galat = (status: number, message: string) => Response.json({ message }, { 
 
 // F20: unduhan CSV rekap keuangan; pola sama dengan /api/laporan/csv (tanpa sesi admin = 401, bukan redirect)
 export async function GET(req: Request) {
+  if (dariSitusLain(req)) return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
   let session;
   try {
     session = await getSession();

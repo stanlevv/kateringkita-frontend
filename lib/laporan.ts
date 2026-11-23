@@ -12,6 +12,13 @@ const sah = (d: string) => POLA.test(d) && !Number.isNaN(ms(d)) && new Date(ms(d
 /** Jumlah hari dalam rentang, ujung-ujungnya ikut dihitung. */
 export const jumlahHari = (dari: string, sampai: string) => Math.round((ms(sampai) - ms(dari)) / 86400e3) + 1;
 
+/** AUD-48: unduhan CSV yang sah selalu fetch dari halaman kita (same-origin). Navigasi dari situs lain dijawab seperti
+ *  tanpa sesi agar tidak membocorkan siapa yang sedang login. Header kosong (peramban lama) dibiarkan. */
+export const dariSitusLain = (req: Request) => {
+  const asal = req.headers.get("sec-fetch-site");
+  return asal !== null && asal !== "same-origin";
+};
+
 /** LP-E1: pesan galat untuk rentang yang tidak boleh dipakai, atau null. */
 export function cekRentang(dari: string, sampai: string, hariIni: string): string | null {
   if (!sah(dari) || !sah(sampai)) return "Tanggal tidak valid.";

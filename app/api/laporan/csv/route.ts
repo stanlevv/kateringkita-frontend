@@ -1,5 +1,5 @@
 import { getTransactions } from "@/services/reportService";
-import { buatCsv, cekRentang } from "@/lib/laporan";
+import { buatCsv, cekRentang, dariSitusLain } from "@/lib/laporan";
 import { hariIniWib } from "@/lib/format";
 import { getSession } from "@/services/authService";
 
@@ -8,6 +8,7 @@ const galat = (status: number, message: string) => Response.json({ message }, { 
 // LP-N4. Unduhan lewat fetch: tanpa sesi dijawab 401 (bukan redirect ke halaman masuk, yang akan
 // terunduh sebagai HTML).
 export async function GET(req: Request) {
+  if (dariSitusLain(req)) return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
   let session;
   try {
     session = await getSession();

@@ -33,10 +33,13 @@ describe("F19 ModerasiTable", () => {
     expect(refresh).toHaveBeenCalled();
     expect(screen.getByText("Ulasan disembunyikan.")).toBeInTheDocument();
   });
-  it("menu diturunkan: alasan tampil, pulihkan langsung tanpa dialog", async () => {
+  // AUD-35: pulihkan tidak jalan dengan sekali klik
+  it("menu diturunkan: alasan tampil, pulihkan lewat konfirmasi", async () => {
     render(<><ModerasiTable jenis="menu" rows={[menu]} /><Toaster /></>);
     expect(screen.getByText("Foto melanggar")).toBeInTheDocument();
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Pulihkan" })); });
+    expect(moderasi).not.toHaveBeenCalled();
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Ya, pulihkan" })); });
     expect(moderasi).toHaveBeenCalledWith(9, "restore", undefined);
   });
   it("kosong -> empty state", () => {

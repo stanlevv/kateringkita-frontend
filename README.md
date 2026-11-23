@@ -6,7 +6,7 @@
 ![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-804%20Passed-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-990%20Tes-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-14%20Scenarios-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)
 
@@ -31,8 +31,13 @@
    - Antrean verifikasi merchant baru beserta data legalitas usaha.
    - Manajemen master data kategori makanan dan titik jemput kampus (*pickup points*).
    - Pengaturan promo platform, batas biaya layanan (*service fee*), dan audit log aktivitas.
+   - Moderasi ulasan & menu, rekap keuangan, pencairan dana toko dan daftar refund Midtrans.
+   - Banner beranda (persetujuan pengajuan penjual) dan pop-up promo aplikasi mobile.
+   - Penyedia AI dengan fallback, dasbor pemakaian AI, dan verifikasi manual hasil AI.
+   - Tiket bantuan pembeli, pengumuman, kondisi server, dan akun admin bertingkat (super, ops, support).
+3. **Tamu di meja (tanpa akun):** PWA `/meja` yang dibuka dari QR meja: lihat menu, pesan, bayar lewat Midtrans Snap.
 
-> 💡 **Aplikasi Mobile Pembeli:** Dibangun secara terpisah dengan Flutter. Frontend web ini berkomunikasi langsung dengan [KateringKita REST API](https://github.com/stanlevv/kateringkita-backend).
+> 💡 **Aplikasi Mobile Pembeli:** Dibangun secara terpisah dengan Flutter. Frontend web ini berkomunikasi langsung dengan [KateringKita REST API](https://github.com/stanlevv/kateringkita-backend). Diagram arsitektur seluruh sistem ada di [README backend](https://github.com/stanlevv/kateringkita-backend) (bagian "Arsitektur & Tumpukan Teknologi").
 
 ---
 
@@ -90,13 +95,18 @@
 | `/template-wa` | Kustomisasi templat pesan WhatsApp otomatis | Merchant |
 | `/copilot` | Kalkulator HPP (*Harga Pokok Penjualan*), saran harga, dan asisten AI toko (Gemini) | Merchant |
 | `/promo` & `/ulasan` | Promo toko (kode promo checkout) dan ulasan pembeli | Merchant |
+| `/banner` | Ajukan banner toko di beranda aplikasi pembeli, lihat status & alasan penolakan, ajukan ulang | Merchant |
 | `/admin/*` | Verifikasi merchant, master data, promo & biaya, kontak CS, dan log sistem | Admin |
 | `/admin/moderasi` | Sembunyikan ulasan, turunkan menu yang melanggar | Admin |
 | `/admin/tiket` & `/admin/tiket/[code]` | Tiket bantuan pembeli: tab Menunggu/Dibalas/Ditutup/Semua, cari, percakapan, balas (notifikasi ke pembeli), tutup tiket | Admin (semua tingkat, termasuk support) |
 | `/admin/keuangan` | Rekap omzet, diskon, biaya layanan per toko + ekspor CSV | Admin |
 | `/admin/pencairan` | Saldo non-tunai per toko, catat pencairan ke rekening toko, daftar dana yang harus dikembalikan, riwayat (F26) | Admin super |
 | `/admin/pengumuman` | Kirim pengumuman ke notifikasi aplikasi | Admin |
-| `/admin/ai` | Penyedia AI gratis untuk Asisten AI: urutan fallback, key (hanya bisa ditulis), uji koneksi, status | Admin |
+| `/admin/ai` | Penyedia AI gratis untuk Asisten AI: urutan fallback, key (hanya bisa ditulis), uji koneksi, status, dan dasbor pemakaian AI | Admin |
+| `/admin/hasil-ai` | Verifikasi AI: setujui / tolak (dengan alasan) hasil AI yang tersimpan | Admin (super & ops memutuskan) |
+| `/admin/banner` & `/admin/popup` | Persetujuan banner penjual, banner platform, dan pop-up promo aplikasi mobile | Admin (super & ops mengatur) |
+| `/admin/server` | Kondisi backend, error 5xx, dan request lambat (log 30 hari) | Admin super |
+| `/admin/admin` & `/admin/akun` | Kelola akun admin dan tingkat aksesnya; ganti sandi akun sendiri | Admin super; semua admin |
 | `/meja/[token]` | PWA pesan dari meja (dibuka QR): menu, keranjang, pesan & bayar Midtrans Snap tanpa akun | Publik |
 | `/meja/pesanan/[code]` | Status pesanan meja (token tamu tersimpan di peramban) | Publik |
 

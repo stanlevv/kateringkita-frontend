@@ -16,11 +16,14 @@ export async function saveRekening(input: unknown): Promise<ActionResult<Pencair
 }
 
 // ---- admin super ----
-/** `until` = as_of daftar saldo yang sedang dilihat; saldo yang berubah sejak itu ditolak backend (409). */
+/** `until` = as_of daftar saldo yang sedang dilihat, `account_updated_at` = versi rekening yang tampil;
+ *  saldo atau rekening yang berubah sejak itu ditolak backend (409). */
 export async function catatPencairan(input: unknown): Promise<ActionResult<Pencairan>> {
   await requireAdmin("super");
-  const { merchant_id, amount, until, reference, note } = objek(input);
-  return hasil(await adminFetch<Pencairan>("/payouts", { method: "POST", body: JSON.stringify({ merchant_id, amount, until, reference, note }) }));
+  const { merchant_id, amount, until, reference, note, account_updated_at } = objek(input);
+  return hasil(await adminFetch<Pencairan>("/payouts", {
+    method: "POST", body: JSON.stringify({ merchant_id, amount, until, reference, note, account_updated_at }),
+  }));
 }
 
 export async function tandaiRefund(code: string, reference: string): Promise<ActionResult<{ code: string; amount: number; reference: string }>> {
