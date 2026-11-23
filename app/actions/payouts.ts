@@ -1,15 +1,25 @@
 "use server";
 
+// Server action pencairan dana: penjual menyimpan rekening tujuan; admin super mencatat pencairan dan menandai refund sudah ditransfer.
+// "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
+// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend. Validasi isi (dan cek ulang kata sandi) ada di backend.
+
 import { adminFetch, toResult, merchantFetch } from "@/services/api";
 import { requireAdmin, requireMerchant } from "@/services/auth.service";
 import type { ActionResult } from "@/types/api";
 import type { Payout, MyPayouts } from "@/types/payout";
 
-// F26 pencairan dana. Validasi isi (dan cek ulang kata sandi) ada di backend; aksi ini hanya meneruskan field yang dikenal.
+// Isian dari browser bisa berbentuk apa saja; selain objek dianggap objek kosong agar destrukturisasi tidak melempar.
 const asObject = (value: unknown) =>
   typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 
 // ---- penjual ----
+
+/**
+ * Menyimpan rekening tujuan pencairan penjual (PUT /merchant/payout-account). Hanya field yang dikenal yang diteruskan.
+ * @param input `bank`, `account_number`, `account_name`, dan `password` (kata sandi akun untuk konfirmasi)
+ * @returns `{ data }` berisi data pencairan penjual terbaru; `{ error }` bila isian atau kata sandi salah (dari backend)
+ */
 export async function saveBankAccount(input: unknown): Promise<ActionResult<MyPayouts>> {
   await requireMerchant();
   const { bank, account_number, account_name, password } = asObject(input);
@@ -22,8 +32,14 @@ export async function saveBankAccount(input: unknown): Promise<ActionResult<MyPa
 }
 
 // ---- admin super ----
-/** `until` = as_of daftar saldo yang sedang dilihat, `account_updated_at` = versi rekening yang tampil;
- *  saldo atau rekening yang berubah sejak itu ditolak backend (409). */
+
+/**
+ * Mencatat pencairan dana ke penjual (POST /admin/payouts). Hanya admin super.
+ * `until` = waktu `as_of` daftar saldo yang sedang dilihat admin, `account_updated_at` = versi rekening yang tampil;
+ * bila saldo atau rekening sudah berubah sejak itu, backend menolak dengan 409 (konflik) agar admin tidak mencatat dengan data lama.
+ * @param input `merchant_id`, `amount`, `until`, `reference` (nomor bukti transfer), `note`, `account_updated_at`
+ * @returns `{ data }` berisi pencairan tercatat, atau `{ error }` dari backend
+ */
 export async function recordPayout(input: unknown): Promise<ActionResult<Payout>> {
   await requireAdmin("super");
   const { merchant_id, amount, until, reference, note, account_updated_at } = asObject(input);
@@ -35,6 +51,12 @@ export async function recordPayout(input: unknown): Promise<ActionResult<Payout>
   );
 }
 
+/**
+ * Menandai refund pesanan sudah ditransfer ke pembeli (POST /admin/refunds/:code). Hanya admin super.
+ * @param code kode pesanan yang direfund
+ * @param reference nomor bukti transfer refund
+ * @returns `{ data: { code, amount, reference } }`, atau `{ error }` dari backend
+ */
 export async function markRefundPaid(
   code: string,
   reference: string,
