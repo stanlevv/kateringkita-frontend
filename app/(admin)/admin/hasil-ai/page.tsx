@@ -3,7 +3,8 @@ import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/authService";
 import type { HasilAi } from "@/types/hasil-ai";
-import { DaftarHasilAi, LIMIT_HASIL_AI, tabHasilAi } from "./components/DaftarHasilAi";
+import { LIMIT_HASIL_AI, tabHasilAi } from "@/lib/hasil-ai";
+import { DaftarHasilAi } from "./components/DaftarHasilAi";
 
 // Rubrik AI: verifikasi manual hasil AI tersimpan. Semua tingkat admin melihat; super & ops menyetujui / menolak.
 export default async function HasilAiPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
