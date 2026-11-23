@@ -1,3 +1,6 @@
+// Komponen OrderTable: filter dan daftar pesanan di halaman /pesanan (tabel di layar lebar, kartu di layar kecil).
+// Data berasal dari page.tsx; komponen ini hanya mengubah URL, lalu server mengambil ulang datanya.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -17,8 +20,10 @@ import { LIMIT_ORDERS, summarizeItems, STATUS_FILTER } from "@/lib/order-filter"
 import { buildUrl } from "@/lib/url";
 import type { MerchantOrder } from "@/types/order";
 
+/** Alamat detail satu pesanan. */
 const detailHref = (order: MerchantOrder) => `/pesanan/${encodeURIComponent(order.code)}`;
 
+/** Kolom tabel pesanan (layar ≥ 1024 px). */
 const COLUMNS: Column<MerchantOrder>[] = [
   {
     key: "kode",
@@ -48,8 +53,16 @@ const COLUMNS: Column<MerchantOrder>[] = [
   { key: "status", header: "Status", cell: (order) => <StatusBadge order={order} /> },
 ];
 
-/** PS-N1, PS-N3, PS-S1. Filter, pencarian, dan halaman tinggal di URL dan diproses server; mengubah filter mengembalikan ke halaman 1. */
+/**
+ * Filter dan daftar pesanan. Filter, pencarian, dan halaman tinggal di URL dan diproses server; mengubah filter
+ * mengembalikan ke halaman 1.
+ * @param props.rows pesanan di halaman ini (sudah disaring server)
+ * @param props.total jumlah semua pesanan yang cocok (untuk paginasi)
+ * @param props.loadFailed pengambilan data di server gagal
+ * @returns layar gagal muat, keadaan kosong, atau filter + daftar + paginasi
+ */
 export function OrderTable({ rows, total, loadFailed }: { rows: MerchantOrder[]; total: number; loadFailed: boolean }) {
+  // 1. Baca filter dari URL. Hari ini disimpan sekali saat tampil supaya tidak berubah di tengah sesi.
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
@@ -60,10 +73,12 @@ export function OrderTable({ rows, total, loadFailed }: { rows: MerchantOrder[];
   const date = /^\d{4}-\d{2}-\d{2}$/.test(params.get("tanggal") ?? "") ? params.get("tanggal")! : today;
   const page = Math.max(1, Math.floor(Number(params.get("page"))) || 1);
 
+  // 2. Pembuat URL: perubahan filter selalu menghapus `page` (kembali ke halaman 1).
   const urlWith = (changes: Record<string, string>) => buildUrl(path, params.toString(), changes);
   const navigate = (changes: Record<string, string>) =>
     router.replace(urlWith({ ...changes, page: "" }), { scroll: false });
 
+  /** Mengirim kotak cari ke URL (?q=). */
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     navigate({ q: String(new FormData(event.currentTarget).get("q") ?? "").trim() });

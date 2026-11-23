@@ -1,7 +1,11 @@
+// Komponen BackToOrders: tautan "Kembali ke daftar pesanan". Dipakai /pesanan/[code] dan kerangka memuatnya.
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-/** Tautan kembali di detail pesanan; dipakai juga oleh kerangka memuatnya supaya tetap bisa diklik selama memuat. */
+/**
+ * Tautan kembali ke /pesanan. Dipakai juga di kerangka memuat supaya tetap bisa diklik selama detail dimuat.
+ * @returns elemen Link
+ */
 export function BackToOrders() {
   return (
     <Link

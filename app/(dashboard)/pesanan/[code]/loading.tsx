@@ -1,8 +1,14 @@
+// Kerangka memuat /pesanan/[code]. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu
+// data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonText } from "@/app/components/ui/Skeleton";
 import { BackToOrders } from "../components/BackToOrders";
 
-// PS-N2: tautan kembali langsung bisa diklik; judul (kode pesanan) dan OrderDetail dikerangkakan.
+/**
+ * Kerangka detail pesanan. Tautan kembali sudah asli sehingga bisa langsung diklik; judul (kode pesanan, berasal dari
+ * data) dan rincian OrderDetail berupa kerangka.
+ * @returns tautan kembali dan PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <>
