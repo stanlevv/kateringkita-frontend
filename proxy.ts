@@ -1,6 +1,7 @@
 // Proxy (dulu disebut middleware di Next): kode yang dijalankan Next sebelum halaman di `config.matcher` dibuka.
 // Tugasnya: (1) pengunjung tanpa cookie sesi kk_session dialihkan ke /login?next=<halaman asal>, supaya setelah masuk
-// kembali ke halaman itu; (2) setiap permintaan diberi x-request-id untuk menelusuri log di backend.
+// kembali ke halaman itu; (2) permintaan yang lolos cek cookie diberi header x-request-id (di request ke halaman dan di
+// response) untuk menelusuri log di backend. Pengalihan ke /login tidak diberi x-request-id.
 // Proxy hanya memeriksa ada tidaknya cookie; keabsahan sesi dan peran (penjual/admin) diperiksa layout dan services.
 // Nama file, ekspor `proxy`/`config`, dan isi matcher dibaca Next, jadi tidak boleh diganti.
 import { NextResponse } from "next/server";
