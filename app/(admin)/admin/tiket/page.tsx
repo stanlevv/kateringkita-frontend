@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { LIMIT_TICKETS, parseTicketTab } from "@/services/admin-ticket.service";
 import { adminFetch } from "@/services/api";
@@ -47,9 +47,9 @@ export default async function TiketPage({
           />
         </Suspense>
       ) : (
-        <GagalMuat
-          judul="Daftar tiket belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil daftar tiket. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Daftar tiket belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil daftar tiket. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

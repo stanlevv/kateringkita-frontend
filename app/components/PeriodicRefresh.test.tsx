@@ -3,15 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-import { MuatUlangBerkala } from "./MuatUlangBerkala";
+import { PeriodicRefresh } from "./PeriodicRefresh";
 
-const tampak = (v: DocumentVisibilityState) =>
-  Object.defineProperty(document, "visibilityState", { value: v, configurable: true });
+const setVisibility = (state: DocumentVisibilityState) =>
+  Object.defineProperty(document, "visibilityState", { value: state, configurable: true });
 
 beforeEach(() => {
   vi.useFakeTimers();
   refresh.mockReset();
-  tampak("visible");
+  setVisibility("visible");
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe("MuatUlangBerkala", () => {
   it("memuat ulang data server tiap 5 detik selama tab terlihat", () => {
-    render(<MuatUlangBerkala />);
+    render(<PeriodicRefresh />);
     act(() => vi.advanceTimersByTime(4999));
     expect(refresh).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
@@ -29,14 +29,14 @@ describe("MuatUlangBerkala", () => {
   });
 
   it("tab tersembunyi: tidak memuat ulang", () => {
-    tampak("hidden");
-    render(<MuatUlangBerkala />);
+    setVisibility("hidden");
+    render(<PeriodicRefresh />);
     act(() => vi.advanceTimersByTime(15000));
     expect(refresh).not.toHaveBeenCalled();
   });
 
   it("berhenti setelah dilepas dari halaman", () => {
-    const { unmount } = render(<MuatUlangBerkala />);
+    const { unmount } = render(<PeriodicRefresh />);
     unmount();
     act(() => vi.advanceTimersByTime(15000));
     expect(refresh).not.toHaveBeenCalled();

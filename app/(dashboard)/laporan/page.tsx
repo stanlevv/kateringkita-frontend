@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { HourlyChart } from "@/app/(dashboard)/laporan/components/HourlyChart";
 import { RangePicker } from "@/app/components/ui/RangePicker";
 import { ReportKpis } from "@/app/(dashboard)/laporan/components/ReportKpis";
@@ -36,9 +36,9 @@ export default async function LaporanPage({
       <PageHeader title="Laporan" description="Omzet, modal bahan, dan laba bersih toko Anda.">
         <div className="flex flex-col gap-6">
           {picker}
-          <GagalMuat
-            judul="Laporan belum bisa dimuat"
-            isi="Terjadi kesalahan saat mengambil data laporan. Periksa koneksi lalu coba lagi."
+          <LoadError
+            title="Laporan belum bisa dimuat"
+            body="Terjadi kesalahan saat mengambil data laporan. Periksa koneksi lalu coba lagi."
           />
         </div>
       </PageHeader>

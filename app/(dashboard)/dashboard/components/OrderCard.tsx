@@ -9,105 +9,108 @@ import { cx } from "@/app/components/ui/cx";
 import { formatTime, formatRupiah, formatPhone } from "@/lib/format";
 import { orderStatusView, actionTexts, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
-import { ChatWaLink, TombolTolak } from "@/app/components/orders/galatAksi";
+import { ChatWaLink, RejectButton } from "@/app/components/orders/action-error";
 
-const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+const formatCountdown = (seconds: number) =>
+  `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
 type Props = {
   order: MerchantOrder;
   /** Detik tahan tersisa (holding saja), dihitung induk. */
-  sisa: number | null;
-  sekarang?: number;
-  baru?: boolean;
+  holdSecondsLeft: number | null;
+  now?: number;
+  isNew?: boolean;
   /** Aksi yang sedang ditunda/dikirim untuk kartu ini. */
   pending?: OrderAction;
-  onAksi: (aksi: OrderAction) => void;
-  onTolak: () => void;
+  onAction: (action: OrderAction) => void;
+  onReject: () => void;
   onSlip: () => void;
 };
 
 /** Brief v3 §4. Satu aksi utama per status dari `statusView`. */
-export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onTolak, onSlip }: Props) {
-  const v = orderStatusView(o);
-  const segera = sisa !== null && sisa < 60;
-  const totalTahan = o.hold_until ? Math.max(1, (Date.parse(o.hold_until) - Date.parse(o.created_at)) / 1000) : 300;
-  const menitMasak =
-    o.status === "cooking" && o.cooking_at && sekarang
-      ? Math.max(0, Math.floor((sekarang - Date.parse(o.cooking_at)) / 60000))
+export function OrderCard({ order, holdSecondsLeft, now, isNew, pending, onAction, onReject, onSlip }: Props) {
+  const view = orderStatusView(order);
+  const urgent = holdSecondsLeft !== null && holdSecondsLeft < 60;
+  const totalHoldSeconds = order.hold_until
+    ? Math.max(1, (Date.parse(order.hold_until) - Date.parse(order.created_at)) / 1000)
+    : 300;
+  const cookingMinutes =
+    order.status === "cooking" && order.cooking_at && now
+      ? Math.max(0, Math.floor((now - Date.parse(order.cooking_at)) / 60000))
       : null;
-  const dibatalkan = o.status === "cancelled" || o.status === "expired";
+  const cancelled = order.status === "cancelled" || order.status === "expired";
 
   return (
     <article
-      data-baru={baru ? "true" : undefined}
-      aria-label={`Pesanan ${o.code}`}
+      data-baru={isNew ? "true" : undefined}
+      aria-label={`Pesanan ${order.code}`}
       className={cx(
         "relative flex flex-col gap-3 overflow-hidden rounded-lg border p-4 pt-5",
-        baru ? "border-accent bg-primary-soft ring-2 ring-accent" : "border-line bg-surface",
+        isNew ? "border-accent bg-primary-soft ring-2 ring-accent" : "border-line bg-surface",
       )}
     >
-      {sisa !== null && (
+      {holdSecondsLeft !== null && (
         <div
           role="progressbar"
           aria-label="Sisa waktu tahan"
           aria-valuemin={0}
-          aria-valuemax={Math.round(totalTahan)}
-          aria-valuenow={sisa}
+          aria-valuemax={Math.round(totalHoldSeconds)}
+          aria-valuenow={holdSecondsLeft}
           className="absolute inset-x-0 top-0 h-1 bg-subtle"
         >
           <div
             className={cx(
               "h-full origin-left transition-transform duration-200 motion-reduce:transition-none",
-              segera ? "bg-danger" : "bg-warning",
+              urgent ? "bg-danger" : "bg-warning",
             )}
-            style={{ transform: `scaleX(${Math.min(1, sisa / totalTahan)})` }}
+            style={{ transform: `scaleX(${Math.min(1, holdSecondsLeft / totalHoldSeconds)})` }}
           />
         </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
         <span data-kode className="font-mono text-sm font-semibold text-ink">
-          {o.code}
+          {order.code}
         </span>
-        <StatusBadge order={o} />
-        {baru && (
+        <StatusBadge order={order} />
+        {isNew && (
           <Badge tone="info" icon={BellRing}>
             Baru
           </Badge>
         )}
         <span className="ml-auto flex items-center gap-3 text-sm">
-          {sisa !== null && (
+          {holdSecondsLeft !== null && (
             <span
               data-timer
               className={cx(
                 "inline-flex items-center gap-1 font-mono font-semibold",
-                segera ? "text-danger" : "text-warning",
+                urgent ? "text-danger" : "text-warning",
               )}
             >
               <Timer aria-hidden className="size-4" />
-              <span>{segera ? `Segera · ${mmss(sisa)}` : mmss(sisa)}</span>
+              <span>{urgent ? `Segera · ${formatCountdown(holdSecondsLeft)}` : formatCountdown(holdSecondsLeft)}</span>
             </span>
           )}
-          {menitMasak !== null && <span className="text-info">{menitMasak} mnt</span>}
-          <span className="font-mono text-ink-muted">{formatTime(o.created_at)}</span>
+          {cookingMinutes !== null && <span className="text-info">{cookingMinutes} mnt</span>}
+          <span className="font-mono text-ink-muted">{formatTime(order.created_at)}</span>
         </span>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-ink">
-          <span className="font-semibold">{o.customer_name}</span>{" "}
-          {o.customer_phone && <span className="text-ink-muted">· {formatPhone(o.customer_phone)}</span>}
+          <span className="font-semibold">{order.customer_name}</span>{" "}
+          {order.customer_phone && <span className="text-ink-muted">· {formatPhone(order.customer_phone)}</span>}
         </p>
-        <PaymentBadge method={o.payment_method} status={o.payment_status} />
+        <PaymentBadge method={order.payment_method} status={order.payment_status} />
       </div>
 
       <ul className="flex flex-col gap-1 text-ink">
-        {o.items.map((i) => (
-          <li key={`${i.menu_id}-${i.options.map((x) => x.id).join()}`}>
-            <span className="font-mono">{i.qty}×</span> {i.menu_name}
-            {i.options.map((x) => (
-              <span key={x.id} className="ml-2 text-sm text-ink-muted">
-                +{x.name}
+        {order.items.map((item) => (
+          <li key={`${item.menu_id}-${item.options.map((option) => option.id).join()}`}>
+            <span className="font-mono">{item.qty}×</span> {item.menu_name}
+            {item.options.map((option) => (
+              <span key={option.id} className="ml-2 text-sm text-ink-muted">
+                +{option.name}
               </span>
             ))}
           </li>
@@ -117,37 +120,41 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
       <div className="flex flex-wrap justify-between gap-2 text-sm text-ink-muted">
         <span className="inline-flex items-center gap-1">
           <MapPin aria-hidden className="size-4" />
-          <span>{o.table ? `Meja ${o.table.label}` : o.pickup_point?.name}</span>
+          <span>{order.table ? `Meja ${order.table.label}` : order.pickup_point?.name}</span>
         </span>
         <span>
-          {o.table ? "Makan di tempat" : o.pickup_at ? `Ambil: ${formatTime(o.pickup_at)}` : "Ambil: secepatnya"}
+          {order.table
+            ? "Makan di tempat"
+            : order.pickup_at
+              ? `Ambil: ${formatTime(order.pickup_at)}`
+              : "Ambil: secepatnya"}
         </span>
       </div>
-      {o.note && <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink">“{o.note}”</p>}
-      {dibatalkan && o.cancel_reason && <p className="text-sm text-danger">Alasan: {o.cancel_reason}</p>}
+      {order.note && <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink">“{order.note}”</p>}
+      {cancelled && order.cancel_reason && <p className="text-sm text-danger">Alasan: {order.cancel_reason}</p>}
 
       <div className="mt-auto flex flex-col gap-3 border-t border-line pt-3 sm:flex-row sm:items-center">
         <p className="font-semibold text-ink">
-          Total <span className="font-mono">{formatRupiah(o.total)}</span>
+          Total <span className="font-mono">{formatRupiah(order.total)}</span>
         </p>
         <div className="flex flex-wrap gap-2 sm:ml-auto">
-          {v.secondary.includes("reject") && <TombolTolak disabled={!!pending} onClick={onTolak} />}
-          {v.secondary.includes("chat-wa") && o.customer_phone && <ChatWaLink code={o.code} />}
+          {view.secondary.includes("reject") && <RejectButton disabled={!!pending} onClick={onReject} />}
+          {view.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
           <Button variant="ghost" onClick={onSlip}>
             <FileText aria-hidden className="size-4" />
             Lihat slip
           </Button>
-          {v.hint && <p className="self-center text-sm text-ink-muted">{v.hint}</p>}
-          {v.primary && (
+          {view.hint && <p className="self-center text-sm text-ink-muted">{view.hint}</p>}
+          {view.primary && (
             <Button
               data-aksi-utama
               className="w-full sm:w-auto"
-              loading={pending === v.primary}
-              loadingText={actionTexts[v.primary].pending}
+              loading={pending === view.primary}
+              loadingText={actionTexts[view.primary].pending}
               disabled={!!pending}
-              onClick={() => onAksi(v.primary!)}
+              onClick={() => onAction(view.primary!)}
             >
-              {v.primaryLabel}
+              {view.primaryLabel}
             </Button>
           )}
         </div>

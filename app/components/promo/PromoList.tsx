@@ -4,7 +4,7 @@ import { useState } from "react";
 import { EyeOff, Pencil, Plus, Power, TicketPercent, Trash2 } from "lucide-react";
 import { deletePromo, setPromoActive } from "@/app/actions/promos";
 import { callAction } from "@/lib/action";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -40,9 +40,9 @@ export function PromoList({
 
   if (galat)
     return (
-      <GagalMuat
-        judul="Promo belum bisa dimuat"
-        isi="Terjadi kesalahan saat mengambil daftar promo. Periksa koneksi lalu coba lagi."
+      <LoadError
+        title="Promo belum bisa dimuat"
+        body="Terjadi kesalahan saat mengambil daftar promo. Periksa koneksi lalu coba lagi."
       />
     );
 

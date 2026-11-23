@@ -1,5 +1,5 @@
 import { VerificationQueue } from "@/app/(admin)/admin/components/VerificationQueue";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import type { VerificationQueueItem } from "@/types/admin";
@@ -17,9 +17,9 @@ export default async function VerifikasiPage() {
       {res.ok && res.data ? (
         <VerificationQueue rows={res.data} />
       ) : (
-        <GagalMuat
-          judul="Antrean belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil antrean. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Antrean belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil antrean. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

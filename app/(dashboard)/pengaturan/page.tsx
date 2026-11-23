@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { SettingsForm } from "@/app/(dashboard)/pengaturan/components/SettingsForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { getPickupPoints } from "@/services/meta.service";
@@ -29,7 +29,7 @@ export default async function PengaturanPage({
       description="Atur profil, jam buka, titik temu, rekening pencairan, pesan dari meja, dan akun."
     >
       {"error" in profil ? (
-        <GagalMuat judul="Pengaturan belum bisa dimuat" isi="Data toko gagal dimuat. Coba lagi." />
+        <LoadError title="Pengaturan belum bisa dimuat" body="Data toko gagal dimuat. Coba lagi." />
       ) : (
         <SettingsForm
           profile={profil.data}

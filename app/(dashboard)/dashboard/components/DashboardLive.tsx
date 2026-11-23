@@ -27,125 +27,112 @@ import type { MerchantOrder } from "@/types/order";
 import { KpiRow } from "./KpiRow";
 import { SetupChecklist } from "./SetupChecklist";
 import { SyncBanner } from "./SyncBanner";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { useLiveDashboard } from "@/hooks/useLiveDashboard";
 import { useNotifications } from "@/hooks/useNotifications";
 
-const TABLET = "(min-width: 768px) and (max-width: 1279px)";
-const adaMedia = () => typeof window.matchMedia === "function";
-const langganTablet = (f: () => void) => {
-  if (!adaMedia()) return () => {};
-  const m = window.matchMedia(TABLET);
-  m.addEventListener("change", f);
-  return () => m.removeEventListener("change", f);
+const TABLET_QUERY = "(min-width: 768px) and (max-width: 1279px)";
+const hasMatchMedia = () => typeof window.matchMedia === "function";
+const subscribeTablet = (onChange: () => void) => {
+  if (!hasMatchMedia()) return () => {};
+  const query = window.matchMedia(TABLET_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
 };
 
-export type DataDashboard = {
+export type DashboardData = {
   orders: MerchantOrder[];
   menus: MerchantMenu[];
-  adaTitikTemu: boolean;
+  hasPickupPoints: boolean;
   /** Waktu server saat data dirender (ms); dasar "Diperbarui N detik lalu" dan "data terakhir HH.MM". */
-  dimuat: number;
+  loadedAt: number;
 };
 
 /**
  * Dashboard live v3 (brief §3–§7, DB-*). Menyimpan data baik terakhir: galat saat polling tidak
  * mengganti antrean (banner DB-E5); galat tanpa data sama sekali -> G-1 gagal muat.
  */
-export function DashboardLive({ data, galat }: { data: DataDashboard | null; galat: boolean }) {
-  const [terakhir, setTerakhir] = useState(data);
-  if (data && data !== terakhir) setTerakhir(data);
-  const tampil = data ?? terakhir;
-  if (!tampil)
+export function DashboardLive({ data, loadFailed }: { data: DashboardData | null; loadFailed: boolean }) {
+  const [lastData, setLastData] = useState(data);
+  if (data && data !== lastData) setLastData(data);
+  const shownData = data ?? lastData;
+  if (!shownData)
     return (
       <PageHeader title="Dashboard">
-        <GagalMuat />
+        <LoadError />
       </PageHeader>
     );
-  return <Isi {...tampil} galat={galat} />;
+  return <DashboardContent {...shownData} loadFailed={loadFailed} />;
 }
 
-function Isi({
-  orders: awalOrders,
-  menus: awalMenus,
-  adaTitikTemu,
-  dimuat,
-  galat,
-}: DataDashboard & { galat: boolean }) {
-  const {
-    orders,
-    menus,
-    lastSyncedAt: terakhir,
-    disconnected: terputus,
-    clockOffset: selisih,
-    receiveOrder: terima,
-    receiveMenu: terimaMenu,
-    refresh: segarkan,
-  } = useLiveDashboard({ orders: awalOrders, menus: awalMenus, loadedAt: dimuat });
-  const { isOpen, openTime: buka, closeTime: tutup } = useStoreStatus();
-  const { changeStoreOpen: ubahDapur, pending: membuka } = useStoreOpenToggle();
-  const [sekarang, setSekarang] = useState(dimuat);
+function DashboardContent({
+  orders: initialOrders,
+  menus: initialMenus,
+  hasPickupPoints,
+  loadedAt,
+  loadFailed,
+}: DashboardData & { loadFailed: boolean }) {
+  const { orders, menus, lastSyncedAt, disconnected, clockOffset, receiveOrder, receiveMenu, refresh } =
+    useLiveDashboard({ orders: initialOrders, menus: initialMenus, loadedAt });
+  const { isOpen, openTime, closeTime } = useStoreStatus();
+  const { changeStoreOpen, pending: storeOpenPending } = useStoreOpenToggle();
+  const [now, setNow] = useState(loadedAt);
   useEffect(() => {
-    const i = setInterval(() => setSekarang(Date.now()), 1000);
-    return () => clearInterval(i);
+    const intervalId = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(intervalId);
   }, []);
   const router = useRouter();
-  const [optimis, setOptimis] = useState<OptimisticActions>({});
-  const [dariOrders, setDariOrders] = useState(orders);
-  if (orders !== dariOrders) {
-    setDariOrders(orders);
-    setOptimis((o) => pruneOptimisticActions(orders, o)); // entri yang sudah digantikan data server dibuang
+  const [optimisticActions, setOptimisticActions] = useState<OptimisticActions>({});
+  const [seenOrders, setSeenOrders] = useState(orders);
+  if (orders !== seenOrders) {
+    setSeenOrders(orders);
+    setOptimisticActions((previous) => pruneOptimisticActions(orders, previous)); // entri yang sudah digantikan data server dibuang
   }
   // DB-E5: galat halaman (refresh gagal) tampil sampai penyegaran sukses berikutnya, tidak menetap.
-  const [galatSaat, setGalatSaat] = useState<number | null>(galat ? terakhir : null);
-  if (galat && galatSaat === null) setGalatSaat(terakhir);
-  if (!galat && galatSaat !== null) setGalatSaat(null);
-  const putus = terputus || (galatSaat !== null && galatSaat === terakhir);
-  const lokal = Math.max(sekarang, dimuat);
-  const kini = lokal + selisih; // D8: jam server (timer tahan, "hari ini")
-  const {
-    newOrderCodes: baru,
-    announcement: umumkan,
-    soundOn: suara,
-    setSoundOn: setSuara,
-  } = useNotifications(orders, dimuat, kini);
+  const [loadFailedAt, setLoadFailedAt] = useState<number | null>(loadFailed ? lastSyncedAt : null);
+  if (loadFailed && loadFailedAt === null) setLoadFailedAt(lastSyncedAt);
+  if (!loadFailed && loadFailedAt !== null) setLoadFailedAt(null);
+  const connectionLost = disconnected || (loadFailedAt !== null && loadFailedAt === lastSyncedAt);
+  const localNow = Math.max(now, loadedAt);
+  const serverNow = localNow + clockOffset; // D8: jam server (timer tahan, "hari ini")
+  const { newOrderCodes, announcement, soundOn, setSoundOn } = useNotifications(orders, loadedAt, serverNow);
 
   // D11: badge sidebar dihitung di layout server; segarkan halaman hanya saat angkanya berubah.
-  const tindakan = countNeedsAction(orders);
-  const tindakanLalu = useRef(tindakan);
+  const needsAction = countNeedsAction(orders);
+  const previousNeedsAction = useRef(needsAction);
   useEffect(() => {
-    if (tindakanLalu.current === tindakan) return;
-    tindakanLalu.current = tindakan;
+    if (previousNeedsAction.current === needsAction) return;
+    previousNeedsAction.current = needsAction;
     router.refresh();
-  }, [tindakan, router]);
-  const tablet = useSyncExternalStore(
-    langganTablet,
-    () => adaMedia() && window.matchMedia(TABLET).matches,
+  }, [needsAction, router]);
+  const isTablet = useSyncExternalStore(
+    subscribeTablet,
+    () => hasMatchMedia() && window.matchMedia(TABLET_QUERY).matches,
     () => false,
   );
 
-  const efektif = applyHoldExpiry(applyOptimisticActions(orders, optimis), kini);
-  const ringkasan = summarizeToday(efektif, menus, kini);
+  const effectiveOrders = applyHoldExpiry(applyOptimisticActions(orders, optimisticActions), serverNow);
+  const summary = summarizeToday(effectiveOrders, menus, serverNow);
 
-  function fokusKuota(menuId?: number) {
+  function focusQuota(menuId?: number) {
     // Setelah tab Kuota (tablet) dirender.
     requestAnimationFrame(() => {
-      const el =
+      const target =
         (menuId && document.querySelector<HTMLElement>(`#kuota-${menuId} input`)) ||
         document.getElementById("panel-kuota");
-      el?.focus();
+      target?.focus();
     });
   }
 
-  const panel = (
+  const sidePanel = (
     <>
       <QuotaPanel
         menus={menus}
-        sekarang={lokal}
-        terakhir={terakhir}
-        onBerubah={(m) => {
-          terimaMenu(m);
-          segarkan();
+        now={localNow}
+        lastSyncedAt={lastSyncedAt}
+        onMenuSaved={(menu) => {
+          receiveMenu(menu);
+          refresh();
         }}
       />
       <section aria-labelledby="judul-terlaris" className="rounded-lg border border-line bg-surface p-4">
@@ -154,10 +141,10 @@ function Isi({
           Menu terlaris hari ini
         </h2>
         <p className="mt-2 text-ink">
-          {ringkasan.bestSeller ? (
+          {summary.bestSeller ? (
             <>
-              <span className="font-medium">{ringkasan.bestSeller.name}</span>{" "}
-              <span className="text-ink-muted">· {ringkasan.bestSeller.portions} porsi</span>
+              <span className="font-medium">{summary.bestSeller.name}</span>{" "}
+              <span className="text-ink-muted">· {summary.bestSeller.portions} porsi</span>
             </>
           ) : (
             <span className="text-ink-muted">Belum ada penjualan hari ini.</span>
@@ -173,23 +160,23 @@ function Isi({
       description="Antrean pesanan dan kuota hari ini"
       actions={
         <IconButton
-          icon={suara ? Volume2 : VolumeX}
+          icon={soundOn ? Volume2 : VolumeX}
           label="Suara notifikasi"
-          aria-pressed={suara}
-          onClick={() => setSuara(!suara)}
+          aria-pressed={soundOn}
+          onClick={() => setSoundOn(!soundOn)}
         />
       }
     >
       <div className="flex flex-col gap-4">
         <p className="sr-only" aria-live="polite">
-          {umumkan}
+          {announcement}
         </p>
-        {putus && <SyncBanner terakhir={terakhir} />}
+        {connectionLost && <SyncBanner lastSyncedAt={lastSyncedAt} />}
         {!isOpen && (
           <Banner
             tone="warning"
             action={
-              <Button loading={membuka} onClick={() => ubahDapur(true)}>
+              <Button loading={storeOpenPending} onClick={() => changeStoreOpen(true)}>
                 Buka sekarang
               </Button>
             }
@@ -197,7 +184,7 @@ function Isi({
             Dapur tutup — pembeli tidak bisa memesan
           </Banner>
         )}
-        {isOutsideOpenHours(kini, buka, tutup) && (
+        {isOutsideOpenHours(serverNow, openTime, closeTime) && (
           <Banner
             tone="info"
             action={
@@ -209,35 +196,37 @@ function Isi({
               </Link>
             }
           >
-            {`Di luar jam buka (${openHoursLabel(buka, tutup)}) — pembeli belum bisa memesan sampai ${buka.replace(":", ".")}`}
+            {`Di luar jam buka (${openHoursLabel(openTime, closeTime)}) — pembeli belum bisa memesan sampai ${openTime.replace(":", ".")}`}
           </Banner>
         )}
-        {(!adaTitikTemu || menus.length === 0) && (
+        {(!hasPickupPoints || menus.length === 0) && (
           <SetupChecklist
-            adaTitikTemu={adaTitikTemu}
-            adaMenu={menus.length > 0}
-            dapurBuka={isOpen}
-            membuka={membuka}
-            onBukaDapur={() => ubahDapur(true)}
+            hasPickupPoints={hasPickupPoints}
+            hasMenus={menus.length > 0}
+            storeOpen={isOpen}
+            opening={storeOpenPending}
+            onOpenStore={() => changeStoreOpen(true)}
           />
         )}
-        <KpiRow ringkasan={ringkasan} />
+        <KpiRow summary={summary} />
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
           <OrderQueue
-            orders={efektif}
+            orders={effectiveOrders}
             menus={menus}
-            sekarang={kini}
-            baru={baru}
-            optimis={optimis}
-            onOptimis={(c, v) => setOptimis((o) => setOrDeleteKey(o, c, v))}
-            onFokusKuota={fokusKuota}
-            onTerima={terima}
-            onSegarkan={segarkan}
-            kuota={tablet ? <div className="flex flex-col gap-4">{panel}</div> : undefined}
+            now={serverNow}
+            newOrderCodes={newOrderCodes}
+            optimisticActions={optimisticActions}
+            onOptimisticChange={(code, entry) =>
+              setOptimisticActions((previous) => setOrDeleteKey(previous, code, entry))
+            }
+            onFocusQuota={focusQuota}
+            onReceiveOrder={receiveOrder}
+            onRefresh={refresh}
+            quotaPanel={isTablet ? <div className="flex flex-col gap-4">{sidePanel}</div> : undefined}
           />
-          {!tablet && (
+          {!isTablet && (
             <aside aria-label="Kuota dan menu terlaris" className="flex flex-col gap-4">
-              {panel}
+              {sidePanel}
             </aside>
           )}
         </div>

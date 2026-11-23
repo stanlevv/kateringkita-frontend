@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { MasterTable } from "@/app/(admin)/admin/components/MasterTable";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import { tabById } from "@/services/admin-master.service";
@@ -26,9 +26,9 @@ export default async function DataMasterPage({
           <MasterTable tabId={tab.id} rows={res.data} />
         </Suspense>
       ) : (
-        <GagalMuat
-          judul="Data master belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Data master belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

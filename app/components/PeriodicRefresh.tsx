@@ -8,13 +8,13 @@ import { useRouter } from "next/navigation";
  * dibuka lama (mis. percakapan tiket) menampilkan pesan baru tanpa tombol muat ulang.
  * router.refresh() mempertahankan state komponen klien (draf balasan tidak hilang).
  */
-export function MuatUlangBerkala({ ms = 5000 }: { ms?: number }) {
+export function PeriodicRefresh({ intervalMs = 5000 }: { intervalMs?: number }) {
   const router = useRouter();
   useEffect(() => {
-    const t = setInterval(() => {
+    const intervalId = setInterval(() => {
       if (document.visibilityState === "visible") router.refresh();
-    }, ms);
-    return () => clearInterval(t);
-  }, [router, ms]);
+    }, intervalMs);
+    return () => clearInterval(intervalId);
+  }, [router, intervalMs]);
   return null;
 }

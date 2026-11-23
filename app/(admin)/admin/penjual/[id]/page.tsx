@@ -1,6 +1,6 @@
 import { SearchX } from "lucide-react";
 import { MerchantDetail } from "@/app/(admin)/admin/components/MerchantDetail";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
@@ -29,9 +29,9 @@ export default async function PenjualDetailPage({ params }: { params: Promise<{ 
   if (res.status === 404) return tidakAda;
   if (!res.ok || !res.data)
     return (
-      <GagalMuat
-        judul="Penjual belum bisa dimuat"
-        isi="Terjadi kesalahan saat mengambil data penjual. Periksa koneksi lalu coba lagi."
+      <LoadError
+        title="Penjual belum bisa dimuat"
+        body="Terjadi kesalahan saat mengambil data penjual. Periksa koneksi lalu coba lagi."
       />
     );
   return (

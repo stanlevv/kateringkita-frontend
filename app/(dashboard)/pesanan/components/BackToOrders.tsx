@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 /** Tautan kembali di detail pesanan; dipakai juga oleh kerangka memuatnya supaya tetap bisa diklik selama memuat. */
-export function KembaliKePesanan() {
+export function BackToOrders() {
   return (
     <Link
       href="/pesanan"

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Download, Printer, RefreshCw } from "lucide-react";
 import { callAction } from "@/lib/action";
 import { setDineIn, createTable, updateTable } from "@/app/actions/table";
-import { gambarQr, QrMeja } from "@/app/components/meja/QrMeja";
+import { createTableQrImage, TableQr } from "@/app/components/table/TableQr";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { cx, focusRing } from "@/app/components/ui/cx";
@@ -16,7 +16,7 @@ import type { Table } from "@/types/table";
 
 async function unduh(m: Table) {
   const a = document.createElement("a");
-  a.href = await gambarQr(m.token, 1024);
+  a.href = await createTableQrImage(m.token, 1024);
   a.download = `qr-meja-${m.label}.png`;
   a.click();
 }
@@ -128,7 +128,7 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
                     !m.is_active && "opacity-60",
                   )}
                 >
-                  <QrMeja meja={m} />
+                  <TableQr table={m} />
                   <p className="font-display text-lg font-semibold text-ink">
                     Meja {m.label}
                     {!m.is_active && <span className="ml-2 text-sm font-medium text-ink-muted">(nonaktif)</span>}

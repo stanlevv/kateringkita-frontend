@@ -2,9 +2,9 @@ import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonSection, SkeletonText } from "@/app/components/ui/Skeleton";
 
 /** Kerangka MenuForm: bagian-bagian formulir + tombol simpan, pratinjau pembeli di kanan (≥ 1280 px). */
-export function RangkaFormMenu({ judul }: { judul: string }) {
+export function MenuFormSkeleton({ title }: { title: string }) {
   return (
-    <PageFrame title={judul}>
+    <PageFrame title={title}>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex flex-col gap-6">
           <SkeletonSection fields={4} />

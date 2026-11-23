@@ -8,7 +8,7 @@ import { menuStockLevel, type StockLevel } from "@/lib/dashboard";
 import type { Tone } from "@/lib/order-status";
 import type { MerchantMenu } from "@/types/menu";
 
-export const BADGE: Record<StockLevel, { label: string; tone: Tone; icon: typeof CircleX }> = {
+export const STOCK_BADGES: Record<StockLevel, { label: string; tone: Tone; icon: typeof CircleX }> = {
   habis: { label: "Habis", tone: "danger", icon: CircleX },
   menipis: { label: "Menipis", tone: "warning", icon: TriangleAlert },
   aman: { label: "Aman", tone: "success", icon: CircleCheck },
@@ -16,45 +16,49 @@ export const BADGE: Record<StockLevel, { label: string; tone: Tone; icon: typeof
 
 /** Brief §5: baris kuota; batas bawah = terjual + ditahan (DB-E4). */
 export function QuotaRow({
-  menu: m,
-  onUbah,
+  menu,
+  onQuotaChange,
   onDelta,
 }: {
   menu: MerchantMenu;
-  onUbah: (quota: number) => void;
+  onQuotaChange: (quota: number) => void;
   onDelta?: (delta: number) => void;
 }) {
-  const stok = menuStockLevel(m);
-  const b = BADGE[stok];
+  const stockLevel = menuStockLevel(menu);
+  const badge = STOCK_BADGES[stockLevel];
   return (
-    <li id={`kuota-${m.id}`} data-stok={stok} className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0">
+    <li
+      id={`kuota-${menu.id}`}
+      data-stok={stockLevel}
+      className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-medium text-ink">{m.name}</p>
-        <Badge tone={b.tone} icon={b.icon}>
-          {b.label}
+        <p className="font-medium text-ink">{menu.name}</p>
+        <Badge tone={badge.tone} icon={badge.icon}>
+          {badge.label}
         </Badge>
       </div>
       <p className="text-sm text-ink-muted">
-        Tersedia {m.available} · Ditahan {m.held_today} · Terjual {m.sold_today}
+        Tersedia {menu.available} · Ditahan {menu.held_today} · Terjual {menu.sold_today}
       </p>
       <Stepper
-        value={m.quota_today}
-        min={m.sold_today + m.held_today}
-        onChange={onUbah}
+        value={menu.quota_today}
+        min={menu.sold_today + menu.held_today}
+        onChange={onQuotaChange}
         onDelta={onDelta}
-        label={`Kuota ${m.name}`}
+        label={`Kuota ${menu.name}`}
         disabledReason="Tidak bisa di bawah porsi yang sudah dipesan"
       />
-      {stok === "habis" && (
+      {stockLevel === "habis" && (
         <div className="flex gap-2">
-          {[5, 10].map((n) => (
+          {[5, 10].map((amount) => (
             <Button
-              key={n}
+              key={amount}
               variant="secondary"
-              aria-label={`+${n} porsi ${m.name}`}
-              onClick={() => (onDelta ? onDelta(n) : onUbah(m.quota_today + n))}
+              aria-label={`+${amount} porsi ${menu.name}`}
+              onClick={() => (onDelta ? onDelta(amount) : onQuotaChange(menu.quota_today + amount))}
             >
-              +{n}
+              +{amount}
             </Button>
           ))}
         </div>

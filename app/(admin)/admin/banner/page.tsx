@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { voucherOptions } from "@/lib/voucher-options";
 import { adminFetch } from "@/services/api";
@@ -21,9 +21,9 @@ export default async function BannerAdminPage() {
       {banners.ok && banners.data ? (
         <BannerAdmin banners={banners.data} vouchers={vouchers} bolehUbah={session.user.admin_level !== "support"} />
       ) : (
-        <GagalMuat
-          judul="Banner belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil banner. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Banner belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil banner. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Printer, ScanLine } from "lucide-react";
-import { QrMeja } from "@/app/components/meja/QrMeja";
+import { TableQr } from "@/app/components/table/TableQr";
 import { Button } from "@/app/components/ui/Button";
 import type { Table } from "@/types/table";
 
@@ -31,7 +31,7 @@ export function CetakQr({ toko, meja }: { toko: string; meja: Table[] }) {
             >
               <p className="text-sm font-medium uppercase tracking-widest text-ink-muted">{toko}</p>
               <p className="font-display text-4xl font-bold text-ink">Meja {m.label}</p>
-              <QrMeja meja={m} ukuran={200} />
+              <TableQr table={m} size={200} />
               <p className="inline-flex items-center gap-2 font-semibold text-ink">
                 <ScanLine aria-hidden className="size-5 text-primary" />
                 Scan untuk lihat menu &amp; pesan

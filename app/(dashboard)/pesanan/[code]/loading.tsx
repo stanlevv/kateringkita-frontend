@@ -1,12 +1,12 @@
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonText } from "@/app/components/ui/Skeleton";
-import { KembaliKePesanan } from "../components/KembaliKePesanan";
+import { BackToOrders } from "../components/BackToOrders";
 
 // PS-N2: tautan kembali langsung bisa diklik; judul (kode pesanan) dan OrderDetail dikerangkakan.
 export default function Loading() {
   return (
     <>
-      <KembaliKePesanan />
+      <BackToOrders />
       <PageFrame>
         <div className="flex max-w-2xl flex-col gap-6 rounded-lg border border-line bg-surface p-5">
           <div className="flex gap-2">

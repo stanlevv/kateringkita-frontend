@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { getAiUsage, getAiProviders } from "@/services/admin-ai.service";
 import { requireAdmin } from "@/services/auth.service";
@@ -21,12 +21,12 @@ export default async function AdminAiPage({
     >
       <div className="flex flex-col gap-10">
         {"error" in pakai ? (
-          <GagalMuat judul="Pemakaian AI belum bisa dimuat" isi="Data gagal dimuat. Coba lagi." />
+          <LoadError title="Pemakaian AI belum bisa dimuat" body="Data gagal dimuat. Coba lagi." />
         ) : (
           <PemakaianAi data={pakai.data} />
         )}
         {"error" in r ? (
-          <GagalMuat judul="Penyedia AI belum bisa dimuat" isi="Data gagal dimuat. Coba lagi." />
+          <LoadError title="Penyedia AI belum bisa dimuat" body="Data gagal dimuat. Coba lagi." />
         ) : (
           <PenyediaAiPanel data={r.data} />
         )}

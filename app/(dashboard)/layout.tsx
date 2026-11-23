@@ -3,14 +3,14 @@ import { cookies } from "next/headers";
 import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { StoreStatusProvider, type StoreInfo } from "@/app/components/shell/StoreStatus";
-import { StatusToko } from "@/app/components/StatusToko";
+import { VerificationBanner } from "@/app/components/VerificationBanner";
 import { Toaster } from "@/app/components/ui/Toast";
 import { getUnreadNotificationCount } from "@/services/notification.service";
 import { getNeedsActionCount } from "@/services/order.service";
 import { getProfile } from "@/services/profile.service";
 import { requireMerchant } from "@/services/auth.service";
 import { getMaintenance } from "@/services/meta.service";
-import { HalamanPemeliharaan } from "@/app/components/Pemeliharaan";
+import { MaintenanceNotice } from "@/app/components/MaintenanceNotice";
 import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
 
 export const metadata: Metadata = { title: "Dashboard penjual", robots: { index: false, follow: false } };
@@ -18,21 +18,21 @@ export const metadata: Metadata = { title: "Dashboard penjual", robots: { index:
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, merchant } = await requireMerchant();
   // F27: API penjual dibalas 503 selama pemeliharaan, jadi shell diganti halaman pemberitahuan
-  const pemeliharaan = await getMaintenance();
-  if (pemeliharaan.aktif) return <HalamanPemeliharaan pesan={pemeliharaan.pesan} />;
+  const maintenance = await getMaintenance();
+  if (maintenance.aktif) return <MaintenanceNotice message={maintenance.pesan} />;
   // Badge dan status dapur dihitung di layout, jadi hanya segar saat muat penuh atau router.refresh() (polling).
-  const [profil, badge, notif, kuki] = await Promise.all([
+  const [profile, badge, unreadNotifications, cookieStore] = await Promise.all([
     getProfile(),
     getNeedsActionCount(),
     getUnreadNotificationCount(),
     cookies(),
   ]);
   const store: StoreInfo | null =
-    "data" in profil
-      ? { isOpen: profil.data.is_open, openTime: profil.data.open_time, closeTime: profil.data.close_time }
+    "data" in profile
+      ? { isOpen: profile.data.is_open, openTime: profile.data.open_time, closeTime: profile.data.close_time }
       : null;
-  const nama = String(user.full_name ?? "Penjual");
-  const toko = String(merchant?.business_name ?? "");
+  const userName = String(user.full_name ?? "Penjual");
+  const storeName = String(merchant?.business_name ?? "");
 
   return (
     <StoreStatusProvider store={store}>
@@ -46,13 +46,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar
           store={store}
           badge={badge}
-          unreadNotifications={notif}
-          mode={parseSidebarMode(kuki.get(SIDEBAR_COOKIE)?.value)}
+          unreadNotifications={unreadNotifications}
+          mode={parseSidebarMode(cookieStore.get(SIDEBAR_COOKIE)?.value)}
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Header userName={nama} storeName={toko} store={store} badge={badge} unreadNotifications={notif} />
+          <Header
+            userName={userName}
+            storeName={storeName}
+            store={store}
+            badge={badge}
+            unreadNotifications={unreadNotifications}
+          />
           <div className="px-4 pt-4 empty:hidden md:px-6">
-            <StatusToko merchant={merchant} />
+            <VerificationBanner merchant={merchant} />
           </div>
           <main id="konten" tabIndex={-1} className="flex-1 p-4 md:p-6">
             {children}

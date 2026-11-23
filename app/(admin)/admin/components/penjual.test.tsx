@@ -15,7 +15,7 @@ vi.mock("@/app/actions/admin/merchants", () => ({
   applyMerchantAction: (...a: unknown[]) => applyMerchantAction(...a),
 }));
 import { Toaster } from "@/app/components/ui/Toast";
-import { StatusToko } from "@/app/components/StatusToko";
+import { VerificationBanner } from "@/app/components/VerificationBanner";
 import type { VerificationQueueItem, Checklist as C, AdminMerchantDetail, MerchantSummary } from "@/types/admin";
 import { MerchantDetail } from "./MerchantDetail";
 import { MerchantTable } from "./MerchantTable";
@@ -310,7 +310,7 @@ describe("daftar penjual", () => {
 
 describe("banner status toko (R-15)", () => {
   it("pending", () => {
-    render(<StatusToko merchant={{ verification_status: "pending" }} />);
+    render(<VerificationBanner merchant={{ verification_status: "pending" }} />);
     expect(
       screen.getByText(
         "Toko Anda sedang diperiksa admin. Setelah terverifikasi, toko Anda bisa ditampilkan ke pembeli.",
@@ -318,22 +318,22 @@ describe("banner status toko (R-15)", () => {
     ).toBeInTheDocument();
   });
   it("needs_fix: catatan + tautan pengaturan", () => {
-    render(<StatusToko merchant={{ verification_status: "needs_fix", verification_note: "Foto buram" }} />);
+    render(<VerificationBanner merchant={{ verification_status: "needs_fix", verification_note: "Foto buram" }} />);
     expect(screen.getByText(/Admin meminta perbaikan: Foto buram/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Lengkapi pengaturan" })).toHaveAttribute("href", "/pengaturan");
   });
   it("suspended: alasan bila ada, umum bila tidak", () => {
     const { unmount } = render(
-      <StatusToko merchant={{ verification_status: "suspended", suspended_reason: "Menu palsu" }} />,
+      <VerificationBanner merchant={{ verification_status: "suspended", suspended_reason: "Menu palsu" }} />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent("Toko Anda ditangguhkan: Menu palsu");
     unmount();
-    render(<StatusToko merchant={{ verification_status: "suspended", suspended_reason: null }} />);
+    render(<VerificationBanner merchant={{ verification_status: "suspended", suspended_reason: null }} />);
     expect(screen.getByRole("alert")).toHaveTextContent("Toko Anda ditangguhkan.");
   });
   it("verified atau tanpa data: tanpa banner", () => {
-    const { container } = render(<StatusToko merchant={{ verification_status: "verified" }} />);
+    const { container } = render(<VerificationBanner merchant={{ verification_status: "verified" }} />);
     expect(container).toBeEmptyDOMElement();
-    expect(render(<StatusToko merchant={null} />).container).toBeEmptyDOMElement();
+    expect(render(<VerificationBanner merchant={null} />).container).toBeEmptyDOMElement();
   });
 });

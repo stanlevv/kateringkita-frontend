@@ -4,54 +4,54 @@ import { formatTime, formatDate } from "@/lib/format";
 import { readyStepLabel } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 
-const TAHAP: [keyof MerchantOrder, string | null][] = [
+const STEPS: [keyof MerchantOrder, string | null][] = [
   ["created_at", "Dipesan"],
   ["confirmed_at", "Dikonfirmasi"],
   ["cooking_at", "Mulai dimasak"],
   ["ready_at", null], // labelTahapSiap: pesanan meja diantar, titik temu diambil
   ["completed_at", "Selesai"],
 ];
-const OLEH = { merchant: "penjual", customer: "pembeli", system: "sistem" } as const;
+const ACTOR_LABELS = { merchant: "penjual", customer: "pembeli", system: "sistem" } as const;
 
 /** PS-N2/PS-A1: tahap yang sudah dilalui dari cap waktu; dibatalkan/kadaluarsa menutup dengan pelaku + alasan. */
-export function StatusTimeline({ order: o }: { order: MerchantOrder }) {
-  const langkah = TAHAP.filter(([k]) => o[k]).map(([k, label]) => ({
-    label: label ?? readyStepLabel(o),
-    waktu: o[k] as string,
+export function StatusTimeline({ order }: { order: MerchantOrder }) {
+  const steps = STEPS.filter(([field]) => order[field]).map(([field, label]) => ({
+    label: label ?? readyStepLabel(order),
+    time: order[field] as string,
     detail: null as string | null,
-    buruk: false,
+    failed: false,
   }));
-  if (o.status === "cancelled" || o.status === "expired") {
-    langkah.push({
-      label: o.cancelled_by
-        ? `Dibatalkan oleh ${OLEH[o.cancelled_by]}`
-        : o.status === "expired"
+  if (order.status === "cancelled" || order.status === "expired") {
+    steps.push({
+      label: order.cancelled_by
+        ? `Dibatalkan oleh ${ACTOR_LABELS[order.cancelled_by]}`
+        : order.status === "expired"
           ? "Kadaluarsa"
           : "Dibatalkan",
-      waktu: o.cancelled_at ?? o.updated_at,
+      time: order.cancelled_at ?? order.updated_at,
       detail:
         [
-          o.status === "expired" && o.cancelled_by ? "Kadaluarsa" : null,
-          o.cancel_reason && `Alasan: ${o.cancel_reason}`,
+          order.status === "expired" && order.cancelled_by ? "Kadaluarsa" : null,
+          order.cancel_reason && `Alasan: ${order.cancel_reason}`,
         ]
           .filter(Boolean)
           .join(" · ") || null,
-      buruk: true,
+      failed: true,
     });
   }
   return (
     <ol aria-label="Riwayat status" className="flex flex-col gap-3">
-      {langkah.map((l) => {
-        const Ikon = !l.buruk ? CheckCircle2 : o.status === "expired" ? TimerOff : Ban;
+      {steps.map((step) => {
+        const Icon = !step.failed ? CheckCircle2 : order.status === "expired" ? TimerOff : Ban;
         return (
-          <li key={l.label} className="flex gap-3">
-            <Ikon aria-hidden className={cx("mt-0.5 size-5 shrink-0", l.buruk ? "text-danger" : "text-success")} />
+          <li key={step.label} className="flex gap-3">
+            <Icon aria-hidden className={cx("mt-0.5 size-5 shrink-0", step.failed ? "text-danger" : "text-success")} />
             <div className="flex flex-col">
-              <span className={cx("font-medium", l.buruk ? "text-danger" : "text-ink")}>{l.label}</span>
+              <span className={cx("font-medium", step.failed ? "text-danger" : "text-ink")}>{step.label}</span>
               <span className="font-mono text-sm text-ink-muted">
-                {formatDate(l.waktu)} {formatTime(l.waktu)}
+                {formatDate(step.time)} {formatTime(step.time)}
               </span>
-              {l.detail && <span className="text-sm text-ink">{l.detail}</span>}
+              {step.detail && <span className="text-sm text-ink">{step.detail}</span>}
             </div>
           </li>
         );

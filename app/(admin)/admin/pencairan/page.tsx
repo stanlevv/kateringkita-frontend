@@ -1,5 +1,5 @@
 import { Banknote, History, Undo2 } from "lucide-react";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { Card } from "@/app/components/ui/Card";
 import { DataTable, type Column } from "@/app/components/ui/DataTable";
@@ -146,9 +146,9 @@ export default async function PencairanPage({ searchParams }: { searchParams: Pr
             </p>
           </div>
           {"error" in saldo ? (
-            <GagalMuat
-              judul="Saldo belum bisa dimuat"
-              isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
+            <LoadError
+              title="Saldo belum bisa dimuat"
+              body="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
             />
           ) : saldo.data.rows.length === 0 ? (
             <EmptyState icon={Banknote} title="Tidak ada saldo" body="Semua bagian toko sudah dicairkan." />
@@ -199,9 +199,9 @@ export default async function PencairanPage({ searchParams }: { searchParams: Pr
             </p>
           </div>
           {"error" in refund ? (
-            <GagalMuat
-              judul="Daftar pengembalian belum bisa dimuat"
-              isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
+            <LoadError
+              title="Daftar pengembalian belum bisa dimuat"
+              body="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
             />
           ) : refund.data.length === 0 ? (
             <EmptyState
@@ -222,9 +222,9 @@ export default async function PencairanPage({ searchParams }: { searchParams: Pr
         <Card className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold text-ink">Riwayat pencairan</h2>
           {!riwayat.ok || !riwayat.data ? (
-            <GagalMuat
-              judul="Riwayat belum bisa dimuat"
-              isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
+            <LoadError
+              title="Riwayat belum bisa dimuat"
+              body="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
             />
           ) : riwayat.data.length === 0 ? (
             <EmptyState icon={History} title="Belum ada pencairan" body="Pencairan yang dicatat akan muncul di sini." />

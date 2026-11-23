@@ -1,26 +1,29 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { getCategories } from "@/services/meta.service";
 import { requireMerchant } from "@/services/auth.service";
 
-const bulat = (v: string | string[] | undefined) =>
-  typeof v === "string" && /^\d{1,9}$/.test(v) ? Number(v) : undefined;
+const parseWholeNumber = (value: string | string[] | undefined) =>
+  typeof value === "string" && /^\d{1,9}$/.test(value) ? Number(value) : undefined;
 
 // M-07, MF-N1 — Tambah menu. `?hpp=&price=` dari Kalkulator HPP (HP-N2).
-export default async function MenuBaruPage({
+export default async function NewMenuPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await requireMerchant();
-  const [kategori, q] = await Promise.all([getCategories(), searchParams]);
+  const [categories, query] = await Promise.all([getCategories(), searchParams]);
   return (
     <PageHeader title="Tambah menu">
-      {"error" in kategori ? (
-        <GagalMuat judul="Formulir menu belum bisa dimuat" isi="Daftar kategori gagal dimuat. Coba lagi." />
+      {"error" in categories ? (
+        <LoadError title="Formulir menu belum bisa dimuat" body="Daftar kategori gagal dimuat. Coba lagi." />
       ) : (
-        <MenuForm categories={kategori.data} prefill={{ hpp: bulat(q.hpp), price: bulat(q.price) }} />
+        <MenuForm
+          categories={categories.data}
+          prefill={{ hpp: parseWholeNumber(query.hpp), price: parseWholeNumber(query.price) }}
+        />
       )}
     </PageHeader>
   );

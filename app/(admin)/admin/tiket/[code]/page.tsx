@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { GagalMuat } from "@/app/components/GagalMuat";
-import { MuatUlangBerkala } from "@/app/components/MuatUlangBerkala";
+import { LoadError } from "@/app/components/LoadError";
+import { PeriodicRefresh } from "@/app/components/PeriodicRefresh";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { isValidTicketCode } from "@/services/admin-ticket.service";
@@ -25,9 +25,9 @@ export default async function TiketDetailPage({ params }: { params: Promise<{ co
   if (!res.ok || !res.data) {
     return (
       <PageHeader title={`Tiket ${code}`} actions={kembali}>
-        <GagalMuat
-          judul="Tiket belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil tiket. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Tiket belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil tiket. Periksa koneksi lalu coba lagi."
         />
       </PageHeader>
     );
@@ -44,7 +44,7 @@ export default async function TiketDetailPage({ params }: { params: Promise<{ co
       }
     >
       {/* balasan pembeli muncul sendiri selama tiket belum ditutup */}
-      {t.status !== "closed" && <MuatUlangBerkala />}
+      {t.status !== "closed" && <PeriodicRefresh />}
       <TiketDetail t={t} />
     </PageHeader>
   );

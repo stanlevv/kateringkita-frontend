@@ -1,5 +1,5 @@
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { voucherOptions } from "@/lib/voucher-options";
 import { merchantFetch } from "@/services/api";
 import { requireMerchant } from "@/services/auth.service";
@@ -21,9 +21,9 @@ export default async function BannerPage() {
       {banners.ok && banners.data ? (
         <BannerToko banners={banners.data} vouchers={vouchers} />
       ) : (
-        <GagalMuat
-          judul="Banner belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil banner. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Banner belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil banner. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

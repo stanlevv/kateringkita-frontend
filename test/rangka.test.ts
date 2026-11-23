@@ -54,8 +54,8 @@ describe("kerangka memuat", () => {
       if (!existsSync(berkas)) continue;
       berkasKerangka++;
       const kerangka = baca(berkas);
-      // `title=` milik PageFrame; `judul=` masih dipakai RangkaFormMenu (halaman menu baru/ubah).
-      const judul = /\b(?:title|judul)="([^"]+)"/.exec(kerangka)?.[1];
+      // `title=` milik PageFrame dan MenuFormSkeleton (halaman menu baru/ubah).
+      const judul = /\btitle="([^"]+)"/.exec(kerangka)?.[1];
       if (!judul) {
         // Hanya halaman yang judulnya dari data (kode pesanan, nama toko) boleh tanpa judul statis.
         if (!JUDUL_DARI_DATA.has(relatif(d))) beda.push(`${relatif(berkas)}: tidak ada judul statis`);

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { AuditTable } from "@/app/(admin)/admin/components/AuditTable";
 import { LogFilters } from "@/app/(admin)/admin/components/LogFilters";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import { LIMIT_LOG } from "@/services/admin-log.service";
@@ -35,9 +35,9 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
             filtered={FILTER.some((k) => sp[k])}
           />
         ) : (
-          <GagalMuat
-            judul="Log belum bisa dimuat"
-            isi="Terjadi kesalahan saat mengambil log. Periksa koneksi lalu coba lagi."
+          <LoadError
+            title="Log belum bisa dimuat"
+            body="Terjadi kesalahan saat mengambil log. Periksa koneksi lalu coba lagi."
           />
         )}
       </Suspense>

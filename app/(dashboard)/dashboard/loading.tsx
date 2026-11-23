@@ -2,7 +2,7 @@ import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonCard, SkeletonKpi, SkeletonTabs, SkeletonText } from "@/app/components/ui/Skeleton";
 
 // Bentuk OrderCard: kode & jam, pembeli, item, titik temu, total + tombol.
-function KartuPesanan() {
+function OrderCardSkeleton() {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 pt-5">
       <div className="flex justify-between gap-2">
@@ -45,7 +45,7 @@ export default function Loading() {
             <SkeletonTabs />
             <div className="grid gap-4 2xl:grid-cols-2">
               {[0, 1, 2, 3].map((i) => (
-                <KartuPesanan key={i} />
+                <OrderCardSkeleton key={i} />
               ))}
             </div>
           </div>

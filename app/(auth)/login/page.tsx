@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/services/auth.service";
 import { getMaintenance } from "@/services/meta.service";
-import { PESAN_PEMELIHARAAN } from "@/app/components/Pemeliharaan";
+import { DEFAULT_MAINTENANCE_MESSAGE } from "@/app/components/MaintenanceNotice";
 import LoginForm from "./LoginForm";
 
 // canonical tanpa ?next=… supaya varian URL login tidak dianggap halaman berbeda.
@@ -27,7 +27,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       alasan={alasan === "sesi-habis" || alasan === "bukan-penjual" ? alasan : undefined}
       registered={registered === "1"}
       reset={reset === "1"}
-      pemeliharaan={pemeliharaan.aktif ? (pemeliharaan.pesan ?? PESAN_PEMELIHARAAN) : undefined}
+      pemeliharaan={pemeliharaan.aktif ? (pemeliharaan.pesan ?? DEFAULT_MAINTENANCE_MESSAGE) : undefined}
     />
   );
 }

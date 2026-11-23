@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { TemplateEditor } from "@/app/(dashboard)/template-wa/components/TemplateEditor";
 import { getOrders } from "@/services/order.service";
@@ -15,7 +15,7 @@ export default async function TemplateWAPage() {
       description="Atur isi pesan WhatsApp yang dikirim ke pembeli untuk setiap pesanan."
     >
       {"error" in profil ? (
-        <GagalMuat judul="Template belum bisa dimuat" isi="Data toko gagal dimuat. Coba lagi." />
+        <LoadError title="Template belum bisa dimuat" body="Data toko gagal dimuat. Coba lagi." />
       ) : (
         <TemplateEditor
           namaToko={profil.data.business_name}

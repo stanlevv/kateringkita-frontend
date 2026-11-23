@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { MerchantTable } from "@/app/(admin)/admin/components/MerchantTable";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import { LIMIT_MERCHANTS } from "@/services/admin-merchant.service";
@@ -43,9 +43,9 @@ export default async function PenjualPage({
           />
         </Suspense>
       ) : (
-        <GagalMuat
-          judul="Daftar penjual belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil daftar penjual. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Daftar penjual belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil daftar penjual. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

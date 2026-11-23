@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { voucherOptions } from "@/lib/voucher-options";
 import { adminFetch } from "@/services/api";
@@ -22,9 +22,9 @@ export default async function PopupPage() {
       {popups.ok && popups.data ? (
         <DaftarPopup popups={popups.data} vouchers={vouchers} bolehUbah={session.user.admin_level !== "support"} />
       ) : (
-        <GagalMuat
-          judul="Pop-up belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil pop-up. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Pop-up belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil pop-up. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

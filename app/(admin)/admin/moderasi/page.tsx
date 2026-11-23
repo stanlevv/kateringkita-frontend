@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ModerasiTable } from "@/app/(admin)/admin/components/ModerasiTable";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { Input } from "@/app/components/ui/Input";
@@ -107,9 +107,9 @@ export default async function ModerasiPage({
             />
           </>
         ) : (
-          <GagalMuat
-            judul="Data moderasi belum bisa dimuat"
-            isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
+          <LoadError
+            title="Data moderasi belum bisa dimuat"
+            body="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
           />
         )}
       </div>

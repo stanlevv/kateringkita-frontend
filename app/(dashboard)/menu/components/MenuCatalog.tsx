@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, SearchX, UtensilsCrossed } from "lucide-react";
 import { setMenuActive } from "@/app/actions/menus";
 import { callAction } from "@/lib/action";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { EmptyState } from "@/app/components/ui/EmptyState";
@@ -26,92 +26,91 @@ import { buildUrl } from "@/lib/url";
 import { MenuCard } from "./MenuCard";
 import { useQuota } from "@/hooks/useQuota";
 
-const LABEL: Record<MenuStatusFilter, string> = {
+const STATUS_LABELS: Record<MenuStatusFilter, string> = {
   semua: "Semua",
   aktif: "Aktif",
   menipis: "Menipis",
   habis: "Habis",
   nonaktif: "Nonaktif",
 };
-const TAMBAH = <LinkButton href="/menu/baru">Tambah menu</LinkButton>;
+const ADD_MENU_BUTTON = <LinkButton href="/menu/baru">Tambah menu</LinkButton>;
 
 /** MN-N1…N4, MN-A1/A2, MN-E1, MN-S1…S3. Filter tinggal di URL. */
 export function MenuCatalog({
   menus,
   categories,
-  galat,
+  loadFailed,
 }: {
   menus: MerchantMenu[];
   categories: Category[];
-  galat: boolean;
+  loadFailed: boolean;
 }) {
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
-  const q = params.get("q") ?? "";
-  const kategori = params.get("kategori") ?? "";
-  const s = params.get("status");
-  const status: MenuStatusFilter = MENU_STATUS_FILTERS.find((x) => x === s) ?? "semua";
+  const searchQuery = params.get("q") ?? "";
+  const category = params.get("kategori") ?? "";
+  const statusParam = params.get("status");
+  const status: MenuStatusFilter = MENU_STATUS_FILTERS.find((value) => value === statusParam) ?? "semua";
 
-  const [lokal, setLokal] = useState<Record<number, MerchantMenu>>({});
+  const [localMenus, setLocalMenus] = useState<Record<number, MerchantMenu>>({});
   // D13: overlay lokal hanya sampai data server berikutnya tiba (pola useQuota).
-  const [dariMenus, setDariMenus] = useState(menus);
-  if (menus !== dariMenus) {
-    setDariMenus(menus);
-    setLokal({});
+  const [seenMenus, setSeenMenus] = useState(menus);
+  if (menus !== seenMenus) {
+    setSeenMenus(menus);
+    setLocalMenus({});
   }
-  const [qInput, setQInput] = useState(q);
-  const [konfirmasi, setKonfirmasi] = useState<MerchantMenu | null>(null);
+  const [searchInput, setSearchInput] = useState(searchQuery);
+  const [pendingDeactivate, setPendingDeactivate] = useState<MerchantMenu | null>(null);
 
   // Baris dari server disalin utuh (terjual & ditahan ikut berubah).
-  const {
-    changeQuotaBy: ubahDelta,
-    setQuota: ubahMutlak,
-    withDraft: dengan,
-  } = useQuota((m) => setLokal((l) => ({ ...l, [m.id]: m })), menus);
+  const { changeQuotaBy, setQuota, withDraft } = useQuota(
+    (menu) => setLocalMenus((previous) => ({ ...previous, [menu.id]: menu })),
+    menus,
+  );
 
   // Nilai terbaru untuk timer/handler; state di closure bisa basi saat timer berjalan.
-  const terbaru = useRef({ params: params.toString(), qInput });
+  const latest = useRef({ params: params.toString(), searchInput });
   useEffect(() => {
-    terbaru.current = { params: params.toString(), qInput };
+    latest.current = { params: params.toString(), searchInput };
   });
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const batalkanTimer = () => {
+  const cancelTimer = () => {
     clearTimeout(timer.current);
     timer.current = undefined;
   };
-  useEffect(() => batalkanTimer, []);
+  useEffect(() => cancelTimer, []);
 
   // Back/tautan mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
   useEffect(() => {
-    if (!timer.current && terbaru.current.qInput.trim() !== q) setQInput(q);
-  }, [q]);
+    if (!timer.current && latest.current.searchInput.trim() !== searchQuery) setSearchInput(searchQuery);
+  }, [searchQuery]);
 
-  function ke(ubahan: Partial<Record<"q" | "kategori" | "status", string>>) {
-    batalkanTimer();
+  function navigate(changes: Partial<Record<"q" | "kategori" | "status", string>>) {
+    cancelTimer();
     // Perubahan kategori/tab membawa ketikan q yang belum sempat dikirim.
-    const semua = "q" in ubahan ? ubahan : { ...ubahan, q: terbaru.current.qInput.trim() };
-    router.replace(buildUrl(path, terbaru.current.params, semua, ["semua"]), { scroll: false });
+    const nextParams = "q" in changes ? changes : { ...changes, q: latest.current.searchInput.trim() };
+    router.replace(buildUrl(path, latest.current.params, nextParams, ["semua"]), { scroll: false });
   }
 
   // MN-N2: pencarian ke URL setelah 300 ms berhenti mengetik.
-  function ketik(v: string) {
-    setQInput(v);
-    batalkanTimer();
-    timer.current = setTimeout(() => ke({ q: v.trim() }), 300);
+  function updateSearch(value: string) {
+    setSearchInput(value);
+    cancelTimer();
+    timer.current = setTimeout(() => navigate({ q: value.trim() }), 300);
   }
 
-  function hapusFilter() {
-    batalkanTimer();
-    setQInput("");
+  function clearFilters() {
+    cancelTimer();
+    setSearchInput("");
     router.replace(path, { scroll: false });
   }
 
-  if (galat)
+  if (loadFailed)
     return (
-      <GagalMuat
-        judul="Menu belum bisa dimuat"
-        isi="Terjadi kesalahan saat mengambil daftar menu. Periksa koneksi lalu coba lagi."
+      <LoadError
+        title="Menu belum bisa dimuat"
+        body="Terjadi kesalahan saat mengambil daftar menu. Periksa koneksi lalu coba lagi."
       />
     );
   if (menus.length === 0) {
@@ -120,41 +119,42 @@ export function MenuCatalog({
         icon={UtensilsCrossed}
         title="Belum ada menu"
         body="Belum ada menu. Tambahkan menu pertama agar pembeli bisa memesan."
-        action={TAMBAH}
+        action={ADD_MENU_BUTTON}
       />
     );
   }
 
-  const daftar = menus.map((m) => lokal[m.id] ?? m).map(dengan);
-  const tab = countMenuTabs(filterBySearchAndCategory(daftar, { q, category: kategori }));
-  const hasil = filterMenus(daftar, { q, category: kategori, status });
+  const displayedMenus = menus.map((menu) => localMenus[menu.id] ?? menu).map(withDraft);
+  const tabCounts = countMenuTabs(filterBySearchAndCategory(displayedMenus, { q: searchQuery, category }));
+  const filteredMenus = filterMenus(displayedMenus, { q: searchQuery, category, status });
 
-  async function setAktif(m: MerchantMenu, aktif: boolean) {
-    const setFlag = (v: boolean) => setLokal((l) => ({ ...l, [m.id]: { ...(l[m.id] ?? m), is_active: v } }));
-    setFlag(aktif);
-    const r = await callAction(() => setMenuActive(m.id, aktif));
-    if ("error" in r) {
-      setFlag(!aktif); // MN-E1
-      toast({ tone: "danger", message: r.error.message });
+  async function setActive(menu: MerchantMenu, active: boolean) {
+    const setFlag = (value: boolean) =>
+      setLocalMenus((previous) => ({ ...previous, [menu.id]: { ...(previous[menu.id] ?? menu), is_active: value } }));
+    setFlag(active);
+    const result = await callAction(() => setMenuActive(menu.id, active));
+    if ("error" in result) {
+      setFlag(!active); // MN-E1
+      toast({ tone: "danger", message: result.error.message });
       return;
     }
     toast(
-      aktif
+      active
         ? { tone: "success", message: "Menu diaktifkan" }
         : {
             tone: "success",
             message: "Menu dinonaktifkan",
-            action: { label: "Batalkan", onClick: () => void setAktif(m, true) },
+            action: { label: "Batalkan", onClick: () => void setActive(menu, true) },
           },
     );
   }
 
-  const namaKategori = categories.find((c) => c.slug === kategori)?.name ?? kategori;
-  const kosong = q
-    ? `Tidak ada menu yang cocok dengan "${q}"`
-    : kategori
-      ? `Tidak ada menu di kategori "${namaKategori}"`
-      : `Tidak ada menu dengan status "${LABEL[status]}"`;
+  const categoryName = categories.find((candidate) => candidate.slug === category)?.name ?? category;
+  const emptyMessage = searchQuery
+    ? `Tidak ada menu yang cocok dengan "${searchQuery}"`
+    : category
+      ? `Tidak ada menu di kategori "${categoryName}"`
+      : `Tidak ada menu dengan status "${STATUS_LABELS[status]}"`;
 
   return (
     <div className="flex flex-col gap-4">
@@ -168,21 +168,21 @@ export function MenuCatalog({
             type="search"
             aria-label="Cari menu"
             placeholder="Cari nama menu"
-            value={qInput}
-            onChange={(e) => ketik(e.target.value)}
+            value={searchInput}
+            onChange={(event) => updateSearch(event.target.value)}
             className="pl-10"
           />
         </div>
         <Select
           aria-label="Kategori"
-          value={kategori}
-          onChange={(e) => ke({ kategori: e.target.value })}
+          value={category}
+          onChange={(event) => navigate({ kategori: event.target.value })}
           className="sm:w-56"
         >
           <option value="">Semua kategori</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.slug}>
-              {c.name}
+          {categories.map((categoryOption) => (
+            <option key={categoryOption.id} value={categoryOption.slug}>
+              {categoryOption.name}
             </option>
           ))}
         </Select>
@@ -190,45 +190,45 @@ export function MenuCatalog({
       <Tabs
         label="Status menu"
         value={status}
-        onChange={(id) => ke({ status: id })}
-        tabs={MENU_STATUS_FILTERS.map((id) => ({ id, label: LABEL[id], count: tab[id] }))}
+        onChange={(id) => navigate({ status: id })}
+        tabs={MENU_STATUS_FILTERS.map((id) => ({ id, label: STATUS_LABELS[id], count: tabCounts[id] }))}
       />
-      {hasil.length === 0 ? (
+      {filteredMenus.length === 0 ? (
         <EmptyState
           icon={SearchX}
           title="Menu tidak ditemukan"
-          body={kosong}
+          body={emptyMessage}
           action={
-            <Button variant="secondary" onClick={hapusFilter}>
+            <Button variant="secondary" onClick={clearFilters}>
               Hapus filter
             </Button>
           }
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {hasil.map((m) => (
+          {filteredMenus.map((menu) => (
             <MenuCard
-              key={m.id}
-              menu={m}
-              onKuota={(n) => ubahMutlak(m.id, n)}
-              onDelta={(d) => ubahDelta(m.id, d)}
-              onNonaktif={() => setKonfirmasi(m)}
-              onAktif={() => void setAktif(m, true)}
+              key={menu.id}
+              menu={menu}
+              onQuotaChange={(quota) => setQuota(menu.id, quota)}
+              onDelta={(delta) => changeQuotaBy(menu.id, delta)}
+              onDeactivate={() => setPendingDeactivate(menu)}
+              onActivate={() => void setActive(menu, true)}
             />
           ))}
         </div>
       )}
       <ConfirmDialog
-        open={!!konfirmasi}
-        onClose={() => setKonfirmasi(null)}
+        open={!!pendingDeactivate}
+        onClose={() => setPendingDeactivate(null)}
         tone="danger"
         title="Nonaktifkan menu?"
         body="Menu disembunyikan dari pembeli. Pesanan lama tetap tercatat."
         confirmLabel="Nonaktifkan menu"
         onConfirm={() => {
-          const m = konfirmasi!;
-          setKonfirmasi(null);
-          void setAktif(m, false);
+          const menu = pendingDeactivate!;
+          setPendingDeactivate(null);
+          void setActive(menu, false);
         }}
       />
     </div>

@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { MenuRatings, RatingSummary } from "@/app/(dashboard)/ulasan/components/RatingSummary";
 import { ReviewList } from "@/app/(dashboard)/ulasan/components/ReviewList";
 import { PageHeader } from "@/app/components/shell/PageHeader";
@@ -23,9 +23,9 @@ export default async function UlasanPage({
   if ("error" in ulasan) {
     return (
       <PageHeader title="Ulasan">
-        <GagalMuat
-          judul="Ulasan belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil ulasan. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Ulasan belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil ulasan. Periksa koneksi lalu coba lagi."
         />
       </PageHeader>
     );

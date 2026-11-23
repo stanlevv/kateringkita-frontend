@@ -6,23 +6,23 @@ import { todayWib } from "@/lib/format";
 import { STATUS_FILTER } from "@/lib/order-filter";
 import { requireMerchant } from "@/services/auth.service";
 
-const satu = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+const firstValue = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
 
 // M-04, M-08 — Daftar pesanan (PS-N1, PS-N3, PS-S1). Filter dan halaman di URL, diproses server.
-export default async function PesananPage({
+export default async function OrdersPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await requireMerchant();
-  const sp = await searchParams;
-  const tanggal = satu(sp.tanggal);
-  const status = STATUS_FILTER.find((s) => s.id === satu(sp.status))?.id;
+  const query = await searchParams;
+  const date = firstValue(query.tanggal);
+  const status = STATUS_FILTER.find((filter) => filter.id === firstValue(query.status))?.id;
   const orders = await getOrders({
     status,
-    date: /^\d{4}-\d{2}-\d{2}$/.test(tanggal) ? tanggal : todayWib(),
-    q: satu(sp.q).trim().slice(0, 50) || undefined,
-    page: Math.max(1, Math.floor(Number(satu(sp.page))) || 1),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : todayWib(),
+    q: firstValue(query.q).trim().slice(0, 50) || undefined,
+    page: Math.max(1, Math.floor(Number(firstValue(query.page))) || 1),
   });
   return (
     <PageHeader title="Pesanan">
@@ -30,7 +30,7 @@ export default async function PesananPage({
         <OrderTable
           rows={"data" in orders ? orders.data.rows : []}
           total={"data" in orders ? orders.data.total : 0}
-          galat={"error" in orders}
+          loadFailed={"error" in orders}
         />
       </Suspense>
     </PageHeader>

@@ -12,7 +12,7 @@ export function GantiSandiWajib() {
       title="Ganti kata sandi sementara"
       description="Akun Anda memakai kata sandi sementara. Buat kata sandi sendiri sebelum memakai panel admin."
     >
-      <ChangePasswordForm onSelesai={() => router.refresh()} />
+      <ChangePasswordForm onPasswordChanged={() => router.refresh()} />
     </PageHeader>
   );
 }

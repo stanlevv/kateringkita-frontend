@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Banner } from "@/app/components/ui/Banner";
 
 /** R-15 — banner status verifikasi toko di atas konten penjual; terverifikasi tidak menampilkan apa pun. */
-export function StatusToko({ merchant }: { merchant: Record<string, unknown> | null }) {
+export function VerificationBanner({ merchant }: { merchant: Record<string, unknown> | null }) {
   const note = typeof merchant?.verification_note === "string" ? merchant.verification_note : null;
-  const alasan = typeof merchant?.suspended_reason === "string" ? merchant.suspended_reason : null;
+  const suspendedReason = typeof merchant?.suspended_reason === "string" ? merchant.suspended_reason : null;
   switch (merchant?.verification_status) {
     case "pending":
       return (
@@ -28,7 +28,8 @@ export function StatusToko({ merchant }: { merchant: Record<string, unknown> | n
     case "suspended":
       return (
         <Banner tone="danger">
-          Toko Anda ditangguhkan{alasan ? `: ${alasan}` : ". Hubungi admin untuk informasi lebih lanjut."}
+          Toko Anda ditangguhkan
+          {suspendedReason ? `: ${suspendedReason}` : ". Hubungi admin untuk informasi lebih lanjut."}
         </Banner>
       );
     default:

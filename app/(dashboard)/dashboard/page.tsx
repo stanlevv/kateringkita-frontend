@@ -8,17 +8,22 @@ import { requireMerchant } from "@/services/auth.service";
 // Selalu merender DashboardLive: galat saat polling memakai data terakhir di klien (DB-E5), bukan layar gagal.
 export default async function DashboardPage() {
   await requireMerchant();
-  const [orders, menus, profil] = await Promise.all([getQueue(), getMenus(), getProfile()]);
-  if ("error" in orders || "error" in menus || "error" in profil) {
-    return <DashboardLive data={null} galat />;
+  const [orders, menus, profile] = await Promise.all([getQueue(), getMenus(), getProfile()]);
+  if ("error" in orders || "error" in menus || "error" in profile) {
+    return <DashboardLive data={null} loadFailed />;
   }
   // Komponen server dirender sekali per permintaan; waktu ini dasar "Diperbarui N detik lalu" di klien (sama saat hidrasi).
   // eslint-disable-next-line react-hooks/purity
-  const dimuat = Date.now();
+  const loadedAt = Date.now();
   return (
     <DashboardLive
-      galat={false}
-      data={{ orders: orders.data, menus: menus.data, adaTitikTemu: profil.data.pickup_point_ids.length > 0, dimuat }}
+      loadFailed={false}
+      data={{
+        orders: orders.data,
+        menus: menus.data,
+        hasPickupPoints: profile.data.pickup_point_ids.length > 0,
+        loadedAt,
+      }}
     />
   );
 }

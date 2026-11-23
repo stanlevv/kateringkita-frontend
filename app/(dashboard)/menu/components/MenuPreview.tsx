@@ -37,11 +37,11 @@ export function MenuPreview({
         {options.length > 0 && (
           <ul className="text-sm text-ink-muted">
             {options
-              .filter((o) => o.name.trim())
-              .map((o, i) => (
+              .filter((option) => option.name.trim())
+              .map((option, i) => (
                 <li key={i}>
-                  {o.name.trim()}
-                  {o.extra_price > 0 && ` (+${formatRupiah(o.extra_price)})`}
+                  {option.name.trim()}
+                  {option.extra_price > 0 && ` (+${formatRupiah(option.extra_price)})`}
                 </li>
               ))}
           </ul>

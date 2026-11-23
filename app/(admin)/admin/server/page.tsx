@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { CircleX, Clock, Database, Server } from "lucide-react";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { KpiCard } from "@/app/components/ui/KpiCard";
 import { Pagination } from "@/app/components/ui/Pagination";
@@ -56,7 +56,7 @@ export default async function ServerPage({
     <PageHeader title="Server" description="Kondisi backend, error 5xx, dan request lambat. Log disimpan 30 hari.">
       <div className="flex flex-col gap-6">
         {"error" in st ? (
-          <GagalMuat judul="Status server belum bisa dimuat" isi="Backend tidak menjawab. Coba lagi sebentar lagi." />
+          <LoadError title="Status server belum bisa dimuat" body="Backend tidak menjawab. Coba lagi sebentar lagi." />
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -87,7 +87,7 @@ export default async function ServerPage({
             <FilterLogServer />
           </Suspense>
           {!log.ok || !log.data ? (
-            <GagalMuat judul="Log belum bisa dimuat" isi="Terjadi kesalahan saat mengambil log. Coba lagi." />
+            <LoadError title="Log belum bisa dimuat" body="Terjadi kesalahan saat mengambil log. Coba lagi." />
           ) : log.data.length === 0 ? (
             <p className="rounded-lg border border-dashed border-line-strong p-6 text-center text-ink-muted">
               Tidak ada log yang cocok.

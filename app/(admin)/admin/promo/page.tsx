@@ -2,7 +2,7 @@ import { savePlatformPromo, setPlatformPromoActive } from "@/app/actions/admin/p
 import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
 import { CsContactForm } from "@/app/(admin)/admin/components/CsContactForm";
 import { PemeliharaanForm } from "@/app/(admin)/admin/components/PemeliharaanForm";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PromoList } from "@/app/components/promo/PromoList";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
@@ -28,9 +28,9 @@ export default async function PromoPlatformPage() {
             <PemeliharaanForm nilai={biaya.data.maintenance ?? { aktif: false, pesan: null }} />
           </div>
         ) : (
-          <GagalMuat
-            judul="Biaya layanan belum bisa dimuat"
-            isi="Terjadi kesalahan saat mengambil biaya layanan. Periksa koneksi lalu coba lagi."
+          <LoadError
+            title="Biaya layanan belum bisa dimuat"
+            body="Terjadi kesalahan saat mengambil biaya layanan. Periksa koneksi lalu coba lagi."
           />
         )}
         <PromoList

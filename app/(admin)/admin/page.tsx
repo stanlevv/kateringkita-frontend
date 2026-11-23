@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { SummaryCards } from "@/app/(admin)/admin/components/SummaryCards";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
@@ -14,9 +14,9 @@ export default async function AdminPage() {
       {res.ok && res.data ? (
         <SummaryCards data={res.data} />
       ) : (
-        <GagalMuat
-          judul="Ringkasan belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil data platform. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Ringkasan belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil data platform. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

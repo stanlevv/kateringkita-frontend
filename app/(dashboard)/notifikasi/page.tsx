@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { requireMerchant } from "@/services/auth.service";
 import { getNotifications } from "@/services/notification.service";
@@ -18,9 +18,9 @@ export default async function NotifikasiPage({
   return (
     <PageHeader title="Notifikasi" description="Pengumuman dari admin dan kabar tentang toko kamu.">
       {"error" in r ? (
-        <GagalMuat
-          judul="Notifikasi belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil notifikasi. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Notifikasi belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil notifikasi. Periksa koneksi lalu coba lagi."
         />
       ) : (
         <DaftarNotifikasi rows={r.data.rows} total={r.data.total} page={page} unread={r.data.unread} />

@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
@@ -17,7 +17,7 @@ export default async function KelolaAdminPage() {
       {res.ok && res.data ? (
         <AdminTable rows={res.data} sayaId={Number(user.id)} />
       ) : (
-        <GagalMuat judul="Daftar admin belum bisa dimuat" isi={res.error?.message ?? "Coba muat ulang halaman."} />
+        <LoadError title="Daftar admin belum bisa dimuat" body={res.error?.message ?? "Coba muat ulang halaman."} />
       )}
     </PageHeader>
   );

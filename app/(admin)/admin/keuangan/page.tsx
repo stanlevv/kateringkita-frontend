@@ -1,5 +1,5 @@
 import { Download, Landmark, ReceiptText, Store, Tag } from "lucide-react";
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { Card } from "@/app/components/ui/Card";
 import { cx, focusRing } from "@/app/components/ui/cx";
@@ -47,9 +47,9 @@ export default async function KeuanganPage({
       <div className="flex flex-col gap-6">
         <RangePicker key={`${dari}|${sampai}|${galat}`} from={dari} to={sampai} today={hariIni} error={galat} />
         {"error" in res ? (
-          <GagalMuat
-            judul="Rekap keuangan belum bisa dimuat"
-            isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
+          <LoadError
+            title="Rekap keuangan belum bisa dimuat"
+            body="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
           />
         ) : (
           <>

@@ -1,5 +1,5 @@
-import { RangkaFormMenu } from "../components/RangkaFormMenu";
+import { MenuFormSkeleton } from "../components/MenuFormSkeleton";
 
 export default function Loading() {
-  return <RangkaFormMenu judul="Ubah menu" />;
+  return <MenuFormSkeleton title="Ubah menu" />;
 }

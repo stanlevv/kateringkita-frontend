@@ -1,4 +1,4 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
@@ -41,9 +41,9 @@ export default async function HasilAiPage({
           bolehUbah={session.user.admin_level !== "support"}
         />
       ) : (
-        <GagalMuat
-          judul="Hasil AI belum bisa dimuat"
-          isi="Terjadi kesalahan saat mengambil hasil AI. Periksa koneksi lalu coba lagi."
+        <LoadError
+          title="Hasil AI belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil hasil AI. Periksa koneksi lalu coba lagi."
         />
       )}
     </PageHeader>

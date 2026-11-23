@@ -5,15 +5,15 @@ import { cx, focusRing } from "@/app/components/ui/cx";
 import { actionTexts, type OrderAction } from "@/lib/order-status";
 
 /** Cara menampilkan galat orderAction; dipakai antrean dashboard dan detail pesanan. */
-export function galatAksi(
-  kode: string,
-  aksi: OrderAction,
-  pesan?: string,
-): { jenis: "stok" } | { jenis: "toast"; tone: "warning" | "danger"; message: string; muatUlang: boolean } {
-  if (kode === "OUT_OF_STOCK") return { jenis: "stok" };
-  if (kode === "CONFLICT")
-    return { jenis: "toast", tone: "warning", message: pesan || "Pesanan sudah berubah status", muatUlang: true };
-  return { jenis: "toast", tone: "danger", message: actionTexts[aksi].failure, muatUlang: false };
+export function actionErrorView(
+  code: string,
+  action: OrderAction,
+  message?: string,
+): { kind: "stok" } | { kind: "toast"; tone: "warning" | "danger"; message: string; reload: boolean } {
+  if (code === "OUT_OF_STOCK") return { kind: "stok" };
+  if (code === "CONFLICT")
+    return { kind: "toast", tone: "warning", message: message || "Pesanan sudah berubah status", reload: true };
+  return { kind: "toast", tone: "danger", message: actionTexts[action].failure, reload: false };
 }
 
 /** M-04, M-11: lewat Route Handler yang mengisi templat pesan toko lalu membuka wa.me. */
@@ -34,7 +34,7 @@ export function ChatWaLink({ code }: { code: string }) {
   );
 }
 
-export function TombolTolak({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) {
+export function RejectButton({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) {
   return (
     <Button variant="secondary" className="text-danger" disabled={disabled} onClick={onClick}>
       Tolak
@@ -43,16 +43,16 @@ export function TombolTolak({ disabled, onClick }: { disabled?: boolean; onClick
 }
 
 /** Stok tidak cukup saat konfirmasi (DB-E2). */
-export function StokDialog({
+export function OutOfStockDialog({
   code,
   onClose,
-  onTolak,
-  onTambah,
+  onReject,
+  onAddQuota,
 }: {
   code: string | null;
   onClose: () => void;
-  onTolak: () => void;
-  onTambah: () => void;
+  onReject: () => void;
+  onAddQuota: () => void;
 }) {
   return (
     <Dialog open={!!code} onClose={onClose} title="Stok tidak cukup untuk pesanan ini">
@@ -60,10 +60,10 @@ export function StokDialog({
         Kuota menu di pesanan {code} sudah tidak mencukupi. Tambah kuota lalu konfirmasi lagi, atau tolak pesanan.
       </p>
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" className="text-danger" onClick={onTolak}>
+        <Button variant="secondary" className="text-danger" onClick={onReject}>
           Tolak pesanan
         </Button>
-        <Button onClick={onTambah}>Tambah kuota</Button>
+        <Button onClick={onAddQuota}>Tambah kuota</Button>
       </div>
     </Dialog>
   );

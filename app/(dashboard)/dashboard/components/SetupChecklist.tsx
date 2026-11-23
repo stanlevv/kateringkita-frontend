@@ -4,43 +4,43 @@ import { Button } from "@/app/components/ui/Button";
 import { cx, focusRing } from "@/app/components/ui/cx";
 
 type Props = {
-  adaTitikTemu: boolean;
-  adaMenu: boolean;
-  dapurBuka: boolean;
-  onBukaDapur: () => void;
-  membuka?: boolean;
+  hasPickupPoints: boolean;
+  hasMenus: boolean;
+  storeOpen: boolean;
+  onOpenStore: () => void;
+  opening?: boolean;
 };
 
-const tautan = cx(
+const LINK_CLASS = cx(
   "inline-flex min-h-11 items-center font-medium text-primary underline-offset-4 hover:underline",
   focusRing,
 );
 
 /** DB-A5: kartu Siapkan toko, langkah dicentang otomatis dari data. */
-export function SetupChecklist({ adaTitikTemu, adaMenu, dapurBuka, onBukaDapur, membuka }: Props) {
-  const langkah = [
+export function SetupChecklist({ hasPickupPoints, hasMenus, storeOpen, onOpenStore, opening }: Props) {
+  const steps = [
     {
-      selesai: adaTitikTemu,
-      isi: (
-        <Link href="/pengaturan?lengkapi=titik-temu" className={tautan}>
+      done: hasPickupPoints,
+      content: (
+        <Link href="/pengaturan?lengkapi=titik-temu" className={LINK_CLASS}>
           Lengkapi pengaturan
         </Link>
       ),
     },
     {
-      selesai: adaMenu,
-      isi: (
-        <Link href="/menu/baru" className={tautan}>
+      done: hasMenus,
+      content: (
+        <Link href="/menu/baru" className={LINK_CLASS}>
           Tambah menu pertama
         </Link>
       ),
     },
     {
-      selesai: dapurBuka,
-      isi: dapurBuka ? (
+      done: storeOpen,
+      content: storeOpen ? (
         <span className="inline-flex min-h-11 items-center font-medium text-ink">Buka dapur</span>
       ) : (
-        <Button variant="secondary" loading={membuka} onClick={onBukaDapur}>
+        <Button variant="secondary" loading={opening} onClick={onOpenStore}>
           Buka dapur
         </Button>
       ),
@@ -53,19 +53,19 @@ export function SetupChecklist({ adaTitikTemu, adaMenu, dapurBuka, onBukaDapur, 
       </h2>
       <p className="text-sm text-ink-muted">Selesaikan tiga langkah ini agar pembeli bisa mulai memesan.</p>
       <ol className="mt-3 flex flex-col gap-1">
-        {langkah.map((l, i) => (
-          <li key={i} data-selesai={String(l.selesai)} className="flex items-center gap-3">
+        {steps.map((step, i) => (
+          <li key={i} data-selesai={String(step.done)} className="flex items-center gap-3">
             <span
               aria-hidden
               className={cx(
                 "inline-flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-                l.selesai ? "bg-success-bg text-success" : "bg-subtle text-ink",
+                step.done ? "bg-success-bg text-success" : "bg-subtle text-ink",
               )}
             >
-              {l.selesai ? <Check className="size-4" /> : i + 1}
+              {step.done ? <Check className="size-4" /> : i + 1}
             </span>
-            {l.isi}
-            <span className="text-sm text-ink-muted">{l.selesai ? "Selesai" : "Belum"}</span>
+            {step.content}
+            <span className="text-sm text-ink-muted">{step.done ? "Selesai" : "Belum"}</span>
           </li>
         ))}
       </ol>
