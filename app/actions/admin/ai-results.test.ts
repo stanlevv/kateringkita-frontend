@@ -1,3 +1,6 @@
+// Test server action verifyAiResult (app/actions/admin/ai-results.ts): setujui/tolak hasil AI beserta catatan.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();

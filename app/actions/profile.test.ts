@@ -1,3 +1,6 @@
+// Test server action saveProfile (app/actions/profile.ts): hanya field yang boleh diubah yang dikirim ke backend.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const cookieJar = { value: undefined as string | undefined };

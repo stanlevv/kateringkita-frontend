@@ -1,3 +1,6 @@
+// Test server action changePassword (app/actions/account.ts): validasi isian, skenario pratinjau, dan galat backend.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const cookieJar = { value: undefined as string | undefined };

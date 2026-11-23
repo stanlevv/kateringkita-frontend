@@ -1,3 +1,6 @@
+// Test server action orderAction (app/actions/orders.ts): aksi pesanan, alasan tolak, skenario pratinjau, dan galat backend.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 

@@ -1,3 +1,6 @@
+// Test server action auth (app/actions/auth.ts): tujuan setelah login per peran, IP pengunjung ke backend, dan lupa kata sandi.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const redirect = vi.fn((target: string) => {

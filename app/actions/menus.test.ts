@@ -1,3 +1,6 @@
+// Test server action menu (app/actions/menus.ts): simpan menu, ubah kuota, aktif/nonaktif, dan minta alamat unggah.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const cookieJar = { value: undefined as string | undefined };

@@ -1,3 +1,6 @@
+// Test server action moderasi (app/actions/admin/moderation.ts): sembunyikan/turunkan dengan alasan dan hapus foto menu.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn(async () => ({}));

@@ -1,3 +1,6 @@
+// Test server action setStoreOpen (app/actions/store.ts): buka/tutup dapur dan skenario gagal.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getScenario = vi.fn();

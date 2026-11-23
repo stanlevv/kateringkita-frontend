@@ -1,3 +1,6 @@
+// Test server action applyMerchantAction (app/actions/admin/merchants.ts): aksi status penjual dan alasan wajib.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();

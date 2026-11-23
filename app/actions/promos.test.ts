@@ -1,3 +1,6 @@
+// Test server action promo penjual (app/actions/promos.ts): simpan, aktif/nonaktif, dan hapus promo.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const cookieJar = { value: undefined as string | undefined };

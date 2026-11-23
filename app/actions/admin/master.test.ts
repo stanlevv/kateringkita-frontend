@@ -1,3 +1,6 @@
+// Test server action data master (master.ts) serta promo platform dan biaya layanan (promos.ts) di app/actions/admin.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();
@@ -67,7 +70,7 @@ describe("master", () => {
       second = { id: 2, sort_order: 2 };
     const activeResult = await setMasterActive("users", 1, true);
     const swapResult = await swapSortOrder("users", first, second);
-    const saveResult = await saveMaster("users", null, { name: "a" }); // cekMaster sendiri memberi fields; penjaga kind tidak
+    const saveResult = await saveMaster("users", null, { name: "a" }); // validateMaster sendiri memberi fields; penjaga kind (jenis data) tidak
     for (const result of [activeResult, swapResult, saveResult])
       expect("error" in result && result.error.code).toBe("VALIDATION_ERROR");
     expect("error" in saveResult && saveResult.error.fields).toBeUndefined();

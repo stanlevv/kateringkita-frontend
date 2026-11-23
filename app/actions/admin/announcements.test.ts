@@ -1,3 +1,6 @@
+// Test server action pengumuman (announcements.ts), serta kontak CS dan mode pemeliharaan (promos.ts) di app/actions/admin.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn(async () => ({}));

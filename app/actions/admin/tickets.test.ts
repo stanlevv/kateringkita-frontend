@@ -1,3 +1,6 @@
+// Test server action tiket bantuan (app/actions/admin/tickets.ts): balas dan tutup tiket.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();

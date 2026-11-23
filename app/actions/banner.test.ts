@@ -1,3 +1,6 @@
+// Test server action banner penjual (app/actions/banner.ts) dan banner admin (app/actions/admin/banner.ts).
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireMerchant = vi.fn();

@@ -1,3 +1,6 @@
+// Test server action askAssistant (app/actions/assistant.ts): pertanyaan dirapikan dan dibatasi 1–500 karakter.
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireMerchant = vi.fn(async () => ({}));
