@@ -1,7 +1,7 @@
-// Halaman /admin/server: status server dan log request bermasalah. Bagian atas menampilkan kondisi backend (jumlah error
-// 5xx dan request lambat 24 jam terakhir, koneksi database, lama server menyala), lalu grafik masalah per jam. Bagian
-// bawah berisi log: setiap error 5xx (galat di sisi server) dan request lambat (lebih dari 2 detik) dicatat backend dan
-// disimpan 30 hari. Server component: membaca searchParams (?level=&q=&page=), mengambil data lewat
+// Halaman /admin/server: status server dan log request bermasalah. Bagian atas menampilkan kondisi backend (jumlah
+// error 5xx dan request lambat 24 jam terakhir, koneksi database, lama server menyala), lalu grafik masalah per jam.
+// Bagian bawah berisi log: setiap error 5xx (galat di sisi server) dan request lambat (lebih dari 2 detik) dicatat
+// backend dan disimpan 30 hari. Server component: membaca searchParams (?level=&q=&page=), mengambil data lewat
 // services/admin-server.service.ts (GET /admin/server-status dan /admin/server-logs). Hanya admin super.
 import { Suspense } from "react";
 import { CircleX, Clock, Database, Server } from "lucide-react";

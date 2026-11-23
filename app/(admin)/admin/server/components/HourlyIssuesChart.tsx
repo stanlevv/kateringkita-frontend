@@ -10,7 +10,8 @@ import { formatTime } from "@/lib/format";
 import type { HourlyServerStats } from "@/types/server";
 
 // Dua seri grafik; `key` sama dengan nama field di data backend (error, lambat). Warna status tetap (merah untuk
-// kritis, kuning untuk peringatan). Kuning kontrasnya < 3:1 di latar terang, jadi selalu berpasangan ikon + label + tabel.
+// kritis, kuning untuk peringatan). Kuning kontrasnya < 3:1 di latar terang, jadi selalu berpasangan ikon + label +
+// tabel.
 const SERIES = [
   { key: "error", name: "Error 5xx", shortName: "error", color: "#d03b3b", icon: CircleX },
   { key: "lambat", name: "Lambat > 2 dtk", shortName: "lambat", color: "#fab219", icon: Clock },

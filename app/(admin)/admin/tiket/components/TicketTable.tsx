@@ -1,6 +1,7 @@
 // Komponen TicketTable: isi halaman /admin/tiket. Kotak cari, tab status (Menunggu, Dibalas, Ditutup, Semua) dengan
 // jumlahnya, lalu daftar tiket: tabel di layar ≥ 1024 px, kartu di layar lebih kecil. Baris dan kartu membuka detail.
-// Data tiket diambil page.tsx dari backend; komponen ini hanya mengubah URL (?status=&q=&page=) agar page.tsx memuat ulang.
+// Data tiket diambil page.tsx dari backend; komponen ini hanya mengubah URL (?status=&q=&page=) agar page.tsx
+// memuat ulang.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, dan router.
 "use client";
 

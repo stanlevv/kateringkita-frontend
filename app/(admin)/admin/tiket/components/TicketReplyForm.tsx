@@ -1,5 +1,5 @@
-// Komponen TicketReplyForm: formulir balasan admin di bawah percakapan /admin/tiket/<kode>. Balasan dikirim lewat server
-// action replyToTicket (app/actions/admin/tickets.ts, POST /admin/tickets/<kode>/messages) dan sampai ke pembeli
+// Komponen TicketReplyForm: formulir balasan admin di bawah percakapan /admin/tiket/<kode>. Balasan dikirim lewat
+// server action replyToTicket (app/actions/admin/tickets.ts, POST /admin/tickets/<kode>/messages) dan sampai ke pembeli
 // sebagai notifikasi. Server action = fungsi server yang bisa dipanggil langsung dari komponen di peramban.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";

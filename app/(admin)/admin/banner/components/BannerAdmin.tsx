@@ -131,7 +131,7 @@ function BannerCard({ banner, now, canEdit }: { banner: Banner; now: number; can
           </div>
         </div>
       )}
-      {/* Setujui lewat konfirmasi dulu: banner yang disetujui tampil ke semua pembeli, jadi salah klik bisa dibatalkan */}
+      {/* Setujui lewat konfirmasi dulu: banner yang disetujui tampil ke semua pembeli, jadi salah klik bisa batal */}
       <ConfirmDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}

@@ -1,7 +1,8 @@
 // Halaman /admin/tiket: daftar tiket bantuan dari pembeli. Tiket bantuan = pertanyaan atau keluhan yang pembeli kirim
 // dari aplikasi; admin membalas di halaman detail dan balasannya sampai ke pembeli sebagai notifikasi.
 // Server component (berjalan di server, tanpa "use client"): membaca searchParams (?status=&q=&page=, parameter di URL
-// setelah tanda tanya), mengambil satu halaman tiket dari backend (GET /admin/tickets), lalu menyerahkannya ke TicketTable.
+// setelah tanda tanya), mengambil satu halaman tiket dari backend (GET /admin/tickets), lalu menyerahkannya ke
+// TicketTable.
 // Semua tingkat admin (super, ops, support) boleh membuka halaman ini.
 import { Suspense } from "react";
 import { LoadError } from "@/app/components/LoadError";
