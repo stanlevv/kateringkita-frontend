@@ -1,4 +1,4 @@
-import { RangkaPromo } from "@/app/components/promo/PromoListSkeleton";
+import { PromoListSkeleton } from "@/app/components/promo/PromoListSkeleton";
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonField, SkeletonText } from "@/app/components/ui/Skeleton";
 
@@ -21,7 +21,7 @@ export default function Loading() {
             </div>
           ))}
         </div>
-        <RangkaPromo kartu={3} />
+        <PromoListSkeleton cardCount={3} />
       </div>
     </PageFrame>
   );

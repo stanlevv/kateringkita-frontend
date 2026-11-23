@@ -10,32 +10,38 @@ import { todayWib } from "@/lib/format";
 import { requireMerchant } from "@/services/auth.service";
 
 // M-09 — Laporan (LP-N1..N3, LP-E1, LP-A1, LP-S1). Rentang dan halaman ada di URL: ?dari&sampai&page.
-export default async function LaporanPage({
+export default async function ReportsPage({
   searchParams,
 }: {
   searchParams: Promise<{ dari?: string; sampai?: string; page?: string }>;
 }) {
   await requireMerchant();
-  const sp = await searchParams;
-  const hariIni = todayWib();
-  const { from: dari, to: sampai, error: galat } = parseRange(sp.dari, sp.sampai, hariIni);
-  const hari = countDays(dari, sampai);
-  const rentang = { from: dari, to: sampai };
+  const params = await searchParams;
+  const today = todayWib();
+  const { from: startDate, to: endDate, error: rangeError } = parseRange(params.dari, params.sampai, today);
+  const dayCount = countDays(startDate, endDate);
+  const range = { from: startDate, to: endDate };
 
-  const [ringkasan, transaksi, perHari] = await Promise.all([
-    getReportSummary(rentang),
-    getTransactions(rentang),
-    hari === 1 ? getHourly({ date: dari }) : null,
+  const [summary, transactions, hourly] = await Promise.all([
+    getReportSummary(range),
+    getTransactions(range),
+    dayCount === 1 ? getHourly({ date: startDate }) : null,
   ]);
 
-  const picker = (
-    <RangePicker key={`${dari}|${sampai}|${galat}`} from={dari} to={sampai} today={hariIni} error={galat} />
+  const rangePicker = (
+    <RangePicker
+      key={`${startDate}|${endDate}|${rangeError}`}
+      from={startDate}
+      to={endDate}
+      today={today}
+      error={rangeError}
+    />
   );
-  if ("error" in ringkasan || "error" in transaksi || (perHari && "error" in perHari)) {
+  if ("error" in summary || "error" in transactions || (hourly && "error" in hourly)) {
     return (
       <PageHeader title="Laporan" description="Omzet, modal bahan, dan laba bersih toko Anda.">
         <div className="flex flex-col gap-6">
-          {picker}
+          {rangePicker}
           <LoadError
             title="Laporan belum bisa dimuat"
             body="Terjadi kesalahan saat mengambil data laporan. Periksa koneksi lalu coba lagi."
@@ -45,20 +51,26 @@ export default async function LaporanPage({
     );
   }
 
-  const semua = transaksi.data;
-  const halaman = Math.min(
-    Math.max(1, Math.floor(Number(sp.page)) || 1),
-    Math.max(1, Math.ceil(semua.length / LIMIT_TRANSACTIONS)),
+  const allTransactions = transactions.data;
+  const currentPage = Math.min(
+    Math.max(1, Math.floor(Number(params.page)) || 1),
+    Math.max(1, Math.ceil(allTransactions.length / LIMIT_TRANSACTIONS)),
   );
-  const rows = semua.slice((halaman - 1) * LIMIT_TRANSACTIONS, halaman * LIMIT_TRANSACTIONS);
+  const rows = allTransactions.slice((currentPage - 1) * LIMIT_TRANSACTIONS, currentPage * LIMIT_TRANSACTIONS);
 
   return (
     <PageHeader title="Laporan" description="Omzet, modal bahan, dan laba bersih toko Anda.">
       <div className="flex flex-col gap-6">
-        {picker}
-        <ReportKpis summary={ringkasan.data} />
-        <HourlyChart points={perHari && "data" in perHari ? perHari.data : groupByHour(semua)} hari={hari} />
-        <TransactionTable rows={rows} total={semua.length} page={halaman} dari={dari} sampai={sampai} />
+        {rangePicker}
+        <ReportKpis summary={summary.data} />
+        <HourlyChart points={hourly && "data" in hourly ? hourly.data : groupByHour(allTransactions)} days={dayCount} />
+        <TransactionTable
+          rows={rows}
+          total={allTransactions.length}
+          page={currentPage}
+          startDate={startDate}
+          endDate={endDate}
+        />
       </div>
     </PageHeader>
   );

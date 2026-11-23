@@ -14,54 +14,62 @@ import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
 import type { Table } from "@/types/table";
 
-async function unduh(m: Table) {
-  const a = document.createElement("a");
-  a.href = await createTableQrImage(m.token, 1024);
-  a.download = `qr-meja-${m.label}.png`;
-  a.click();
+async function downloadQr(table: Table) {
+  const link = document.createElement("a");
+  link.href = await createTableQrImage(table.token, 1024);
+  link.download = `qr-meja-${table.label}.png`;
+  link.click();
 }
 
-export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwal: Table[] | null }) {
-  const [aktif, setAktif] = useState(aktifAwal);
-  const [meja, setMeja] = useState<Table[]>(mejaAwal ?? []);
+export function TableOrderSettings({
+  initialEnabled,
+  initialTables,
+}: {
+  initialEnabled: boolean;
+  initialTables: Table[] | null;
+}) {
+  const [enabled, setEnabled] = useState(initialEnabled);
+  const [tables, setTables] = useState<Table[]>(initialTables ?? []);
   const [label, setLabel] = useState("");
-  const [galat, setGalat] = useState<string>();
-  const [sibuk, setSibuk] = useState(false);
-  const [ganti, setGanti] = useState<Table | null>(null);
+  const [labelError, setLabelError] = useState<string>();
+  const [adding, setAdding] = useState(false);
+  const [tableToRegenerate, setTableToRegenerate] = useState<Table | null>(null);
 
-  async function sakelar(v: boolean) {
-    setAktif(v);
-    const r = await callAction(() => setDineIn(v));
-    if ("error" in r) {
-      setAktif(!v);
-      toast({ tone: "danger", message: r.error.message });
+  async function toggleDineIn(nextEnabled: boolean) {
+    setEnabled(nextEnabled);
+    const result = await callAction(() => setDineIn(nextEnabled));
+    if ("error" in result) {
+      setEnabled(!nextEnabled);
+      toast({ tone: "danger", message: result.error.message });
       return;
     }
-    toast({ tone: "success", message: v ? "Pesan dari meja aktif" : "Pesan dari meja dimatikan" });
+    toast({ tone: "success", message: nextEnabled ? "Pesan dari meja aktif" : "Pesan dari meja dimatikan" });
   }
 
-  async function tambah(e: FormEvent) {
-    e.preventDefault();
-    setSibuk(true);
-    const r = await callAction(() => createTable(label));
-    setSibuk(false);
-    if ("error" in r) {
-      setGalat(r.error.fields?.label?.[0] ?? r.error.message);
+  async function addTable(event: FormEvent) {
+    event.preventDefault();
+    setAdding(true);
+    const result = await callAction(() => createTable(label));
+    setAdding(false);
+    if ("error" in result) {
+      setLabelError(result.error.fields?.label?.[0] ?? result.error.message);
       return;
     }
-    setMeja((daftar) => [...daftar, r.data]);
+    setTables((previousTables) => [...previousTables, result.data]);
     setLabel("");
-    setGalat(undefined);
+    setLabelError(undefined);
   }
 
-  async function ubah(m: Table, input: { is_active?: boolean; ganti_token?: true }) {
-    const r = await callAction(() => updateTable(m.id, input));
-    if ("error" in r) {
-      toast({ tone: "danger", message: r.error.message });
+  async function changeTable(table: Table, input: { is_active?: boolean; ganti_token?: true }) {
+    const result = await callAction(() => updateTable(table.id, input));
+    if ("error" in result) {
+      toast({ tone: "danger", message: result.error.message });
       return;
     }
-    setMeja((daftar) => daftar.map((x) => (x.id === m.id ? r.data : x)));
-    if (input.ganti_token) toast({ tone: "success", message: `QR Meja ${m.label} diganti. Cetak ulang QR-nya.` });
+    setTables((previousTables) =>
+      previousTables.map((existing) => (existing.id === table.id ? result.data : existing)),
+    );
+    if (input.ganti_token) toast({ tone: "success", message: `QR Meja ${table.label} diganti. Cetak ulang QR-nya.` });
   }
 
   return (
@@ -74,33 +82,33 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
             Pesanan masuk ke antrean dengan label meja dan otomatis diterima setelah lunas.
           </p>
         </div>
-        <Switch checked={aktif} onChange={sakelar} label="Terima pesanan dari meja" />
+        <Switch checked={enabled} onChange={toggleDineIn} label="Terima pesanan dari meja" />
       </div>
-      {!aktif && (
+      {!enabled && (
         <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink-muted">
           Selama sakelar mati, semua QR meja menampilkan pesan tidak aktif.
         </p>
       )}
 
-      {mejaAwal === null ? (
+      {initialTables === null ? (
         <p className="text-sm text-danger">Daftar meja gagal dimuat. Muat ulang halaman.</p>
       ) : (
         <>
-          <form onSubmit={tambah} noValidate className="flex flex-wrap items-end gap-3">
+          <form onSubmit={addTable} noValidate className="flex flex-wrap items-end gap-3">
             <div className="min-w-48 flex-1">
               <Field
                 label="Nama meja"
                 id="meja-label"
                 help="Contoh: 1, 2, Teras A. Tiap meja mendapat QR sendiri."
-                error={galat}
+                error={labelError}
               >
-                <Input value={label} maxLength={30} onChange={(e) => setLabel(e.target.value)} />
+                <Input value={label} maxLength={30} onChange={(event) => setLabel(event.target.value)} />
               </Field>
             </div>
-            <Button type="submit" loading={sibuk} loadingText="Menambah…" disabled={!label.trim()}>
+            <Button type="submit" loading={adding} loadingText="Menambah…" disabled={!label.trim()}>
               Tambah meja
             </Button>
-            {meja.length > 0 && (
+            {tables.length > 0 && (
               <a
                 href="/cetak-qr"
                 target="_blank"
@@ -116,34 +124,34 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
             )}
           </form>
 
-          {meja.length === 0 ? (
+          {tables.length === 0 ? (
             <p className="text-sm text-ink-muted">Belum ada meja. Tambahkan meja pertama untuk mendapatkan QR-nya.</p>
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {meja.map((m) => (
+              {tables.map((table) => (
                 <li
-                  key={m.id}
+                  key={table.id}
                   className={cx(
                     "flex flex-col items-center gap-3 rounded-lg border border-line p-4",
-                    !m.is_active && "opacity-60",
+                    !table.is_active && "opacity-60",
                   )}
                 >
-                  <TableQr table={m} />
+                  <TableQr table={table} />
                   <p className="font-display text-lg font-semibold text-ink">
-                    Meja {m.label}
-                    {!m.is_active && <span className="ml-2 text-sm font-medium text-ink-muted">(nonaktif)</span>}
+                    Meja {table.label}
+                    {!table.is_active && <span className="ml-2 text-sm font-medium text-ink-muted">(nonaktif)</span>}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button variant="secondary" onClick={() => unduh(m)}>
+                    <Button variant="secondary" onClick={() => downloadQr(table)}>
                       <Download aria-hidden className="size-4" />
                       Unduh
                     </Button>
-                    <Button variant="secondary" onClick={() => setGanti(m)}>
+                    <Button variant="secondary" onClick={() => setTableToRegenerate(table)}>
                       <RefreshCw aria-hidden className="size-4" />
                       Ganti QR
                     </Button>
-                    <Button variant="ghost" onClick={() => ubah(m, { is_active: !m.is_active })}>
-                      {m.is_active ? "Nonaktifkan" : "Aktifkan"}
+                    <Button variant="ghost" onClick={() => changeTable(table, { is_active: !table.is_active })}>
+                      {table.is_active ? "Nonaktifkan" : "Aktifkan"}
                     </Button>
                   </div>
                 </li>
@@ -154,17 +162,17 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
       )}
 
       <ConfirmDialog
-        open={!!ganti}
-        onClose={() => setGanti(null)}
-        title={`Ganti QR Meja ${ganti?.label ?? ""}?`}
+        open={!!tableToRegenerate}
+        onClose={() => setTableToRegenerate(null)}
+        title={`Ganti QR Meja ${tableToRegenerate?.label ?? ""}?`}
         body="QR lama langsung tidak berlaku. Cetak dan tempel QR yang baru di meja."
         confirmLabel="Ganti QR"
         cancelLabel="Batal"
         tone="danger"
         onConfirm={async () => {
-          const m = ganti;
-          setGanti(null);
-          if (m) await ubah(m, { ganti_token: true });
+          const table = tableToRegenerate;
+          setTableToRegenerate(null);
+          if (table) await changeTable(table, { ganti_token: true });
         }}
       />
     </div>

@@ -16,25 +16,25 @@ import { formatDate } from "@/lib/format";
 import type { Banner, VoucherOption } from "@/types/banner";
 
 /** Banner toko: satu banner aktif (menunggu / tayang) per toko; ditolak bisa diajukan ulang. */
-export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers: VoucherOption[] }) {
+export function MerchantBanners({ banners, vouchers }: { banners: Banner[]; vouchers: VoucherOption[] }) {
   const router = useRouter();
-  const [form, setForm] = useState<Banner | "baru" | null>(null);
+  const [form, setForm] = useState<Banner | "new" | null>(null);
   // eslint-disable-next-line react-hooks/purity -- status tayang/berakhir dihitung saat render
   const now = Date.now();
-  const adaAktif = banners.some((b) => isBannerActive(b, now));
+  const hasActiveBanner = banners.some((banner) => isBannerActive(banner, now));
 
-  async function hapus(b: Banner) {
-    const r = await callAction(() => deleteMerchantBanner(b.id));
-    if ("error" in r) return toast({ tone: "danger", message: r.error.message });
+  async function deleteBanner(banner: Banner) {
+    const result = await callAction(() => deleteMerchantBanner(banner.id));
+    if ("error" in result) return toast({ tone: "danger", message: result.error.message });
     toast({ tone: "success", message: "Banner dihapus." });
     router.refresh();
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {!adaAktif && (
+      {!hasActiveBanner && (
         <div>
-          <Button onClick={() => setForm("baru")}>
+          <Button onClick={() => setForm("new")}>
             <Plus aria-hidden className="size-4" />
             Ajukan banner
           </Button>
@@ -48,36 +48,36 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
         />
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
-          {banners.map((b) => {
-            const st = bannerStatus(b, now);
+          {banners.map((banner) => {
+            const statusBadge = bannerStatus(banner, now);
             return (
-              <li key={b.id}>
+              <li key={banner.id}>
                 <article
-                  aria-label={b.title}
+                  aria-label={banner.title}
                   className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-4"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari penyimpanan publik */}
-                  <img src={b.image_url} alt="" className="aspect-[2/1] w-full rounded-md object-cover" />
+                  <img src={banner.image_url} alt="" className="aspect-[2/1] w-full rounded-md object-cover" />
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-ink">{b.title}</p>
-                    <Badge tone={st.tone} icon={st.icon}>
-                      {st.label}
+                    <p className="font-semibold text-ink">{banner.title}</p>
+                    <Badge tone={statusBadge.tone} icon={statusBadge.icon}>
+                      {statusBadge.label}
                     </Badge>
                   </div>
                   <p className="text-sm text-ink-muted">
-                    {b.target === "promo" && b.promo ? `Voucher ${b.promo.code}` : "Halaman toko"} ·{" "}
-                    {formatDate(b.starts_at)} – {formatDate(b.ends_at)}
+                    {banner.target === "promo" && banner.promo ? `Voucher ${banner.promo.code}` : "Halaman toko"} ·{" "}
+                    {formatDate(banner.starts_at)} – {formatDate(banner.ends_at)}
                   </p>
-                  {b.status === "ditolak" && b.catatan && (
-                    <p className="text-sm text-danger">Alasan admin: {b.catatan}</p>
+                  {banner.status === "ditolak" && banner.catatan && (
+                    <p className="text-sm text-danger">Alasan admin: {banner.catatan}</p>
                   )}
                   <div className="mt-auto flex flex-wrap gap-2">
-                    {(b.status === "ditolak" || b.status === "menunggu") && (
-                      <Button variant="secondary" onClick={() => setForm(b)}>
-                        {b.status === "ditolak" ? "Ajukan ulang" : "Ubah"}
+                    {(banner.status === "ditolak" || banner.status === "menunggu") && (
+                      <Button variant="secondary" onClick={() => setForm(banner)}>
+                        {banner.status === "ditolak" ? "Ajukan ulang" : "Ubah"}
                       </Button>
                     )}
-                    <Button variant="secondary" onClick={() => void hapus(b)}>
+                    <Button variant="secondary" onClick={() => void deleteBanner(banner)}>
                       Hapus
                     </Button>
                   </div>
@@ -90,15 +90,15 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
       <Dialog
         open={form !== null}
         onClose={() => setForm(null)}
-        title={form === "baru" ? "Ajukan banner" : "Ubah banner"}
+        title={form === "new" ? "Ajukan banner" : "Ubah banner"}
         className="max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto"
       >
         {form !== null && (
           <BannerForm
-            mode="toko"
-            banner={form === "baru" ? null : form}
+            mode="merchant"
+            banner={form === "new" ? null : form}
             vouchers={vouchers}
-            simpan={saveMerchantBanner}
+            saveAction={saveMerchantBanner}
             onClose={() => setForm(null)}
             onSaved={() => {
               setForm(null);

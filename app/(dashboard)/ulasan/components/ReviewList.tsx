@@ -7,7 +7,7 @@ import { Pagination } from "@/app/components/ui/Pagination";
 import { formatDate } from "@/lib/format";
 import { LIMIT_REVIEWS, maskName, reviewsUrl } from "@/lib/review";
 import type { Review } from "@/types/review";
-import { Bintang } from "./RatingSummary";
+import { StarRating } from "./RatingSummary";
 
 type Filter = { menu?: number; bintang?: number };
 
@@ -17,15 +17,15 @@ export function ReviewList({
   total,
   page,
   filter,
-  kosongSemua,
+  noReviews,
 }: {
   rows: Review[];
   total: number;
   page: number;
   filter: Filter;
-  kosongSemua?: boolean;
+  noReviews?: boolean;
 }) {
-  if (kosongSemua) {
+  if (noReviews) {
     return (
       <EmptyState
         icon={MessageSquareOff}
@@ -34,7 +34,7 @@ export function ReviewList({
       />
     );
   }
-  const chip =
+  const chipClass =
     "inline-flex min-h-11 items-center rounded-md border border-line-strong px-3 text-ink hover:bg-subtle aria-[current=true]:border-primary aria-[current=true]:bg-info-bg aria-[current=true]:font-semibold";
   return (
     <div className="flex flex-col gap-4">
@@ -42,18 +42,18 @@ export function ReviewList({
         <Link
           href={reviewsUrl({ menu: filter.menu })}
           aria-current={filter.bintang === undefined ? "true" : undefined}
-          className={cx(chip, focusRing)}
+          className={cx(chipClass, focusRing)}
         >
           Semua bintang
         </Link>
-        {[5, 4, 3, 2, 1].map((b) => (
+        {[5, 4, 3, 2, 1].map((starCount) => (
           <Link
-            key={b}
-            href={reviewsUrl({ menu: filter.menu, stars: b })}
-            aria-current={filter.bintang === b ? "true" : undefined}
-            className={cx(chip, focusRing)}
+            key={starCount}
+            href={reviewsUrl({ menu: filter.menu, stars: starCount })}
+            aria-current={filter.bintang === starCount ? "true" : undefined}
+            className={cx(chipClass, focusRing)}
           >
-            {b} bintang
+            {starCount} bintang
           </Link>
         ))}
       </nav>
@@ -71,17 +71,17 @@ export function ReviewList({
       ) : (
         <>
           <ul className="flex flex-col gap-3">
-            {rows.map((r) => (
-              <li key={r.id} className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4">
+            {rows.map((review) => (
+              <li key={review.id} className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Bintang nilai={r.rating} teks={`${r.rating} dari 5 bintang`} />
-                  <span className="text-sm text-ink-muted">{formatDate(r.created_at)}</span>
+                  <StarRating value={review.rating} label={`${review.rating} dari 5 bintang`} />
+                  <span className="text-sm text-ink-muted">{formatDate(review.created_at)}</span>
                 </div>
-                <p className="text-ink">{r.comment ?? <span className="text-ink-muted">Tanpa komentar</span>}</p>
+                <p className="text-ink">{review.comment ?? <span className="text-ink-muted">Tanpa komentar</span>}</p>
                 <p className="flex flex-wrap gap-x-2 text-sm text-ink-muted">
-                  <span>{maskName(r.customer_name)}</span>
+                  <span>{maskName(review.customer_name)}</span>
                   <span aria-hidden>·</span>
-                  <span>{r.menu_name}</span>
+                  <span>{review.menu_name}</span>
                 </p>
               </li>
             ))}
@@ -91,7 +91,7 @@ export function ReviewList({
               page={page}
               total={total}
               limit={LIMIT_REVIEWS}
-              hrefFor={(p) => reviewsUrl({ ...filter, page: p })}
+              hrefFor={(pageNumber) => reviewsUrl({ ...filter, page: pageNumber })}
             />
           )}
         </>

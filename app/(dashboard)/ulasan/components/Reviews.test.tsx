@@ -6,36 +6,36 @@ import { summarizeReviews, filterReviews } from "@/lib/review";
 import { MenuRatings, RatingSummary } from "./RatingSummary";
 import { ReviewList } from "./ReviewList";
 
-const rs = reviews();
-const daftarMenu = menus().map((m) => ({ id: m.id, name: m.name }));
+const allReviews = reviews();
+const menuOptions = menus().map((menu) => ({ id: menu.id, name: menu.name }));
 
 describe("RatingSummary (UL-N1)", () => {
   it("rata-rata, jumlah, dan sebaran 5->1 berjumlah total (teks, bukan warna saja)", () => {
-    render(<RatingSummary reviews={rs} />);
-    const r = summarizeReviews(rs);
-    expect(screen.getByText(r.average.toLocaleString("id-ID", { minimumFractionDigits: 1 }))).toBeInTheDocument();
+    render(<RatingSummary reviews={allReviews} />);
+    const summary = summarizeReviews(allReviews);
+    expect(screen.getByText(summary.average.toLocaleString("id-ID", { minimumFractionDigits: 1 }))).toBeInTheDocument();
     expect(screen.getByText("dari 20 ulasan")).toBeInTheDocument();
-    const baris = screen.getAllByRole("listitem");
-    expect(baris).toHaveLength(5);
-    const jumlah = baris.map((b) => Number(within(b).getByTestId("jumlah").textContent));
-    expect(jumlah.reduce((a, b) => a + b, 0)).toBe(20);
-    expect(within(baris[0]).getByText("5 bintang")).toBeInTheDocument();
+    const rows = screen.getAllByRole("listitem");
+    expect(rows).toHaveLength(5);
+    const counts = rows.map((row) => Number(within(row).getByTestId("jumlah").textContent));
+    expect(counts.reduce((sum, count) => sum + count, 0)).toBe(20);
+    expect(within(rows[0]).getByText("5 bintang")).toBeInTheDocument();
   });
 });
 
 describe("MenuRatings (UL-N2)", () => {
   it("tiap menu tautan ke ?menu=<id>; Semua menu mengosongkan filter", () => {
-    render(<MenuRatings reviews={rs} menus={daftarMenu} menuId={rs[0].menu_id} />);
-    const tautan = screen.getByRole("link", { name: new RegExp(rs[0].menu_name) });
-    expect(tautan).toHaveAttribute("href", `/ulasan?menu=${rs[0].menu_id}`);
-    expect(tautan).toHaveAttribute("aria-current", "true");
+    render(<MenuRatings reviews={allReviews} menus={menuOptions} menuId={allReviews[0].menu_id} />);
+    const link = screen.getByRole("link", { name: new RegExp(allReviews[0].menu_name) });
+    expect(link).toHaveAttribute("href", `/ulasan?menu=${allReviews[0].menu_id}`);
+    expect(link).toHaveAttribute("aria-current", "true");
     expect(screen.getByRole("link", { name: "Semua menu" })).toHaveAttribute("href", "/ulasan");
   });
 });
 
 describe("ReviewList (UL-N3, UL-S1)", () => {
   it("nama disamarkan, bintang dengan teks pembaca layar, menu, tanggal", () => {
-    const { rows, total } = filterReviews(rs, {}, 1);
+    const { rows, total } = filterReviews(allReviews, {}, 1);
     render(<ReviewList rows={rows} total={total} page={1} filter={{}} />);
     expect(screen.getAllByText(/^[A-Za-z]{2}\*\*\*$/)).toHaveLength(10);
     expect(screen.queryByText(/Rafli R\./)).toBeNull();
@@ -43,13 +43,13 @@ describe("ReviewList (UL-N3, UL-S1)", () => {
     expect(screen.getByRole("link", { name: "Berikutnya" })).toHaveAttribute("href", "/ulasan?page=2");
   });
   it("filter bintang berupa tautan yang mempertahankan menu", () => {
-    const { rows, total } = filterReviews(rs, { menu: 3 }, 1);
+    const { rows, total } = filterReviews(allReviews, { menu: 3 }, 1);
     render(<ReviewList rows={rows} total={total} page={1} filter={{ menu: 3 }} />);
     expect(screen.getByRole("link", { name: /^4 bintang/ })).toHaveAttribute("href", "/ulasan?menu=3&bintang=4");
     expect(screen.getByRole("link", { name: "Semua bintang" })).toHaveAttribute("aria-current", "true");
   });
   it("UL-S1 belum ada ulasan sama sekali", () => {
-    render(<ReviewList rows={[]} total={0} page={1} filter={{}} kosongSemua />);
+    render(<ReviewList rows={[]} total={0} page={1} filter={{}} noReviews />);
     expect(screen.getByText("Ulasan muncul setelah pembeli menyelesaikan pesanan")).toBeInTheDocument();
   });
   it("tersaring tapi kosong -> tautan hapus filter", () => {

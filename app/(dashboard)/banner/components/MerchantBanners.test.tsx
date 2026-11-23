@@ -10,11 +10,11 @@ vi.mock("@/app/actions/banner", () => ({
 }));
 vi.mock("@/lib/upload", () => ({ uploadPhoto: vi.fn() }));
 import type { Banner } from "@/types/banner";
-import { BannerToko } from "./MerchantBanners";
+import { MerchantBanners } from "./MerchantBanners";
 
-const nanti = new Date(Date.now() + 3 * 86400e3).toISOString();
-const lalu = new Date(Date.now() - 86400e3).toISOString();
-const b = (p: Partial<Banner>): Banner => ({
+const later = new Date(Date.now() + 3 * 86400e3).toISOString();
+const earlier = new Date(Date.now() - 86400e3).toISOString();
+const makeBanner = (overrides: Partial<Banner>): Banner => ({
   id: 1,
   title: "Diskon pembukaan",
   image_url: "https://foto.test/x.png",
@@ -23,37 +23,37 @@ const b = (p: Partial<Banner>): Banner => ({
   merchant: null,
   status: "menunggu",
   catatan: null,
-  starts_at: lalu,
-  ends_at: nanti,
+  starts_at: earlier,
+  ends_at: later,
   sort_order: 0,
   reviewed_at: null,
-  created_at: lalu,
-  ...p,
+  created_at: earlier,
+  ...overrides,
 });
 
 beforeEach(() => refresh.mockReset());
 
-describe("BannerToko", () => {
+describe("MerchantBanners", () => {
   it("kosong: ajakan + tombol Ajukan banner membuka form", async () => {
-    render(<BannerToko banners={[]} vouchers={[]} />);
+    render(<MerchantBanners banners={[]} vouchers={[]} />);
     expect(screen.getByText("Belum ada banner")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Ajukan banner" }));
     expect(screen.getByLabelText(/Judul/)).toBeInTheDocument();
   });
 
   it("banner aktif menunggu: status, tanpa tombol ajukan baru", () => {
-    render(<BannerToko banners={[b({})]} vouchers={[]} />);
-    const k = within(screen.getByRole("article"));
-    expect(k.getByText("Menunggu persetujuan")).toBeInTheDocument();
+    render(<MerchantBanners banners={[makeBanner({})]} vouchers={[]} />);
+    const card = within(screen.getByRole("article"));
+    expect(card.getByText("Menunggu persetujuan")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Ajukan banner" })).not.toBeInTheDocument();
   });
 
   it("ditolak: alasan admin + Ajukan ulang; tayang: label Tayang", async () => {
     render(
-      <BannerToko
+      <MerchantBanners
         banners={[
-          b({ status: "ditolak", catatan: "Gambar buram" }),
-          b({ id: 2, status: "disetujui", title: "Banner lama", ends_at: lalu }),
+          makeBanner({ status: "ditolak", catatan: "Gambar buram" }),
+          makeBanner({ id: 2, status: "disetujui", title: "Banner lama", ends_at: earlier }),
         ]}
         vouchers={[]}
       />,

@@ -9,7 +9,7 @@ export default async function PromoPage() {
   const promos = await getPromos();
   return (
     <PageHeader title="Promo">
-      <PromoList promos={"data" in promos ? promos.data : []} galat={"error" in promos} />
+      <PromoList promos={"data" in promos ? promos.data : []} loadFailed={"error" in promos} />
     </PageHeader>
   );
 }

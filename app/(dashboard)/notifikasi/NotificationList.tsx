@@ -11,10 +11,10 @@ import { formatTime, formatDate } from "@/lib/format";
 import type { AppNotification } from "@/types/notification";
 
 const LIMIT = 20;
-const IKON = { moderation: ImageOff, info: Megaphone } as const;
+const TYPE_ICONS = { moderation: ImageOff, info: Megaphone } as const;
 
 /** Daftar notifikasi; yang belum dibaca ditandai titik. Saat dibuka semua ditandai dibaca, lalu badge sidebar disegarkan. */
-export function DaftarNotifikasi({
+export function NotificationList({
   rows,
   total,
   page,
@@ -26,12 +26,12 @@ export function DaftarNotifikasi({
   unread: number;
 }) {
   const router = useRouter();
-  const sudah = useRef(false);
+  const markedRead = useRef(false);
   useEffect(() => {
-    if (unread === 0 || sudah.current) return;
-    sudah.current = true;
-    void markAllNotificationsRead().then((r) => {
-      if ("data" in r) router.refresh();
+    if (unread === 0 || markedRead.current) return;
+    markedRead.current = true;
+    void markAllNotificationsRead().then((result) => {
+      if ("data" in result) router.refresh();
     });
   }, [unread, router]);
 
@@ -47,27 +47,30 @@ export function DaftarNotifikasi({
   return (
     <div className="flex flex-col gap-4">
       <ul className="flex flex-col divide-y divide-line rounded-lg border border-line bg-surface">
-        {rows.map((n) => {
-          const Ikon = IKON[n.type as keyof typeof IKON] ?? Bell;
-          const baru = n.read_at === null;
+        {rows.map((notification) => {
+          const Icon = TYPE_ICONS[notification.type as keyof typeof TYPE_ICONS] ?? Bell;
+          const isNew = notification.read_at === null;
           return (
-            <li key={n.id} className={cx("flex gap-3 p-4", baru && "bg-primary-soft/40")}>
-              <Ikon
+            <li key={notification.id} className={cx("flex gap-3 p-4", isNew && "bg-primary-soft/40")}>
+              <Icon
                 aria-hidden
-                className={cx("mt-0.5 size-5 shrink-0", n.type === "moderation" ? "text-danger" : "text-ink-muted")}
+                className={cx(
+                  "mt-0.5 size-5 shrink-0",
+                  notification.type === "moderation" ? "text-danger" : "text-ink-muted",
+                )}
               />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className="flex items-center gap-2 font-semibold text-ink">
-                  {baru && (
+                  {isNew && (
                     <span className="size-2 shrink-0 rounded-full bg-accent">
                       <span className="sr-only">Belum dibaca: </span>
                     </span>
                   )}
-                  {n.title}
+                  {notification.title}
                 </p>
-                <p className="whitespace-pre-wrap break-words text-sm text-ink">{n.body}</p>
+                <p className="whitespace-pre-wrap break-words text-sm text-ink">{notification.body}</p>
                 <p className="text-xs text-ink-muted">
-                  {formatDate(n.created_at)} · {formatTime(n.created_at)} WIB
+                  {formatDate(notification.created_at)} · {formatTime(notification.created_at)} WIB
                 </p>
               </div>
             </li>
@@ -79,7 +82,7 @@ export function DaftarNotifikasi({
           page={page}
           total={total}
           limit={LIMIT}
-          hrefFor={(p) => (p > 1 ? `/notifikasi?page=${p}` : "/notifikasi")}
+          hrefFor={(pageNumber) => (pageNumber > 1 ? `/notifikasi?page=${pageNumber}` : "/notifikasi")}
         />
       )}
     </div>

@@ -14,7 +14,7 @@ import { validatePromo } from "@/lib/schemas";
 import type { ActionResult } from "@/types/api";
 import type { Promo } from "@/types/promo";
 
-const LABEL: Record<string, string> = {
+const FIELD_LABELS: Record<string, string> = {
   code: "Kode promo",
   description: "Deskripsi",
   type: "Jenis promo",
@@ -26,10 +26,10 @@ const LABEL: Record<string, string> = {
   starts_at: "Mulai",
   ends_at: "Selesai",
 };
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
-const opsional = (s: string) => (s.trim() === "" ? null : Number(s));
+const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
+const toOptionalNumber = (text: string) => (text.trim() === "" ? null : Number(text));
 
-type Isian = {
+type PromoFormValues = {
   code: string;
   description: string;
   type: Promo["type"];
@@ -44,21 +44,21 @@ type Isian = {
   is_public: boolean;
 };
 
-const awalDari = (p?: Promo | null): Isian => {
-  const sekarang = new Date().toISOString();
+const toFormValues = (promo?: Promo | null): PromoFormValues => {
+  const nowIso = new Date().toISOString();
   return {
-    code: p?.code ?? "",
-    description: p?.description ?? "",
-    type: p?.type ?? "percent",
-    value: p ? String(p.value) : "",
-    max_discount: p?.max_discount ? String(p.max_discount) : "",
-    min_subtotal: String(p?.min_subtotal ?? 0),
-    quota: p?.quota != null ? String(p.quota) : "",
-    per_user_limit: String(p?.per_user_limit ?? 1),
-    starts: isoToWibInput(p?.starts_at ?? sekarang),
-    ends: isoToWibInput(p?.ends_at ?? new Date(Date.now() + 30 * 86400e3).toISOString()),
-    is_active: p?.is_active ?? true,
-    is_public: p?.is_public ?? true,
+    code: promo?.code ?? "",
+    description: promo?.description ?? "",
+    type: promo?.type ?? "percent",
+    value: promo ? String(promo.value) : "",
+    max_discount: promo?.max_discount ? String(promo.max_discount) : "",
+    min_subtotal: String(promo?.min_subtotal ?? 0),
+    quota: promo?.quota != null ? String(promo.quota) : "",
+    per_user_limit: String(promo?.per_user_limit ?? 1),
+    starts: isoToWibInput(promo?.starts_at ?? nowIso),
+    ends: isoToWibInput(promo?.ends_at ?? new Date(Date.now() + 30 * 86400e3).toISOString()),
+    is_active: promo?.is_active ?? true,
+    is_public: promo?.is_public ?? true,
   };
 };
 
@@ -67,105 +67,114 @@ export function PromoForm({
   promo,
   onSaved,
   onClose,
-  simpan = savePromo,
+  saveAction = savePromo,
   admin,
 }: {
   promo?: Promo | null;
-  onSaved: (p: Promo) => void;
+  onSaved: (savedPromo: Promo) => void;
   onClose: () => void;
-  simpan?: (id: number | null, input: unknown) => Promise<ActionResult<Promo>>;
+  saveAction?: (id: number | null, input: unknown) => Promise<ActionResult<Promo>>;
   admin?: boolean;
 }) {
-  const [v, setV] = useState<Isian>(() => awalDari(promo));
-  const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
-  const [dicoba, setDicoba] = useState(false);
-  const [fokusKey, setFokusKey] = useState(0);
-  const [server, setServer] = useState<Record<string, string>>({});
-  const [menyimpan, setMenyimpan] = useState(false);
+  const [values, setValues] = useState<PromoFormValues>(() => toFormValues(promo));
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [errorFocusKey, setErrorFocusKey] = useState(0);
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  const set = <K extends keyof Isian>(k: K, nilai: Isian[K]) => {
-    setServer({});
-    setV((p) => ({ ...p, [k]: nilai }));
+  const setField = <K extends keyof PromoFormValues>(field: K, value: PromoFormValues[K]) => {
+    setServerErrors({});
+    setValues((previous) => ({ ...previous, [field]: value }));
   };
-  const blur = (k: string) => () => setTersentuh((p) => new Set(p).add(k));
+  const blurHandler = (field: string) => () => setTouched((previous) => new Set(previous).add(field));
 
-  const persen = v.type === "percent";
+  const isPercent = values.type === "percent";
   const input = {
-    code: v.code,
-    description: v.description,
-    type: v.type,
-    value: v.type === "free_service_fee" ? 0 : num(v.value),
-    max_discount: persen ? opsional(v.max_discount) : null,
-    min_subtotal: num(v.min_subtotal),
-    quota: opsional(v.quota),
-    per_user_limit: num(v.per_user_limit),
-    starts_at: wibInputToIso(v.starts),
-    ends_at: wibInputToIso(v.ends),
-    is_active: v.is_active,
-    is_public: v.is_public,
+    code: values.code,
+    description: values.description,
+    type: values.type,
+    value: values.type === "free_service_fee" ? 0 : toNumber(values.value),
+    max_discount: isPercent ? toOptionalNumber(values.max_discount) : null,
+    min_subtotal: toNumber(values.min_subtotal),
+    quota: toOptionalNumber(values.quota),
+    per_user_limit: toNumber(values.per_user_limit),
+    starts_at: wibInputToIso(values.starts),
+    ends_at: wibInputToIso(values.ends),
+    is_active: values.is_active,
+    is_public: values.is_public,
   };
-  const semua = validatePromo(input, promo?.used_count ?? 0);
-  const galatSemua = dicoba ? { ...server, ...semua } : semua;
-  const galat = (k: string) => (dicoba || tersentuh.has(k) ? galatSemua[k] : undefined);
-  const ringkasan = dicoba
-    ? Object.entries(galatSemua).map(([k, m]) => ({ id: `pf-${k}`, message: `${LABEL[k] ?? k}: ${m}` }))
+  const clientErrors = validatePromo(input, promo?.used_count ?? 0);
+  const allErrors = submitAttempted ? { ...serverErrors, ...clientErrors } : clientErrors;
+  const fieldError = (field: string) => (submitAttempted || touched.has(field) ? allErrors[field] : undefined);
+  const errorSummary = submitAttempted
+    ? Object.entries(allErrors).map(([field, message]) => ({
+        id: `pf-${field}`,
+        message: `${FIELD_LABELS[field] ?? field}: ${message}`,
+      }))
     : [];
 
-  async function kirim(e: React.FormEvent) {
-    e.preventDefault();
-    if (Object.keys(semua).length > 0) {
-      setDicoba(true);
-      setFokusKey((n) => n + 1);
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (Object.keys(clientErrors).length > 0) {
+      setSubmitAttempted(true);
+      setErrorFocusKey((count) => count + 1);
       return;
     }
-    if (menyimpan) return;
-    setMenyimpan(true);
-    const r = await callAction(() => simpan(promo?.id ?? null, input));
-    setMenyimpan(false);
-    if ("error" in r) {
-      if (r.error.fields) {
+    if (saving) return;
+    setSaving(true);
+    const result = await callAction(() => saveAction(promo?.id ?? null, input));
+    setSaving(false);
+    if ("error" in result) {
+      if (result.error.fields) {
         // PR-E1
-        setServer(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
-        setDicoba(true);
-        setFokusKey((n) => n + 1);
+        setServerErrors(
+          Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
+        );
+        setSubmitAttempted(true);
+        setErrorFocusKey((count) => count + 1);
       } else {
-        toast({ tone: "danger", message: r.error.message });
+        toast({ tone: "danger", message: result.error.message });
       }
       return;
     }
     toast({ tone: "success", message: "Promo disimpan" });
-    onSaved(r.data);
+    onSaved(result.data);
   }
 
   return (
-    <form onSubmit={kirim} noValidate className="flex flex-col gap-4">
-      <ErrorSummary errors={ringkasan} focusKey={fokusKey} />
+    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <ErrorSummary errors={errorSummary} focusKey={errorFocusKey} />
       <Field
         label="Kode promo"
         id="pf-code"
         required
         help={admin && promo ? "Kode tidak bisa diubah." : "3–30 huruf besar atau angka, tanpa spasi."}
-        error={galat("code")}
+        error={fieldError("code")}
       >
         <Input
-          value={v.code}
+          value={values.code}
           maxLength={30}
           readOnly={admin && !!promo}
-          onChange={(e) => set("code", e.target.value.toUpperCase())}
-          onBlur={blur("code")}
+          onChange={(event) => setField("code", event.target.value.toUpperCase())}
+          onBlur={blurHandler("code")}
           className="font-mono"
         />
       </Field>
-      <Field label="Deskripsi" id="pf-description" error={galat("description")}>
+      <Field label="Deskripsi" id="pf-description" error={fieldError("description")}>
         <Input
-          value={v.description}
+          value={values.description}
           maxLength={255}
-          onChange={(e) => set("description", e.target.value)}
-          onBlur={blur("description")}
+          onChange={(event) => setField("description", event.target.value)}
+          onBlur={blurHandler("description")}
         />
       </Field>
-      <Field label="Jenis promo" id="pf-type" required error={galat("type")}>
-        <Select value={v.type} onChange={(e) => set("type", e.target.value as Promo["type"])} onBlur={blur("type")}>
+      <Field label="Jenis promo" id="pf-type" required error={fieldError("type")}>
+        <Select
+          value={values.type}
+          onChange={(event) => setField("type", event.target.value as Promo["type"])}
+          onBlur={blurHandler("type")}
+        >
           <option value="percent">Persen</option>
           <option value="fixed">Potongan Rupiah</option>
           {/* C2: biaya layanan milik platform — hanya admin, atau promo toko lama yang sudah berjenis ini */}
@@ -174,96 +183,96 @@ export function PromoForm({
           )}
         </Select>
       </Field>
-      {v.type !== "free_service_fee" && (
+      {values.type !== "free_service_fee" && (
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={persen ? "Nilai (%)" : "Nilai (Rp)"} id="pf-value" required error={galat("value")}>
+          <Field label={isPercent ? "Nilai (%)" : "Nilai (Rp)"} id="pf-value" required error={fieldError("value")}>
             <Input
               type="number"
               inputMode="numeric"
               min={1}
               step={1}
-              value={v.value}
-              onChange={(e) => set("value", e.target.value)}
-              onBlur={blur("value")}
+              value={values.value}
+              onChange={(event) => setField("value", event.target.value)}
+              onBlur={blurHandler("value")}
             />
           </Field>
-          {persen && (
+          {isPercent && (
             <Field
               label="Maks potongan (Rp)"
               id="pf-max_discount"
               help="Kosongkan bila tanpa batas."
-              error={galat("max_discount")}
+              error={fieldError("max_discount")}
             >
               <Input
                 type="number"
                 inputMode="numeric"
                 min={1}
                 step={1}
-                value={v.max_discount}
-                onChange={(e) => set("max_discount", e.target.value)}
-                onBlur={blur("max_discount")}
+                value={values.max_discount}
+                onChange={(event) => setField("max_discount", event.target.value)}
+                onBlur={blurHandler("max_discount")}
               />
             </Field>
           )}
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Min belanja (Rp)" id="pf-min_subtotal" required error={galat("min_subtotal")}>
+        <Field label="Min belanja (Rp)" id="pf-min_subtotal" required error={fieldError("min_subtotal")}>
           <Input
             type="number"
             inputMode="numeric"
             min={0}
             step={1}
-            value={v.min_subtotal}
-            onChange={(e) => set("min_subtotal", e.target.value)}
-            onBlur={blur("min_subtotal")}
+            value={values.min_subtotal}
+            onChange={(event) => setField("min_subtotal", event.target.value)}
+            onBlur={blurHandler("min_subtotal")}
           />
         </Field>
-        <Field label="Kuota" id="pf-quota" help="Kosong = tanpa batas." error={galat("quota")}>
+        <Field label="Kuota" id="pf-quota" help="Kosong = tanpa batas." error={fieldError("quota")}>
           <Input
             type="number"
             inputMode="numeric"
             min={1}
             step={1}
-            value={v.quota}
-            onChange={(e) => set("quota", e.target.value)}
-            onBlur={blur("quota")}
+            value={values.quota}
+            onChange={(event) => setField("quota", event.target.value)}
+            onBlur={blurHandler("quota")}
           />
         </Field>
-        <Field label="Batas per pembeli" id="pf-per_user_limit" required error={galat("per_user_limit")}>
+        <Field label="Batas per pembeli" id="pf-per_user_limit" required error={fieldError("per_user_limit")}>
           <Input
             type="number"
             inputMode="numeric"
             min={1}
             step={1}
-            value={v.per_user_limit}
-            onChange={(e) => set("per_user_limit", e.target.value)}
-            onBlur={blur("per_user_limit")}
+            value={values.per_user_limit}
+            onChange={(event) => setField("per_user_limit", event.target.value)}
+            onBlur={blurHandler("per_user_limit")}
           />
         </Field>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Mulai (WIB)" id="pf-starts_at" required error={galat("starts_at")}>
+        <Field label="Mulai (WIB)" id="pf-starts_at" required error={fieldError("starts_at")}>
           <Input
             type="datetime-local"
-            value={v.starts}
-            onChange={(e) => set("starts", e.target.value)}
-            onBlur={blur("starts_at")}
+            value={values.starts}
+            onChange={(event) => setField("starts", event.target.value)}
+            onBlur={blurHandler("starts_at")}
           />
         </Field>
-        <Field label="Selesai (WIB)" id="pf-ends_at" required error={galat("ends_at")}>
+        <Field label="Selesai (WIB)" id="pf-ends_at" required error={fieldError("ends_at")}>
           <Input
             type="datetime-local"
-            value={v.ends}
-            onChange={(e) => set("ends", e.target.value)}
-            onBlur={blur("ends_at")}
+            value={values.ends}
+            onChange={(event) => setField("ends", event.target.value)}
+            onBlur={blurHandler("ends_at")}
           />
         </Field>
       </div>
       <div className="flex items-center gap-3">
         <Switch
-          checked={v.is_public}
-          onChange={(x) => set("is_public", x)}
+          checked={values.is_public}
+          onChange={(checked) => setField("is_public", checked)}
           label={admin ? "Tampilkan di daftar voucher" : "Tampilkan di halaman toko"}
         />
         <span className="text-ink">{admin ? "Tampilkan di daftar voucher" : "Tampilkan di halaman toko"}</span>
@@ -271,7 +280,11 @@ export function PromoForm({
       </div>
       {!admin && (
         <div className="flex items-center gap-3">
-          <Switch checked={v.is_active} onChange={(x) => set("is_active", x)} label="Promo aktif" />
+          <Switch
+            checked={values.is_active}
+            onChange={(checked) => setField("is_active", checked)}
+            label="Promo aktif"
+          />
           <span className="text-ink">Promo aktif</span>
         </div>
       )}
@@ -279,7 +292,7 @@ export function PromoForm({
         <Button variant="secondary" onClick={onClose}>
           Batal
         </Button>
-        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">
+        <Button type="submit" loading={saving} loadingText="Menyimpan…">
           Simpan promo
         </Button>
       </div>

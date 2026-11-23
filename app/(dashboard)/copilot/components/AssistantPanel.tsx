@@ -11,37 +11,40 @@ import { Textarea } from "@/app/components/ui/Input";
 import { callAction } from "@/lib/action";
 import type { AssistantAnswer } from "@/types/ai-result";
 
-const CONTOH = [
+const EXAMPLE_QUESTIONS = [
   "Menu mana yang margin-nya paling tipis dan berapa harga yang lebih sehat?",
   "Buatkan paket snack box rapat 50 orang dari menu saya beserta harganya.",
   "Berapa kuota harian yang wajar untuk tiap menu berdasarkan penjualan 30 hari terakhir?",
 ];
 
-const pesanGagal: Record<string, string> = {
+const ERROR_MESSAGES: Record<string, string> = {
   SERVICE_UNAVAILABLE: "Asisten AI belum diaktifkan di server.",
   RATE_LIMITED: "Terlalu banyak pertanyaan. Coba lagi beberapa menit lagi.",
   NETWORK: "Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.",
 };
 
 // F17: tanya-jawab dengan konteks menu, HPP, dan penjualan toko sendiri
-export function AsistenPanel() {
+export function AssistantPanel() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<AssistantAnswer | null>(null);
-  const [gagal, setGagal] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  function kirim(ev?: FormEvent, isi = question) {
-    ev?.preventDefault();
-    const q = isi.trim();
-    if (!q) return setGagal("Tulis pertanyaan dulu.");
-    setQuestion(q);
-    setGagal(null);
-    start(async () => {
-      const r = await callAction(() => askAssistant(q));
-      if ("data" in r) return setAnswer(r.data);
+  function submit(event?: FormEvent, questionText = question) {
+    event?.preventDefault();
+    const trimmed = questionText.trim();
+    if (!trimmed) return setErrorMessage("Tulis pertanyaan dulu.");
+    setQuestion(trimmed);
+    setErrorMessage(null);
+    startTransition(async () => {
+      const result = await callAction(() => askAssistant(trimmed));
+      if ("data" in result) return setAnswer(result.data);
       // alasan per kolom dulu (mis. ditolak filter keamanan), lalu pesan umum
-      setGagal(
-        r.error.fields?.question?.[0] ?? pesanGagal[r.error.code] ?? r.error.message ?? "Terjadi kesalahan. Coba lagi.",
+      setErrorMessage(
+        result.error.fields?.question?.[0] ??
+          ERROR_MESSAGES[result.error.code] ??
+          result.error.message ??
+          "Terjadi kesalahan. Coba lagi.",
       );
     });
   }
@@ -58,36 +61,36 @@ export function AsistenPanel() {
         </p>
       </div>
       <ul className="flex flex-wrap gap-2" aria-label="Contoh pertanyaan">
-        {CONTOH.map((c) => (
-          <li key={c}>
+        {EXAMPLE_QUESTIONS.map((example) => (
+          <li key={example}>
             <Button
               type="button"
               variant="secondary"
               className="h-auto py-2 text-left text-sm"
               disabled={pending}
-              onClick={() => kirim(undefined, c)}
+              onClick={() => submit(undefined, example)}
             >
-              {c}
+              {example}
             </Button>
           </li>
         ))}
       </ul>
-      <form onSubmit={kirim} noValidate className="flex flex-col gap-3">
+      <form onSubmit={submit} noValidate className="flex flex-col gap-3">
         <Field label="Pertanyaan" id="pertanyaan-asisten">
-          <Textarea rows={3} maxLength={500} value={question} onChange={(e) => setQuestion(e.target.value)} />
+          <Textarea rows={3} maxLength={500} value={question} onChange={(event) => setQuestion(event.target.value)} />
         </Field>
         <Button type="submit" loading={pending} loadingText="Menyusun jawaban…" className="self-start">
           Tanya asisten
         </Button>
       </form>
-      {gagal && <Banner tone="danger">{gagal}</Banner>}
+      {errorMessage && <Banner tone="danger">{errorMessage}</Banner>}
       {answer && !pending && (
         <div aria-live="polite" className="flex flex-col gap-3 rounded-lg border border-line bg-subtle p-4 text-ink">
           <p className="whitespace-pre-wrap">{answer.answer}</p>
           {answer.points?.length ? (
             <ul aria-label="Poin penting" className="list-disc space-y-1 pl-5">
-              {answer.points.map((p, i) => (
-                <li key={i}>{p}</li>
+              {answer.points.map((point, i) => (
+                <li key={i}>{point}</li>
               ))}
             </ul>
           ) : null}

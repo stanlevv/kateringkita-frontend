@@ -7,7 +7,7 @@ import type { ReportSummary } from "@/types/report";
 
 /** LP-N1, LP-A1, LP-S1. Target, capaian, dan jumlah pesanan dihitung server (summary). */
 export function ReportKpis({ summary }: { summary: ReportSummary }) {
-  const { target, achievement_pct: pct } = summary;
+  const { target, achievement_pct: achievementPct } = summary;
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <KpiCard label="Omzet dan target" icon={Target} value={formatRupiah(summary.revenue)}>
@@ -19,12 +19,12 @@ export function ReportKpis({ summary }: { summary: ReportSummary }) {
                 aria-label="Capaian target"
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-valuenow={Math.min(pct, 100)}
+                aria-valuenow={Math.min(achievementPct, 100)}
                 className="h-2 flex-1 overflow-hidden rounded-md bg-subtle"
               >
-                <div className="h-full bg-primary" style={{ width: `${Math.min(pct, 100)}%` }} />
+                <div className="h-full bg-primary" style={{ width: `${Math.min(achievementPct, 100)}%` }} />
               </div>
-              <span className="font-mono text-sm font-semibold text-ink">{pct}%</span>
+              <span className="font-mono text-sm font-semibold text-ink">{achievementPct}%</span>
             </div>
             <p className="mt-1 text-sm text-ink-muted">Target {formatRupiah(target)}</p>
           </>

@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import { requireMerchant } from "@/services/auth.service";
 import { getScenario, SCENARIOS } from "@/lib/scenario";
 
-export default async function PratinjauPage() {
+export default async function PreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
   await requireMerchant();
-  const aktif = await getScenario();
-  const link =
+  const activeScenario = await getScenario();
+  const linkClass =
     "block min-h-11 rounded-md border border-line bg-surface p-4 hover:bg-subtle focus-visible:ring-2 focus-visible:ring-info";
 
   return (
@@ -14,19 +14,21 @@ export default async function PratinjauPage() {
       <h1 className="text-2xl font-bold text-ink">Pratinjau skenario</h1>
       <p className="mt-1 text-ink-muted">
         Pilih keadaan untuk mencoba tampilan dashboard dengan data contoh. Aktif sekarang:{" "}
-        <strong className="text-ink">{SCENARIOS.find((s) => s.id === aktif)?.label ?? "Normal"}</strong>
+        <strong className="text-ink">
+          {SCENARIOS.find((scenario) => scenario.id === activeScenario)?.label ?? "Normal"}
+        </strong>
       </p>
       <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-        {SCENARIOS.map((s) => (
-          <li key={s.id}>
-            <a href={`/api/skenario?nilai=${s.id}&ke=/dashboard`} className={link}>
-              <span className="block font-semibold text-ink">{s.label}</span>
-              <span className="block text-sm text-ink-muted">{s.description}</span>
+        {SCENARIOS.map((scenario) => (
+          <li key={scenario.id}>
+            <a href={`/api/skenario?nilai=${scenario.id}&ke=/dashboard`} className={linkClass}>
+              <span className="block font-semibold text-ink">{scenario.label}</span>
+              <span className="block text-sm text-ink-muted">{scenario.description}</span>
             </a>
           </li>
         ))}
       </ul>
-      <a href="/api/skenario?nilai=hapus&ke=/pratinjau" className={`${link} mt-4 font-semibold text-primary`}>
+      <a href="/api/skenario?nilai=hapus&ke=/pratinjau" className={`${linkClass} mt-4 font-semibold text-primary`}>
         Hapus skenario
       </a>
     </div>

@@ -3,24 +3,24 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const savePromo = vi.fn();
-vi.mock("@/app/actions/promos", () => ({ savePromo: (...a: unknown[]) => savePromo(...a) }));
+vi.mock("@/app/actions/promos", () => ({ savePromo: (...args: unknown[]) => savePromo(...args) }));
 import { promos } from "@/lib/fixtures/promos";
 import { PromoForm } from "./PromoForm";
 
 const onSaved = vi.fn();
 const onClose = vi.fn();
-const tampil = (promo?: Parameters<typeof PromoForm>[0]["promo"]) =>
+const renderForm = (promo?: Parameters<typeof PromoForm>[0]["promo"]) =>
   render(<PromoForm promo={promo} onSaved={onSaved} onClose={onClose} />);
-const ketik = async (label: string | RegExp, teks: string) => {
-  const el = screen.getByLabelText(label) as HTMLInputElement;
-  if (el.type === "datetime-local") return void fireEvent.change(el, { target: { value: teks } });
-  await userEvent.clear(el);
-  if (teks) await userEvent.type(el, teks);
+const typeInto = async (label: string | RegExp, text: string) => {
+  const field = screen.getByLabelText(label) as HTMLInputElement;
+  if (field.type === "datetime-local") return void fireEvent.change(field, { target: { value: text } });
+  await userEvent.clear(field);
+  if (text) await userEvent.type(field, text);
 };
-const simpan = () => userEvent.click(screen.getByRole("button", { name: "Simpan promo" }));
-const isiValid = async () => {
-  await ketik(/Kode promo/, "ramadan");
-  await ketik(/^Nilai/, "10");
+const clickSave = () => userEvent.click(screen.getByRole("button", { name: "Simpan promo" }));
+const fillValid = async () => {
+  await typeInto(/Kode promo/, "ramadan");
+  await typeInto(/^Nilai/, "10");
 };
 
 beforeEach(() => {
@@ -31,23 +31,23 @@ beforeEach(() => {
 
 describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
   it("kode dipaksa huruf besar", async () => {
-    tampil();
-    await ketik(/Kode promo/, "ramadan1");
+    renderForm();
+    await typeInto(/Kode promo/, "ramadan1");
     expect(screen.getByLabelText(/Kode promo/)).toHaveValue("RAMADAN1");
   });
 
   it("PR-E2 nilai 0, persen > 100, selesai <= mulai -> error per field + ringkasan fokus", async () => {
-    tampil();
-    await ketik(/Kode promo/, "AB");
-    await ketik(/^Nilai/, "0");
-    await ketik(/Selesai/, "2020-01-01T00:00");
-    await simpan();
+    renderForm();
+    await typeInto(/Kode promo/, "AB");
+    await typeInto(/^Nilai/, "0");
+    await typeInto(/Selesai/, "2020-01-01T00:00");
+    await clickSave();
     expect(screen.getByRole("alert", { name: "" })).toHaveFocus();
     expect(screen.getAllByText("Kode 3–30 huruf besar atau angka.").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Nilai minimal 1.").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Waktu selesai harus setelah waktu mulai.").length).toBeGreaterThan(0);
     expect(savePromo).not.toHaveBeenCalled();
-    await ketik(/^Nilai/, "101");
+    await typeInto(/^Nilai/, "101");
     expect(screen.getAllByText("Persen maksimal 100.").length).toBeGreaterThan(0);
   });
 
@@ -61,26 +61,26 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
   });
 
   it("C2: penjual tidak punya opsi gratis biaya layanan; admin tetap punya; promo toko lama jenis itu tetap bisa diubah", () => {
-    const opsi = () =>
-      Array.from((screen.getByLabelText(/Jenis promo/) as HTMLSelectElement).options).map((o) => o.value);
-    const { unmount } = tampil();
-    expect(opsi()).toEqual(["percent", "fixed"]);
+    const optionValues = () =>
+      Array.from((screen.getByLabelText(/Jenis promo/) as HTMLSelectElement).options).map((option) => option.value);
+    const { unmount } = renderForm();
+    expect(optionValues()).toEqual(["percent", "fixed"]);
     unmount();
-    const a = render(<PromoForm admin onSaved={onSaved} onClose={onClose} />);
-    expect(opsi()).toEqual(["percent", "fixed", "free_service_fee"]);
-    a.unmount();
-    tampil({ ...promos()[0], type: "free_service_fee", value: 0 });
-    expect(opsi()).toContain("free_service_fee");
+    const adminView = render(<PromoForm admin onSaved={onSaved} onClose={onClose} />);
+    expect(optionValues()).toEqual(["percent", "fixed", "free_service_fee"]);
+    adminView.unmount();
+    renderForm({ ...promos()[0], type: "free_service_fee", value: 0 });
+    expect(optionValues()).toContain("free_service_fee");
   });
 
   it("sakelar tampil di halaman toko: bawaan menyala, dimatikan → is_public false terkirim", async () => {
     savePromo.mockResolvedValue({ data: { ...promos()[0], id: 9, code: "RAMADAN", is_public: false } });
-    tampil();
-    const sak = screen.getByRole("switch", { name: "Tampilkan di halaman toko" });
-    expect(sak).toHaveAttribute("aria-checked", "true");
-    await userEvent.click(sak);
-    await isiValid();
-    await simpan();
+    renderForm();
+    const publicSwitch = screen.getByRole("switch", { name: "Tampilkan di halaman toko" });
+    expect(publicSwitch).toHaveAttribute("aria-checked", "true");
+    await userEvent.click(publicSwitch);
+    await fillValid();
+    await clickSave();
     await waitFor(() => expect(savePromo).toHaveBeenCalledWith(null, expect.objectContaining({ is_public: false })));
   });
 
@@ -91,11 +91,11 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
 
   it("submit valid mengirim kode kapital, waktu ISO UTC, kuota kosong = null", async () => {
     savePromo.mockResolvedValue({ data: { ...promos()[0], id: 9, code: "RAMADAN" } });
-    tampil();
-    await isiValid();
-    await ketik(/Mulai/, "2026-11-01T07:00");
-    await ketik(/Selesai/, "2026-12-01T07:00");
-    await simpan();
+    renderForm();
+    await fillValid();
+    await typeInto(/Mulai/, "2026-11-01T07:00");
+    await typeInto(/Selesai/, "2026-12-01T07:00");
+    await clickSave();
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(savePromo).toHaveBeenCalledWith(
       null,
@@ -114,9 +114,9 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
     savePromo.mockResolvedValue({
       error: { code: "CONFLICT", message: "Kode sudah dipakai.", fields: { code: ["Kode sudah dipakai."] } },
     });
-    tampil();
-    await isiValid();
-    await simpan();
+    renderForm();
+    await fillValid();
+    await clickSave();
     await waitFor(() => expect(screen.getAllByText("Kode sudah dipakai.").length).toBeGreaterThan(0));
     expect(screen.getByLabelText(/Kode promo/)).toHaveValue("RAMADAN");
     expect(onSaved).not.toHaveBeenCalled();
@@ -124,11 +124,11 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
   });
 
   it("mode ubah: terisi dari promo, waktu WIB", () => {
-    const p = promos()[0];
-    tampil(p);
-    expect(screen.getByLabelText(/Kode promo/)).toHaveValue(p.code);
+    const promo = promos()[0];
+    renderForm(promo);
+    expect(screen.getByLabelText(/Kode promo/)).toHaveValue(promo.code);
     expect(screen.getByLabelText(/Mulai/)).toHaveValue(
-      new Date(Date.parse(p.starts_at) + 7 * 3600e3).toISOString().slice(0, 16),
+      new Date(Date.parse(promo.starts_at) + 7 * 3600e3).toISOString().slice(0, 16),
     );
   });
 });

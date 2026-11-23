@@ -175,8 +175,8 @@ export function BannerAdmin({
           <BannerForm
             mode="admin"
             vouchers={vouchers}
-            simpan={createAdminBanner}
-            mintaUnggah={requestAdminUpload}
+            saveAction={createAdminBanner}
+            requestUpload={requestAdminUpload}
             onClose={() => setBuat(false)}
             onSaved={() => {
               setBuat(false);

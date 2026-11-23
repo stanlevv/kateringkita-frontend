@@ -23,49 +23,50 @@ import { ChatPreview } from "./ChatPreview";
 
 /** M-11, WA-*: `template` null = memakai templat bawaan. `order` = pesanan contoh untuk pratinjau. */
 export function TemplateEditor({
-  namaToko,
+  storeName,
   template,
   order,
 }: {
-  namaToko: string;
+  storeName: string;
   template: string | null;
   order: MerchantOrder | null;
 }) {
-  const [awal, setAwal] = useState(template ?? TEMPLATE_BAWAAN);
-  const [teks, setTeks] = useState(awal);
-  const [menyimpan, setMenyimpan] = useState(false);
-  const [tanyaBawaan, setTanyaBawaan] = useState(false);
-  const area = useRef<HTMLTextAreaElement>(null);
-  const kursor = useRef<number | null>(null);
+  const [savedTemplate, setSavedTemplate] = useState(template ?? TEMPLATE_BAWAAN);
+  const [text, setText] = useState(savedTemplate);
+  const [saving, setSaving] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  const pendingCursor = useRef<number | null>(null);
 
-  const dirty = teks !== awal;
+  const dirty = text !== savedTemplate;
   const guard = useUnsavedGuard(dirty);
-  const galat = validateTemplate(teks);
+  const templateError = validateTemplate(text);
 
   // Kursor dikembalikan setelah React menulis ulang isi textarea.
   useEffect(() => {
-    if (kursor.current === null) return;
-    const el = area.current;
-    el?.focus();
-    el?.setSelectionRange(kursor.current, kursor.current);
-    kursor.current = null;
-  }, [teks]);
+    if (pendingCursor.current === null) return;
+    const element = textarea.current;
+    element?.focus();
+    element?.setSelectionRange(pendingCursor.current, pendingCursor.current);
+    pendingCursor.current = null;
+  }, [text]);
 
-  function sisip(kode: string) {
-    const el = area.current;
-    const a = el?.selectionStart ?? teks.length;
-    const b = el?.selectionEnd ?? teks.length;
-    kursor.current = a + kode.length;
-    setTeks(teks.slice(0, a) + kode + teks.slice(b));
+  function insertPlaceholder(placeholder: string) {
+    const element = textarea.current;
+    const selectionStart = element?.selectionStart ?? text.length;
+    const selectionEnd = element?.selectionEnd ?? text.length;
+    pendingCursor.current = selectionStart + placeholder.length;
+    setText(text.slice(0, selectionStart) + placeholder + text.slice(selectionEnd));
   }
 
-  async function simpan() {
-    if (galat || menyimpan) return;
-    setMenyimpan(true);
-    const r = await callAction(() => saveProfile({ wa_template: teks }));
-    setMenyimpan(false);
-    if ("error" in r) return toast({ tone: "danger", message: r.error.fields?.wa_template?.[0] ?? r.error.message });
-    setAwal(teks);
+  async function save() {
+    if (templateError || saving) return;
+    setSaving(true);
+    const result = await callAction(() => saveProfile({ wa_template: text }));
+    setSaving(false);
+    if ("error" in result)
+      return toast({ tone: "danger", message: result.error.fields?.wa_template?.[0] ?? result.error.message });
+    setSavedTemplate(text);
     toast({ tone: "success", message: "Templat disimpan" });
   }
 
@@ -79,18 +80,18 @@ export function TemplateEditor({
               Klik untuk menyisipkan di posisi kursor. Kata kunci diganti data pesanan saat pesan dikirim.
             </p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {PLACEHOLDER.map((p) => (
-                <li key={p.code}>
+              {PLACEHOLDER.map((item) => (
+                <li key={item.code}>
                   <button
                     type="button"
-                    onClick={() => sisip(p.code)}
+                    onClick={() => insertPlaceholder(item.code)}
                     className={cx(
                       "flex min-h-11 w-full flex-col items-start justify-center rounded-md border border-line-strong bg-surface px-3 py-1 text-left hover:bg-subtle",
                       focusRing,
                     )}
                   >
-                    <span className="font-mono text-sm font-semibold text-ink">{p.code}</span>
-                    <span className="text-sm text-ink-muted">{p.description}</span>
+                    <span className="font-mono text-sm font-semibold text-ink">{item.code}</span>
+                    <span className="text-sm text-ink-muted">{item.description}</span>
                   </button>
                 </li>
               ))}
@@ -99,35 +100,35 @@ export function TemplateEditor({
           <Field
             label="Isi templat"
             id="wa-template"
-            help={`${teks.length.toLocaleString("id-ID")}/${MAX_TEMPLATE_LENGTH.toLocaleString("id-ID")} karakter`}
-            error={galat ?? undefined}
+            help={`${text.length.toLocaleString("id-ID")}/${MAX_TEMPLATE_LENGTH.toLocaleString("id-ID")} karakter`}
+            error={templateError ?? undefined}
           >
             <Textarea
-              ref={area}
-              value={teks}
-              onChange={(e) => setTeks(e.target.value)}
+              ref={textarea}
+              value={text}
+              onChange={(event) => setText(event.target.value)}
               rows={12}
               className="font-mono"
             />
           </Field>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button variant="secondary" onClick={() => setTanyaBawaan(true)}>
+            <Button variant="secondary" onClick={() => setConfirmResetOpen(true)}>
               Kembalikan ke bawaan
             </Button>
             {dirty && (
               <div className="flex flex-wrap items-center gap-3">
-                {galat && (
+                {templateError && (
                   <p id="wa-simpan-info" className="text-sm text-danger">
                     Perbaiki isi templat dulu sebelum menyimpan.
                   </p>
                 )}
                 <Button
-                  loading={menyimpan}
+                  loading={saving}
                   loadingText="Menyimpan…"
-                  aria-disabled={galat ? true : undefined}
-                  aria-describedby={galat ? "wa-simpan-info" : undefined}
-                  className={galat ? "opacity-50" : undefined}
-                  onClick={() => void simpan()}
+                  aria-disabled={templateError ? true : undefined}
+                  aria-describedby={templateError ? "wa-simpan-info" : undefined}
+                  className={templateError ? "opacity-50" : undefined}
+                  onClick={() => void save()}
                 >
                   Simpan templat
                 </Button>
@@ -137,22 +138,22 @@ export function TemplateEditor({
         </div>
 
         <ChatPreview
-          namaToko={namaToko}
-          teks={order ? renderTemplate(teks, templateValuesFromOrder(order)) : teks}
-          catatan={order ? `Contoh dari pesanan ${order.code}.` : "Pratinjau terisi data pesanan setelah ada pesanan."}
+          storeName={storeName}
+          text={order ? renderTemplate(text, templateValuesFromOrder(order)) : text}
+          note={order ? `Contoh dari pesanan ${order.code}.` : "Pratinjau terisi data pesanan setelah ada pesanan."}
         />
       </div>
 
       <ConfirmDialog
-        open={tanyaBawaan}
-        onClose={() => setTanyaBawaan(false)}
+        open={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
         title="Kembalikan ke bawaan?"
         body="Isi templat diganti dengan templat bawaan. Perubahan baru tersimpan setelah Simpan templat ditekan."
         confirmLabel="Kembalikan"
         tone="primary"
         onConfirm={() => {
-          setTeks(TEMPLATE_BAWAAN);
-          setTanyaBawaan(false);
+          setText(TEMPLATE_BAWAAN);
+          setConfirmResetOpen(false);
         }}
       />
       <ConfirmDialog

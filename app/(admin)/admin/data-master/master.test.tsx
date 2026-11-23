@@ -203,9 +203,9 @@ describe("promo platform & biaya layanan", () => {
       <PromoList
         admin
         promos={[promo]}
-        galat={false}
-        simpan={savePlatformPromo}
-        setAktifAksi={setPlatformPromoActive}
+        loadFailed={false}
+        saveAction={savePlatformPromo}
+        setActiveAction={setPlatformPromoActive}
       />,
     );
     expect(screen.queryByRole("button", { name: /Hapus/ })).toBeNull();
@@ -223,13 +223,13 @@ describe("promo platform & biaya layanan", () => {
   });
   it("mode admin: form tanpa saklar Promo aktif; mode penjual tetap punya", async () => {
     const { PromoForm } = await import("@/app/components/promo/PromoForm");
-    const { rerender } = render(<PromoForm admin onSaved={vi.fn()} onClose={vi.fn()} simpan={savePlatformPromo} />);
+    const { rerender } = render(<PromoForm admin onSaved={vi.fn()} onClose={vi.fn()} saveAction={savePlatformPromo} />);
     expect(screen.queryByRole("switch", { name: "Promo aktif" })).toBeNull();
     rerender(<PromoForm onSaved={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getByRole("switch", { name: "Promo aktif" })).toBeInTheDocument();
   });
   it("mode admin: validasi form identik (nilai 0 ditolak sebelum memanggil server)", async () => {
-    render(<PromoList admin promos={[]} galat={false} simpan={savePlatformPromo} />);
+    render(<PromoList admin promos={[]} loadFailed={false} saveAction={savePlatformPromo} />);
     await userEvent.click(screen.getAllByRole("button", { name: "Buat promo" })[0]);
     await userEvent.type(screen.getByLabelText(/Kode promo/), "AB");
     await userEvent.click(screen.getByRole("button", { name: "Simpan promo" }));

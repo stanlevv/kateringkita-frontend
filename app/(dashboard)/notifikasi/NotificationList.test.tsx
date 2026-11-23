@@ -5,10 +5,10 @@ const refresh = vi.fn();
 const markAllNotificationsRead = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/notifications", () => ({ markAllNotificationsRead: () => markAllNotificationsRead() }));
-import { DaftarNotifikasi } from "./NotificationList";
+import { NotificationList } from "./NotificationList";
 import type { AppNotification } from "@/types/notification";
 
-const n = (o: Partial<AppNotification>): AppNotification => ({
+const makeNotification = (overrides: Partial<AppNotification>): AppNotification => ({
   id: 1,
   type: "moderation",
   title: "Foto menu dihapus admin",
@@ -16,7 +16,7 @@ const n = (o: Partial<AppNotification>): AppNotification => ({
   data: { menu_id: 3 },
   read_at: null,
   created_at: "2026-11-23T03:00:00.000Z",
-  ...o,
+  ...overrides,
 });
 
 beforeEach(() => {
@@ -25,14 +25,14 @@ beforeEach(() => {
   markAllNotificationsRead.mockResolvedValue({ data: { unread_count: 0 } });
 });
 
-describe("DaftarNotifikasi", () => {
+describe("NotificationList", () => {
   it("menampilkan judul, isi, penanda belum dibaca; dibuka → tandai semua dibaca lalu refresh badge", async () => {
     await act(async () => {
       render(
-        <DaftarNotifikasi
+        <NotificationList
           rows={[
-            n({}),
-            n({
+            makeNotification({}),
+            makeNotification({
               id: 2,
               type: "info",
               title: "Libur nasional",
@@ -54,7 +54,7 @@ describe("DaftarNotifikasi", () => {
   });
   it("tanpa yang belum dibaca: tidak memanggil server; kosong → empty state", async () => {
     await act(async () => {
-      render(<DaftarNotifikasi rows={[]} total={0} page={1} unread={0} />);
+      render(<NotificationList rows={[]} total={0} page={1} unread={0} />);
     });
     expect(screen.getByText("Belum ada notifikasi")).toBeInTheDocument();
     expect(markAllNotificationsRead).not.toHaveBeenCalled();

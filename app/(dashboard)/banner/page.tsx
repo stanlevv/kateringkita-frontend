@@ -5,7 +5,7 @@ import { merchantFetch } from "@/services/api";
 import { requireMerchant } from "@/services/auth.service";
 import { getPromos } from "@/services/promo.service";
 import type { Banner } from "@/types/banner";
-import { BannerToko } from "./components/MerchantBanners";
+import { MerchantBanners } from "./components/MerchantBanners";
 
 // Banner beranda toko (rancangan voucher 2026-11-16 §5.4): ajukan, lihat status & alasan, ajukan ulang.
 export default async function BannerPage() {
@@ -19,7 +19,7 @@ export default async function BannerPage() {
       description="Pasang banner tokomu di beranda aplikasi pembeli. Tampil setelah disetujui admin."
     >
       {banners.ok && banners.data ? (
-        <BannerToko banners={banners.data} vouchers={vouchers} />
+        <MerchantBanners banners={banners.data} vouchers={vouchers} />
       ) : (
         <LoadError
           title="Banner belum bisa dimuat"

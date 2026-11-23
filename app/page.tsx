@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getSession } from "@/services/auth.service";
-import { AlurPesanan } from "@/app/components/landing/OrderFlow";
+import { OrderFlow } from "@/app/components/landing/OrderFlow";
 import { PrinterDemo } from "@/app/components/landing/PrinterDemo";
 import { Brand } from "@/app/components/shell/Brand";
 import { LinkButton } from "@/app/components/ui/LinkButton";
@@ -325,7 +325,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <AlurPesanan />
+        <OrderFlow />
 
         <section id="mulai" aria-labelledby="mulai-judul" className="scroll-mt-16 bg-surface py-20 sm:py-24">
           <div className={`${WRAP} grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16`}>

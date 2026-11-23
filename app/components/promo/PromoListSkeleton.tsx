@@ -1,14 +1,14 @@
 import { Skeleton, SkeletonText } from "@/app/components/ui/Skeleton";
 
 /** Kerangka PromoList (tombol "Buat promo" + grid kartu). Dipakai /promo dan /admin/promo. */
-export function RangkaPromo({ kartu = 6 }: { kartu?: number }) {
+export function PromoListSkeleton({ cardCount = 6 }: { cardCount?: number }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
         <Skeleton className="h-11 w-36" />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: kartu }, (_, i) => (
+        {Array.from({ length: cardCount }, (_, i) => (
           <div key={i} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4">
             <div className="flex justify-between gap-2">
               <SkeletonText size="lg" width="w-28" />

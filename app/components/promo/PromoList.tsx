@@ -20,25 +20,25 @@ import { PromoForm } from "./PromoForm";
 /** PR-N1…N3, PR-S1. Perubahan lokal menang atas data server sampai muat ulang (D2); null = dihapus. */
 export function PromoList({
   promos,
-  galat,
+  loadFailed,
   admin,
-  simpan,
-  setAktifAksi,
+  saveAction,
+  setActiveAction,
 }: {
   promos: Promo[];
-  galat: boolean;
+  loadFailed: boolean;
   /** Mode admin (promo platform, D4): tanpa Hapus, kode tidak bisa diubah, aksi simpan/aktif dari admin. */
   admin?: boolean;
-  simpan?: (id: number | null, input: unknown) => Promise<ActionResult<Promo>>;
-  setAktifAksi?: (id: number, aktif: boolean) => Promise<ActionResult<Promo>>;
+  saveAction?: (id: number | null, input: unknown) => Promise<ActionResult<Promo>>;
+  setActiveAction?: (id: number, active: boolean) => Promise<ActionResult<Promo>>;
 }) {
-  const [lokal, setLokal] = useState<Record<number, Promo | null>>({});
-  const [baru, setBaru] = useState<Promo[]>([]);
-  const [form, setForm] = useState<"baru" | Promo | null>(null);
-  const [hapus, setHapus] = useState<Promo | null>(null);
+  const [localChanges, setLocalChanges] = useState<Record<number, Promo | null>>({});
+  const [newPromos, setNewPromos] = useState<Promo[]>([]);
+  const [form, setForm] = useState<"new" | Promo | null>(null);
+  const [promoToDelete, setPromoToDelete] = useState<Promo | null>(null);
   const [now] = useState(() => Date.now());
 
-  if (galat)
+  if (loadFailed)
     return (
       <LoadError
         title="Promo belum bisa dimuat"
@@ -46,54 +46,54 @@ export function PromoList({
       />
     );
 
-  const daftar = [...baru, ...promos].flatMap((p) => {
-    const x = p.id in lokal ? lokal[p.id] : p;
-    return x ? [x] : [];
+  const visiblePromos = [...newPromos, ...promos].flatMap((promo) => {
+    const current = promo.id in localChanges ? localChanges[promo.id] : promo;
+    return current ? [current] : [];
   });
-  const buka = () => setForm("baru");
+  const openCreateForm = () => setForm("new");
 
-  async function setAktif(p: Promo, aktif: boolean) {
-    const pasang = (x: Promo) => setLokal((l) => ({ ...l, [p.id]: x }));
-    pasang({ ...p, is_active: aktif });
-    const r = await callAction(() => (setAktifAksi ?? setPromoActive)(p.id, aktif));
-    if ("error" in r) {
-      pasang(p);
-      toast({ tone: "danger", message: r.error.message });
+  async function setActive(promo: Promo, active: boolean) {
+    const applyLocal = (updated: Promo) => setLocalChanges((previous) => ({ ...previous, [promo.id]: updated }));
+    applyLocal({ ...promo, is_active: active });
+    const result = await callAction(() => (setActiveAction ?? setPromoActive)(promo.id, active));
+    if ("error" in result) {
+      applyLocal(promo);
+      toast({ tone: "danger", message: result.error.message });
       return;
     }
     toast(
-      aktif
+      active
         ? { tone: "success", message: "Promo diaktifkan" }
         : {
             tone: "success",
             message: "Promo dinonaktifkan",
-            action: { label: "Batalkan", onClick: () => void setAktif({ ...p, is_active: true }, true) },
+            action: { label: "Batalkan", onClick: () => void setActive({ ...promo, is_active: true }, true) },
           },
     );
   }
 
-  async function hapusPromo(p: Promo) {
-    const r = await callAction(() => deletePromo(p.id));
-    if ("error" in r) return toast({ tone: "danger", message: r.error.message });
-    setLokal((l) => ({ ...l, [p.id]: null }));
+  async function removePromo(promo: Promo) {
+    const result = await callAction(() => deletePromo(promo.id));
+    if ("error" in result) return toast({ tone: "danger", message: result.error.message });
+    setLocalChanges((previous) => ({ ...previous, [promo.id]: null }));
     toast({ tone: "success", message: "Promo dihapus" });
   }
 
-  function tersimpan(p: Promo) {
-    if (form === "baru") setBaru((b) => [p, ...b]);
-    else setLokal((l) => ({ ...l, [p.id]: p }));
+  function handleSaved(promo: Promo) {
+    if (form === "new") setNewPromos((previous) => [promo, ...previous]);
+    else setLocalChanges((previous) => ({ ...previous, [promo.id]: promo }));
     setForm(null);
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {daftar.length === 0 ? (
+      {visiblePromos.length === 0 ? (
         <EmptyState
           icon={TicketPercent}
           title="Belum ada promo"
           body="Buat kode promo untuk menarik pembeli"
           action={
-            <Button onClick={buka}>
+            <Button onClick={openCreateForm}>
               <Plus aria-hidden className="size-4" />
               Buat promo
             </Button>
@@ -102,76 +102,76 @@ export function PromoList({
       ) : (
         <>
           <div>
-            <Button onClick={buka}>
+            <Button onClick={openCreateForm}>
               <Plus aria-hidden className="size-4" />
               Buat promo
             </Button>
           </div>
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {daftar.map((p) => {
-              const st = PROMO_STATUS[promoStatus(p, now)];
+            {visiblePromos.map((promo) => {
+              const statusBadge = PROMO_STATUS[promoStatus(promo, now)];
               return (
-                <li key={p.id}>
+                <li key={promo.id}>
                   <article
-                    aria-label={p.code}
+                    aria-label={promo.code}
                     className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-4"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-mono text-lg font-semibold text-ink">{p.code}</p>
+                      <p className="font-mono text-lg font-semibold text-ink">{promo.code}</p>
                       <div className="flex flex-wrap justify-end gap-1">
-                        <Badge tone={st.tone} icon={st.icon}>
-                          {st.label}
+                        <Badge tone={statusBadge.tone} icon={statusBadge.icon}>
+                          {statusBadge.label}
                         </Badge>
-                        {p.is_public === false && (
+                        {promo.is_public === false && (
                           <Badge tone="neutral" icon={EyeOff}>
                             Tersembunyi
                           </Badge>
                         )}
                       </div>
                     </div>
-                    {p.description && <p className="text-ink-muted">{p.description}</p>}
-                    <p className="font-medium text-ink">{describePromoType(p)}</p>
+                    {promo.description && <p className="text-ink-muted">{promo.description}</p>}
+                    <p className="font-medium text-ink">{describePromoType(promo)}</p>
                     <dl className="grid gap-1 text-sm text-ink-muted">
                       <div>
                         <dt className="sr-only">Min belanja</dt>
                         <dd>
-                          {p.min_subtotal > 0
-                            ? `Min. belanja ${formatRupiah(p.min_subtotal)}`
+                          {promo.min_subtotal > 0
+                            ? `Min. belanja ${formatRupiah(promo.min_subtotal)}`
                             : "Tanpa minimal belanja"}
                         </dd>
                       </div>
                       <div>
                         <dt className="sr-only">Periode</dt>
                         <dd>
-                          {formatDate(p.starts_at)} – {formatDate(p.ends_at)}
+                          {formatDate(promo.starts_at)} – {formatDate(promo.ends_at)}
                         </dd>
                       </div>
                       <div>
                         <dt className="sr-only">Pemakaian</dt>
                         <dd className="font-mono">
-                          {p.quota !== null ? `${p.used_count}/${p.quota}` : p.used_count} terpakai
+                          {promo.quota !== null ? `${promo.used_count}/${promo.quota}` : promo.used_count} terpakai
                         </dd>
                       </div>
                     </dl>
                     <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                      <Button variant="secondary" aria-label={`Ubah ${p.code}`} onClick={() => setForm(p)}>
+                      <Button variant="secondary" aria-label={`Ubah ${promo.code}`} onClick={() => setForm(promo)}>
                         <Pencil aria-hidden className="size-4" />
                         Ubah
                       </Button>
                       <Button
                         variant="secondary"
-                        aria-label={`${p.is_active ? "Nonaktifkan" : "Aktifkan"} ${p.code}`}
-                        onClick={() => void setAktif(p, !p.is_active)}
+                        aria-label={`${promo.is_active ? "Nonaktifkan" : "Aktifkan"} ${promo.code}`}
+                        onClick={() => void setActive(promo, !promo.is_active)}
                       >
                         <Power aria-hidden className="size-4" />
-                        {p.is_active ? "Nonaktifkan" : "Aktifkan"}
+                        {promo.is_active ? "Nonaktifkan" : "Aktifkan"}
                       </Button>
-                      {admin ? null : p.used_count === 0 ? (
+                      {admin ? null : promo.used_count === 0 ? (
                         <Button
                           variant="ghost"
                           className="ml-auto text-danger"
-                          aria-label={`Hapus ${p.code}`}
-                          onClick={() => setHapus(p)}
+                          aria-label={`Hapus ${promo.code}`}
+                          onClick={() => setPromoToDelete(promo)}
                         >
                           <Trash2 aria-hidden className="size-4" />
                           Hapus
@@ -191,28 +191,28 @@ export function PromoList({
       <Dialog
         open={form !== null}
         onClose={() => setForm(null)}
-        title={form === "baru" ? "Buat promo" : "Ubah promo"}
+        title={form === "new" ? "Buat promo" : "Ubah promo"}
         className="max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto"
       >
         <PromoForm
-          promo={form === "baru" ? null : form}
-          simpan={simpan}
+          promo={form === "new" ? null : form}
+          saveAction={saveAction}
           admin={admin}
-          onSaved={tersimpan}
+          onSaved={handleSaved}
           onClose={() => setForm(null)}
         />
       </Dialog>
       <ConfirmDialog
-        open={!!hapus}
-        onClose={() => setHapus(null)}
+        open={!!promoToDelete}
+        onClose={() => setPromoToDelete(null)}
         tone="danger"
         title="Hapus promo?"
-        body={`Kode ${hapus?.code ?? ""} akan dihapus dan tidak bisa dipakai lagi.`}
+        body={`Kode ${promoToDelete?.code ?? ""} akan dihapus dan tidak bisa dipakai lagi.`}
         confirmLabel="Hapus promo"
         onConfirm={() => {
-          const p = hapus!;
-          setHapus(null);
-          void hapusPromo(p);
+          const promo = promoToDelete!;
+          setPromoToDelete(null);
+          void removePromo(promo);
         }}
       />
     </div>

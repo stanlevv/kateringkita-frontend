@@ -36,9 +36,9 @@ export default async function PromoPlatformPage() {
         <PromoList
           admin
           promos={promos.ok && promos.data ? promos.data : []}
-          galat={!promos.ok}
-          simpan={savePlatformPromo}
-          setAktifAksi={setPlatformPromoActive}
+          loadFailed={!promos.ok}
+          saveAction={savePlatformPromo}
+          setActiveAction={setPlatformPromoActive}
         />
       </div>
     </PageHeader>

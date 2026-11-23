@@ -35,7 +35,8 @@ export function PickupPointPicker({
       </div>
     );
   }
-  const ubah = (id: number, on: boolean) => onChange(on ? [...value, id] : value.filter((x) => x !== id));
+  const toggle = (id: number, checked: boolean) =>
+    onChange(checked ? [...value, id] : value.filter((selectedId) => selectedId !== id));
   return (
     <div
       id="pg-pickup_point_ids"
@@ -44,12 +45,12 @@ export function PickupPointPicker({
       className="flex flex-col focus-visible:ring-2 focus-visible:ring-focus"
     >
       {points.length === 0 && <p className="text-ink-muted">Belum ada titik temu yang tersedia.</p>}
-      {points.map((p) => (
+      {points.map((point) => (
         <Checkbox
-          key={p.id}
-          label={p.name}
-          checked={value.includes(p.id)}
-          onChange={(e) => ubah(p.id, e.target.checked)}
+          key={point.id}
+          label={point.name}
+          checked={value.includes(point.id)}
+          onChange={(event) => toggle(point.id, event.target.checked)}
         />
       ))}
       {error && (

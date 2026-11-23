@@ -10,11 +10,11 @@ import { callAction } from "@/lib/action";
 import { formatRupiah, formatDate } from "@/lib/format";
 import type { MyPayouts } from "@/types/payout";
 
-type Isian = { bank: string; account_number: string; account_name: string; password: string };
-const dari = (d: MyPayouts | null): Isian => ({
-  bank: d?.account?.bank ?? "",
-  account_number: d?.account?.account_number ?? "",
-  account_name: d?.account?.account_name ?? "",
+type BankAccountInput = { bank: string; account_number: string; account_name: string; password: string };
+const toFormValues = (payouts: MyPayouts | null): BankAccountInput => ({
+  bank: payouts?.account?.bank ?? "",
+  account_number: payouts?.account?.account_number ?? "",
+  account_name: payouts?.account?.account_name ?? "",
   password: "",
 });
 
@@ -22,44 +22,47 @@ const dari = (d: MyPayouts | null): Isian => ({
  * F26: pembayaran non-tunai masuk ke KateringKita lewat Midtrans; admin mentransfer bagian toko ke rekening ini.
  * Di luar form utama: tersimpan langsung, wajib kata sandi (dicek backend). `data` null = gagal dimuat.
  */
-export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
-  const [d, setD] = useState(data);
-  const [ubah, setUbah] = useState(!data?.account);
-  const [v, setV] = useState(() => dari(data));
-  const [galat, setGalat] = useState<Partial<Record<keyof Isian, string>>>({});
-  const [sibuk, setSibuk] = useState(false);
+export function PayoutBankAccount({ data }: { data: MyPayouts | null }) {
+  const [payoutData, setPayoutData] = useState(data);
+  const [editing, setEditing] = useState(!data?.account);
+  const [values, setValues] = useState(() => toFormValues(data));
+  const [errors, setErrors] = useState<Partial<Record<keyof BankAccountInput, string>>>({});
+  const [saving, setSaving] = useState(false);
 
-  if (!d)
+  if (!payoutData)
     return (
       <p role="alert" className="text-danger">
         Data pencairan belum bisa dimuat. Muat ulang halaman.
       </p>
     );
 
-  const set = (k: keyof Isian, nilai: string) => {
-    setGalat((g) => ({ ...g, [k]: undefined }));
-    setV((p) => ({ ...p, [k]: nilai }));
+  const setField = (field: keyof BankAccountInput, value: string) => {
+    setErrors((previous) => ({ ...previous, [field]: undefined }));
+    setValues((previous) => ({ ...previous, [field]: value }));
   };
-  function batal() {
-    setV(dari(d));
-    setGalat({});
-    setUbah(false);
+  function cancelEdit() {
+    setValues(toFormValues(payoutData));
+    setErrors({});
+    setEditing(false);
   }
-  async function simpan(e: FormEvent) {
-    e.preventDefault();
-    if (sibuk) return;
-    setSibuk(true);
-    const r = await callAction(() => saveBankAccount(v));
-    setSibuk(false);
-    if ("error" in r) {
-      if (r.error.fields) setGalat(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
-      else toast({ tone: "danger", message: r.error.message });
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    const result = await callAction(() => saveBankAccount(values));
+    setSaving(false);
+    if ("error" in result) {
+      if (result.error.fields)
+        setErrors(
+          Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
+        );
+      else toast({ tone: "danger", message: result.error.message });
       return;
     }
-    setD(r.data);
-    setV(dari(r.data));
-    setGalat({});
-    setUbah(false);
+    setPayoutData(result.data);
+    setValues(toFormValues(result.data));
+    setErrors({});
+    setEditing(false);
     toast({ tone: "success", message: "Rekening pencairan disimpan" });
   }
 
@@ -74,9 +77,10 @@ export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
           <dt className="text-sm text-ink-muted">Saldo belum dicairkan</dt>
-          <dd className="font-mono text-xl font-semibold text-ink">{formatRupiah(d.balance.amount)}</dd>
+          <dd className="font-mono text-xl font-semibold text-ink">{formatRupiah(payoutData.balance.amount)}</dd>
           <dd className="text-sm text-ink-muted">
-            {d.balance.orders} pesanan selesai{d.balance.since ? ` sejak ${formatDate(d.balance.since)}` : ""}
+            {payoutData.balance.orders} pesanan selesai
+            {payoutData.balance.since ? ` sejak ${formatDate(payoutData.balance.since)}` : ""}
           </dd>
         </div>
         <div>
@@ -88,27 +92,29 @@ export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
         </div>
       </dl>
 
-      {d.account && !ubah ? (
+      {payoutData.account && !editing ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-subtle p-4">
           <div>
             <p className="font-semibold text-ink">
-              {d.account.bank_name} · <span className="font-mono">{d.account.account_number}</span>
+              {payoutData.account.bank_name} · <span className="font-mono">{payoutData.account.account_number}</span>
             </p>
-            <p className="text-ink-muted">a.n. {d.account.account_name}</p>
+            <p className="text-ink-muted">a.n. {payoutData.account.account_name}</p>
           </div>
-          <Button variant="secondary" onClick={() => setUbah(true)}>
+          <Button variant="secondary" onClick={() => setEditing(true)}>
             Ganti rekening
           </Button>
         </div>
       ) : (
-        <form onSubmit={simpan} noValidate className="flex max-w-md flex-col gap-4" aria-label="Rekening pencairan">
-          {!d.account && <p className="text-sm font-medium text-warning">Isi rekening agar saldo bisa dicairkan.</p>}
-          <Field label="Bank atau e-wallet" id="rk-bank" required error={galat.bank}>
-            <Select value={v.bank} onChange={(e) => set("bank", e.target.value)}>
+        <form onSubmit={submit} noValidate className="flex max-w-md flex-col gap-4" aria-label="Rekening pencairan">
+          {!payoutData.account && (
+            <p className="text-sm font-medium text-warning">Isi rekening agar saldo bisa dicairkan.</p>
+          )}
+          <Field label="Bank atau e-wallet" id="rk-bank" required error={errors.bank}>
+            <Select value={values.bank} onChange={(event) => setField("bank", event.target.value)}>
               <option value="">Pilih bank atau e-wallet</option>
-              {d.banks.map((b) => (
-                <option key={b.code} value={b.code}>
-                  {b.name}
+              {payoutData.banks.map((bank) => (
+                <option key={bank.code} value={bank.code}>
+                  {bank.name}
                 </option>
               ))}
             </Select>
@@ -118,14 +124,14 @@ export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
             id="rk-account_number"
             required
             help="Untuk e-wallet, isi nomor HP yang terdaftar."
-            error={galat.account_number}
+            error={errors.account_number}
           >
             <Input
               inputMode="numeric"
               autoComplete="off"
               maxLength={30}
-              value={v.account_number}
-              onChange={(e) => set("account_number", e.target.value)}
+              value={values.account_number}
+              onChange={(event) => setField("account_number", event.target.value)}
             />
           </Field>
           <Field
@@ -133,13 +139,13 @@ export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
             id="rk-account_name"
             required
             help="Sesuai buku tabungan atau akun e-wallet."
-            error={galat.account_name}
+            error={errors.account_name}
           >
             <Input
               autoComplete="off"
               maxLength={100}
-              value={v.account_name}
-              onChange={(e) => set("account_name", e.target.value)}
+              value={values.account_name}
+              onChange={(event) => setField("account_name", event.target.value)}
             />
           </Field>
           <Field
@@ -147,21 +153,21 @@ export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
             id="rk-password"
             required
             help="Demi keamanan, rekening hanya bisa diganti dengan kata sandi."
-            error={galat.password}
+            error={errors.password}
           >
             <Input
               type="password"
               autoComplete="current-password"
-              value={v.password}
-              onChange={(e) => set("password", e.target.value)}
+              value={values.password}
+              onChange={(event) => setField("password", event.target.value)}
             />
           </Field>
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" loading={sibuk} loadingText="Menyimpan…">
+            <Button type="submit" loading={saving} loadingText="Menyimpan…">
               Simpan rekening
             </Button>
-            {d.account && (
-              <Button variant="ghost" onClick={batal} disabled={sibuk}>
+            {payoutData.account && (
+              <Button variant="ghost" onClick={cancelEdit} disabled={saving}>
                 Batal
               </Button>
             )}
@@ -171,19 +177,20 @@ export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
 
       <div className="flex flex-col gap-2">
         <h3 className="font-semibold text-ink">Riwayat pencairan</h3>
-        {d.payouts.length === 0 ? (
+        {payoutData.payouts.length === 0 ? (
           <p className="text-ink-muted">Belum ada pencairan.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-line">
-            {d.payouts.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 py-3">
+            {payoutData.payouts.map((payout) => (
+              <li key={payout.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 py-3">
                 <span className="text-ink">
-                  {formatDate(p.created_at)} · {p.orders_count} pesanan · {p.bank_name} {p.account_number}
+                  {formatDate(payout.created_at)} · {payout.orders_count} pesanan · {payout.bank_name}{" "}
+                  {payout.account_number}
                 </span>
-                <span className="font-mono font-semibold text-ink">{formatRupiah(p.amount)}</span>
+                <span className="font-mono font-semibold text-ink">{formatRupiah(payout.amount)}</span>
                 <span className="w-full text-sm text-ink-muted">
-                  Ref. {p.reference}
-                  {p.note ? ` · ${p.note}` : ""}
+                  Ref. {payout.reference}
+                  {payout.note ? ` · ${payout.note}` : ""}
                 </span>
               </li>
             ))}
