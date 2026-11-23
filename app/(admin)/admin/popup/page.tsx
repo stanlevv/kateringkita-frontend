@@ -5,7 +5,7 @@ import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { Popup } from "@/types/popup";
 import type { Promo } from "@/types/promo";
-import { DaftarPopup } from "./components/PopupList";
+import { PopupList } from "./components/PopupList";
 
 // Pop-up promo aplikasi mobile (rancangan voucher 2026-11-16 §5.5): semua tingkat melihat; super & ops mengatur.
 export default async function PopupPage() {
@@ -20,7 +20,7 @@ export default async function PopupPage() {
       description="Pop-up promo saat aplikasi pembeli dibuka. Tampil sekali sehari dan berhenti setelah vouchernya diklaim."
     >
       {popups.ok && popups.data ? (
-        <DaftarPopup popups={popups.data} vouchers={vouchers} bolehUbah={session.user.admin_level !== "support"} />
+        <PopupList popups={popups.data} vouchers={vouchers} canEdit={session.user.admin_level !== "support"} />
       ) : (
         <LoadError
           title="Pop-up belum bisa dimuat"

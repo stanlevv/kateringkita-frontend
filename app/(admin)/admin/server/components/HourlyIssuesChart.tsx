@@ -7,23 +7,23 @@ import { formatTime } from "@/lib/format";
 import type { HourlyServerStats } from "@/types/server";
 
 // Warna status tetap (skill dataviz: critical & warning). Kuning < 3:1 di latar terang → selalu berpasangan ikon + label + tabel.
-const SERI = [
+const SERIES = [
   { key: "error", name: "Error 5xx", shortName: "error", color: "#d03b3b", icon: CircleX },
   { key: "lambat", name: "Lambat > 2 dtk", shortName: "lambat", color: "#fab219", icon: Clock },
 ];
 
 /** Error 5xx (bawah) dan request lambat (atas) per jam, 24 jam terakhir. */
-export function GrafikPerJam({ data }: { data: HourlyServerStats[] }) {
+export function HourlyIssuesChart({ data }: { data: HourlyServerStats[] }) {
   return (
     <BarChart
       title="Masalah per jam"
       description="24 jam terakhir, jam WIB."
-      series={SERI}
+      series={SERIES}
       columnLabel="Jam (WIB)"
-      data={data.map((d) => ({
-        label: formatTime(d.jam),
-        fullLabel: `${formatTime(d.jam)} WIB`,
-        values: { error: d.error, lambat: d.lambat },
+      data={data.map((hour) => ({
+        label: formatTime(hour.jam),
+        fullLabel: `${formatTime(hour.jam)} WIB`,
+        values: { error: hour.error, lambat: hour.lambat },
       }))}
       axisTicks={[0, 6, 12, 18, data.length - 1]}
       empty={

@@ -8,31 +8,31 @@ import { LIMIT_LOG } from "@/services/admin-log.service";
 import type { AuditLog, PageMeta } from "@/types/admin";
 import { requireAdmin } from "@/services/auth.service";
 
-const FILTER = ["action", "target_type", "target_id", "from", "to"] as const;
+const FILTER_KEYS = ["action", "target_type", "target_id", "from", "to"] as const;
 
 // A-05 — Log aksi admin (hanya baca). Filter di URL.
 export default async function LogPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   await requireAdmin();
-  const sp = await searchParams;
-  const q = new URLSearchParams();
-  for (const k of FILTER) if (sp[k]) q.set(k, sp[k]!);
-  const n = Number(sp.page);
-  const page = Number.isInteger(n) && n >= 1 && n <= 100_000 ? n : 1;
-  q.set("page", String(page));
-  q.set("limit", String(LIMIT_LOG));
-  const res = await adminFetch<AuditLog[]>(`/audit-logs?${q}`);
-  const meta = res.meta as PageMeta | undefined;
+  const params = await searchParams;
+  const apiQuery = new URLSearchParams();
+  for (const key of FILTER_KEYS) if (params[key]) apiQuery.set(key, params[key]!);
+  const pageParam = Number(params.page);
+  const page = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 100_000 ? pageParam : 1;
+  apiQuery.set("page", String(page));
+  apiQuery.set("limit", String(LIMIT_LOG));
+  const response = await adminFetch<AuditLog[]>(`/audit-logs?${apiQuery}`);
+  const meta = response.meta as PageMeta | undefined;
 
   return (
     <PageHeader title="Log aksi admin" description="Setiap perubahan oleh admin tercatat di sini. Hanya untuk dibaca.">
       <Suspense>
         <LogFilters />
-        {res.ok && res.data ? (
+        {response.ok && response.data ? (
           <AuditTable
-            rows={res.data}
+            rows={response.data}
             page={page}
-            total={meta?.total ?? res.data.length}
-            filtered={FILTER.some((k) => sp[k])}
+            total={meta?.total ?? response.data.length}
+            filtered={FILTER_KEYS.some((key) => params[key])}
           />
         ) : (
           <LoadError

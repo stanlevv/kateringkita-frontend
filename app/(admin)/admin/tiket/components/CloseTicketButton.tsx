@@ -9,39 +9,39 @@ import { toast } from "@/app/components/ui/Toast";
 import { callAction } from "@/lib/action";
 
 /** Tutup tiket setelah konfirmasi. Dialog tetap terbuka bila gagal; berhasil -> toast + muat ulang. */
-export function TutupTiket({ code }: { code: string }) {
+export function CloseTicketButton({ code }: { code: string }) {
   const router = useRouter();
-  const [buka, setBuka] = useState(false);
-  const [sibuk, setSibuk] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  async function tutup() {
-    if (sibuk) return;
-    setSibuk(true);
-    const r = await callAction(() => closeTicket(code));
-    setSibuk(false);
-    if ("error" in r) {
-      toast({ tone: "danger", message: r.error.message });
+  async function confirmClose() {
+    if (busy) return;
+    setBusy(true);
+    const result = await callAction(() => closeTicket(code));
+    setBusy(false);
+    if ("error" in result) {
+      toast({ tone: "danger", message: result.error.message });
       return;
     }
-    setBuka(false);
+    setDialogOpen(false);
     toast({ tone: "success", message: `Tiket ${code} ditutup.` });
     router.refresh();
   }
 
   return (
     <>
-      <Button variant="secondary" onClick={() => setBuka(true)}>
+      <Button variant="secondary" onClick={() => setDialogOpen(true)}>
         Tutup tiket
       </Button>
       <ConfirmDialog
-        open={buka}
-        onClose={() => setBuka(false)}
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
         title="Tutup tiket"
         tone="primary"
         confirmLabel="Tutup tiket"
-        busy={sibuk}
+        busy={busy}
         body="Pembeli mendapat notifikasi dan tidak bisa membalas tiket ini lagi. Bila masih perlu bantuan, pembeli membuat tiket baru."
-        onConfirm={() => void tutup()}
+        onConfirm={() => void confirmClose()}
       />
     </>
   );

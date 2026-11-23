@@ -14,51 +14,52 @@ import { MAX_REPLY_LENGTH } from "@/services/admin-ticket.service";
  * Balas pembeli (1–2000 karakter). Galat validasi tampil di bawah isian (fields.body, atau pesan umumnya);
  * galat lain lewat toast. Tiket yang ternyata sudah ditutup (409) memuat ulang halaman agar tampil keadaan terbarunya.
  */
-export function BalasTiket({ code }: { code: string }) {
+export function TicketReplyForm({ code }: { code: string }) {
   const router = useRouter();
-  const [teks, setTeks] = useState("");
-  const [galat, setGalat] = useState<string>();
-  const [sibuk, setSibuk] = useState(false);
+  const [text, setText] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [busy, setBusy] = useState(false);
 
-  async function kirim(e: FormEvent) {
-    e.preventDefault();
-    if (sibuk || !teks.trim()) return;
-    setSibuk(true);
-    const r = await callAction(() => replyToTicket(code, teks));
-    setSibuk(false);
-    if ("error" in r) {
-      if (r.error.code === "VALIDATION_ERROR") return setGalat(r.error.fields?.body?.[0] ?? r.error.message);
-      toast({ tone: "danger", message: r.error.message });
-      if (r.error.code === "TICKET_CLOSED" || r.error.code === "NOT_FOUND") router.refresh();
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy || !text.trim()) return;
+    setBusy(true);
+    const result = await callAction(() => replyToTicket(code, text));
+    setBusy(false);
+    if ("error" in result) {
+      if (result.error.code === "VALIDATION_ERROR")
+        return setErrorMessage(result.error.fields?.body?.[0] ?? result.error.message);
+      toast({ tone: "danger", message: result.error.message });
+      if (result.error.code === "TICKET_CLOSED" || result.error.code === "NOT_FOUND") router.refresh();
       return;
     }
-    setTeks("");
-    setGalat(undefined);
+    setText("");
+    setErrorMessage(undefined);
     toast({ tone: "success", message: "Balasan terkirim. Pembeli mendapat notifikasi." });
     router.refresh();
   }
 
   return (
-    <form onSubmit={kirim} noValidate className="flex flex-col gap-3 border-t border-line pt-4">
+    <form onSubmit={submit} noValidate className="flex flex-col gap-3 border-t border-line pt-4">
       <Field
         label="Balasan untuk pembeli"
         id={`balas-${code}`}
         required
-        help={`${teks.length}/${MAX_REPLY_LENGTH}`}
-        error={galat}
+        help={`${text.length}/${MAX_REPLY_LENGTH}`}
+        error={errorMessage}
       >
         <Textarea
-          value={teks}
+          value={text}
           maxLength={MAX_REPLY_LENGTH}
           rows={4}
-          onChange={(e) => {
-            setTeks(e.target.value);
-            setGalat(undefined);
+          onChange={(event) => {
+            setText(event.target.value);
+            setErrorMessage(undefined);
           }}
         />
       </Field>
       <div className="flex justify-end">
-        <Button type="submit" disabled={!teks.trim()} loading={sibuk} loadingText="Mengirim…">
+        <Button type="submit" disabled={!text.trim()} loading={busy} loadingText="Mengirim…">
           Kirim balasan
         </Button>
       </div>

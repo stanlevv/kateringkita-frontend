@@ -18,26 +18,26 @@ import { bannerStatus } from "@/lib/banner";
 import { formatDate } from "@/lib/format";
 import type { Banner, VoucherOption } from "@/types/banner";
 
-const ALASAN = "Tulis alasan penolakan (3–300 karakter).";
+const REASON_HINT = "Tulis alasan penolakan (3–300 karakter).";
 
-function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah: boolean }) {
+function BannerCard({ banner, now, canEdit }: { banner: Banner; now: number; canEdit: boolean }) {
   const router = useRouter();
-  const [alasan, setAlasan] = useState("");
-  const [galat, setGalat] = useState<string>();
-  const [sibuk, setSibuk] = useState(false);
-  const [yakin, setYakin] = useState(false);
-  const st = bannerStatus(b, now);
+  const [reason, setReason] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const statusView = bannerStatus(banner, now);
 
-  async function tinjau(status: "disetujui" | "ditolak" | "nonaktif") {
-    if (status === "ditolak" && alasan.trim().length < 3) return setGalat(ALASAN);
-    setSibuk(true);
-    const r = await callAction(() =>
-      reviewAdminBanner(b.id, status === "ditolak" ? { status, catatan: alasan.trim() } : { status }),
+  async function review(status: "disetujui" | "ditolak" | "nonaktif") {
+    if (status === "ditolak" && reason.trim().length < 3) return setErrorMessage(REASON_HINT);
+    setBusy(true);
+    const result = await callAction(() =>
+      reviewAdminBanner(banner.id, status === "ditolak" ? { status, catatan: reason.trim() } : { status }),
     );
-    setSibuk(false);
-    if ("error" in r) {
-      if (r.error.fields?.catatan) return setGalat(r.error.fields.catatan[0]);
-      return toast({ tone: "danger", message: r.error.message });
+    setBusy(false);
+    if ("error" in result) {
+      if (result.error.fields?.catatan) return setErrorMessage(result.error.fields.catatan[0]);
+      return toast({ tone: "danger", message: result.error.message });
     }
     toast({
       tone: "success",
@@ -52,56 +52,59 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
   }
 
   return (
-    <article aria-label={b.title} className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-4">
+    <article
+      aria-label={banner.title}
+      className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-4"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari penyimpanan publik */}
-      <img src={b.image_url} alt="" className="aspect-[2/1] w-full rounded-md object-cover" />
+      <img src={banner.image_url} alt="" className="aspect-[2/1] w-full rounded-md object-cover" />
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-semibold text-ink">{b.title}</p>
-          <p className="text-sm text-ink-muted">{b.merchant?.business_name ?? "Platform KateringKita"}</p>
+          <p className="font-semibold text-ink">{banner.title}</p>
+          <p className="text-sm text-ink-muted">{banner.merchant?.business_name ?? "Platform KateringKita"}</p>
         </div>
-        <Badge tone={st.tone} icon={st.icon}>
-          {st.label}
+        <Badge tone={statusView.tone} icon={statusView.icon}>
+          {statusView.label}
         </Badge>
       </div>
       <p className="text-sm text-ink-muted">
-        {b.target === "promo" && b.promo
-          ? `Voucher ${b.promo.code}`
-          : b.target === "merchant"
+        {banner.target === "promo" && banner.promo
+          ? `Voucher ${banner.promo.code}`
+          : banner.target === "merchant"
             ? "Halaman toko"
             : "Tanpa tujuan"}
         {" · "}
-        {formatDate(b.starts_at)} – {formatDate(b.ends_at)}
-        {b.merchant ? "" : ` · urutan ${b.sort_order}`}
+        {formatDate(banner.starts_at)} – {formatDate(banner.ends_at)}
+        {banner.merchant ? "" : ` · urutan ${banner.sort_order}`}
       </p>
-      {b.catatan && <p className="text-sm text-ink-muted">Catatan: {b.catatan}</p>}
-      {bolehUbah && (
+      {banner.catatan && <p className="text-sm text-ink-muted">Catatan: {banner.catatan}</p>}
+      {canEdit && (
         <div className="mt-auto flex flex-col gap-2 border-t border-line pt-3">
-          {b.status === "menunggu" && (
-            <Field label="Alasan penolakan" id={`alasan-banner-${b.id}`} error={galat}>
+          {banner.status === "menunggu" && (
+            <Field label="Alasan penolakan" id={`alasan-banner-${banner.id}`} error={errorMessage}>
               <Input
-                value={alasan}
+                value={reason}
                 maxLength={300}
-                onChange={(e) => {
-                  setAlasan(e.target.value);
-                  setGalat(undefined);
+                onChange={(event) => {
+                  setReason(event.target.value);
+                  setErrorMessage(undefined);
                 }}
               />
             </Field>
           )}
           <div className="flex flex-wrap justify-end gap-2">
-            {b.status === "menunggu" && (
-              <Button variant="secondary" disabled={sibuk} onClick={() => void tinjau("ditolak")}>
+            {banner.status === "menunggu" && (
+              <Button variant="secondary" disabled={busy} onClick={() => void review("ditolak")}>
                 Tolak
               </Button>
             )}
-            {(b.status === "menunggu" || b.status === "ditolak" || b.status === "nonaktif") && (
-              <Button disabled={sibuk} onClick={() => setYakin(true)}>
+            {(banner.status === "menunggu" || banner.status === "ditolak" || banner.status === "nonaktif") && (
+              <Button disabled={busy} onClick={() => setConfirmOpen(true)}>
                 Setujui
               </Button>
             )}
-            {b.status === "disetujui" && (
-              <Button variant="secondary" disabled={sibuk} onClick={() => void tinjau("nonaktif")}>
+            {banner.status === "disetujui" && (
+              <Button variant="secondary" disabled={busy} onClick={() => void review("nonaktif")}>
                 Nonaktifkan
               </Button>
             )}
@@ -110,16 +113,16 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
       )}
       {/* AUD-35: persetujuan tidak jalan dengan sekali klik */}
       <ConfirmDialog
-        open={yakin}
-        onClose={() => setYakin(false)}
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
         tone="primary"
-        busy={sibuk}
+        busy={busy}
         title="Setujui banner?"
         body="Banner ini akan tampil di beranda aplikasi pembeli sesuai jadwalnya."
         confirmLabel="Ya, setujui"
         onConfirm={() => {
-          setYakin(false);
-          void tinjau("disetujui");
+          setConfirmOpen(false);
+          void review("disetujui");
         }}
       />
     </article>
@@ -130,21 +133,21 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
 export function BannerAdmin({
   banners,
   vouchers,
-  bolehUbah,
+  canEdit,
 }: {
   banners: Banner[];
   vouchers: VoucherOption[];
-  bolehUbah: boolean;
+  canEdit: boolean;
 }) {
   const router = useRouter();
-  const [buat, setBuat] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   // eslint-disable-next-line react-hooks/purity -- status tayang/berakhir dihitung saat render
   const now = Date.now();
   return (
     <div className="flex flex-col gap-4">
-      {bolehUbah && (
+      {canEdit && (
         <div>
-          <Button onClick={() => setBuat(true)}>
+          <Button onClick={() => setCreateOpen(true)}>
             <Plus aria-hidden className="size-4" />
             Buat banner platform
           </Button>
@@ -158,28 +161,28 @@ export function BannerAdmin({
         />
       ) : (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {banners.map((b) => (
-            <li key={b.id}>
-              <KartuBanner b={b} now={now} bolehUbah={bolehUbah} />
+          {banners.map((banner) => (
+            <li key={banner.id}>
+              <BannerCard banner={banner} now={now} canEdit={canEdit} />
             </li>
           ))}
         </ul>
       )}
       <Dialog
-        open={buat}
-        onClose={() => setBuat(false)}
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
         title="Buat banner platform"
         className="max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto"
       >
-        {buat && (
+        {createOpen && (
           <BannerForm
             mode="admin"
             vouchers={vouchers}
             saveAction={createAdminBanner}
             requestUpload={requestAdminUpload}
-            onClose={() => setBuat(false)}
+            onClose={() => setCreateOpen(false)}
             onSaved={() => {
-              setBuat(false);
+              setCreateOpen(false);
               toast({ tone: "success", message: "Banner platform tayang." });
               router.refresh();
             }}

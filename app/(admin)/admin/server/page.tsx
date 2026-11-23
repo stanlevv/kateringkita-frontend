@@ -9,18 +9,18 @@ import { formatTime, formatDate } from "@/lib/format";
 import { getServerLogs, getServerStatus, LIMIT_SERVER_LOGS } from "@/services/admin-server.service";
 import { requireAdmin } from "@/services/auth.service";
 import type { ServerLog } from "@/types/server";
-import { FilterLogServer } from "./components/ServerLogFilters";
-import { GrafikPerJam } from "./components/HourlyIssuesChart";
+import { ServerLogFilters } from "./components/ServerLogFilters";
+import { HourlyIssuesChart } from "./components/HourlyIssuesChart";
 
-const lama = (s: number) => {
-  const h = Math.floor(s / 86400),
-    j = Math.floor((s % 86400) / 3600),
-    m = Math.floor((s % 3600) / 60);
-  return [h && `${h} hr`, j && `${j} j`, `${m} mnt`].filter(Boolean).join(" ");
+const formatUptime = (seconds: number) => {
+  const days = Math.floor(seconds / 86400),
+    hours = Math.floor((seconds % 86400) / 3600),
+    minutes = Math.floor((seconds % 3600) / 60);
+  return [days && `${days} hr`, hours && `${hours} j`, `${minutes} mnt`].filter(Boolean).join(" ");
 };
 
-function Level({ l }: { l: ServerLog["level"] }) {
-  return l === "error" ? (
+function LevelBadge({ level }: { level: ServerLog["level"] }) {
+  return level === "error" ? (
     <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
       <CircleX aria-hidden className="size-3.5" />
       Error
@@ -40,42 +40,45 @@ export default async function ServerPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   await requireAdmin("super");
-  const sp = await searchParams;
-  const q = new URLSearchParams();
-  if (sp.level === "error" || sp.level === "slow") q.set("level", sp.level);
-  if (sp.q) q.set("q", sp.q.slice(0, 128));
-  const n = Number(sp.page);
-  const page = Number.isInteger(n) && n >= 1 && n <= 100_000 ? n : 1;
-  const hrefFor = (p: number) => `/admin/server?${new URLSearchParams({ ...Object.fromEntries(q), page: String(p) })}`;
-  q.set("page", String(page));
-  q.set("limit", String(LIMIT_SERVER_LOGS));
-  const [st, log] = await Promise.all([getServerStatus(), getServerLogs(q)]);
+  const params = await searchParams;
+  const apiQuery = new URLSearchParams();
+  if (params.level === "error" || params.level === "slow") apiQuery.set("level", params.level);
+  if (params.q) apiQuery.set("q", params.q.slice(0, 128));
+  const pageParam = Number(params.page);
+  const page = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 100_000 ? pageParam : 1;
+  const hrefFor = (pageNumber: number) =>
+    `/admin/server?${new URLSearchParams({ ...Object.fromEntries(apiQuery), page: String(pageNumber) })}`;
+  apiQuery.set("page", String(page));
+  apiQuery.set("limit", String(LIMIT_SERVER_LOGS));
+  const [status, log] = await Promise.all([getServerStatus(), getServerLogs(apiQuery)]);
   const total = (log.meta as { total?: number } | undefined)?.total ?? log.data?.length ?? 0;
 
   return (
     <PageHeader title="Server" description="Kondisi backend, error 5xx, dan request lambat. Log disimpan 30 hari.">
       <div className="flex flex-col gap-6">
-        {"error" in st ? (
+        {"error" in status ? (
           <LoadError title="Status server belum bisa dimuat" body="Backend tidak menjawab. Coba lagi sebentar lagi." />
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <KpiCard label="Error 5xx · 24 jam" value={st.data.ringkas_24j.error} icon={CircleX} />
-              <KpiCard label="Lambat > 2 dtk · 24 jam" value={st.data.ringkas_24j.lambat} icon={Clock} />
+              <KpiCard label="Error 5xx · 24 jam" value={status.data.ringkas_24j.error} icon={CircleX} />
+              <KpiCard label="Lambat > 2 dtk · 24 jam" value={status.data.ringkas_24j.lambat} icon={Clock} />
               <KpiCard
                 label="Database"
-                value={st.data.db.ok ? `${st.data.db.latency_ms} ms` : "Gangguan"}
+                value={status.data.db.ok ? `${status.data.db.latency_ms} ms` : "Gangguan"}
                 icon={Database}
-                hint={st.data.db.migrasi_terakhir ? `Migrasi terakhir: ${st.data.db.migrasi_terakhir}` : undefined}
+                hint={
+                  status.data.db.migrasi_terakhir ? `Migrasi terakhir: ${status.data.db.migrasi_terakhir}` : undefined
+                }
               />
               <KpiCard
                 label="Uptime server"
-                value={lama(st.data.uptime_s)}
+                value={formatUptime(status.data.uptime_s)}
                 icon={Server}
-                hint={`Memori ${st.data.memori_mb} MB · Node ${st.data.node}`}
+                hint={`Memori ${status.data.memori_mb} MB · Node ${status.data.node}`}
               />
             </div>
-            <GrafikPerJam data={st.data.per_jam} />
+            <HourlyIssuesChart data={status.data.per_jam} />
           </>
         )}
 
@@ -84,7 +87,7 @@ export default async function ServerPage({
             Log
           </h2>
           <Suspense>
-            <FilterLogServer />
+            <ServerLogFilters />
           </Suspense>
           {!log.ok || !log.data ? (
             <LoadError title="Log belum bisa dimuat" body="Terjadi kesalahan saat mengambil log. Coba lagi." />
@@ -98,32 +101,32 @@ export default async function ServerPage({
                 <table className="w-full min-w-[56rem] text-left text-sm">
                   <thead className="bg-subtle text-ink-muted">
                     <tr>
-                      {["Waktu (WIB)", "Jenis", "Status", "Request", "Durasi", "Pesan", "Request ID"].map((h) => (
-                        <th key={h} scope="col" className="px-3 py-2 font-medium">
-                          {h}
+                      {["Waktu (WIB)", "Jenis", "Status", "Request", "Durasi", "Pesan", "Request ID"].map((header) => (
+                        <th key={header} scope="col" className="px-3 py-2 font-medium">
+                          {header}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {log.data.map((r) => (
-                      <tr key={r.id} className="border-t border-line align-top">
+                    {log.data.map((row) => (
+                      <tr key={row.id} className="border-t border-line align-top">
                         <td className="whitespace-nowrap px-3 py-2">
-                          {formatDate(r.created_at)}, {formatTime(r.created_at)}
+                          {formatDate(row.created_at)}, {formatTime(row.created_at)}
                         </td>
                         <td className="px-3 py-2">
-                          <Level l={r.level} />
+                          <LevelBadge level={row.level} />
                         </td>
-                        <td className={cx("px-3 py-2 font-mono font-semibold", r.status >= 500 && "text-danger")}>
-                          {r.status}
+                        <td className={cx("px-3 py-2 font-mono font-semibold", row.status >= 500 && "text-danger")}>
+                          {row.status}
                         </td>
                         <td className="px-3 py-2 font-mono">
-                          <span className="text-ink-muted">{r.method}</span> {r.path}
+                          <span className="text-ink-muted">{row.method}</span> {row.path}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 font-mono">{r.duration_ms} ms</td>
-                        <td className="max-w-72 min-w-48 px-3 py-2 break-words">{r.message ?? "-"}</td>
+                        <td className="whitespace-nowrap px-3 py-2 font-mono">{row.duration_ms} ms</td>
+                        <td className="max-w-72 min-w-48 px-3 py-2 break-words">{row.message ?? "-"}</td>
                         <td className="min-w-52 px-3 py-2 font-mono text-xs break-all text-ink-muted">
-                          {r.request_id ?? "-"}
+                          {row.request_id ?? "-"}
                         </td>
                       </tr>
                     ))}

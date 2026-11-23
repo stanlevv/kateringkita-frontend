@@ -7,11 +7,11 @@ import { Field } from "@/app/components/ui/Field";
 import { Select } from "@/app/components/ui/Input";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { Tabs } from "@/app/components/ui/Tabs";
-import { LIMIT_AI_RESULTS, AI_RESULT_TABS as TAB, type AiResultTab } from "@/lib/ai-result";
+import { LIMIT_AI_RESULTS, AI_RESULT_TABS, type AiResultTab } from "@/lib/ai-result";
 import type { AiResult } from "@/types/ai-result";
-import { KartuHasilAi } from "./AiResultCard";
+import { AiResultCard } from "./AiResultCard";
 
-const KOSONG: Record<AiResultTab, string> = {
+const EMPTY_TITLES: Record<AiResultTab, string> = {
   menunggu: "Tidak ada hasil AI yang menunggu verifikasi",
   disetujui: "Belum ada hasil AI yang disetujui",
   ditolak: "Belum ada hasil AI yang ditolak",
@@ -19,31 +19,31 @@ const KOSONG: Record<AiResultTab, string> = {
 };
 
 /** Tab status + filter fitur di URL (tab Menunggu tanpa ?status); setiap kartu bisa disetujui / ditolak. */
-export function DaftarHasilAi({
+export function AiResultList({
   rows,
   tab,
-  fitur,
+  feature,
   page,
   total,
-  bolehUbah,
+  canEdit,
 }: {
   rows: AiResult[];
   tab: AiResultTab;
-  fitur: string;
+  feature: string;
   page: number;
   total: number;
-  bolehUbah: boolean;
+  canEdit: boolean;
 }) {
   const router = useRouter();
-  const url = (o: { status?: string; fitur?: string; page?: number }) => {
-    const q = new URLSearchParams();
-    const st = o.status ?? tab;
-    const f = o.fitur ?? fitur;
-    if (st !== "menunggu") q.set("status", st);
-    if (f) q.set("fitur", f);
-    if (o.page && o.page > 1) q.set("page", String(o.page));
-    const s = q.toString();
-    return `/admin/hasil-ai${s ? `?${s}` : ""}`;
+  const buildHref = (changes: { status?: string; feature?: string; page?: number }) => {
+    const query = new URLSearchParams();
+    const nextStatus = changes.status ?? tab;
+    const nextFeature = changes.feature ?? feature;
+    if (nextStatus !== "menunggu") query.set("status", nextStatus);
+    if (nextFeature) query.set("fitur", nextFeature);
+    if (changes.page && changes.page > 1) query.set("page", String(changes.page));
+    const queryString = query.toString();
+    return `/admin/hasil-ai${queryString ? `?${queryString}` : ""}`;
   };
 
   return (
@@ -52,11 +52,11 @@ export function DaftarHasilAi({
         <Tabs
           label="Status verifikasi"
           value={tab}
-          onChange={(id) => router.push(url({ status: id }))}
-          tabs={TAB.map((t) => ({ id: t.id, label: t.label }))}
+          onChange={(id) => router.push(buildHref({ status: id }))}
+          tabs={AI_RESULT_TABS.map((tabItem) => ({ id: tabItem.id, label: tabItem.label }))}
         />
         <Field label="Fitur AI" id="filter-fitur-ai">
-          <Select value={fitur} onChange={(e) => router.push(url({ fitur: e.target.value }))}>
+          <Select value={feature} onChange={(event) => router.push(buildHref({ feature: event.target.value }))}>
             <option value="">Semua fitur</option>
             <option value="asisten">Asisten toko</option>
             <option value="rekomendasi">Rekomendasi pembeli</option>
@@ -66,18 +66,23 @@ export function DaftarHasilAi({
       {rows.length === 0 ? (
         <EmptyState
           icon={Inbox}
-          title={KOSONG[tab]}
+          title={EMPTY_TITLES[tab]}
           body="Hasil AI tersimpan setiap kali asisten toko atau rekomendasi pembeli menjawab dengan format yang valid."
         />
       ) : (
         <div className="flex flex-col gap-3">
-          {rows.map((h) => (
-            <KartuHasilAi key={h.id} h={h} bolehUbah={bolehUbah} />
+          {rows.map((aiResult) => (
+            <AiResultCard key={aiResult.id} aiResult={aiResult} canEdit={canEdit} />
           ))}
         </div>
       )}
       {total > LIMIT_AI_RESULTS && (
-        <Pagination page={page} total={total} limit={LIMIT_AI_RESULTS} hrefFor={(p) => url({ page: p })} />
+        <Pagination
+          page={page}
+          total={total}
+          limit={LIMIT_AI_RESULTS}
+          hrefFor={(pageNumber) => buildHref({ page: pageNumber })}
+        />
       )}
     </div>
   );

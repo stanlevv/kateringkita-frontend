@@ -7,24 +7,24 @@ import { isValidTicketCode } from "@/services/admin-ticket.service";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { TicketDetail } from "@/types/admin";
-import { TiketDetail } from "../components/TicketDetailView";
-import { TutupTiket } from "../components/CloseTicketButton";
+import { TicketDetailView } from "../components/TicketDetailView";
+import { CloseTicketButton } from "../components/CloseTicketButton";
 
 // Detail tiket bantuan: percakapan, balas, tutup. Kode tidak valid atau 404 -> not-found.tsx segmen ini.
-export default async function TiketDetailPage({ params }: { params: Promise<{ code: string }> }) {
+export default async function TicketDetailPage({ params }: { params: Promise<{ code: string }> }) {
   await requireAdmin();
   const { code } = await params;
   if (!isValidTicketCode(code)) notFound();
-  const res = await adminFetch<TicketDetail>(`/tickets/${encodeURIComponent(code)}`);
-  if (res.status === 404) notFound();
-  const kembali = (
+  const response = await adminFetch<TicketDetail>(`/tickets/${encodeURIComponent(code)}`);
+  if (response.status === 404) notFound();
+  const backLink = (
     <LinkButton href="/admin/tiket" variant="secondary">
       Semua tiket
     </LinkButton>
   );
-  if (!res.ok || !res.data) {
+  if (!response.ok || !response.data) {
     return (
-      <PageHeader title={`Tiket ${code}`} actions={kembali}>
+      <PageHeader title={`Tiket ${code}`} actions={backLink}>
         <LoadError
           title="Tiket belum bisa dimuat"
           body="Terjadi kesalahan saat mengambil tiket. Periksa koneksi lalu coba lagi."
@@ -32,20 +32,20 @@ export default async function TiketDetailPage({ params }: { params: Promise<{ co
       </PageHeader>
     );
   }
-  const t = res.data;
+  const ticket = response.data;
   return (
     <PageHeader
-      title={t.subject}
+      title={ticket.subject}
       actions={
         <>
-          {t.status !== "closed" && <TutupTiket code={t.code} />}
-          {kembali}
+          {ticket.status !== "closed" && <CloseTicketButton code={ticket.code} />}
+          {backLink}
         </>
       }
     >
       {/* balasan pembeli muncul sendiri selama tiket belum ditutup */}
-      {t.status !== "closed" && <PeriodicRefresh />}
-      <TiketDetail t={t} />
+      {ticket.status !== "closed" && <PeriodicRefresh />}
+      <TicketDetailView ticket={ticket} />
     </PageHeader>
   );
 }

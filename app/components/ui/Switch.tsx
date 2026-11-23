@@ -1,5 +1,5 @@
 // Komponen Switch: saklar nyala/mati (role="switch" agar dibacakan sebagai saklar oleh pembaca layar).
-// Dipakai StoreStatusToggle, MenuForm, TableOrderSettings, PenyediaAiPanel, DaftarPopup.
+// Dipakai StoreStatusToggle, MenuForm, TableOrderSettings, AiProvidersPanel, PopupList.
 import { cx, focusRing } from "./cx";
 
 /**

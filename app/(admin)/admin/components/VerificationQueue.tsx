@@ -9,7 +9,7 @@ import type { VerificationQueueItem } from "@/types/admin";
 import { formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { VerificationStatus } from "./VerificationBadge";
+import { VerificationBadge } from "./VerificationBadge";
 
 /**
  * Antrean verifikasi, terlama dulu (urutan dari backend). Label "Diperbarui penjual" muncul bila penjual mengubah
@@ -43,7 +43,7 @@ export function VerificationQueue({ rows }: { rows: VerificationQueueItem[] }) {
                   Diperbarui penjual
                 </span>
               )}
-              <VerificationStatus status={merchant.verification_status} />
+              <VerificationBadge status={merchant.verification_status} />
             </span>
           </div>
           <p className="text-sm text-ink-muted">

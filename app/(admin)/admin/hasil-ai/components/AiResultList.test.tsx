@@ -6,9 +6,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 vi.mock("@/app/actions/admin/ai-results", () => ({ verifyAiResult: vi.fn() }));
 import type { AiResult } from "@/types/ai-result";
 import { parseAiResultTab } from "@/lib/ai-result";
-import { DaftarHasilAi } from "./AiResultList";
+import { AiResultList } from "./AiResultList";
 
-const H: AiResult = {
+const AI_RESULT: AiResult = {
   id: 5,
   fitur: "asisten",
   input_text: "Harga risol?",
@@ -24,7 +24,7 @@ const H: AiResult = {
 
 beforeEach(() => push.mockReset());
 
-describe("DaftarHasilAi", () => {
+describe("AiResultList", () => {
   it("parseAiResultTab: tanpa status = menunggu; nilai asing jadi menunggu", () => {
     expect(parseAiResultTab(undefined)).toBe("menunggu");
     expect(parseAiResultTab("ditolak")).toBe("ditolak");
@@ -33,7 +33,7 @@ describe("DaftarHasilAi", () => {
   });
 
   it("pindah tab & fitur memperbarui URL (halaman kembali ke 1)", () => {
-    render(<DaftarHasilAi rows={[H]} tab="menunggu" fitur="" page={2} total={30} bolehUbah />);
+    render(<AiResultList rows={[AI_RESULT]} tab="menunggu" feature="" page={2} total={30} canEdit />);
     fireEvent.click(screen.getByRole("tab", { name: /Disetujui/ }));
     expect(push).toHaveBeenLastCalledWith("/admin/hasil-ai?status=disetujui");
     fireEvent.change(screen.getByLabelText("Fitur AI"), { target: { value: "rekomendasi" } });
@@ -42,7 +42,7 @@ describe("DaftarHasilAi", () => {
   });
 
   it("kosong: pesan sesuai tab", () => {
-    render(<DaftarHasilAi rows={[]} tab="menunggu" fitur="" page={1} total={0} bolehUbah />);
+    render(<AiResultList rows={[]} tab="menunggu" feature="" page={1} total={0} canEdit />);
     expect(screen.getByText("Tidak ada hasil AI yang menunggu verifikasi")).toBeInTheDocument();
   });
 });

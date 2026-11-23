@@ -1,29 +1,29 @@
 import { Badge } from "@/app/components/ui/Badge";
 import { formatTime, formatDate, formatRelativeTime } from "@/lib/format";
 import { TICKET_STATUSES } from "@/services/admin-ticket.service";
-import type { TicketStatus as Status } from "@/types/admin";
+import type { TicketStatus } from "@/types/admin";
 
-export function StatusTiket({ status }: { status: Status }) {
+export function TicketStatusBadge({ status }: { status: TicketStatus }) {
   // Nilai di luar kontrak tetap tampil apa adanya, bukan merusak halaman.
-  const s: (typeof TICKET_STATUSES)[Status] = TICKET_STATUSES[status] ?? {
+  const view: (typeof TICKET_STATUSES)[TicketStatus] = TICKET_STATUSES[status] ?? {
     label: status,
     tone: "neutral",
     icon: TICKET_STATUSES.closed.icon,
   };
   return (
-    <Badge tone={s.tone} icon={s.icon}>
-      {s.label}
+    <Badge tone={view.tone} icon={view.icon}>
+      {view.label}
     </Badge>
   );
 }
 
-export const waktuLengkap = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)} WIB`;
+export const formatFullTime = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)} WIB`;
 
 /** "5 menit lalu" dengan waktu lengkap di title & dateTime. */
-export function WaktuRelatif({ iso, sekarang }: { iso: string; sekarang: number }) {
+export function RelativeTime({ iso, now }: { iso: string; now: number }) {
   return (
-    <time dateTime={iso} title={waktuLengkap(iso)}>
-      {formatRelativeTime(iso, sekarang)}
+    <time dateTime={iso} title={formatFullTime(iso)}>
+      {formatRelativeTime(iso, now)}
     </time>
   );
 }

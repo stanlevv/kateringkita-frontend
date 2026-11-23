@@ -1,7 +1,7 @@
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList } from "@/app/components/ui/Skeleton";
 
-// DaftarPopup: tombol buat + kartu pop-up
+// PopupList: tombol buat + kartu pop-up
 export default function Loading() {
   return (
     <PageFrame

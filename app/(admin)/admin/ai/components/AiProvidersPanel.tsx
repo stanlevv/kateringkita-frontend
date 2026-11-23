@@ -17,69 +17,71 @@ import { callAction } from "@/lib/action";
 import { formatTime, formatDate } from "@/lib/format";
 import type { AiProviderList, AiTestResult, AiProviderType, AiProvider } from "@/types/ai";
 
-const waktu = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`;
+const formatDateTime = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`;
 
-function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () => void }) {
-  const [jenis, setJenis] = useState<AiProviderType>(awal?.provider ?? "gemini");
-  const [label, setLabel] = useState(awal?.label ?? AI_PROVIDER_INFO.gemini.name);
-  const [model, setModel] = useState(awal?.model ?? AI_PROVIDER_INFO.gemini.exampleModels[0]);
-  const [kunci, setKunci] = useState("");
-  const [prioritas, setPrioritas] = useState(String(awal?.priority ?? 100));
-  const [galat, setGalat] = useState<Record<string, string>>({});
-  const [kirim, setKirim] = useState(false);
-  const info = AI_PROVIDER_INFO[jenis];
+function ProviderForm({ initial, onDone }: { initial: AiProvider | null; onDone: () => void }) {
+  const [providerType, setProviderType] = useState<AiProviderType>(initial?.provider ?? "gemini");
+  const [label, setLabel] = useState(initial?.label ?? AI_PROVIDER_INFO.gemini.name);
+  const [model, setModel] = useState(initial?.model ?? AI_PROVIDER_INFO.gemini.exampleModels[0]);
+  const [apiKey, setApiKey] = useState("");
+  const [priority, setPriority] = useState(String(initial?.priority ?? 100));
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const info = AI_PROVIDER_INFO[providerType];
 
-  function pilih(j: AiProviderType) {
-    setJenis(j);
-    setLabel(AI_PROVIDER_INFO[j].name);
-    setModel(AI_PROVIDER_INFO[j].exampleModels[0]);
+  function selectProvider(type: AiProviderType) {
+    setProviderType(type);
+    setLabel(AI_PROVIDER_INFO[type].name);
+    setModel(AI_PROVIDER_INFO[type].exampleModels[0]);
   }
 
-  async function simpan(e: FormEvent) {
-    e.preventDefault();
-    setKirim(true);
-    const isi = { label, model, priority: Number(prioritas), ...(kunci.trim() ? { api_key: kunci.trim() } : {}) };
-    const r = await callAction(() =>
-      awal
-        ? updateAiProvider(awal.id, isi)
-        : createAiProvider({ ...isi, provider: jenis, api_key: kunci.trim(), is_active: true }),
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    const values = { label, model, priority: Number(priority), ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}) };
+    const result = await callAction(() =>
+      initial
+        ? updateAiProvider(initial.id, values)
+        : createAiProvider({ ...values, provider: providerType, api_key: apiKey.trim(), is_active: true }),
     );
-    setKirim(false);
-    if ("error" in r) {
-      setGalat(Object.fromEntries(Object.entries(r.error.fields ?? {}).map(([k, v]) => [k, v[0]])));
-      if (!r.error.fields) toast({ tone: "danger", message: r.error.message });
+    setSubmitting(false);
+    if ("error" in result) {
+      setErrors(
+        Object.fromEntries(Object.entries(result.error.fields ?? {}).map(([field, messages]) => [field, messages[0]])),
+      );
+      if (!result.error.fields) toast({ tone: "danger", message: result.error.message });
       return;
     }
-    toast({ tone: "success", message: awal ? "Penyedia AI disimpan" : "Penyedia AI ditambahkan" });
-    onSelesai();
+    toast({ tone: "success", message: initial ? "Penyedia AI disimpan" : "Penyedia AI ditambahkan" });
+    onDone();
   }
 
   return (
-    <form onSubmit={simpan} noValidate className="flex flex-col gap-4">
-      <fieldset disabled={!!awal} className="flex flex-col gap-2">
+    <form onSubmit={save} noValidate className="flex flex-col gap-4">
+      <fieldset disabled={!!initial} className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium text-ink">Penyedia</legend>
         <div className="grid gap-2 sm:grid-cols-2">
-          {AI_PROVIDER_TYPES.map((j) => (
+          {AI_PROVIDER_TYPES.map((type) => (
             <label
-              key={j}
+              key={type}
               className={cx(
                 "flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border px-3 has-[:disabled]:cursor-default",
-                jenis === j ? "border-accent bg-primary-soft font-semibold" : "border-line bg-surface",
+                providerType === type ? "border-accent bg-primary-soft font-semibold" : "border-line bg-surface",
               )}
             >
               <input
                 type="radio"
                 name="penyedia"
-                value={j}
-                checked={jenis === j}
-                onChange={() => pilih(j)}
+                value={type}
+                checked={providerType === type}
+                onChange={() => selectProvider(type)}
                 className={cx("size-4 accent-primary", focusRing)}
               />
-              {AI_PROVIDER_INFO[j].name}
+              {AI_PROVIDER_INFO[type].name}
             </label>
           ))}
         </div>
-        {awal && (
+        {initial && (
           <p className="text-xs text-ink-muted">
             Jenis penyedia tidak bisa diganti. Tambahkan penyedia baru bila perlu.
           </p>
@@ -97,31 +99,36 @@ function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () 
         Buat API key gratis di {info.name}
         <ExternalLink aria-hidden className="size-3.5" />
       </a>
-      <Field label="Nama" id="ai-label" required error={galat.label}>
-        <Input value={label} maxLength={60} onChange={(e) => setLabel(e.target.value)} />
+      <Field label="Nama" id="ai-label" required error={errors.label}>
+        <Input value={label} maxLength={60} onChange={(event) => setLabel(event.target.value)} />
       </Field>
       <Field
         label="Model"
         id="ai-model"
         required
         help={`Contoh: ${info.exampleModels.join(", ")}. Nama model bisa berubah, cek halaman penyedia.`}
-        error={galat.model}
+        error={errors.model}
       >
-        <Input value={model} maxLength={120} list="ai-model-contoh" onChange={(e) => setModel(e.target.value)} />
+        <Input
+          value={model}
+          maxLength={120}
+          list="ai-model-contoh"
+          onChange={(event) => setModel(event.target.value)}
+        />
       </Field>
       <datalist id="ai-model-contoh">
-        {info.exampleModels.map((m) => (
-          <option key={m} value={m} />
+        {info.exampleModels.map((exampleModel) => (
+          <option key={exampleModel} value={exampleModel} />
         ))}
       </datalist>
       <Field
         label="API key"
         id="ai-key"
-        required={!awal}
-        error={galat.api_key}
+        required={!initial}
+        error={errors.api_key}
         help={
-          awal
-            ? `Tersimpan: ••••${awal.key_hint}. Kosongkan bila tidak diganti.`
+          initial
+            ? `Tersimpan: ••••${initial.key_hint}. Kosongkan bila tidak diganti.`
             : "Disimpan terenkripsi dan tidak bisa dilihat lagi setelah disimpan."
         }
       >
@@ -129,8 +136,8 @@ function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () 
           type="password"
           autoComplete="off"
           spellCheck={false}
-          value={kunci}
-          onChange={(e) => setKunci(e.target.value)}
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
         />
       </Field>
       <Field
@@ -138,32 +145,32 @@ function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () 
         id="ai-prioritas"
         required
         help="Angka kecil dicoba lebih dulu (1–1000)."
-        error={galat.priority}
+        error={errors.priority}
       >
         <Input
           type="number"
           inputMode="numeric"
           min={1}
           max={1000}
-          value={prioritas}
-          onChange={(e) => setPrioritas(e.target.value)}
+          value={priority}
+          onChange={(event) => setPriority(event.target.value)}
         />
       </Field>
-      <Button type="submit" loading={kirim} loadingText="Menyimpan…">
-        {awal ? "Simpan perubahan" : "Tambah penyedia"}
+      <Button type="submit" loading={submitting} loadingText="Menyimpan…">
+        {initial ? "Simpan perubahan" : "Tambah penyedia"}
       </Button>
     </form>
   );
 }
 
-function StatusChip({ p }: { p: AiProvider }) {
-  const s = aiProviderStatus(p);
-  if (s.kind === "nonaktif")
+function StatusChip({ provider }: { provider: AiProvider }) {
+  const status = aiProviderStatus(provider);
+  if (status.kind === "nonaktif")
     return <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-semibold text-ink-muted">Nonaktif</span>;
-  if (s.kind === "istirahat")
+  if (status.kind === "istirahat")
     return (
       <span className="rounded-full bg-warning-bg px-2.5 py-0.5 text-xs font-semibold text-warning">
-        Istirahat s.d. {formatTime(s.until)}
+        Istirahat s.d. {formatTime(status.until)}
       </span>
     );
   return (
@@ -171,22 +178,25 @@ function StatusChip({ p }: { p: AiProvider }) {
   );
 }
 
-export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
+export function AiProvidersPanel({ data }: { data: AiProviderList }) {
   const router = useRouter();
-  const [form, setForm] = useState<{ awal: AiProvider | null } | null>(null);
-  const [hapus, setHapus] = useState<AiProvider | null>(null);
-  const [uji, setUji] = useState<Record<number, AiTestResult | "memuat">>({});
+  const [form, setForm] = useState<{ initial: AiProvider | null } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AiProvider | null>(null);
+  const [testResults, setTestResults] = useState<Record<number, AiTestResult | "loading">>({});
 
-  async function aktif(p: AiProvider, v: boolean) {
-    const r = await callAction(() => updateAiProvider(p.id, { is_active: v }));
-    if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
+  async function toggleActive(provider: AiProvider, active: boolean) {
+    const result = await callAction(() => updateAiProvider(provider.id, { is_active: active }));
+    if ("error" in result) return void toast({ tone: "danger", message: result.error.message });
     router.refresh();
   }
 
-  async function cek(p: AiProvider) {
-    setUji((u) => ({ ...u, [p.id]: "memuat" }));
-    const r = await callAction(() => testAiProvider(p.id));
-    setUji((u) => ({ ...u, [p.id]: "data" in r ? r.data : { ok: false, message: r.error.message } }));
+  async function runTest(provider: AiProvider) {
+    setTestResults((previous) => ({ ...previous, [provider.id]: "loading" }));
+    const result = await callAction(() => testAiProvider(provider.id));
+    setTestResults((previous) => ({
+      ...previous,
+      [provider.id]: "data" in result ? result.data : { ok: false, message: result.error.message },
+    }));
     router.refresh();
   }
 
@@ -222,7 +232,7 @@ export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-lg font-semibold">Urutan penyedia</h2>
-        <Button onClick={() => setForm({ awal: null })}>
+        <Button onClick={() => setForm({ initial: null })}>
           <Plus aria-hidden className="size-4" />
           Tambah penyedia
         </Button>
@@ -234,14 +244,14 @@ export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
         </p>
       ) : (
         <ol aria-label="Urutan penyedia" className="flex flex-col gap-3">
-          {data.providers.map((p, i) => {
-            const u = uji[p.id];
+          {data.providers.map((provider, i) => {
+            const testResult = testResults[provider.id];
             return (
               <li
-                key={p.id}
+                key={provider.id}
                 className={cx(
                   "flex flex-col gap-3 rounded-lg border bg-surface p-4",
-                  p.is_active ? "border-line" : "border-dashed border-line opacity-70",
+                  provider.is_active ? "border-line" : "border-dashed border-line opacity-70",
                 )}
               >
                 <div className="flex flex-wrap items-start gap-3">
@@ -253,55 +263,66 @@ export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">
-                      {p.label}
-                      <StatusChip p={p} />
+                      {provider.label}
+                      <StatusChip provider={provider} />
                     </p>
                     <p className="text-sm text-ink-muted">
-                      {p.provider_name} · prioritas {p.priority}
+                      {provider.provider_name} · prioritas {provider.priority}
                     </p>
                     <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                      <span className="font-mono">{p.model}</span>
+                      <span className="font-mono">{provider.model}</span>
                       <span className="inline-flex items-center gap-1 font-mono text-ink-muted">
                         <KeyRound aria-hidden className="size-3.5" />
-                        ••••{p.key_hint}
+                        ••••{provider.key_hint}
                       </span>
                     </p>
                   </div>
-                  <Switch checked={p.is_active} onChange={(v) => void aktif(p, v)} label={`Aktifkan ${p.label}`} />
+                  <Switch
+                    checked={provider.is_active}
+                    onChange={(active) => void toggleActive(provider, active)}
+                    label={`Aktifkan ${provider.label}`}
+                  />
                 </div>
                 <div className="flex flex-col gap-1 text-sm">
-                  {p.last_ok_at && <p className="text-ink-muted">Terakhir berhasil: {waktu(p.last_ok_at)}</p>}
-                  {p.last_error && p.last_error_at && (
+                  {provider.last_ok_at && (
+                    <p className="text-ink-muted">Terakhir berhasil: {formatDateTime(provider.last_ok_at)}</p>
+                  )}
+                  {provider.last_error && provider.last_error_at && (
                     <p className="text-danger">
-                      Error terakhir ({waktu(p.last_error_at)}): {p.last_error}
+                      Error terakhir ({formatDateTime(provider.last_error_at)}): {provider.last_error}
                     </p>
                   )}
-                  {u && u !== "memuat" && (
+                  {testResult && testResult !== "loading" && (
                     <p
                       role="status"
                       className={cx(
                         "inline-flex items-center gap-1.5 font-medium",
-                        u.ok ? "text-success" : "text-danger",
+                        testResult.ok ? "text-success" : "text-danger",
                       )}
                     >
-                      {u.ok ? (
+                      {testResult.ok ? (
                         <CircleCheck aria-hidden className="size-4" />
                       ) : (
                         <CircleX aria-hidden className="size-4" />
                       )}
-                      {u.ok ? `Tersambung (${u.ms} ms): “${u.sample}”` : u.message}
+                      {testResult.ok ? `Tersambung (${testResult.ms} ms): “${testResult.sample}”` : testResult.message}
                     </p>
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => void cek(p)} disabled={u === "memuat"}>
-                    {u === "memuat" ? <Loader2 aria-hidden className="size-4 animate-spin" /> : null}Uji koneksi
+                  <Button
+                    variant="secondary"
+                    onClick={() => void runTest(provider)}
+                    disabled={testResult === "loading"}
+                  >
+                    {testResult === "loading" ? <Loader2 aria-hidden className="size-4 animate-spin" /> : null}Uji
+                    koneksi
                   </Button>
-                  <Button variant="secondary" onClick={() => setForm({ awal: p })}>
+                  <Button variant="secondary" onClick={() => setForm({ initial: provider })}>
                     <Pencil aria-hidden className="size-4" />
                     Ubah
                   </Button>
-                  <Button variant="ghost" className="text-danger" onClick={() => setHapus(p)}>
+                  <Button variant="ghost" className="text-danger" onClick={() => setDeleteTarget(provider)}>
                     <Trash2 aria-hidden className="size-4" />
                     Hapus
                   </Button>
@@ -315,13 +336,13 @@ export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
       <Dialog
         open={!!form}
         onClose={() => setForm(null)}
-        title={form?.awal ? `Ubah ${form.awal.label}` : "Tambah penyedia AI"}
+        title={form?.initial ? `Ubah ${form.initial.label}` : "Tambah penyedia AI"}
       >
         {form && (
-          <Formulir
-            key={form.awal?.id ?? "baru"}
-            awal={form.awal}
-            onSelesai={() => {
+          <ProviderForm
+            key={form.initial?.id ?? "new"}
+            initial={form.initial}
+            onDone={() => {
               setForm(null);
               router.refresh();
             }}
@@ -330,20 +351,20 @@ export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
       </Dialog>
 
       <ConfirmDialog
-        open={!!hapus}
-        onClose={() => setHapus(null)}
-        title={`Hapus ${hapus?.label ?? ""}?`}
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={`Hapus ${deleteTarget?.label ?? ""}?`}
         body="API key penyedia ini ikut terhapus dan tidak bisa dikembalikan. Asisten AI memakai penyedia lain yang aktif."
         confirmLabel="Hapus"
         cancelLabel="Batal"
         tone="danger"
         onConfirm={async () => {
-          const p = hapus;
-          setHapus(null);
-          if (!p) return;
-          const r = await callAction(() => deleteAiProvider(p.id));
-          if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
-          toast({ tone: "success", message: `${p.label} dihapus` });
+          const provider = deleteTarget;
+          setDeleteTarget(null);
+          if (!provider) return;
+          const result = await callAction(() => deleteAiProvider(provider.id));
+          if ("error" in result) return void toast({ tone: "danger", message: result.error.message });
+          toast({ tone: "success", message: `${provider.label} dihapus` });
           router.refresh();
         }}
       />

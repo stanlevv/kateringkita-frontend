@@ -17,7 +17,7 @@ import { LIMIT_MERCHANTS, VERIFICATION_STATUSES } from "@/services/admin-merchan
 import type { MerchantSummary } from "@/types/admin";
 import { formatPhone } from "@/lib/format";
 import { buildUrl } from "@/lib/url";
-import { VerificationStatus } from "./VerificationBadge";
+import { VerificationBadge } from "./VerificationBadge";
 
 // Alamat detail penjual dan label status dapur.
 const detailHref = (merchant: MerchantSummary) => `/admin/penjual/${merchant.id}`;
@@ -40,7 +40,7 @@ const COLUMNS: Column<MerchantSummary>[] = [
     header: "WhatsApp",
     cell: (merchant) => <span className="font-mono">{formatPhone(merchant.wa_number)}</span>,
   },
-  { key: "status", header: "Status", cell: (merchant) => <VerificationStatus status={merchant.verification_status} /> },
+  { key: "status", header: "Status", cell: (merchant) => <VerificationBadge status={merchant.verification_status} /> },
   { key: "buka", header: "Dapur", cell: openLabel },
   { key: "menu", header: "Menu aktif", align: "right", cell: (merchant) => merchant.menu_count },
 ];
@@ -193,7 +193,7 @@ export function MerchantTable({
                     {merchant.owner_name} · {formatPhone(merchant.wa_number)}
                   </span>
                   <span className="flex flex-wrap items-center justify-between gap-2">
-                    <VerificationStatus status={merchant.verification_status} />
+                    <VerificationBadge status={merchant.verification_status} />
                     <span className="text-sm text-ink-muted">
                       Dapur {openLabel(merchant).toLowerCase()} · {merchant.menu_count} menu aktif
                     </span>

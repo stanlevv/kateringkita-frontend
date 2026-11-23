@@ -1,5 +1,5 @@
 // Komponen FileDrop: pemilih foto lewat tombol atau seret-lepas, dengan cek format dan ukuran di peramban.
-// Dipakai MenuForm, ExtraPhotos, SettingsForm, DaftarPopup.
+// Dipakai MenuForm, ExtraPhotos, SettingsForm, PopupList.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 

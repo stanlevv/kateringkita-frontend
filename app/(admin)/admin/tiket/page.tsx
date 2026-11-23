@@ -5,45 +5,45 @@ import { LIMIT_TICKETS, parseTicketTab } from "@/services/admin-ticket.service";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { TicketMeta, TicketSummary } from "@/types/admin";
-import { TiketTable } from "./components/TicketTable";
+import { TicketTable } from "./components/TicketTable";
 
 // Tiket bantuan pembeli (semua tingkat admin). Tab status, cari, dan halaman di URL; tanpa ?status = Menunggu.
-export default async function TiketPage({
+export default async function TicketsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   await requireAdmin();
-  const sp = await searchParams;
-  const tab = parseTicketTab(sp.status);
-  const cari = sp.q?.trim() ?? "";
-  const n = Number(sp.page);
-  const page = Number.isInteger(n) && n >= 1 && n <= 100_000 ? n : 1;
-  const q = new URLSearchParams();
-  if (tab !== "semua") q.set("status", tab);
-  if (cari) q.set("q", cari);
-  q.set("page", String(page));
-  q.set("limit", String(LIMIT_TICKETS));
-  const res = await adminFetch<TicketSummary[]>(`/tickets?${q}`);
-  const meta = res.meta as TicketMeta | undefined;
+  const params = await searchParams;
+  const tab = parseTicketTab(params.status);
+  const search = params.q?.trim() ?? "";
+  const pageParam = Number(params.page);
+  const page = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 100_000 ? pageParam : 1;
+  const apiQuery = new URLSearchParams();
+  if (tab !== "semua") apiQuery.set("status", tab);
+  if (search) apiQuery.set("q", search);
+  apiQuery.set("page", String(page));
+  apiQuery.set("limit", String(LIMIT_TICKETS));
+  const response = await adminFetch<TicketSummary[]>(`/tickets?${apiQuery}`);
+  const meta = response.meta as TicketMeta | undefined;
   // Dasar "N menit lalu": dihitung sekali per permintaan supaya HTML server dan hidrasi klien sama.
   // eslint-disable-next-line react-hooks/purity
-  const sekarang = Date.now();
+  const now = Date.now();
 
   return (
     <PageHeader
       title="Tiket bantuan"
       description="Pertanyaan dan keluhan pembeli dari aplikasi. Balasan Anda dikirim ke pembeli sebagai notifikasi."
     >
-      {res.ok && res.data ? (
+      {response.ok && response.data ? (
         <Suspense>
-          <TiketTable
-            rows={res.data}
+          <TicketTable
+            rows={response.data}
             tab={tab}
             counts={meta?.counts}
             page={page}
-            total={meta?.total ?? res.data.length}
-            sekarang={sekarang}
+            total={meta?.total ?? response.data.length}
+            now={now}
           />
         </Suspense>
       ) : (

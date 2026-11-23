@@ -7,7 +7,7 @@ import type { AdminMerchantDetail } from "@/types/admin";
 import { formatTime, formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { VerificationStatus } from "./VerificationBadge";
+import { VerificationBadge } from "./VerificationBadge";
 
 // Satu baris label–nilai di daftar deskripsi (dl).
 const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -34,7 +34,7 @@ export function MerchantDetail({ merchant }: { merchant: AdminMerchantDetail }) 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <VerificationStatus status={merchant.verification_status} />
+        <VerificationBadge status={merchant.verification_status} />
         <AdminActionDialog
           id={merchant.id}
           status={merchant.verification_status}

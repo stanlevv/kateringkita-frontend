@@ -9,12 +9,12 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/hasil-ai",
   useSearchParams: () => new URLSearchParams(),
 }));
-vi.mock("@/app/actions/admin/ai-results", () => ({ verifyAiResult: (...a: unknown[]) => verifyAiResult(...a) }));
+vi.mock("@/app/actions/admin/ai-results", () => ({ verifyAiResult: (...args: unknown[]) => verifyAiResult(...args) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { AiResult } from "@/types/ai-result";
-import { KartuHasilAi } from "./AiResultCard";
+import { AiResultCard } from "./AiResultCard";
 
-const ASISTEN: AiResult = {
+const ASSISTANT_RESULT: AiResult = {
   id: 5,
   fitur: "asisten",
   input_text: "Harga risol untuk [nama]?",
@@ -27,7 +27,7 @@ const ASISTEN: AiResult = {
   user: { id: 2, name: "Siti" },
   merchant: { id: 1, business_name: "Dapur Siti" },
 };
-const REKOMENDASI: AiResult = {
+const RECOMMENDATION_RESULT: AiResult = {
   id: 6,
   fitur: "rekomendasi",
   input_text: "nasi goreng 2 porsi",
@@ -52,34 +52,34 @@ beforeEach(() => {
   verifyAiResult.mockReset().mockResolvedValue({ data: null });
 });
 
-describe("KartuHasilAi", () => {
+describe("AiResultCard", () => {
   it("asisten toko: pengguna, toko, input tersamarkan, jawaban, poin, asumsi, status", () => {
-    render(<KartuHasilAi h={ASISTEN} bolehUbah />);
-    const k = within(screen.getByRole("article"));
-    expect(k.getByText("Asisten toko")).toBeInTheDocument();
-    expect(k.getByText(/Siti · Dapur Siti/)).toBeInTheDocument();
-    expect(k.getByText("Harga risol untuk [nama]?")).toBeInTheDocument();
-    expect(k.getByText("Naikkan ke Rp 6.000.")).toBeInTheDocument();
-    expect(k.getByText("HPP Rp 2.500")).toBeInTheDocument();
-    expect(k.getByText("Asumsi: Harga bahan stabil")).toBeInTheDocument();
-    expect(k.getByText("Menunggu")).toBeInTheDocument();
+    render(<AiResultCard aiResult={ASSISTANT_RESULT} canEdit />);
+    const card = within(screen.getByRole("article"));
+    expect(card.getByText("Asisten toko")).toBeInTheDocument();
+    expect(card.getByText(/Siti · Dapur Siti/)).toBeInTheDocument();
+    expect(card.getByText("Harga risol untuk [nama]?")).toBeInTheDocument();
+    expect(card.getByText("Naikkan ke Rp 6.000.")).toBeInTheDocument();
+    expect(card.getByText("HPP Rp 2.500")).toBeInTheDocument();
+    expect(card.getByText("Asumsi: Harga bahan stabil")).toBeInTheDocument();
+    expect(card.getByText("Menunggu")).toBeInTheDocument();
   });
 
   it("rekomendasi pembeli: ringkasan, item, total; keputusan & catatan pemverifikasi", () => {
-    render(<KartuHasilAi h={REKOMENDASI} bolehUbah />);
-    const k = within(screen.getByRole("article"));
-    expect(k.getByText("Rekomendasi pembeli")).toBeInTheDocument();
-    expect(k.getByText("Paket hemat.")).toBeInTheDocument();
-    expect(k.getByText(/2× Nasi Goreng Spesial · Dapur Siti/)).toBeInTheDocument();
-    expect(k.getByText(/Kenyang/)).toBeInTheDocument();
-    expect(k.getByText(/Total Rp\s?30\.000/)).toBeInTheDocument();
-    expect(k.getByText("Ditolak")).toBeInTheDocument();
-    expect(k.getByText(/oleh Admin Ops/)).toBeInTheDocument();
-    expect(k.getByText(/Melebihi anggaran/)).toBeInTheDocument();
+    render(<AiResultCard aiResult={RECOMMENDATION_RESULT} canEdit />);
+    const card = within(screen.getByRole("article"));
+    expect(card.getByText("Rekomendasi pembeli")).toBeInTheDocument();
+    expect(card.getByText("Paket hemat.")).toBeInTheDocument();
+    expect(card.getByText(/2× Nasi Goreng Spesial · Dapur Siti/)).toBeInTheDocument();
+    expect(card.getByText(/Kenyang/)).toBeInTheDocument();
+    expect(card.getByText(/Total Rp\s?30\.000/)).toBeInTheDocument();
+    expect(card.getByText("Ditolak")).toBeInTheDocument();
+    expect(card.getByText(/oleh Admin Ops/)).toBeInTheDocument();
+    expect(card.getByText(/Melebihi anggaran/)).toBeInTheDocument();
   });
 
   it("support: hanya melihat, tanpa tombol verifikasi", () => {
-    render(<KartuHasilAi h={ASISTEN} bolehUbah={false} />);
+    render(<AiResultCard aiResult={ASSISTANT_RESULT} canEdit={false} />);
     expect(screen.queryByRole("button", { name: "Setujui" })).not.toBeInTheDocument();
     expect(screen.getByText("Hanya admin Super atau Operasional yang bisa memverifikasi.")).toBeInTheDocument();
   });
@@ -90,7 +90,7 @@ describe("verifikasi", () => {
     render(
       <>
         <Toaster />
-        <KartuHasilAi h={ASISTEN} bolehUbah />
+        <AiResultCard aiResult={ASSISTANT_RESULT} canEdit />
       </>,
     );
     await userEvent.click(screen.getByRole("button", { name: "Setujui" }));
@@ -103,7 +103,7 @@ describe("verifikasi", () => {
     render(
       <>
         <Toaster />
-        <KartuHasilAi h={ASISTEN} bolehUbah />
+        <AiResultCard aiResult={ASSISTANT_RESULT} canEdit />
       </>,
     );
     await userEvent.click(screen.getByRole("button", { name: "Tolak" }));
@@ -120,7 +120,7 @@ describe("verifikasi", () => {
     render(
       <>
         <Toaster />
-        <KartuHasilAi h={ASISTEN} bolehUbah />
+        <AiResultCard aiResult={ASSISTANT_RESULT} canEdit />
       </>,
     );
     await userEvent.click(screen.getByRole("button", { name: "Setujui" }));

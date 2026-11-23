@@ -4,7 +4,7 @@ import { LinkButton } from "@/app/components/ui/LinkButton";
 import { Skeleton, SkeletonBox, SkeletonText } from "@/app/components/ui/Skeleton";
 import { cx } from "@/app/components/ui/cx";
 
-// TiketDetail: baris info, percakapan (gelembung kiri/kanan + formulir balas), kartu pembeli & pesanan.
+// TicketDetailView: baris info, percakapan (gelembung kiri/kanan + formulir balas), kartu pembeli & pesanan.
 // Judul (judul tiket) dari data, jadi ikut dikerangkakan; tautan kembali langsung bisa diklik.
 export default function Loading() {
   return (
@@ -24,8 +24,8 @@ export default function Loading() {
         <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
           <Card className="flex flex-col gap-4 lg:col-span-2">
             <SkeletonText size="lg" width="w-32" />
-            {[false, true, false].map((admin, i) => (
-              <div key={i} className={cx("flex flex-col gap-1", admin ? "items-end" : "items-start")}>
+            {[false, true, false].map((isAdmin, i) => (
+              <div key={i} className={cx("flex flex-col gap-1", isAdmin ? "items-end" : "items-start")}>
                 <Skeleton className="h-20 w-3/4" />
                 <SkeletonText size="sm" width="w-36" />
               </div>
@@ -36,10 +36,10 @@ export default function Loading() {
             </div>
           </Card>
           <div className="flex flex-col gap-4">
-            {[3, 5].map((n, i) => (
+            {[3, 5].map((lineCount, i) => (
               <Card key={i} className="flex flex-col gap-2">
                 <SkeletonText size="lg" width="w-28" />
-                {Array.from({ length: n }, (_, j) => (
+                {Array.from({ length: lineCount }, (_, j) => (
                   <div key={j}>
                     <SkeletonText size="sm" width="w-16" />
                     <SkeletonText width="w-40" />

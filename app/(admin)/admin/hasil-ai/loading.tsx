@@ -1,7 +1,7 @@
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList, SkeletonTabs } from "@/app/components/ui/Skeleton";
 
-// DaftarHasilAi: tab status + pilihan fitur, lalu kartu hasil AI.
+// AiResultList: tab status + pilihan fitur, lalu kartu hasil AI.
 export default function Loading() {
   return (
     <PageFrame

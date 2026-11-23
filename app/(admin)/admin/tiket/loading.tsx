@@ -1,7 +1,7 @@
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList, SkeletonBox, SkeletonTabs } from "@/app/components/ui/Skeleton";
 
-// TiketTable: kotak cari, tab status, lalu tabel (≥ 1024 px) atau kartu.
+// TicketTable: kotak cari, tab status, lalu tabel (≥ 1024 px) atau kartu.
 export default function Loading() {
   return (
     <PageFrame

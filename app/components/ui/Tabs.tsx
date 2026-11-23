@@ -1,5 +1,5 @@
 // Komponen Tabs: deretan tab (role="tablist") yang bisa dipindah dengan panah kiri/kanan.
-// Dipakai OrderQueue, MenuCatalog, MasterTable, DaftarHasilAi, TiketTable.
+// Dipakai OrderQueue, MenuCatalog, MasterTable, AiResultList, TicketTable.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 

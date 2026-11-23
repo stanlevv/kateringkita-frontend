@@ -6,7 +6,7 @@ const refresh = vi.fn();
 const reviewAdminBanner = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/admin/banner", () => ({
-  reviewAdminBanner: (...a: unknown[]) => reviewAdminBanner(...a),
+  reviewAdminBanner: (...args: unknown[]) => reviewAdminBanner(...args),
   createAdminBanner: vi.fn(),
   requestAdminUpload: vi.fn(),
 }));
@@ -15,9 +15,9 @@ import { Toaster } from "@/app/components/ui/Toast";
 import type { Banner } from "@/types/banner";
 import { BannerAdmin } from "./BannerAdmin";
 
-const nanti = new Date(Date.now() + 3 * 86400e3).toISOString();
-const lalu = new Date(Date.now() - 86400e3).toISOString();
-const b = (p: Partial<Banner>): Banner => ({
+const future = new Date(Date.now() + 3 * 86400e3).toISOString();
+const past = new Date(Date.now() - 86400e3).toISOString();
+const makeBanner = (overrides: Partial<Banner>): Banner => ({
   id: 1,
   title: "Diskon Dapur Siti",
   image_url: "https://foto.test/x.png",
@@ -26,12 +26,12 @@ const b = (p: Partial<Banner>): Banner => ({
   merchant: { id: 3, slug: "dapur-siti", business_name: "Dapur Siti" },
   status: "menunggu",
   catatan: null,
-  starts_at: lalu,
-  ends_at: nanti,
+  starts_at: past,
+  ends_at: future,
   sort_order: 0,
   reviewed_at: null,
-  created_at: lalu,
-  ...p,
+  created_at: past,
+  ...overrides,
 });
 
 beforeEach(() => {
@@ -44,12 +44,12 @@ describe("BannerAdmin", () => {
     render(
       <>
         <Toaster />
-        <BannerAdmin banners={[b({})]} vouchers={[]} bolehUbah />
+        <BannerAdmin banners={[makeBanner({})]} vouchers={[]} canEdit />
       </>,
     );
-    const k = within(screen.getByRole("article"));
-    expect(k.getByText("Dapur Siti")).toBeInTheDocument();
-    await userEvent.click(k.getByRole("button", { name: "Setujui" }));
+    const card = within(screen.getByRole("article"));
+    expect(card.getByText("Dapur Siti")).toBeInTheDocument();
+    await userEvent.click(card.getByRole("button", { name: "Setujui" }));
     expect(reviewAdminBanner).not.toHaveBeenCalled(); // lewat konfirmasi dulu
     await userEvent.click(screen.getByRole("button", { name: "Ya, setujui" }));
     expect(reviewAdminBanner).toHaveBeenCalledWith(1, { status: "disetujui" });
@@ -61,31 +61,31 @@ describe("BannerAdmin", () => {
     render(
       <>
         <Toaster />
-        <BannerAdmin banners={[b({})]} vouchers={[]} bolehUbah />
+        <BannerAdmin banners={[makeBanner({})]} vouchers={[]} canEdit />
       </>,
     );
-    const k = within(screen.getByRole("article"));
-    await userEvent.click(k.getByRole("button", { name: "Tolak" }));
-    expect(k.getByText("Tulis alasan penolakan (3–300 karakter).")).toBeInTheDocument();
+    const card = within(screen.getByRole("article"));
+    await userEvent.click(card.getByRole("button", { name: "Tolak" }));
+    expect(card.getByText("Tulis alasan penolakan (3–300 karakter).")).toBeInTheDocument();
     expect(reviewAdminBanner).not.toHaveBeenCalled();
-    await userEvent.type(k.getByLabelText(/Alasan penolakan/), "Gambar buram");
-    await userEvent.click(k.getByRole("button", { name: "Tolak" }));
+    await userEvent.type(card.getByLabelText(/Alasan penolakan/), "Gambar buram");
+    await userEvent.click(card.getByRole("button", { name: "Tolak" }));
     expect(reviewAdminBanner).toHaveBeenCalledWith(1, { status: "ditolak", catatan: "Gambar buram" });
   });
 
   it("banner tayang: Nonaktifkan; support hanya melihat; tombol buat banner platform", async () => {
     const { unmount } = render(
       <BannerAdmin
-        banners={[b({ status: "disetujui", merchant: null, title: "Voucher KateringKita" })]}
+        banners={[makeBanner({ status: "disetujui", merchant: null, title: "Voucher KateringKita" })]}
         vouchers={[]}
-        bolehUbah
+        canEdit
       />,
     );
     expect(screen.getByRole("button", { name: "Nonaktifkan" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Buat banner platform" }));
     expect(screen.getByLabelText(/Urutan tampil/)).toBeInTheDocument();
     unmount();
-    render(<BannerAdmin banners={[b({})]} vouchers={[]} bolehUbah={false} />);
+    render(<BannerAdmin banners={[makeBanner({})]} vouchers={[]} canEdit={false} />);
     expect(screen.queryByRole("button", { name: "Setujui" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Buat banner platform" })).not.toBeInTheDocument();
   });

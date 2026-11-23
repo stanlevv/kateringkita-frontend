@@ -4,7 +4,7 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 
 // notFound() dari page.tsx segmen ini (kode tidak valid atau backend 404): tetap di dalam shell admin.
-export default function TiketTidakDitemukan() {
+export default function TicketNotFound() {
   return (
     <PageHeader title="Tiket tidak ditemukan">
       <EmptyState

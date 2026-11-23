@@ -19,7 +19,7 @@ export default async function BannerAdminPage() {
       description="Banner beranda aplikasi pembeli. Pengajuan penjual menunggu persetujuan; banner platform langsung tayang."
     >
       {banners.ok && banners.data ? (
-        <BannerAdmin banners={banners.data} vouchers={vouchers} bolehUbah={session.user.admin_level !== "support"} />
+        <BannerAdmin banners={banners.data} vouchers={vouchers} canEdit={session.user.admin_level !== "support"} />
       ) : (
         <LoadError
           title="Banner belum bisa dimuat"

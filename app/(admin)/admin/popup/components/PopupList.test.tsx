@@ -6,25 +6,25 @@ const refresh = vi.fn();
 const savePopup = vi.fn();
 const uploadPhoto = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-vi.mock("@/app/actions/admin/popup", () => ({ savePopup: (...a: unknown[]) => savePopup(...a) }));
+vi.mock("@/app/actions/admin/popup", () => ({ savePopup: (...args: unknown[]) => savePopup(...args) }));
 vi.mock("@/app/actions/admin/banner", () => ({ requestAdminUpload: vi.fn() }));
-vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
+vi.mock("@/lib/upload", () => ({ uploadPhoto: (...args: unknown[]) => uploadPhoto(...args) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { Popup } from "@/types/popup";
-import { DaftarPopup, statusPopup } from "./PopupList";
+import { PopupList, popupStatus } from "./PopupList";
 
 const NOW = Date.now();
-const iso = (h: number) => new Date(NOW + h * 3600e3).toISOString();
-const p = (o: Partial<Popup>): Popup => ({
+const isoInHours = (hours: number) => new Date(NOW + hours * 3600e3).toISOString();
+const makePopup = (overrides: Partial<Popup>): Popup => ({
   id: 1,
   title: "Promo akhir pekan",
   image_url: "https://foto.test/p.webp",
   promo: null,
-  starts_at: iso(-1),
-  ends_at: iso(24),
+  starts_at: isoInHours(-1),
+  ends_at: isoInHours(24),
   is_active: true,
-  created_at: iso(-2),
-  ...o,
+  created_at: isoInHours(-2),
+  ...overrides,
 });
 
 beforeEach(() => {
@@ -33,27 +33,27 @@ beforeEach(() => {
   uploadPhoto.mockReset().mockResolvedValue({ data: { public_url: "https://foto.test/platform/popup/a.webp" } });
 });
 
-describe("statusPopup", () => {
+describe("popupStatus", () => {
   it("Tayang / Terjadwal / Berakhir / Nonaktif", () => {
-    expect(statusPopup(p({}), NOW).label).toBe("Tayang");
-    expect(statusPopup(p({ starts_at: iso(2) }), NOW).label).toBe("Terjadwal");
-    expect(statusPopup(p({ ends_at: iso(-1) }), NOW).label).toBe("Berakhir");
-    expect(statusPopup(p({ is_active: false }), NOW).label).toBe("Nonaktif");
+    expect(popupStatus(makePopup({}), NOW).label).toBe("Tayang");
+    expect(popupStatus(makePopup({ starts_at: isoInHours(2) }), NOW).label).toBe("Terjadwal");
+    expect(popupStatus(makePopup({ ends_at: isoInHours(-1) }), NOW).label).toBe("Berakhir");
+    expect(popupStatus(makePopup({ is_active: false }), NOW).label).toBe("Nonaktif");
   });
 });
 
-describe("DaftarPopup", () => {
+describe("PopupList", () => {
   it("kartu: status, voucher, Nonaktifkan → PATCH is_active false", async () => {
     render(
       <>
         <Toaster />
-        <DaftarPopup popups={[p({ promo: { id: 7, code: "HEMAT3K" } })]} vouchers={[]} bolehUbah />
+        <PopupList popups={[makePopup({ promo: { id: 7, code: "HEMAT3K" } })]} vouchers={[]} canEdit />
       </>,
     );
-    const k = within(screen.getByRole("article"));
-    expect(k.getByText("Tayang")).toBeInTheDocument();
-    expect(k.getByText(/Voucher HEMAT3K/)).toBeInTheDocument();
-    await userEvent.click(k.getByRole("button", { name: "Nonaktifkan" }));
+    const card = within(screen.getByRole("article"));
+    expect(card.getByText("Tayang")).toBeInTheDocument();
+    expect(card.getByText(/Voucher HEMAT3K/)).toBeInTheDocument();
+    await userEvent.click(card.getByRole("button", { name: "Nonaktifkan" }));
     expect(savePopup).toHaveBeenCalledWith(1, { is_active: false });
     expect(refresh).toHaveBeenCalled();
   });
@@ -62,7 +62,7 @@ describe("DaftarPopup", () => {
     render(
       <>
         <Toaster />
-        <DaftarPopup popups={[]} vouchers={[{ id: 7, code: "HEMAT3K", label: "Potongan Rp3.000" }]} bolehUbah />
+        <PopupList popups={[]} vouchers={[{ id: 7, code: "HEMAT3K", label: "Potongan Rp3.000" }]} canEdit />
       </>,
     );
     expect(screen.getByText("Belum ada pop-up")).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe("DaftarPopup", () => {
   });
 
   it("support hanya melihat", () => {
-    render(<DaftarPopup popups={[p({})]} vouchers={[]} bolehUbah={false} />);
+    render(<PopupList popups={[makePopup({})]} vouchers={[]} canEdit={false} />);
     expect(screen.queryByRole("button", { name: "Buat pop-up" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Nonaktifkan" })).not.toBeInTheDocument();
   });

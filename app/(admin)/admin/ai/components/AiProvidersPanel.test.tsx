@@ -8,15 +8,15 @@ const createAiProvider = vi.fn();
 const updateAiProvider = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/admin/ai", () => ({
-  createAiProvider: (...a: unknown[]) => createAiProvider(...a),
-  updateAiProvider: (...a: unknown[]) => updateAiProvider(...a),
+  createAiProvider: (...args: unknown[]) => createAiProvider(...args),
+  updateAiProvider: (...args: unknown[]) => updateAiProvider(...args),
   deleteAiProvider: vi.fn(),
   testAiProvider: vi.fn(),
 }));
 
-import { PenyediaAiPanel } from "./AiProvidersPanel";
+import { AiProvidersPanel } from "./AiProvidersPanel";
 
-const p = (o: Partial<AiProvider>): AiProvider => ({
+const provider = (overrides: Partial<AiProvider>): AiProvider => ({
   id: 1,
   provider: "groq",
   provider_name: "Groq",
@@ -29,12 +29,12 @@ const p = (o: Partial<AiProvider>): AiProvider => ({
   last_error: null,
   last_error_at: null,
   cooldown_until: null,
-  ...o,
+  ...overrides,
 });
 const data: AiProviderList = {
   providers: [
-    p({}),
-    p({
+    provider({}),
+    provider({
       id: 2,
       provider: "openrouter",
       provider_name: "OpenRouter",
@@ -44,7 +44,7 @@ const data: AiProviderList = {
       last_error: "Kuota/batas pemakaian habis (429).",
       last_error_at: new Date().toISOString(),
     }),
-    p({ id: 3, label: "Cadangan mati", priority: 3, is_active: false }),
+    provider({ id: 3, label: "Cadangan mati", priority: 3, is_active: false }),
   ],
   env_gemini: null,
 };
@@ -53,32 +53,32 @@ afterEach(() => vi.clearAllMocks());
 
 describe("halaman admin AI", () => {
   it("urutan, status siap/istirahat/nonaktif, key hanya 4 karakter, error terakhir", () => {
-    render(<PenyediaAiPanel data={data} />);
-    const kartu = within(screen.getByRole("list", { name: "Urutan penyedia" })).getAllByRole("listitem");
-    expect(within(kartu[0]).getByText("Siap dipakai")).toBeInTheDocument();
-    expect(within(kartu[0]).getByText("••••ABCD")).toBeInTheDocument();
-    expect(within(kartu[1]).getByText(/Istirahat s\.d\./)).toBeInTheDocument();
-    expect(within(kartu[1]).getByText(/Kuota\/batas pemakaian habis/)).toBeInTheDocument();
-    expect(within(kartu[2]).getByText("Nonaktif")).toBeInTheDocument();
+    render(<AiProvidersPanel data={data} />);
+    const cards = within(screen.getByRole("list", { name: "Urutan penyedia" })).getAllByRole("listitem");
+    expect(within(cards[0]).getByText("Siap dipakai")).toBeInTheDocument();
+    expect(within(cards[0]).getByText("••••ABCD")).toBeInTheDocument();
+    expect(within(cards[1]).getByText(/Istirahat s\.d\./)).toBeInTheDocument();
+    expect(within(cards[1]).getByText(/Kuota\/batas pemakaian habis/)).toBeInTheDocument();
+    expect(within(cards[2]).getByText("Nonaktif")).toBeInTheDocument();
     expect(screen.getByText(/tidak ada \(GEMINI_API_KEY di server kosong\)/)).toBeInTheDocument();
   });
 
   it("ubah tanpa mengisi key → key tidak dikirim; tambah → penyedia & key dikirim", async () => {
-    const u = userEvent.setup();
-    updateAiProvider.mockResolvedValue({ data: p({}) });
-    createAiProvider.mockResolvedValue({ data: p({ id: 9 }) });
-    render(<PenyediaAiPanel data={data} />);
+    const user = userEvent.setup();
+    updateAiProvider.mockResolvedValue({ data: provider({}) });
+    createAiProvider.mockResolvedValue({ data: provider({ id: 9 }) });
+    render(<AiProvidersPanel data={data} />);
 
-    await u.click(
+    await user.click(
       within(within(screen.getByRole("list", { name: "Urutan penyedia" })).getAllByRole("listitem")[0]).getByRole(
         "button",
         { name: "Ubah" },
       ),
     );
-    const ubah = screen.getByRole("dialog", { name: "Ubah Groq gratis" });
-    await u.clear(within(ubah).getByLabelText(/Prioritas/));
-    await u.type(within(ubah).getByLabelText(/Prioritas/), "5");
-    await u.click(within(ubah).getByRole("button", { name: "Simpan perubahan" }));
+    const editDialog = screen.getByRole("dialog", { name: "Ubah Groq gratis" });
+    await user.clear(within(editDialog).getByLabelText(/Prioritas/));
+    await user.type(within(editDialog).getByLabelText(/Prioritas/), "5");
+    await user.click(within(editDialog).getByRole("button", { name: "Simpan perubahan" }));
     expect(updateAiProvider).toHaveBeenCalledWith(1, {
       label: "Groq gratis",
       model: "llama-3.3-70b-versatile",
@@ -86,11 +86,11 @@ describe("halaman admin AI", () => {
     });
     expect(refresh).toHaveBeenCalled();
 
-    await u.click(screen.getByRole("button", { name: "Tambah penyedia" }));
-    const tambah = screen.getByRole("dialog", { name: "Tambah penyedia AI" });
-    await u.click(within(tambah).getByRole("radio", { name: "Groq" }));
-    await u.type(within(tambah).getByLabelText(/API key/), "gsk_kunci_1234567890");
-    await u.click(within(tambah).getByRole("button", { name: "Tambah penyedia" }));
+    await user.click(screen.getByRole("button", { name: "Tambah penyedia" }));
+    const addDialog = screen.getByRole("dialog", { name: "Tambah penyedia AI" });
+    await user.click(within(addDialog).getByRole("radio", { name: "Groq" }));
+    await user.type(within(addDialog).getByLabelText(/API key/), "gsk_kunci_1234567890");
+    await user.click(within(addDialog).getByRole("button", { name: "Tambah penyedia" }));
     expect(createAiProvider).toHaveBeenCalledWith({
       label: "Groq",
       model: "llama-3.3-70b-versatile",
