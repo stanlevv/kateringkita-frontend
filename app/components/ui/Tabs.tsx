@@ -1,9 +1,21 @@
+// Komponen Tabs: deretan tab (role="tablist") yang bisa dipindah dengan panah kiri/kanan.
+// Dipakai OrderQueue, MasterTable, DaftarHasilAi, TiketTable.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { cx, focusRing } from "./cx";
 
+/** Satu tab: id (dipakai sebagai nilai), label, dan angka opsional di sampingnya. */
 export type Tab = { id: string; label: string; count?: number };
 
+/**
+ * Deretan tab. Hanya tab aktif yang bisa difokus dengan Tab; panah kiri/kanan berpindah tab (pola tablist WAI-ARIA).
+ * @param props.tabs daftar tab
+ * @param props.value id tab aktif
+ * @param props.onChange dipanggil dengan id tab yang dipilih
+ * @param props.label nama deretan tab untuk pembaca layar
+ * @returns elemen `div` role="tablist"
+ */
 export function Tabs({
   tabs,
   value,
@@ -15,6 +27,7 @@ export function Tabs({
   onChange: (id: string) => void;
   label: string;
 }) {
+  // Panah kiri/kanan: pilih tab sebelah (berputar di ujung) dan pindahkan fokus ke sana.
   const moveFocus = (event: React.KeyboardEvent, i: number) => {
     const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
     if (!step) return;

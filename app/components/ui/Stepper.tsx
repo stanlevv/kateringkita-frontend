@@ -1,14 +1,29 @@
+// Komponen Stepper: isian angka dengan tombol − dan + (tahan untuk mengulang). Dipakai QuotaRow dan MenuCard untuk kuota.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cx, focusRing } from "./cx";
 
+// Gaya tombol − dan + (44×44 px).
 const buttonClass = cx(
   "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-line-strong bg-surface text-ink hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-50",
   focusRing,
 );
 
+/**
+ * Isian angka dengan tombol −/+. Menahan tombol mengulang langkah setelah 400 ms, tiap 80 ms. Angka yang diketik baru
+ * disimpan saat keluar dari isian atau menekan Enter; nilai di luar batas atau bukan bilangan bulat dikembalikan.
+ * @param props.value nilai sekarang
+ * @param props.min nilai terkecil (tombol − nonaktif di sini)
+ * @param props.max nilai terbesar (opsional)
+ * @param props.onChange menerima nilai baru (ketikan, atau tombol bila onDelta tidak ada)
+ * @param props.onDelta menerima +1/−1 dari tombol (opsional; dipakai kuota agar dikirim sebagai selisih)
+ * @param props.disabledReason alasan tombol − nonaktif, dibacakan lewat aria-describedby
+ * @param props.label nama isian untuk pembaca layar
+ * @returns elemen `div`
+ */
 export function Stepper({
   value,
   min,
@@ -26,6 +41,7 @@ export function Stepper({
   disabledReason?: string;
   label: string;
 }) {
+  // 1. Draf ketikan, nilai terbaru (untuk timer), dan timer tahan-tombol.
   const reasonId = useId();
   const [draft, setDraft] = useState<string | null>(null);
   const latest = useRef({ value, onChange, onDelta });
@@ -37,9 +53,11 @@ export function Stepper({
   );
   const viaPointer = useRef(false);
 
+  // 2. Batas: tombol nonaktif di ujung rentang.
   const atMin = value <= min;
   const atMax = max !== undefined && value >= max;
 
+  // 3. Satu langkah ±1 (diabaikan bila keluar batas).
   const step = (direction: 1 | -1) => {
     const { value: currentValue, onChange: notifyChange, onDelta: notifyDelta } = latest.current;
     const nextValue = currentValue + direction;
@@ -49,6 +67,7 @@ export function Stepper({
     if (notifyDelta) notifyDelta(direction);
     else notifyChange(nextValue);
   };
+  // 4. Tahan dan lepas tombol, termasuk perbedaan perilaku sentuh dan papan ketik.
   const stopRepeat = () => {
     clearTimeout(timer.current.holdDelay);
     clearInterval(timer.current.repeatInterval);
@@ -81,7 +100,9 @@ export function Stepper({
     step(direction); // lewat papan ketik
   };
 
+  // 5. Simpan angka yang diketik.
   const commitDraft = () => {
+    // 1. Tanpa ketikan tidak ada yang disimpan; 2. hanya bilangan bulat dalam batas dan berbeda yang dikirim.
     if (draft === null) return;
     const nextValue = Number(draft);
     // shortcut: nilai tak valid dikembalikan diam-diam; tambah pesan galat bila UX meminta.

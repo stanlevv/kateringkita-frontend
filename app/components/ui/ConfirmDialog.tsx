@@ -1,3 +1,6 @@
+// Komponen ConfirmDialog: dialog konfirmasi (Ya/Batal), opsional dengan pilihan alasan dan isian "Lainnya".
+// Dipakai untuk aksi yang perlu dipastikan dulu: tolak pesanan, tutup dapur, aksi admin, dan lainnya.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useState, type ReactNode } from "react";
@@ -6,8 +9,10 @@ import { Dialog } from "./Dialog";
 import { Field } from "./Field";
 import { Textarea } from "./Input";
 
+// Pilihan terakhir yang membuka isian alasan bebas.
 const OTHER_REASON = "Lainnya";
 
+// Prop ConfirmDialog (lihat JSDoc ConfirmDialog).
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -22,6 +27,7 @@ type Props = {
   onConfirm: (reason?: string) => void;
 };
 
+// Isi dialog; dipisah agar state pilihan alasan dibuat ulang setiap kali dialog dibuka.
 function ConfirmDialogBody({
   onClose,
   body,
@@ -33,6 +39,7 @@ function ConfirmDialogBody({
   busy,
   onConfirm,
 }: Omit<Props, "open" | "title">) {
+  // Alasan terpilih; "Lainnya" memakai teks yang diketik. Tombol konfirmasi nonaktif bila alasan wajib tapi kosong.
   const [selected, setSelected] = useState<string | null>(null);
   const [otherText, setOtherText] = useState("");
   const isOther = selected === OTHER_REASON;
@@ -77,6 +84,21 @@ function ConfirmDialogBody({
   );
 }
 
+/**
+ * Dialog konfirmasi.
+ * @param props.open tampil atau tidak
+ * @param props.onClose dipanggil saat Batal, Tutup, atau Esc
+ * @param props.title judul dialog
+ * @param props.body penjelasan akibat aksi
+ * @param props.confirmLabel teks tombol konfirmasi
+ * @param props.cancelLabel teks tombol batal (bawaan "Batal")
+ * @param props.tone warna tombol konfirmasi: danger atau primary
+ * @param props.reasons pilihan alasan baku (opsional); "Lainnya" selalu ditambahkan
+ * @param props.requireReason alasan wajib dipilih/diisi
+ * @param props.busy nonaktifkan tombol konfirmasi selama memproses
+ * @param props.onConfirm dipanggil dengan alasan (bila ada)
+ * @returns Dialog
+ */
 export function ConfirmDialog({ open, onClose, title, ...rest }: Props) {
   return (
     <Dialog open={open} onClose={onClose} title={title}>

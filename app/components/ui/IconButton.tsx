@@ -1,7 +1,15 @@
+// Komponen IconButton: tombol berisi ikon saja, dengan label untuk pembaca layar dan tooltip. Dipakai Dialog, Toast, shell.
 import type { ButtonHTMLAttributes } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cx, focusRing } from "./cx";
 
+/**
+ * Tombol ikon 44×44 px. `label` dipasang sebagai `aria-label` (nama tombol untuk pembaca layar) dan `title`.
+ * @param props.icon ikon lucide
+ * @param props.label nama tombol
+ * @param props atribut `button` lain (onClick, disabled, ...)
+ * @returns elemen `button`
+ */
 export function IconButton({
   icon: Icon,
   label,

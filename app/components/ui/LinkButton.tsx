@@ -1,3 +1,4 @@
+// Komponen LinkButton: tautan Next.js yang tampil seperti tombol, untuk navigasi (bukan aksi). Dipakai di banyak halaman.
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { cx, focusRing } from "./cx";
@@ -7,7 +8,13 @@ const variantClasses = {
   secondary: "border border-line-strong bg-surface text-ink hover:bg-subtle",
 };
 
-// Tautan bergaya tombol (navigasi, bukan aksi).
+/**
+ * Tautan bergaya tombol (navigasi, bukan aksi).
+ * @param props.variant gaya: primary (oranye) atau secondary (berbingkai)
+ * @param props.size md (44 px) atau lg (48 px)
+ * @param props atribut `Link` lain (href, ...)
+ * @returns elemen `Link`
+ */
 export function LinkButton({
   variant = "primary",
   size = "md",

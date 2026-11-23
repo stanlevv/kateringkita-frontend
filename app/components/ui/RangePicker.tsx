@@ -1,3 +1,6 @@
+// Komponen RangePicker: pemilih rentang tanggal laporan (Hari ini, 7 hari, 30 hari, atau tanggal sendiri).
+// Dipakai halaman laporan penjual (/laporan) dan keuangan admin (/admin/keuangan).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useState } from "react";
@@ -6,7 +9,16 @@ import { validateRange, daysBefore } from "@/lib/report";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { Input } from "@/app/components/ui/Input";
 
-/** LP-N1, LP-E1. Rentang tinggal di URL (`dari`, `sampai`); isian tidak sah ditolak di sini dan tidak mengubah URL. */
+/**
+ * Pemilih rentang tanggal. Rentang disimpan di URL (`?dari=...&sampai=...`, nama parameter tetap karena dibaca
+ * halaman server), jadi bisa dibagikan dan bertahan saat dimuat ulang. Isian yang tidak sah ditolak di sini dan
+ * tidak mengubah URL.
+ * @param props.from tanggal awal dari URL (YYYY-MM-DD)
+ * @param props.to tanggal akhir dari URL
+ * @param props.today tanggal hari ini (WIB), batas atas pilihan
+ * @param props.error galat rentang dari URL yang tidak sah, atau null
+ * @returns elemen `div`
+ */
 export function RangePicker({
   from,
   to,
@@ -18,6 +30,7 @@ export function RangePicker({
   today: string;
   error: string | null;
 }) {
+  // 1. Preset yang cocok dengan URL ditandai aktif; tanpa preset cocok (atau ada galat) isian tanggal dibuka.
   const router = useRouter();
   const path = usePathname();
   const presets = [
@@ -31,9 +44,11 @@ export function RangePicker({
   const [localError, setLocalError] = useState<string | null>(null);
   const shownError = localError ?? error;
 
+  // 2. Ganti URL tanpa menggulir halaman; halaman server membaca rentang baru.
   const navigate = (rangeFrom: string, rangeTo: string) =>
     router.replace(`${path}?dari=${rangeFrom}&sampai=${rangeTo}`, { scroll: false });
 
+  // 3. Ubah satu tanggal: cek rentang dulu, URL hanya diganti bila sah.
   function updateField(field: "from" | "to", value: string) {
     const nextRange = { ...draftRange, [field]: value };
     setDraftRange(nextRange);
@@ -42,6 +57,7 @@ export function RangePicker({
     if (!rangeError) navigate(nextRange.from, nextRange.to);
   }
 
+  // 4. Pilih preset: tutup isian tanggal dan langsung ganti URL.
   function choosePreset(option: (typeof presets)[number]) {
     setShowCustom(false);
     setLocalError(null);
@@ -49,6 +65,7 @@ export function RangePicker({
     navigate(option.from, today);
   }
 
+  // 5. Gaya tombol preset (aria-pressed menandai tombol yang aktif).
   const buttonClass = (pressed: boolean) =>
     cx(
       "inline-flex min-h-11 items-center rounded-md border px-4 font-medium",

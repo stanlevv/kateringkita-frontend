@@ -1,10 +1,19 @@
+// Komponen ErrorSummary: ringkasan galat form di atas form, berisi tautan ke tiap isian yang salah.
+// Dipakai form login, daftar, lupa sandi, menu, pengaturan, dan lainnya.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useEffect, useRef } from "react";
 import { CircleAlert } from "lucide-react";
 
-// Dipasang setelah submit gagal. Fokus pindah ke sini (G-2) saat muncul pertama kali
-// atau saat `focusKey` berubah (mis. penghitung submit); render ulang biasa tidak merebut fokus.
+/**
+ * Ringkasan galat (role="alert") yang dipasang setelah submit gagal. Fokus pindah ke sini saat muncul pertama kali
+ * atau saat `focusKey` berubah (mis. penghitung submit), agar pengguna keyboard dan pembaca layar langsung tahu;
+ * render ulang biasa tidak merebut fokus.
+ * @param props.errors daftar `{ id isian, pesan }`; kosong = tidak dirender
+ * @param props.focusKey ganti nilainya untuk memindahkan fokus ke ringkasan lagi
+ * @returns elemen `div`, atau null bila tanpa galat
+ */
 export function ErrorSummary({ errors, focusKey }: { errors: { id: string; message: string }[]; focusKey?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const hasErrors = errors.length > 0;

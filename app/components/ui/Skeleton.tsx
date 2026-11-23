@@ -1,9 +1,16 @@
+// Komponen kerangka memuat (skeleton): kotak abu-abu berkilau yang tampil selama halaman menunggu data.
+// Dipakai file loading.tsx tiap halaman (lewat PageFrame) dan beberapa komponen yang memuat sendiri.
 import { Card } from "./Card";
 import { cx } from "./cx";
 
-// Kerangka memuat (SY-3). Bentuknya meniru komponen asli (Card, KpiCard, DataTable, Field, Tabs) supaya tata letak
-// tidak melompat saat data datang. Isian bg-line tetap terlihat di atas canvas maupun surface.
+// Bentuk kerangka meniru komponen asli (Card, KpiCard, DataTable, Field, Tabs) supaya tata letak tidak melompat
+// saat data datang. Isian bg-line tetap terlihat di atas latar canvas maupun surface.
 
+/**
+ * Satu kotak berkilau; ukuran dan bentuk dari `className`.
+ * @param props.className kelas ukuran (h-*, w-*) dan bentuk
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
@@ -16,9 +23,16 @@ export function Skeleton({ className }: { className?: string }) {
   );
 }
 
+// Tinggi baris (line-height) tiap ukuran teks Tailwind.
 const LINE_HEIGHTS = { sm: "h-5", base: "h-6", lg: "h-7", "2xl": "h-8", "4xl": "h-10" };
 
-/** Satu baris teks: kotaknya setinggi line-height teks asli (text-sm 20 px, base 24 px, …), batangnya lebih tipis. */
+/**
+ * Satu baris teks: kotaknya setinggi line-height teks asli (text-sm 20 px, base 24 px, …), batangnya lebih tipis.
+ * @param props.size ukuran teks yang ditiru (sm, base, lg, 2xl, 4xl)
+ * @param props.width kelas lebar batang (w-*)
+ * @param props.className kelas tambahan
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonText({
   size = "base",
   width,
@@ -35,12 +49,21 @@ export function SkeletonText({
   );
 }
 
-/** Bingkai kosong seperti Input/Select yang belum terisi. */
+/**
+ * Bingkai kosong seperti Input/Select yang belum terisi.
+ * @param props.className kelas ukuran
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonBox({ className }: { className?: string }) {
   return <div aria-hidden className={cx("rounded-md border border-line bg-surface", className)} />;
 }
 
-/** Field + Input: label text-sm, jarak 6 px, kotak isian 44 px (Textarea: `tinggi="h-24"`). */
+/**
+ * Field + Input: label text-sm, jarak 6 px, kotak isian 44 px (Textarea: `height="h-24"`).
+ * @param props.height kelas tinggi kotak isian
+ * @param props.label kelas lebar label
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonField({ height = "h-11", label = "w-24" }: { height?: string; label?: string }) {
   return (
     <div aria-hidden className="flex flex-col gap-1.5">
@@ -50,7 +73,10 @@ export function SkeletonField({ height = "h-11", label = "w-24" }: { height?: st
   );
 }
 
-/** KpiCard: label, angka text-2xl, keterangan. */
+/**
+ * Meniru KpiCard: label, angka text-2xl, keterangan.
+ * @returns Card kerangka
+ */
 export function SkeletonKpi() {
   return (
     <Card aria-hidden>
@@ -61,7 +87,14 @@ export function SkeletonKpi() {
   );
 }
 
-/** Card berisi judul text-lg, `baris` baris teks, dan `tombol` tombol di bawah. */
+/**
+ * Card berisi judul text-lg, beberapa baris teks, dan tombol di bawah.
+ * @param props.withTitle tampilkan baris judul
+ * @param props.lines jumlah baris teks
+ * @param props.buttons jumlah tombol
+ * @param props.className kelas tambahan
+ * @returns Card kerangka
+ */
 export function SkeletonCard({
   withTitle = true,
   lines = 2,
@@ -90,7 +123,11 @@ export function SkeletonCard({
   );
 }
 
-/** Bagian formulir (section berbingkai): judul text-lg + `isian` Field. */
+/**
+ * Bagian formulir (section berbingkai): judul text-lg + beberapa Field.
+ * @param props.fields jumlah isian
+ * @returns Card kerangka
+ */
 export function SkeletonSection({ fields = 3 }: { fields?: number }) {
   return (
     <Card aria-hidden className="flex flex-col gap-4 sm:p-6">
@@ -102,7 +139,12 @@ export function SkeletonSection({ fields = 3 }: { fields?: number }) {
   );
 }
 
-/** DataTable: kepala bg-subtle + baris 44 px bergaris. */
+/**
+ * Meniru DataTable: kepala bg-subtle + baris 44 px bergaris.
+ * @param props.rows jumlah baris
+ * @param props.columns jumlah kolom
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   const cells = Array.from({ length: columns }, (_, i) => (
     <SkeletonText key={i} size="sm" width={i === 0 ? "w-24" : "w-16"} className="flex-1" />
@@ -119,7 +161,12 @@ export function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; column
   );
 }
 
-/** Daftar yang tampil sebagai DataTable di ≥ 1024 px dan kartu di bawahnya (OrderTable, MerchantTable, TransactionTable). */
+/**
+ * Daftar yang tampil sebagai DataTable di ≥ 1024 px dan kartu di bawahnya (OrderTable, MerchantTable, TransactionTable).
+ * @param props.rows jumlah baris
+ * @param props.columns jumlah kolom tabel
+ * @returns tabel kerangka (layar lebar) dan kartu kerangka (layar sempit)
+ */
 export function SkeletonList({ rows = 6, columns = 5 }: { rows?: number; columns?: number }) {
   return (
     <>
@@ -151,7 +198,12 @@ const BAR_HEIGHTS = [
   "h-[40%]",
 ];
 
-/** Grafik batang (HourlyChart, GrafikBatang): sumbu bawah + batang. `className` memberi tinggi area (aspect-* atau h-*). */
+/**
+ * Grafik batang (HourlyChart, BarChart): sumbu bawah + batang.
+ * @param props.bars jumlah batang
+ * @param props.className tinggi area (aspect-* atau h-*)
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonChart({ bars = 12, className }: { bars?: number; className?: string }) {
   return (
     <div aria-hidden className={cx("flex w-full items-end gap-1 border-b border-line", className)}>
@@ -162,7 +214,11 @@ export function SkeletonChart({ bars = 12, className }: { bars?: number; classNa
   );
 }
 
-/** Tabs: deretan label di atas garis bawah. */
+/**
+ * Meniru Tabs: deretan label di atas garis bawah.
+ * @param props.count jumlah tab
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonTabs({ count = 3 }: { count?: number }) {
   return (
     <div aria-hidden className="flex h-11 items-center gap-8 border-b border-line px-4">
@@ -173,7 +229,11 @@ export function SkeletonTabs({ count = 3 }: { count?: number }) {
   );
 }
 
-/** Deretan tombol pil (RangePicker, filter chip). */
+/**
+ * Deretan tombol pil (RangePicker, filter chip).
+ * @param props.count jumlah tombol
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonPills({ count = 4 }: { count?: number }) {
   return (
     <div aria-hidden className="flex flex-wrap gap-2">
@@ -184,7 +244,11 @@ export function SkeletonPills({ count = 4 }: { count?: number }) {
   );
 }
 
-/** Baris filter daftar: kotak cari + select berlabel (`pilihan` = lebar md:w-* tiap select). */
+/**
+ * Baris filter daftar: kotak cari + select berlabel.
+ * @param props.selectWidths kelas lebar (md:w-*) tiap select
+ * @returns elemen kerangka (aria-hidden: tidak dibacakan pembaca layar)
+ */
 export function SkeletonFilter({ selectWidths = [] }: { selectWidths?: string[] }) {
   return (
     <div aria-hidden className="flex flex-col gap-3 md:flex-row md:items-end">

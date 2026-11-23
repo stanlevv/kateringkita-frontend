@@ -1,9 +1,19 @@
+// Komponen Drawer: panel yang meluncur dari sisi layar, dibangun di atas Dialog.
+// Dipakai OrderSlipDrawer (slip pesanan) dan MobileNav (menu navigasi).
 "use client";
 
 import type { ReactNode } from "react";
 import { Dialog } from "./Dialog";
 
-// Panel kanan di desktop, selebar layar di bawah 768 px. `side="kiri"`: menu navigasi yang dibuka dari rail sidebar.
+/**
+ * Panel samping: di desktop menempel di kanan (atau kiri), di bawah 768 px selebar layar.
+ * @param props.open tampil atau tidak
+ * @param props.onClose dipanggil saat pengguna menutup (tombol Tutup atau Esc)
+ * @param props.title judul panel
+ * @param props.children isi panel
+ * @param props.side `"right"` (bawaan) atau `"left"` untuk menu navigasi yang dibuka dari rail sidebar
+ * @returns Dialog bergaya panel
+ */
 export function Drawer({
   open,
   onClose,

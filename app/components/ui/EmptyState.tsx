@@ -1,6 +1,15 @@
+// Komponen EmptyState: tampilan saat daftar kosong (ikon, judul, penjelasan, aksi). Dipakai di daftar dan tabel.
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
+/**
+ * Tampilan daftar kosong.
+ * @param props.icon ikon besar di atas
+ * @param props.title judul singkat
+ * @param props.body penjelasan dan langkah berikutnya
+ * @param props.action tombol/tautan opsional
+ * @returns elemen `div`
+ */
 export function EmptyState({
   icon: Icon,
   title,

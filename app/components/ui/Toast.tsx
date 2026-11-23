@@ -1,3 +1,6 @@
+// Komponen Toast: pesan singkat yang muncul di pojok bawah lalu hilang sendiri (mis. "Tersimpan").
+// `toast()` bisa dipanggil dari mana saja; `<Toaster />` dipasang sekali di layout untuk menampilkannya.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -7,6 +10,7 @@ import { cx } from "./cx";
 import { IconButton } from "./IconButton";
 import { toneClass, toneIcon } from "./tone";
 
+// Satu pesan: nada, teks, aksi opsional (mis. "Batalkan"), dan lama tampil (0 = sampai ditutup).
 type ToastItem = {
   id: number;
   tone: Tone;
@@ -21,23 +25,35 @@ let nextId = 1;
 const subscribers = new Set<() => void>();
 const emit = () => subscribers.forEach((listener) => listener());
 
+/**
+ * Menampilkan pesan toast.
+ * @param options nada, pesan, aksi opsional, dan lama tampil (bawaan 4 dtk; danger tetap sampai ditutup)
+ * @returns id toast, untuk menutupnya lewat dismissToast
+ */
 export function toast(options: Omit<ToastItem, "id">): number {
   const id = nextId++;
   items = [...items, { ...options, id }];
   emit();
   return id;
 }
+/**
+ * Menutup toast.
+ * @param id id dari toast()
+ */
 export function dismissToast(id: number) {
   items = items.filter((item) => item.id !== id);
   emit();
 }
 
+// Satu kartu toast: muncul dengan animasi, hilang setelah durasinya, dan berhenti menghitung selama disorot.
 function ToastCard({ item }: { item: ToastItem }) {
+  // 1. Animasi masuk: tampil pada frame berikutnya agar transisi CSS berjalan.
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const frameId = requestAnimationFrame(() => setVisible(true));
     return () => cancelAnimationFrame(frameId);
   }, []);
+  // 2. Timer tutup otomatis.
   const duration = item.duration ?? (item.tone === "danger" ? 0 : 4000); // 0 = tetap sampai ditutup
   // Jeda saat kursor di atas atau fokus di dalam; lanjut dari awal durasi setelah lepas.
   const [paused, setPaused] = useState(false);
@@ -46,6 +62,7 @@ function ToastCard({ item }: { item: ToastItem }) {
     const timer = setTimeout(() => dismissToast(item.id), duration);
     return () => clearTimeout(timer);
   }, [duration, item.id, paused]);
+  // 3. Ikon sesuai nada.
   const Icon = toneIcon[item.tone];
   return (
     <div
@@ -80,6 +97,7 @@ function ToastCard({ item }: { item: ToastItem }) {
   );
 }
 
+// Langganan perubahan daftar toast untuk useSyncExternalStore (cara React membaca nilai dari luar React).
 const subscribe = (listener: () => void) => {
   subscribers.add(listener);
   return () => {
@@ -87,6 +105,10 @@ const subscribe = (listener: () => void) => {
   };
 };
 
+/**
+ * Wilayah tampil semua toast. Memakai aria-live="polite": pembaca layar membacakan pesan baru tanpa memindahkan fokus.
+ * @returns elemen `div` role="region"
+ */
 export function Toaster() {
   const list = useSyncExternalStore(
     subscribe,

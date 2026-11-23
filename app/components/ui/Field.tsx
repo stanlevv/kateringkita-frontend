@@ -1,8 +1,22 @@
+// Komponen Field: membungkus satu isian form dengan label, teks bantuan, dan pesan galat yang terhubung untuk aksesibilitas.
+// Dipakai di semua form.
 import { cloneElement, useId, type ReactElement } from "react";
 import { CircleAlert } from "lucide-react";
 
+// Atribut yang dipasang Field ke isian di dalamnya.
 type ChildProps = { id?: string; "aria-describedby"?: string; "aria-invalid"?: boolean; "aria-required"?: boolean };
 
+/**
+ * Label + isian + bantuan + galat. Isian anak diberi `id`, `aria-describedby` (menunjuk teks bantuan/galat agar
+ * dibacakan), `aria-invalid` saat galat, dan `aria-required` bila wajib.
+ * @param props.label teks label
+ * @param props.help teks bantuan opsional
+ * @param props.error pesan galat opsional
+ * @param props.required tampilkan tanda * dan tandai wajib
+ * @param props.id id isian; bila kosong dibuat otomatis
+ * @param props.children satu elemen isian (Input, Select, Textarea, ...)
+ * @returns elemen `div`
+ */
 export function Field({
   label,
   help,

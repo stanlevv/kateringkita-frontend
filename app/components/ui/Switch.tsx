@@ -1,5 +1,15 @@
+// Komponen Switch: saklar nyala/mati (role="switch" agar dibacakan sebagai saklar oleh pembaca layar).
+// Dipakai StoreStatusToggle, MenuForm, PesanMeja, PenyediaAiPanel, DaftarPopup.
 import { cx, focusRing } from "./cx";
 
+/**
+ * Saklar nyala/mati. Status dibacakan lewat `aria-checked`.
+ * @param props.checked menyala atau tidak
+ * @param props.onChange dipanggil dengan nilai kebalikan saat diklik
+ * @param props.label nama saklar untuk pembaca layar
+ * @param props.disabled nonaktif (mis. selama permintaan berjalan)
+ * @returns elemen `button`
+ */
 export function Switch({
   checked,
   onChange,

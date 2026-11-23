@@ -1,7 +1,18 @@
+// Komponen KpiCard: kartu angka ringkas (KPI = angka kunci kinerja) seperti omzet atau jumlah pesanan.
+// Dipakai di ringkasan admin, keuangan, server, laporan, dan dashboard.
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Card } from "./Card";
 
+/**
+ * Kartu satu angka kunci.
+ * @param props.label nama angka
+ * @param props.value angka yang ditampilkan besar
+ * @param props.hint keterangan kecil di bawah
+ * @param props.icon ikon opsional di samping label
+ * @param props.children isi tambahan di bawah angka
+ * @returns Card
+ */
 export function KpiCard({
   label,
   value,

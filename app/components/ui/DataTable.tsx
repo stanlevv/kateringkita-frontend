@@ -1,6 +1,9 @@
+// Komponen DataTable: tabel data serbaguna; kolom ditentukan pemanggil, baris bisa diklik atau dipilih dengan keyboard.
+// Dipakai tabel admin (penjual, log, master, ...) dan daftar pesanan/transaksi penjual.
 import type { ReactNode } from "react";
 import { cx } from "./cx";
 
+/** Definisi satu kolom: kunci, judul, cara menggambar sel, rata kanan untuk angka, dan boleh membungkus teks. */
 export type Column<T> = {
   key: string;
   header: string;
@@ -9,12 +12,26 @@ export type Column<T> = {
   wrap?: boolean;
 };
 
-// Klik/tombol dari tautan, tombol, atau isian di dalam sel bukan milik baris.
+/**
+ * Klik/tombol dari tautan, tombol, atau isian di dalam sel bukan milik baris.
+ * @param event event klik atau keyboard pada baris
+ * @returns true bila asalnya dari kontrol di dalam sel
+ */
 function isFromControl(event: { target: EventTarget; currentTarget: HTMLElement }) {
   const control = (event.target as HTMLElement).closest("a,button,input,select,textarea,label");
   return !!control && event.currentTarget.contains(control);
 }
 
+/**
+ * Tabel data. Bila `onRowClick` ada, baris bisa difokus (Tab) dan diaktifkan dengan klik, Enter, atau Spasi;
+ * klik pada tautan/tombol/isian di dalam sel tidak ikut mengaktifkan baris.
+ * @param props.columns definisi kolom
+ * @param props.rows data baris
+ * @param props.rowKey membuat kunci unik tiap baris
+ * @param props.onRowClick dipanggil dengan baris yang dipilih (opsional)
+ * @param props.caption nama tabel untuk pembaca layar
+ * @returns elemen `div` berisi `table`
+ */
 export function DataTable<T>({
   columns,
   rows,
