@@ -130,6 +130,19 @@ Wajib dipakai saat memberi nama baru. Mengikuti nama tabel DB dan peran PRD.
 | tersaring              | filtered               | terbaru                | latest                  |
 | jenis (data)           | kind                   | masalah (isian)        | problem                 |
 | foto                   | photo                  | tampilan (status)      | view                    |
+| lencana                | badge                  | gelembung (pesan)      | bubble                  |
+| waktu lengkap          | fullTime               | waktu relatif          | relativeTime            |
+| sekarang (acuan waktu) | now                    | boleh mengubah         | canEdit                 |
+| putuskan               | decide                 | keluaran (AI)          | output                  |
+| poin                   | point                  | fitur (AI)             | feature                 |
+| jenis penyedia         | providerType           | prioritas              | priority                |
+| kunci API              | apiKey                 | uji koneksi            | runTest / testResult    |
+| sasaran hapus          | deleteTarget           | lama menyala           | uptime                  |
+| jenis log              | level                  | masalah per jam        | hourlyIssues            |
+| lembar cetak           | printSheet             | nama toko              | merchantName            |
+| gambar                 | image                  | dialog buat            | createOpen              |
+| dialog konfirmasi      | confirmOpen            | jumlah per tab         | tabCount                |
+| jadwalkan cari         | scheduleSearch         | hapus pencarian        | clearSearch             |
 
 Istilah yang belum ada di tabel: pilih padanan Inggris yang umum, lalu tambahkan ke tabel ini pada commit yang sama.
 
