@@ -1,3 +1,7 @@
+// Komponen QrPrintSheet: isi halaman /cetak-qr. Satu kartu per meja aktif (nama toko, nomor meja, QR, ajakan scan),
+// dua kolom per lembar A4. Kartu bergaris putus-putus untuk digunting; judul dan tombol Cetak tidak ikut tercetak
+// (kelas print:hidden). Data meja diambil page.tsx.
+// "use client": komponen ini berjalan di peramban (client component) karena tombol Cetak memanggil window.print().
 "use client";
 
 import { Printer, ScanLine } from "lucide-react";
@@ -5,7 +9,12 @@ import { TableQr } from "@/app/components/table/TableQr";
 import { Button } from "@/app/components/ui/Button";
 import type { Table } from "@/types/table";
 
-// Kartu bergaris putus-putus untuk digunting; tombol cetak tidak ikut tercetak
+/**
+ * Lembar QR meja siap cetak.
+ * @param props.merchantName nama toko yang dicetak di setiap kartu
+ * @param props.tables meja aktif
+ * @returns main berisi kartu QR
+ */
 export function QrPrintSheet({ merchantName, tables }: { merchantName: string; tables: Table[] }) {
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 print:max-w-none print:p-0">

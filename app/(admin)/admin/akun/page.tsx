@@ -6,7 +6,9 @@ import { LEVEL_LABELS, type AdminLevel } from "@/lib/admin-level";
 import { requireAdmin } from "@/services/auth.service";
 
 /**
- * Halaman akun admin. Hanya kata sandi yang bisa diganti di sini; nama dan nomor diubah oleh admin super lain bila perlu.
+ * Halaman akun admin. Hanya kata sandi yang bisa diganti di sini. Panel web belum punya tempat untuk mengubah nama dan
+ * nomor admin yang sudah ada; halaman kelola admin (/admin/admin) hanya bisa membuat admin baru, mengubah tingkat,
+ * menonaktifkan/mengaktifkan, dan membuat sandi sementara.
  * @returns PageHeader berisi data akun (nama, nomor HP, tingkat) dan ChangePasswordForm
  */
 export default async function AdminAccountPage() {
