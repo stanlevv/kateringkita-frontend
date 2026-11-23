@@ -1,3 +1,5 @@
+// Test formulir lupa kata sandi (ForgotPasswordForm): validasi email, alur email -> kode + sandi baru -> /login?reset=1,
+// dan galat kode dari server. Server action dan router dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import ForgotPasswordForm from "./ForgotPasswordForm";

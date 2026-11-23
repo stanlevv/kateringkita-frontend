@@ -1,3 +1,5 @@
+// Test halaman /login dan /register (server component): pengguna yang sudah masuk dialihkan (penjual ke /dashboard,
+// admin ke /admin), dan formulir tetap tampil saat backend mati. Sesi, redirect, dan apiFetch dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import LoginPage from "./login/page";
 import RegisterPage from "./register/page";

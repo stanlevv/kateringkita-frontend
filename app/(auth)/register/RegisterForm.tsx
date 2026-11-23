@@ -1,3 +1,7 @@
+// Formulir daftar penjual di halaman /register, dalam dua langkah: data pemilik (nama, WA, email, sandi) lalu data
+// usaha (nama usaha, jenis usaha, alamat). Data dikirim ke server action `registerMerchant` (backend POST
+// /auth/merchant/register). Setelah berhasil tampil layar "Akun berhasil dibuat"; pengguna tidak masuk otomatis.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, dan event form.
 "use client";
 
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
@@ -15,7 +19,9 @@ import { Input, Select } from "@/app/components/ui/Input";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { businessSchema, validateFields, ownerSchema } from "@/lib/schemas";
 
+/** Satu jenis usaha dari backend (GET /meta/merchant-types). */
 type MerchantType = { id: number; name: string };
+/** Isian formulir. Kuncinya sama dengan nama field yang diminta backend, kecuali `confirm` yang tidak dikirim. */
 type FormValues = Record<
   "full_name" | "phone" | "email" | "password" | "confirm" | "business_name" | "merchant_type_id" | "address",
   string
@@ -31,12 +37,22 @@ const INITIAL_VALUES: FormValues = {
   merchant_type_id: "",
   address: "",
 };
+// Field langkah 1; bila server menolak salah satunya, formulir kembali ke langkah 1.
 const OWNER_FIELDS = ["full_name", "phone", "email", "password", "confirm"];
 const ALREADY_REGISTERED_MESSAGE = "Nomor WA atau email ini sudah terdaftar.";
 const NETWORK_ERROR_MESSAGE = "Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.";
+// Langkah persiapan toko yang ditampilkan setelah daftar berhasil.
 const SETUP_STEPS = ["Lengkapi pengaturan toko", "Tambah menu pertama", "Buka dapur"];
 
+/**
+ * Formulir daftar penjual dua langkah dengan stepper, galat per field, dan layar berhasil.
+ * @param props.types daftar jenis usaha untuk pilihan di langkah 2
+ * @param props.typesFailed true bila daftar jenis usaha gagal diambil; langkah 2 menampilkan tombol Coba lagi
+ * @returns halaman daftar lengkap, atau layar "Akun berhasil dibuat" setelah berhasil
+ */
 export default function RegisterForm({ types, typesFailed }: { types: MerchantType[]; typesFailed: boolean }) {
+  // 1. State langkah, isian, galat, dan fokus. `errorFocusKey` naik setiap kali ada galat, supaya ErrorSummary
+  //    memindahkan fokus ke ringkasan galat. `moveFocusRef` menandai bahwa fokus perlu pindah setelah render berikutnya.
   const [step, setStep] = useState<1 | 2>(1);
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
   const [showPassword, setShowPassword] = useState(false);
@@ -51,13 +67,15 @@ export default function RegisterForm({ types, typesFailed }: { types: MerchantTy
   const [registered, setRegistered] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  // Tombol yang diklik hilang saat langkah berganti; fokus dipindah ke judul langkah baru.
+  // 2. Tombol yang diklik hilang saat langkah berganti, jadi fokus dipindah ke judul langkah baru (penting untuk
+  //    pengguna keyboard dan pembaca layar).
   useEffect(() => {
     if (!moveFocusRef.current) return;
     moveFocusRef.current = false;
     headingRef.current?.focus();
   }, [step, registered]);
 
+  // 3. Pembantu field: skema validasi langkah aktif, handler onChange, pemeriksaan saat blur, dan gabungan prop Input.
   const schema = step === 1 ? ownerSchema : businessSchema;
   const handleChange = (name: keyof FormValues) => (event: { target: { value: string } }) =>
     setValues((previous) => ({ ...previous, [name]: event.target.value }));
@@ -70,6 +88,7 @@ export default function RegisterForm({ types, typesFailed }: { types: MerchantTy
     onBlur: validateOnBlur(name),
   });
 
+  // 4. Simpan galat validasi; true bila ada galat (fokus pindah ke ringkasan galat).
   function hasValidationErrors(fieldErrors: Record<string, string>) {
     setErrors(fieldErrors);
     if (Object.keys(fieldErrors).length === 0) return false;
@@ -77,6 +96,7 @@ export default function RegisterForm({ types, typesFailed }: { types: MerchantTy
     return true;
   }
 
+  // 5. Langkah 1 -> 2 setelah data pemilik lolos validasi.
   function goToBusinessStep(event: FormEvent) {
     event.preventDefault();
     setAlreadyRegistered(false);
@@ -86,27 +106,34 @@ export default function RegisterForm({ types, typesFailed }: { types: MerchantTy
     }
   }
 
+  // 6. Kirim pendaftaran.
   function submitRegistration(event: FormEvent) {
+    // 1. Cegah muat ulang halaman dan periksa data usaha.
     event.preventDefault();
     setGeneralError("");
     if (hasValidationErrors(validateFields(businessSchema, values))) return;
+    // 2. Kirim di dalam transisi (selama itu tombol menampilkan "Memproses…").
     startTransition(async () => {
+      // 1. Kirim semua isian kecuali `confirm` ke server action.
       const formData = new FormData();
       for (const [name, value] of Object.entries(values)) if (name !== "confirm") formData.set(name, value);
       const result = await registerMerchant({}, formData);
+      // 2. Berhasil -> layar berhasil. Gagal jaringan -> banner umum.
       if (result.ok) {
         moveFocusRef.current = true;
         return setRegistered(true);
       }
       if (result.code === "NETWORK") return setGeneralError(NETWORK_ERROR_MESSAGE);
+      // 3. Galat per field dari server.
       const serverErrors = Object.fromEntries(
         Object.entries(result.fields ?? {}).map(([name, messages]) => [name, messages[0]]),
       );
-      // RG-E2: 409 tanpa rincian field tetap berarti no WA/email sudah dipakai.
+      // 4. 409 (CONFLICT) tanpa rincian field tetap berarti nomor WA atau email sudah dipakai akun lain.
       if (result.code === "CONFLICT" && !serverErrors.phone && !serverErrors.email)
         serverErrors.phone = ALREADY_REGISTERED_MESSAGE;
       if (Object.keys(serverErrors).length === 0)
         return setGeneralError(result.error ?? "Terjadi kesalahan. Coba lagi.");
+      // 5. Tampilkan galat; bila ada galat di field pemilik, kembali ke langkah 1 agar field itu terlihat.
       setErrors(serverErrors);
       setErrorFocusKey((count) => count + 1);
       setAlreadyRegistered(result.code === "CONFLICT");
@@ -114,6 +141,7 @@ export default function RegisterForm({ types, typesFailed }: { types: MerchantTy
     });
   }
 
+  // 7. Ringkasan galat untuk ErrorSummary; id field sama dengan nama field.
   const errorSummary = Object.entries(errors)
     .filter(([, message]) => message)
     .map(([id, message]) => ({ id, message }));
@@ -317,6 +345,11 @@ export default function RegisterForm({ types, typesFailed }: { types: MerchantTy
   );
 }
 
+/**
+ * Bingkai halaman daftar: logo di atas, kartu berisi `children`, dan tautan "Sudah punya akun? Masuk" di bawah.
+ * @param props.children isi kartu (formulir atau layar berhasil)
+ * @returns elemen `<main>` halaman daftar
+ */
 function AuthFrame({ children }: { children: React.ReactNode }) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center gap-6 px-4 py-10">

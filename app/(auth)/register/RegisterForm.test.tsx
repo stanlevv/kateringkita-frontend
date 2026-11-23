@@ -1,3 +1,6 @@
+// Test formulir daftar penjual (RegisterForm): stepper dua langkah, validasi nomor WA, isian tetap saat kembali,
+// galat 409/jaringan/429 dari server, perpindahan fokus, layar berhasil, dan jenis usaha gagal dimuat.
+// Server action registerMerchant dan router dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import RegisterForm from "./RegisterForm";

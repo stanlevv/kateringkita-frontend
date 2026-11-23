@@ -1,3 +1,6 @@
+// Test formulir masuk (LoginForm): validasi isian, field next, pesan per kode galat (sandi salah, 429 dengan
+// hitung mundur, jaringan, akun pembeli), banner keterangan dari URL, dan tombol lihat kata sandi.
+// Server action login dipalsukan (vi.mock) sehingga tidak ada panggilan ke backend.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import LoginForm from "./LoginForm";
