@@ -42,7 +42,7 @@ const MODE = [
 ] as const;
 const LABEL: Record<string, string> = {
   business_name: "Nama usaha", description: "Deskripsi", address: "Alamat", wa_number: "Nomor WA toko", open_time: "Jam buka", close_time: "Jam tutup",
-  hold_minutes: "Durasi tahan pesanan", logo_url: "Logo toko", daily_revenue_target: "Target omzet harian", pickup_point_ids: "Titik temu",
+  hold_minutes: "Durasi tahan pesanan", logo_url: "Logo toko", cover_url: "Background toko", daily_revenue_target: "Target omzet harian", pickup_point_ids: "Titik temu",
 };
 const MB = 1024 * 1024;
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
@@ -50,13 +50,13 @@ const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 type Isian = {
   business_name: string; description: string; address: string; wa_number: string; service_mode: MerchantProfile["service_mode"];
   open_time: string; close_time: string; hold_minutes: string; daily_revenue_target: string; pickup_point_ids: number[];
-  logo_url: string | null;
+  logo_url: string | null; cover_url: string | null;
 };
 
 const awalDari = (p: MerchantProfile): Isian => ({
   business_name: p.business_name, description: p.description ?? "", address: p.address, wa_number: p.wa_number, service_mode: p.service_mode,
   open_time: p.open_time, close_time: p.close_time, hold_minutes: String(p.hold_minutes), daily_revenue_target: String(p.daily_revenue_target),
-  pickup_point_ids: p.pickup_point_ids, logo_url: p.logo_url,
+  pickup_point_ids: p.pickup_point_ids, logo_url: p.logo_url, cover_url: p.cover_url ?? null,
 });
 const kunci = (i: Isian) => JSON.stringify({ ...i, pickup_point_ids: [...i.pickup_point_ids].sort((a, b) => a - b) });
 
@@ -69,8 +69,15 @@ function Bagian({ id, judul, sorot, children }: { id: string; judul: string; sor
   );
 }
 
-/** Logo: pratinjau, unggah langsung ke penyimpanan (FE-08), hapus (PG-E3). F26: QRIS statis toko dihapus (bayar online lewat Midtrans). */
-function Gambar({ id, url, error, onChange, onBusy }: { id: string; url: string | null; error?: string; onChange: (u: string | null) => void; onBusy: (b: boolean) => void }) {
+const JENIS_GAMBAR = {
+  logo: { nama: "Logo toko", kotak: "aspect-square w-40", isi: "object-contain", sizes: "160px" },
+  // background profil toko tampil melebar di atas halaman toko aplikasi
+  cover: { nama: "Background toko", kotak: "aspect-[3/1] w-full max-w-md", isi: "object-cover", sizes: "448px" },
+} as const;
+
+/** Logo / background toko: pratinjau, unggah langsung ke penyimpanan (FE-08), hapus (PG-E3). F26: QRIS statis toko dihapus (bayar online lewat Midtrans). */
+function Gambar({ id, jenis = "logo", url, error, onChange, onBusy }: { id: string; jenis?: keyof typeof JENIS_GAMBAR; url: string | null; error?: string; onChange: (u: string | null) => void; onBusy: (b: boolean) => void }) {
+  const j = JENIS_GAMBAR[jenis];
   const [galat, setGalat] = useState<string | null>(null);
   const [sibuk, setSibuk] = useState(false);
   const [selesai, setSelesai] = useState(false);
@@ -102,7 +109,7 @@ function Gambar({ id, url, error, onChange, onBusy }: { id: string; url: string 
     berjalan.current = true;
     setSibuk(true);
     onBusy(true);
-    const r = await unggahFoto(f, "logo");
+    const r = await unggahFoto(f, jenis);
     if (id !== unggahKe.current) return;
     berjalan.current = false;
     setSibuk(false);
@@ -113,18 +120,18 @@ function Gambar({ id, url, error, onChange, onBusy }: { id: string; url: string 
   }
   const pesan = galat ?? error;
   return (
-    <div role="group" aria-label="Logo toko" className="flex flex-col gap-3">
+    <div role="group" aria-label={j.nama} className="flex flex-col gap-3">
       {url ? (
-        <div className="relative aspect-square w-40 overflow-hidden rounded-md bg-subtle">
-          <Image src={url} alt="Logo toko" fill unoptimized sizes="160px" className="object-contain" />
+        <div className={cx("relative overflow-hidden rounded-md bg-subtle", j.kotak)}>
+          <Image src={url} alt={j.nama} fill unoptimized sizes={j.sizes} className={j.isi} />
         </div>
       ) : (
         <p className="text-sm text-ink-muted">Belum ada gambar.</p>
       )}
       {sibuk && <p role="status" className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />Mengunggah…</p>}
-      {selesai && !sibuk && <p role="status" className="text-sm text-success">Logo terunggah.</p>}
+      {selesai && !sibuk && <p role="status" className="text-sm text-success">{jenis === "logo" ? "Logo" : "Background"} terunggah.</p>}
       {pesan && <p role="alert" className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{pesan}</p>}
-      <div ref={wadah}><FileDrop id={id} maxBytes={20 * MB /* diperkecil di lib/unggah.ts */} onFile={(f) => void pilih(f)} onError={setGalat} label={url ? "Ganti logo" : "Pilih logo"} /></div>
+      <div ref={wadah}><FileDrop id={id} maxBytes={20 * MB /* diperkecil di lib/unggah.ts */} onFile={(f) => void pilih(f)} onError={setGalat} label={`${url ? "Ganti" : "Pilih"} ${jenis === "logo" ? "logo" : "background"}`} /></div>
       {url && <div><Button variant="ghost" onClick={() => { batalkan(); pindahFokus.current = true; setGalat(null); setSelesai(false); onChange(null); }}><X aria-hidden className="size-4" />Hapus gambar</Button></div>}
     </div>
   );
@@ -168,7 +175,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
   const sentuh = (k: string) => setTersentuh((p) => new Set(p).add(k));
   const blur = (k: string) => () => sentuh(k);
   const input = {
-    business_name: v.business_name, description: v.description, logo_url: v.logo_url, address: v.address, wa_number: v.wa_number, service_mode: v.service_mode,
+    business_name: v.business_name, description: v.description, logo_url: v.logo_url, cover_url: v.cover_url, address: v.address, wa_number: v.wa_number, service_mode: v.service_mode,
     open_time: v.open_time, close_time: v.close_time, hold_minutes: num(v.hold_minutes), daily_revenue_target: num(v.daily_revenue_target),
     pickup_point_ids: v.pickup_point_ids,
   };
@@ -244,6 +251,11 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium text-ink">Logo toko</p>
                 <Gambar key={`logo-${resetKe}`} id="pg-logo_url" url={v.logo_url} error={galat("logo_url")} onChange={(u) => set("logo_url", u)} onBusy={(b) => setMengunggah((n) => n + (b ? 1 : -1))} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm font-medium text-ink">Background toko</p>
+                <p className="text-sm text-ink-muted">Tampil melebar di atas halaman toko di aplikasi pembeli. Pakai foto lanskap, misalnya dapur atau etalase.</p>
+                <Gambar key={`cover-${resetKe}`} id="pg-cover_url" jenis="cover" url={v.cover_url} error={galat("cover_url")} onChange={(u) => set("cover_url", u)} onBusy={(b) => setMengunggah((n) => n + (b ? 1 : -1))} />
               </div>
               <Field label="Alamat" id="pg-address" required error={galat("address")}>
                 <Input value={v.address} maxLength={255} onChange={(e) => set("address", e.target.value)} onBlur={blur("address")} />

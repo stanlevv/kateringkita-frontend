@@ -7,6 +7,7 @@ export type MerchantMenu = {
   name: string;
   description: string | null;
   image_url: string | null;
+  gallery?: string[]; // foto tambahan (maks 4) selain foto utama
   category: Category;
   unit_label: string;
   price: number;

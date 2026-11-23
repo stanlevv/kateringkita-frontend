@@ -7,6 +7,7 @@ export const profile = (): MerchantProfile => ({
   address: "Jl. Veteran No. 12, Malang",
   wa_number: "081234567890",
   logo_url: null,
+  cover_url: null,
   merchant_type: merchantTypes()[0],
   service_mode: "both",
   is_open: true,

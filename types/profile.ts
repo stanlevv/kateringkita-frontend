@@ -6,6 +6,7 @@ export type MerchantProfile = {
   address: string;
   wa_number: string;
   logo_url: string | null;
+  cover_url?: string | null; // background profil toko
   merchant_type: MerchantType;
   service_mode: "daily" | "event" | "both";
   is_open: boolean;
