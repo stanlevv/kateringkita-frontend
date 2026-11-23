@@ -1,3 +1,5 @@
+// Daftar menu navigasi panel penjual dan panel admin. Satu definisi untuk sidebar, rail tablet, dan drawer ponsel.
+// Dibaca NavList.
 import {
   BadgeCheck,
   Banknote,
@@ -25,7 +27,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-// badge: true = jumlah pesanan perlu tindakan; "notif" = notifikasi belum dibaca
+/**
+ * Satu menu. `badge`: true = jumlah pesanan perlu tindakan; "notifications" = notifikasi belum dibaca.
+ * `exact`: aktif hanya bila URL sama persis (bukan juga sub-halamannya).
+ */
 export type NavItem = {
   href: string;
   label: string;
@@ -33,9 +38,10 @@ export type NavItem = {
   badge?: boolean | "notifications";
   exact?: boolean;
 };
+/** Satu kelompok menu dengan judul kecil di atasnya. */
 export type NavGroup = { title: string; items: NavItem[] };
 
-// F18: navigasi panel admin; halaman Verifikasi s.d. Promo dibangun bertahap.
+/** Menu panel admin. Menu khusus tingkat super disaring NavList lewat canAccessPage (lib/admin-level.ts). */
 export const ADMIN_NAV: NavGroup[] = [
   {
     title: "Admin",
@@ -64,7 +70,7 @@ export const ADMIN_NAV: NavGroup[] = [
   },
 ];
 
-// SH-N1: satu definisi untuk sidebar, rail tablet, dan drawer ponsel.
+/** Menu panel penjual. */
 export const MERCHANT_NAV: NavGroup[] = [
   {
     title: "Operasional",

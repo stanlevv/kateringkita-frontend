@@ -1,6 +1,11 @@
+// Logo dan nama KateringKita. Dipakai Sidebar dan halaman login, daftar, lupa sandi.
 import { cx } from "@/app/components/ui/cx";
 
-/** Logo aplikasi mobile (tudung saji + uap) sebagai SVG; warna dari currentColor. Sama dengan app/icon.svg. */
+/**
+ * Logo aplikasi mobile (tudung saji + uap) sebagai SVG; warna dari currentColor. Sama dengan app/icon.svg.
+ * @param props.className kelas ukuran/warna
+ * @returns elemen `svg`
+ */
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
@@ -18,6 +23,11 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Logo + tulisan KateringKita.
+ * @param props.rail di rail sidebar: tulisan hanya tampil saat sidebar lebar. Rail = sidebar sempit berisi ikon saja (tablet 768–1279 px). `sb-lebar:` = varian Tailwind yang aktif saat sidebar lebar.
+ * @returns elemen `div`
+ */
 export function Brand({ rail = false }: { rail?: boolean }) {
   return (
     <div className={cx("flex items-center gap-2", rail && "justify-center sb-lebar:justify-start")}>

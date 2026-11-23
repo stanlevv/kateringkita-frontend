@@ -1,3 +1,6 @@
+// Komponen AccountMenu: tombol nama pengguna di header yang membuka tautan Pengaturan akun dan tombol Keluar.
+// Dipakai Header.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
@@ -7,12 +10,20 @@ import { logout } from "@/app/actions/auth";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { initials } from "@/lib/shell";
 
+// Gaya tiap baris di panel menu.
 const itemClass = cx(
   "flex min-h-11 w-full items-center gap-2 rounded-md px-3 text-sm text-ink hover:bg-subtle",
   focusRing,
 );
 
-// Disclosure (bukan role menu): tombol aria-expanded + daftar biasa; Esc, klik luar, dan Tab keluar menutup.
+/**
+ * Menu akun berpola disclosure (tombol buka/tutup biasa, bukan role="menu"): tombol ber-`aria-expanded` (memberi tahu
+ * pembaca layar panel terbuka atau tidak) + daftar biasa. Esc, klik di luar, dan Tab keluar menutup panel.
+ * @param props.userName nama pengguna (inisial dan nama di tombol)
+ * @param props.storeName nama toko (atau "Admin")
+ * @param props.admin panel admin: tautan akun ke /admin/akun
+ * @returns elemen `div` berisi tombol dan panel
+ */
 export function AccountMenu({
   userName,
   storeName,
@@ -22,11 +33,13 @@ export function AccountMenu({
   storeName: string;
   admin?: boolean;
 }) {
+  // 1. Status buka, ref wadah (untuk deteksi klik luar) dan ref tombol (untuk mengembalikan fokus).
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
 
+  // 2. Selama terbuka, klik/sentuh di luar wadah menutup panel.
   useEffect(() => {
     if (!open) return;
     const closeOnOutsideClick = (event: PointerEvent) => {

@@ -1,3 +1,5 @@
+// Komponen MobileNav: tombol yang membuka menu navigasi dalam drawer (ponsel/tablet). Dipakai Header dan Sidebar.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useState } from "react";
@@ -12,6 +14,13 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
  * Tombol yang membuka daftar navigasi yang sama dalam drawer: di header bawah 768 px, atau (`rail`) di rail 768–1279 px
  * sebagai drawer kiri. Hanya tombolnya yang disembunyikan per lebar layar, jadi drawer yang sedang terbuka tetap
  * tampil (dan bisa ditutup) saat tablet diputar.
+ * @param props.store status dapur (saklar ikut tampil di drawer penjual), atau null
+ * @param props.badge jumlah pesanan perlu tindakan
+ * @param props.unreadNotifications jumlah notifikasi belum dibaca
+ * @param props.admin panel admin
+ * @param props.level tingkat admin untuk menyaring menu
+ * @param props.rail tombol versi rail (drawer kiri)
+ * @returns tombol dan Drawer
  */
 export function MobileNav({
   store,

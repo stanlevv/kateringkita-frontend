@@ -1,5 +1,14 @@
+// Komponen PageHeader: judul, deskripsi, dan tombol aksi di atas setiap halaman panel. Dipakai hampir semua page.tsx.
 import type { ReactNode } from "react";
 
+/**
+ * Kepala halaman (h1 + deskripsi + aksi), lalu isi halaman.
+ * @param props.title judul halaman (h1)
+ * @param props.description deskripsi di bawah judul
+ * @param props.actions tombol/tautan di kanan
+ * @param props.children isi halaman
+ * @returns fragmen berisi kepala dan isi
+ */
 export function PageHeader({
   title,
   description,

@@ -1,3 +1,6 @@
+// Komponen CollapsibleSidebar: bingkai sidebar yang bisa diciutkan/dilebarkan; pilihannya disimpan di cookie.
+// Dipakai Sidebar.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useState, type ReactNode } from "react";
@@ -6,8 +9,14 @@ import { IconButton } from "@/app/components/ui/IconButton";
 import { SIDEBAR_COOKIE, type SidebarMode } from "@/lib/shell";
 
 /**
- * SH-N1: bingkai sidebar. Di ≥ 1280 px tombolnya menciutkan/melebarkan sidebar dan pilihan disimpan di cookie
- * setahun. Lebar diganti seketika (tanpa animasi width) supaya konten tidak reflow berkali-kali.
+ * Bingkai sidebar. Di ≥ 1280 px tombolnya menciutkan/melebarkan sidebar dan pilihan disimpan setahun di cookie
+ * `kk-sidebar` (data kecil di peramban yang ikut terkirim ke server, sehingga layout server langsung merender lebar
+ * yang benar tanpa kedip). Nilai cookie "lebar"/"ringkas" tetap karena dibaca layout server dan varian CSS `sb-lebar:`.
+ * Lebar diganti seketika (tanpa animasi width) supaya konten tidak reflow berkali-kali.
+ * @param props.mode mode awal dari cookie ("lebar" atau "ringkas")
+ * @param props.topContent isi bagian atas (logo dan tombol menu)
+ * @param props.children isi sidebar (daftar menu, status dapur)
+ * @returns elemen `aside`
  */
 export function CollapsibleSidebar({
   mode: initialMode,
@@ -18,6 +27,7 @@ export function CollapsibleSidebar({
   topContent: ReactNode;
   children: ReactNode;
 }) {
+  // Mode berjalan di state; tombol menukar mode lalu menulis cookie.
   const [mode, setMode] = useState(initialMode);
   const isWide = mode === "lebar";
   function toggleMode() {

@@ -1,3 +1,5 @@
+// Saklar status dapur (buka/tutup) dan hook untuk mengubahnya. Dipakai Sidebar, MobileNav, dan banner DashboardLive.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
@@ -11,13 +13,18 @@ import { cx } from "@/app/components/ui/cx";
 import { isOutsideOpenHours, openHoursLabel } from "@/lib/shell";
 import { useStoreStatus } from "./StoreStatus";
 
-/** SH-E1: ubah status dapur lewat status bersama; gagal -> kembali + toast. Dipakai juga oleh banner dashboard. */
+/**
+ * Mengubah status dapur lewat status bersama. Tampilan langsung berubah; bila server gagal, kembali ke status lama
+ * dan muncul toast. Dipakai juga oleh banner dashboard.
+ * @returns `changeStoreOpen(nextOpen)` dan `pending` (permintaan sedang berjalan)
+ */
 export function useStoreOpenToggle() {
   const { setIsOpen } = useStoreStatus();
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
   async function changeStoreOpen(nextOpen: boolean) {
+    // 1. Ubah tampilan dulu, lalu kirim ke server. 2. Gagal: kembalikan + toast; berhasil: muat ulang data server.
     setPending(true);
     setIsOpen(nextOpen);
     const result = await callAction(() => setStoreOpen(nextOpen));
@@ -32,20 +39,27 @@ export function useStoreOpenToggle() {
   return { changeStoreOpen, pending };
 }
 
-/** SH-N3 / SH-E1 / SH-A1. `rail`: hanya saklar kecuali sidebar sedang lebar (varian sb-lebar). Status dibaca dari StoreStatusProvider. */
+/**
+ * Saklar status dapur dengan teks Buka/Tutup seperti yang dilihat pembeli. Menutup dapur minta konfirmasi dulu;
+ * membuka langsung. Status dibaca dari StoreStatusProvider.
+ * @param props.rail hanya saklar kecuali sidebar sedang lebar. Rail = sidebar sempit berisi ikon saja (tablet 768–1279 px). `sb-lebar:` = varian Tailwind yang aktif saat sidebar lebar.
+ * @returns elemen `div`
+ */
 export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
+  // 1. Status bersama dan pengubahnya.
   const { isOpen, openTime, closeTime } = useStoreStatus();
   const { changeStoreOpen, pending } = useStoreOpenToggle();
   const [confirmingClose, setConfirmingClose] = useState(false);
 
-  // Snapshot server = false, jadi HTML server dan klien awal sama; dihitung ulang setelah hidrasi.
+  // 2. Di luar jam buka? Snapshot server = false, jadi HTML server dan klien awal sama; dihitung ulang setelah
+  //    hidrasi (saat React di peramban mengambil alih HTML dari server).
   const outsideOpenHours = useSyncExternalStore(
     () => () => {},
     () => isOutsideOpenHours(Date.now(), openTime, closeTime),
     () => false,
   );
 
-  // Status yang dilihat pembeli (sama dengan backend D2): saklar menyala DAN di dalam jam buka.
+  // 3. Status yang dilihat pembeli (aturannya sama dengan backend): saklar menyala DAN di dalam jam buka.
   // Saklar menyala di luar jam = toko buka otomatis saat jam buka tiba.
   const openForCustomers = isOpen && !outsideOpenHours;
 

@@ -1,9 +1,22 @@
+// Komponen Header: bilah atas panel penjual/admin (tombol menu ponsel, cari pesanan, jam, menu akun).
+// Dipakai layout app/(dashboard) dan app/(admin)/admin.
 import { Search } from "lucide-react";
 import { AccountMenu } from "./AccountMenu";
 import { Clock } from "./Clock";
 import { MobileNav } from "./MobileNav";
 import type { StoreInfo } from "./StoreStatus";
 
+/**
+ * Bilah atas. Kotak cari adalah form GET biasa ke /pesanan?q=... sehingga tetap jalan tanpa JavaScript.
+ * @param props.userName nama pengguna untuk menu akun
+ * @param props.storeName nama toko (atau "Admin")
+ * @param props.store status dapur untuk drawer ponsel, atau null bila gagal dimuat
+ * @param props.badge jumlah pesanan perlu tindakan
+ * @param props.unreadNotifications jumlah notifikasi belum dibaca
+ * @param props.admin panel admin (tanpa kotak cari)
+ * @param props.level tingkat admin untuk menyaring menu
+ * @returns elemen `header`
+ */
 export function Header({
   userName,
   storeName,

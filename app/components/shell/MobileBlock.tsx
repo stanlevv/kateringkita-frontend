@@ -1,7 +1,13 @@
+// Komponen MobileBlock: layar penuh "Buka di tablet atau komputer" untuk layar ponsel.
+// Dipakai template.tsx panel penjual (app/(dashboard)) dan admin (app/(admin)/admin).
 import { MonitorSmartphone } from "lucide-react";
 
 // Aturan: dashboard penjual & admin hanya untuk tablet/desktop (lebar ≥ 768 px). Di bawah itu layar penuh ini menutup
 // halaman. Hanya CSS (md:hidden), tanpa deteksi perangkat: tablet yang diputar ke lanskap langsung bisa dipakai.
+/**
+ * Penutup layar ponsel (role="alertdialog" agar pembaca layar langsung membacakan judul dan isinya).
+ * @returns elemen `div` yang hanya tampil di bawah 768 px
+ */
 export function MobileBlock() {
   return (
     <div

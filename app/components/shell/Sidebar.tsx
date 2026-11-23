@@ -1,3 +1,5 @@
+// Komponen Sidebar: navigasi kiri panel penjual/admin (logo, menu, status dapur).
+// Dipakai layout app/(dashboard) dan app/(admin)/admin.
 import type { SidebarMode } from "@/lib/shell";
 import { Brand } from "./Brand";
 import { MobileNav } from "./MobileNav";
@@ -9,6 +11,14 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
 /**
  * Rail ikon 64 px di 768–1279 (tombol atas membuka drawer berlabel), penuh 256 px di ≥ 1280 kecuali `mode` "ringkas"
  * (pilihan penjual dari cookie), disembunyikan di bawah 768 (diganti MobileNav). Butuh StoreStatusProvider bila `store` ada.
+ * Rail = sidebar sempit berisi ikon saja (tablet 768–1279 px). `sb-lebar:` = varian Tailwind yang aktif saat sidebar lebar.
+ * @param props.store status dapur, atau null bila gagal dimuat
+ * @param props.badge jumlah pesanan perlu tindakan
+ * @param props.unreadNotifications jumlah notifikasi belum dibaca
+ * @param props.admin panel admin (tanpa status dapur)
+ * @param props.level tingkat admin untuk menyaring menu
+ * @param props.mode "lebar" atau "ringkas" dari cookie
+ * @returns CollapsibleSidebar
  */
 export function Sidebar({
   store,

@@ -1,3 +1,5 @@
+// Komponen NavList: daftar menu navigasi beserta badge angka. Dipakai Sidebar dan MobileNav.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
 import Link from "next/link";
@@ -6,8 +8,18 @@ import { cx, focusRing } from "@/app/components/ui/cx";
 import { canAccessPage } from "@/lib/admin-level";
 import { MERCHANT_NAV, ADMIN_NAV } from "./nav";
 
-/** `rail`: hanya ikon (tooltip lewat title/aria-label) kecuali sidebar sedang lebar (varian sb-lebar); tanpa `rail` selalu penuh (drawer). */
-/** `level`: tingkat admin; menu khusus super disembunyikan untuk tingkat lain. */
+/**
+ * Daftar menu. Menu yang cocok dengan URL sekarang ditandai `aria-current="page"` (pembaca layar menyebutnya
+ * halaman aktif). Angka badge punya teks tersembunyi ("3 belum dibaca") agar tidak hanya berupa angka.
+ * Hanya berisi prop sederhana (angka/teks/boolean) karena dirender dari komponen server.
+ * @param props.badge jumlah pesanan perlu tindakan
+ * @param props.unreadNotifications jumlah notifikasi belum dibaca
+ * @param props.rail hanya ikon (tooltip lewat title) kecuali sidebar sedang lebar; tanpa `rail` selalu penuh (drawer)
+ * @param props.onNavigate dipanggil saat tautan diklik (menutup drawer)
+ * @param props.admin pakai menu admin
+ * @param props.level tingkat admin; menu khusus super disembunyikan untuk tingkat lain
+ * @returns elemen `nav`
+ */
 export function NavList({
   badge = 0,
   unreadNotifications = 0,
@@ -23,6 +35,7 @@ export function NavList({
   admin?: boolean;
   level?: unknown;
 }) {
+  // Menu admin disaring per tingkat; menu penjual dipakai apa adanya.
   const nav = admin
     ? ADMIN_NAV.map((group) => ({ ...group, items: group.items.filter((item) => canAccessPage(level, item.href)) }))
     : MERCHANT_NAV;
