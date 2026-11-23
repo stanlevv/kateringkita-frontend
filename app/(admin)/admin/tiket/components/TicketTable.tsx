@@ -1,3 +1,7 @@
+// Komponen TicketTable: isi halaman /admin/tiket. Kotak cari, tab status (Menunggu, Dibalas, Ditutup, Semua) dengan
+// jumlahnya, lalu daftar tiket: tabel di layar ≥ 1024 px, kartu di layar lebih kecil. Baris dan kartu membuka detail.
+// Data tiket diambil page.tsx dari backend; komponen ini hanya mengubah URL (?status=&q=&page=) agar page.tsx memuat ulang.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, dan router.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -22,8 +26,10 @@ import {
 import type { TicketMeta, TicketSummary } from "@/types/admin";
 import { TicketStatusBadge, RelativeTime } from "./TicketStatusBadge";
 
+// Alamat halaman detail satu tiket; kode di-encode agar aman dipakai di URL.
 const ticketHref = (ticket: TicketSummary) => `/admin/tiket/${encodeURIComponent(ticket.code)}`;
 
+// Judul dan isi pesan kosong per tab; kuncinya nilai ?status= di URL.
 const EMPTY_MESSAGES: Record<TicketTab, { title: string; body: string }> = {
   open: {
     title: "Tidak ada tiket yang menunggu",
@@ -37,7 +43,14 @@ const EMPTY_MESSAGES: Record<TicketTab, { title: string; body: string }> = {
   semua: { title: "Belum ada tiket", body: "Tiket bantuan dari pembeli akan muncul di sini." },
 };
 
+/**
+ * Menyusun kolom tabel tiket untuk layar lebar.
+ * @param tab tab yang sedang dibuka
+ * @param now waktu acuan untuk teks "N menit lalu"
+ * @returns daftar kolom DataTable
+ */
 function buildColumns(tab: TicketTab, now: number): Column<TicketSummary>[] {
+  // 1. Kolom yang selalu ada: kode, judul + kategori, pembeli, pesanan, dan pesan terakhir.
   const columns: Column<TicketSummary>[] = [
     {
       key: "kode",
@@ -93,13 +106,23 @@ function buildColumns(tab: TicketTab, now: number): Column<TicketSummary>[] {
       ),
     },
   ];
-  // Di tab per status semua baris berstatus sama; kolom status hanya berguna di Semua.
+  // 2. Di tab per status semua baris berstatus sama; kolom status hanya berguna di Semua.
   return tab === "semua"
     ? [...columns, { key: "status", header: "Status", cell: (ticket) => <TicketStatusBadge status={ticket.status} /> }]
     : columns;
 }
 
-/** Daftar tiket bantuan. Tab status, pencarian (ditunda), dan halaman tinggal di URL; tab Menunggu tanpa ?status. */
+/**
+ * Daftar tiket bantuan. Tab status, pencarian, dan halaman tinggal di URL; tab Menunggu tanpa ?status. Pencarian
+ * memakai debounce: URL baru diubah 400 ms setelah admin berhenti mengetik, bukan pada setiap huruf.
+ * @param props.rows tiket di halaman ini
+ * @param props.tab tab yang sedang dibuka
+ * @param props.counts jumlah tiket per status dari `meta.counts`; tanpa ini tab tampil tanpa angka
+ * @param props.page nomor halaman sekarang
+ * @param props.total jumlah semua tiket yang cocok, untuk paginasi
+ * @param props.now waktu acuan dari server untuk teks "N menit lalu"
+ * @returns kotak cari, tab, dan daftar tiket
+ */
 export function TicketTable({
   rows,
   tab,
@@ -115,16 +138,18 @@ export function TicketTable({
   total: number;
   now: number;
 }) {
+  // 1. Baca URL sekarang; isi kotak cari dimulai dari ?q=.
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const query = params.get("q") ?? "";
   const [text, setText] = useState(query);
-  // Nilai terbaru untuk timer; state di closure bisa basi saat timer berjalan.
+  // 2. Nilai terbaru untuk timer; state di closure bisa basi saat timer berjalan.
   const latest = useRef({ params: params.toString(), text });
   useEffect(() => {
     latest.current = { params: params.toString(), text };
   });
+  // 3. Timer debounce pencarian; dibatalkan saat pindah tab, hapus cari, atau komponen dilepas.
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const cancelTimer = () => {
     clearTimeout(timer.current);
@@ -132,11 +157,12 @@ export function TicketTable({
   };
   useEffect(() => cancelTimer, []);
 
-  // Tautan/Back mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
+  // 4. Tautan/Back mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
   useEffect(() => {
     if (!timer.current && latest.current.text.trim() !== query) setText(query);
   }, [query]);
 
+  // 5. Ganti URL dengan perubahan parameter; halaman selalu kembali ke 1.
   function navigate(changes: Record<string, string>) {
     cancelTimer();
     // Pindah tab membawa ketikan q yang belum sempat dikirim.
@@ -144,6 +170,7 @@ export function TicketTable({
     router.replace(buildUrl(pathname, latest.current.params, { ...allChanges, page: "" }), { scroll: false });
   }
 
+  // 6. Setiap ketikan menjadwalkan ulang pencarian 400 ms kemudian.
   function scheduleSearch(value: string) {
     setText(value);
     cancelTimer();
@@ -155,6 +182,7 @@ export function TicketTable({
     navigate({ q: "" });
   }
 
+  // 7. Angka di tiap tab; tab Semua = jumlah ketiga status.
   const tabCount = (id: TicketTab) =>
     counts ? (id === "semua" ? counts.open + counts.answered + counts.closed : counts[id]) : undefined;
 

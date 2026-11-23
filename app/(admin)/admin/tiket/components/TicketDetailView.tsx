@@ -1,3 +1,7 @@
+// Komponen TicketDetailView: isi halaman /admin/tiket/<kode>. Menampilkan info singkat tiket, percakapan pembeli dan
+// admin, formulir balas (TicketReplyForm) bila tiket belum ditutup, kartu pembeli (dengan tautan WhatsApp), dan kartu
+// pesanan terkait. Data tiket diambil page.tsx dari backend lalu dikirim lewat prop; komponen ini tidak mengambil data.
+// Server component (tanpa "use client"): hanya menampilkan, bagian interaktifnya ada di TicketReplyForm.
 import Link from "next/link";
 import { Badge } from "@/app/components/ui/Badge";
 import { Banner } from "@/app/components/ui/Banner";
@@ -9,12 +13,24 @@ import type { TicketDetail, TicketMessage } from "@/types/admin";
 import { TicketReplyForm } from "./TicketReplyForm";
 import { TicketStatusBadge, formatFullTime } from "./TicketStatusBadge";
 
+/**
+ * Satu baris label dan nilai di dalam daftar keterangan (dl).
+ * @param props.label teks label, mis. "Nama"
+ * @param props.children nilai yang ditampilkan
+ * @returns pasangan dt dan dd
+ */
 const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-col">
     <dt className="text-sm text-ink-muted">{label}</dt>
     <dd className="min-w-0 break-words">{children}</dd>
   </div>
 );
+/**
+ * Kartu bagian berjudul di kolom samping.
+ * @param props.title judul kartu
+ * @param props.children isi kartu
+ * @returns section
+ */
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="rounded-lg border border-line bg-surface p-4">
     <h2 className="mb-3 text-lg font-semibold">{title}</h2>
@@ -22,7 +38,13 @@ const SectionCard = ({ title, children }: { title: string; children: React.React
   </section>
 );
 
-/** Pesan pembeli di kiri, pesan admin di kanan berlatar oranye lembut; nama pengirim + peran + waktu WIB. */
+/**
+ * Satu gelembung pesan. Pesan pembeli di kiri, pesan admin di kanan berlatar oranye lembut; nama pengirim + peran +
+ * waktu WIB. Baris baru di isi pesan dipertahankan.
+ * @param props.message pesan tiket dari backend
+ * @param props.customerName nama pembeli, dipakai bila pesan tidak membawa nama pengirim
+ * @returns butir daftar (li)
+ */
 function MessageBubble({ message, customerName }: { message: TicketMessage; customerName: string }) {
   const fromAdmin = message.sender_role === "admin";
   return (
@@ -46,7 +68,11 @@ function MessageBubble({ message, customerName }: { message: TicketMessage; cust
   );
 }
 
-/** Detail tiket: info singkat, percakapan + formulir balas (bila belum ditutup), pembeli, dan pesanan terkait. */
+/**
+ * Detail tiket: info singkat, percakapan + formulir balas (bila belum ditutup), pembeli, dan pesanan terkait.
+ * @param props.ticket tiket lengkap dari GET /admin/tickets/<kode>
+ * @returns tampilan detail tiket
+ */
 export function TicketDetailView({ ticket }: { ticket: TicketDetail }) {
   const closed = ticket.status === "closed";
   const orderStatus = ticket.order && ticketOrderStatus(ticket.order.status);

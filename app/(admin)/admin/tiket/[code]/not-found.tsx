@@ -1,9 +1,14 @@
+// Halaman "tiket tidak ditemukan" untuk /admin/tiket/<kode>. Next menampilkan not-found.tsx ini saat page.tsx di
+// folder yang sama memanggil notFound() (kode tidak valid atau backend menjawab 404), tetap di dalam kerangka admin.
 import { SearchX } from "lucide-react";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 
-// notFound() dari page.tsx segmen ini (kode tidak valid atau backend 404): tetap di dalam shell admin.
+/**
+ * Pesan tiket tidak ditemukan dengan tautan kembali ke daftar tiket.
+ * @returns PageHeader berisi EmptyState
+ */
 export default function TicketNotFound() {
   return (
     <PageHeader title="Tiket tidak ditemukan">

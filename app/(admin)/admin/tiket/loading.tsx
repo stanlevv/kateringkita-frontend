@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/tiket. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList, SkeletonBox, SkeletonTabs } from "@/app/components/ui/Skeleton";
 
-// TicketTable: kotak cari, tab status, lalu tabel (≥ 1024 px) atau kartu.
+/**
+ * Kerangka TicketTable: kotak cari, tab status, lalu tabel (≥ 1024 px) atau kartu.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

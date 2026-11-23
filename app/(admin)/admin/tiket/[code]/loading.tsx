@@ -1,11 +1,15 @@
+// Kerangka memuat /admin/tiket/<kode>. loading.tsx tampil otomatis selama page.tsx menunggu data tiket.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Card } from "@/app/components/ui/Card";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { Skeleton, SkeletonBox, SkeletonText } from "@/app/components/ui/Skeleton";
 import { cx } from "@/app/components/ui/cx";
 
-// TicketDetailView: baris info, percakapan (gelembung kiri/kanan + formulir balas), kartu pembeli & pesanan.
-// Judul (judul tiket) dari data, jadi ikut dikerangkakan; tautan kembali langsung bisa diklik.
+/**
+ * Kerangka TicketDetailView: baris info, percakapan (gelembung kiri/kanan + formulir balas), kartu pembeli & pesanan.
+ * Judul halaman (judul tiket) berasal dari data, jadi tidak ditulis; tautan kembali sudah bisa diklik.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame
