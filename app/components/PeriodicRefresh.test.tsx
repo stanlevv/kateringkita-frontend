@@ -18,7 +18,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("MuatUlangBerkala", () => {
+describe("PeriodicRefresh", () => {
   it("memuat ulang data server tiap 5 detik selama tab terlihat", () => {
     render(<PeriodicRefresh />);
     act(() => vi.advanceTimersByTime(4999));

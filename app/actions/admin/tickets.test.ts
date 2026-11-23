@@ -19,7 +19,7 @@ beforeEach(() => {
   adminFetch.mockReset().mockResolvedValue({ ok: true, status: 201, data: { code: TICKET_CODE } });
 });
 
-describe("balasTiket", () => {
+describe("replyToTicket", () => {
   it("semua tingkat admin (requireAdmin tanpa tingkat); balasan dipangkas lalu dikirim", async () => {
     expect(await replyToTicket(TICKET_CODE, "  Sudah kami cek, VA Anda lunas.  ")).toEqual({ data: null });
     expect(requireAdmin).toHaveBeenCalledWith();
@@ -69,7 +69,7 @@ describe("balasTiket", () => {
   });
 });
 
-describe("tutupTiket", () => {
+describe("closeTicket", () => {
   it("POST /tickets/:code/close tanpa body", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: { code: TICKET_CODE, status: "closed" } });
     expect(await closeTicket(TICKET_CODE)).toEqual({ data: null });

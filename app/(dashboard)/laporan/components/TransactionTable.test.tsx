@@ -8,7 +8,7 @@ import { Toaster } from "@/app/components/ui/Toast";
 import type { Transaction } from "@/types/report";
 import { TransactionTable } from "./TransactionTable";
 
-// 25 baris lokal: dua baris pertama satu pesanan dengan dua menu (kode berulang, D6).
+// 25 baris lokal: dua baris pertama satu pesanan dengan dua menu (kode berulang).
 const semua: Transaction[] = Array.from({ length: 25 }, (_, i) => ({
   code: `KK-20261031-${String(Math.max(i - 1, 0)).padStart(4, "0")}`,
   created_at: "2026-10-30T10:00:00.000Z",

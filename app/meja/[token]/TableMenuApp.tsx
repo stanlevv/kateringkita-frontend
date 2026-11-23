@@ -58,7 +58,7 @@ const toDottedTime = (time: string) => time.replace(":", ".");
  * @param props.min batas bawah; tombol kurang mati di batas ini (bawaan 0)
  * @returns grup dua tombol dan angka
  */
-function Stepper({
+function QuantityStepper({
   value,
   onChange,
   label,
@@ -241,7 +241,7 @@ function OptionPicker({ menu, onAdd }: { menu: TableMenuItem; onAdd: (options: M
       </fieldset>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Jumlah</span>
-        <Stepper
+        <QuantityStepper
           value={qty}
           min={menu.min_order_qty}
           label={menu.name}
@@ -561,7 +561,11 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
                     )}
                     <p className="font-mono text-sm">{formatRupiah(unitPrice(line) * line.qty)}</p>
                   </div>
-                  <Stepper value={line.qty} label={line.menu.name} onChange={(value) => changeQty(line.key, value)} />
+                  <QuantityStepper
+                    value={line.qty}
+                    label={line.menu.name}
+                    onChange={(value) => changeQty(line.key, value)}
+                  />
                 </li>
               ))}
             </ul>

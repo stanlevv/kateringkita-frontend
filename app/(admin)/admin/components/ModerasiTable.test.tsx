@@ -66,7 +66,7 @@ describe("F19 ModerasiTable", () => {
     expect(refresh).toHaveBeenCalled();
     expect(screen.getByText("Ulasan disembunyikan.")).toBeInTheDocument();
   });
-  // AUD-35: pulihkan tidak jalan dengan sekali klik
+  // Pulihkan tidak jalan dengan sekali klik
   it("menu diturunkan: alasan tampil, pulihkan lewat konfirmasi", async () => {
     render(
       <>

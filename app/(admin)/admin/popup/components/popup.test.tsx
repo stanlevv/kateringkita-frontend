@@ -58,7 +58,7 @@ describe("DaftarPopup", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("buat pop-up: unggah (popup), voucher platform opsional, periode → simpanPopup(null, …)", async () => {
+  it("buat pop-up: unggah (popup), voucher platform opsional, periode → savePopup(null, …)", async () => {
     render(
       <>
         <Toaster />

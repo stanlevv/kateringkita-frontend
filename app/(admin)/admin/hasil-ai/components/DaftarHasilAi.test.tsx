@@ -25,7 +25,7 @@ const H: AiResult = {
 beforeEach(() => push.mockReset());
 
 describe("DaftarHasilAi", () => {
-  it("tabHasilAi: tanpa status = menunggu; nilai asing jadi menunggu", () => {
+  it("parseAiResultTab: tanpa status = menunggu; nilai asing jadi menunggu", () => {
     expect(parseAiResultTab(undefined)).toBe("menunggu");
     expect(parseAiResultTab("ditolak")).toBe("ditolak");
     expect(parseAiResultTab("semua")).toBe("semua");

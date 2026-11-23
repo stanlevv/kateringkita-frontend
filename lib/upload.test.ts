@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe("unggahFoto (M-07, M-10, FE-08)", () => {
+describe("uploadPhoto (M-07, M-10, FE-08)", () => {
   it("sukses: minta URL lalu PUT berkas dengan Content-Type; hasil = public_url", async () => {
     expect(await uploadPhoto(photo, "logo")).toEqual({ data: { public_url: "https://cdn.test/a.png" } });
     expect(requestUpload).toHaveBeenCalledWith({ purpose: "logo", content_type: "image/png", size: 10 });
@@ -56,7 +56,7 @@ describe("unggahFoto (M-07, M-10, FE-08)", () => {
   });
 });
 
-describe("unggahFoto memperkecil foto sebelum unggah", () => {
+describe("uploadPhoto memperkecil foto sebelum unggah", () => {
   const ONE_MB = 1024 * 1024;
   const phonePhoto = () => new File([new Uint8Array(8 * ONE_MB)], "IMG_0001.jpg", { type: "image/jpeg" });
   const context = { fillStyle: "", fillRect: vi.fn(), drawImage: vi.fn() };

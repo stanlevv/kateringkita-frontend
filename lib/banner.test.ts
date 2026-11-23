@@ -21,7 +21,7 @@ const makeBanner = (overrides: Partial<Banner>): Banner => ({
   ...overrides,
 });
 
-describe("statusBanner", () => {
+describe("bannerStatus", () => {
   it("label & nada sesuai status dan periode", () => {
     expect(bannerStatus(makeBanner({}), NOW).label).toBe("Tayang");
     expect(bannerStatus(makeBanner({ starts_at: "2026-11-18T00:00:00.000Z" }), NOW).label).toBe("Terjadwal");
@@ -41,7 +41,7 @@ describe("statusBanner", () => {
   });
 });
 
-describe("cekBanner", () => {
+describe("validateBanner", () => {
   const ok = {
     title: "Diskon",
     image_url: "https://foto.test/x.png",

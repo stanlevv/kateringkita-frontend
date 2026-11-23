@@ -23,7 +23,7 @@ import type { MerchantOrder } from "@/types/order";
 
 const makeOrder = (overrides: Partial<MerchantOrder>): MerchantOrder => ({ ...orders()[0], ...overrides });
 
-describe("D14 terapkanOptimis: status tujuan hanya selama updated_at server sama", () => {
+describe("D14 applyOptimisticActions: status tujuan hanya selama updated_at server sama", () => {
   const base = makeOrder({
     code: "A",
     status: "holding",
@@ -41,7 +41,7 @@ describe("D14 terapkanOptimis: status tujuan hanya selama updated_at server sama
       updated,
     ]);
   });
-  it("pangkasOptimis membuang entri yang dasarnya tak cocok; objek sama bila tak ada yang dibuang", () => {
+  it("pruneOptimisticActions membuang entri yang dasarnya tak cocok; objek sama bila tak ada yang dibuang", () => {
     const actions = {
       A: { action: "confirm" as const, baseUpdatedAt: base.updated_at },
       B: { action: "cook" as const, baseUpdatedAt: "lain" },
@@ -102,7 +102,7 @@ describe("tab antrean (brief §3)", () => {
     const holdUntil = holding.map((order) => Date.parse(order.hold_until!));
     expect(holdUntil).toEqual([...holdUntil].sort((first, second) => first - second));
   });
-  it("jumlah tab Perlu tindakan sama dengan perluTindakan() (KPI & sidebar)", () => {
+  it("jumlah tab Perlu tindakan sama dengan countNeedsAction() (KPI & sidebar)", () => {
     const tabCounts = countQueueTabs(list);
     expect(tabCounts.tindakan).toBe(countNeedsAction(list));
     // Daftar tetap memuat holding VA (virtual account)/online yang menunggu pembayaran; angka hanya yang perlu tindakan penjual
@@ -151,7 +151,7 @@ describe("DB-N3 panel kuota", () => {
   });
 });
 
-describe("D5 satukanPesanan", () => {
+describe("D5 mergeOrders", () => {
   const orderA = makeOrder({ code: "A", updated_at: "2026-11-01T04:00:10.000Z", status: "holding" });
   const orderB = makeOrder({ code: "B", updated_at: "2026-11-01T04:00:20.000Z", status: "confirmed" });
   const current = [orderA, orderB];
@@ -175,7 +175,7 @@ describe("D5 satukanPesanan", () => {
   });
 });
 
-describe("D3 batasSejak", () => {
+describe("D3 updatedSinceCursor", () => {
   it("updated_at terbesar - 5 dtk", () => {
     const list = [
       makeOrder({ code: "A", updated_at: "2026-11-01T04:00:10Z" }),
@@ -188,7 +188,7 @@ describe("D3 batasSejak", () => {
   });
 });
 
-describe("D8 selisihJam", () => {
+describe("D8 clockOffsetMs", () => {
   it("hold_until - seconds_left - diterima dari holding pertama", () => {
     const list = [
       makeOrder({ code: "X", status: "confirmed", hold_until: null, seconds_left: null }),
@@ -207,7 +207,7 @@ describe("D8 selisihJam", () => {
   });
 });
 
-describe("D2 ringkasHariIni", () => {
+describe("D2 summarizeToday", () => {
   const NOW = Date.parse("2026-11-01T03:00:00Z"); // 1 Nov 2026 10:00 WIB
   const item = (menu_id: number, menu_name: string, qty: number) => ({
     menu_id,

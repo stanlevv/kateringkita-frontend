@@ -27,7 +27,7 @@ describe("MN-N2 saring & hitung tab", () => {
     expect(filterMenus(allMenus, { q: "", category: "minuman", status: "semua" })).toHaveLength(3);
     expect(filterMenus(allMenus, { q: "", category: "snack", status: "nonaktif" }).map((menu) => menu.id)).toEqual([9]);
   });
-  it("hitungTab mengikuti q dan kategori, bukan tab", () => {
+  it("countMenuTabs mengikuti q dan kategori, bukan tab", () => {
     expect(countMenuTabs(filterBySearchAndCategory(allMenus, { q: "", category: "minuman" })).semua).toBe(3);
   });
   it("margin = (harga - hpp) / harga dibulatkan", () => {

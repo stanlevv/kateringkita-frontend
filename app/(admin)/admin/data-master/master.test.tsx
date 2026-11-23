@@ -116,7 +116,7 @@ describe("halaman data master", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Kategori" }));
     expect(replace).toHaveBeenLastCalledWith("/admin/data-master", { scroll: false });
   });
-  it("naik/turun memanggil tukarUrutan dengan nilai tetangga; galat -> toast", async () => {
+  it("naik/turun memanggil swapSortOrder dengan nilai tetangga; galat -> toast", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: kat });
     swapSortOrder.mockResolvedValue({ data: null });
     render(

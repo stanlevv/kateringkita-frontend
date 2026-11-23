@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
-import { API, JWT_SECRET_UJI, PORT_API, PORT_WEB, URL_DB } from "./e2e/helpers";
+import { API, API_PORT, DB_URL, TEST_JWT_SECRET, WEB_PORT } from "./e2e/helpers";
 
-const web = `http://localhost:${PORT_WEB}`;
+const web = `http://localhost:${WEB_PORT}`;
 const tsx = "node ../be/node_modules/tsx/dist/cli.mjs";
 
 // Konfigurasi Playwright Smoke untuk mode Next.js Production (next start)
@@ -19,9 +19,9 @@ export default defineConfig({
       timeout: 120_000,
       reuseExistingServer: false,
       env: {
-        PORT: String(PORT_API),
-        DATABASE_URL: URL_DB,
-        JWT_SECRET: JWT_SECRET_UJI,
+        PORT: String(API_PORT),
+        DATABASE_URL: DB_URL,
+        JWT_SECRET: TEST_JWT_SECRET,
         CORS_ORIGIN: web,
         NODE_ENV: "development",
         TZ: "Asia/Jakarta",
@@ -29,7 +29,7 @@ export default defineConfig({
     },
     {
       name: "Web",
-      command: `npx next start -p ${PORT_WEB}`,
+      command: `npx next start -p ${WEB_PORT}`,
       url: `${web}/login`,
       timeout: 180_000,
       reuseExistingServer: false,

@@ -15,7 +15,7 @@ const profile = {
   daily_revenue_target: 0,
   pickup_point_ids: [1],
 };
-describe("cekProfil (M-10)", () => {
+describe("validateProfile (M-10)", () => {
   it("valid lolos", () => expect(validateProfile(profile)).toEqual({}));
   it("PG-E1 tutup <= buka", () => {
     expect(validateProfile({ ...profile, close_time: "07:00" }).close_time).toBeTruthy();

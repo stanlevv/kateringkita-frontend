@@ -110,7 +110,7 @@ describe("F01-SEC-2 IP klien ke backend", () => {
 });
 
 describe("F11 lupa sandi", () => {
-  it("mintaKodeReset -> POST /auth/password/forgot", async () => {
+  it("requestResetCode -> POST /auth/password/forgot", async () => {
     apiFetch.mockResolvedValue({ ok: true, status: 200, data: { message: "x" } });
     expect(await requestResetCode("a@b.id")).toEqual({ ok: true });
     expect(apiFetch).toHaveBeenCalledWith(
@@ -118,7 +118,7 @@ describe("F11 lupa sandi", () => {
       expect.objectContaining({ method: "POST", body: JSON.stringify({ email: "a@b.id" }) }),
     );
   });
-  it("resetKataSandi: galat kode diteruskan ke form", async () => {
+  it("resetPassword: galat kode diteruskan ke form", async () => {
     apiFetch.mockResolvedValue({
       ok: false,
       status: 400,

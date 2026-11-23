@@ -17,7 +17,7 @@ beforeEach(() => {
   requireMerchant.mockClear();
 });
 
-describe("F17 tanyaAsisten", () => {
+describe("F17 askAssistant", () => {
   it("POST /merchant/assistant dengan pertanyaan yang dirapikan", async () => {
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: { answer: "ok" } });
     expect(await askAssistant("  Halo  ")).toEqual({ data: { answer: "ok" } });

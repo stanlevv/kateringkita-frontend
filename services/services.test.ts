@@ -182,7 +182,7 @@ describe("services", () => {
     });
     expect(await getOrders()).toEqual({ error: { code: "INTERNAL_ERROR", message: "Dari server" } });
   });
-  it("getAntrean: aktif + hari ini, kode sama sekali; galat salah satu -> error", async () => {
+  it("getQueue: aktif + hari ini, kode sama sekali; galat salah satu -> error", async () => {
     set();
     const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
     const allOrders = orders();
@@ -204,7 +204,7 @@ describe("services", () => {
     );
     expect(await getQueue()).toEqual({ error: { code: "X", message: "x" } });
   });
-  it("getAntrean: pesanan-baru menumpuk satu pesanan holding dibuat sekarang", async () => {
+  it("getQueue: pesanan-baru menumpuk satu pesanan holding dibuat sekarang", async () => {
     set();
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [] });
     set("pesanan-baru");
@@ -215,7 +215,7 @@ describe("services", () => {
     expect(result.data[0].status).toBe("holding");
     expect(Math.abs(Date.now() - Date.parse(result.data[0].created_at))).toBeLessThan(5000);
   });
-  it("getJumlahTindakan: meta.total dari holding,confirmed; galat -> 0", async () => {
+  it("getNeedsActionCount: meta.total dari holding,confirmed; galat -> 0", async () => {
     set();
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [], meta: { page: 1, limit: 1, total: 7 } });
     expect(await getNeedsActionCount()).toBe(7);
@@ -237,7 +237,7 @@ describe("services", () => {
   });
 });
 
-describe("D4 getPerubahan (M-04)", () => {
+describe("D4 getChangedOrders (M-04)", () => {
   const SINCE = "2026-11-01T03:00:00.000Z";
   const makeRows = (count: number, updatedAt: string, codePrefix = "K") =>
     Array.from({ length: count }, (_, i) => ({

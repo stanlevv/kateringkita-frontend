@@ -24,7 +24,7 @@ describe("KpiRow (M-04, D2)", () => {
     expect(kpi("Rata-rata siap")).toHaveTextContent("12 menit");
     expect(screen.queryByText(/kemarin/)).toBeNull();
   });
-  it("rataSiapMenit null -> —; kapasitas total 0 -> 0 %", () => {
+  it("averageReadyMinutes null -> —; kapasitas total 0 -> 0 %", () => {
     render(<KpiRow summary={{ ...SUMMARY, averageReadyMinutes: null, capacity: { used: 0, total: 0 } }} />);
     expect(kpi("Rata-rata siap")).toHaveTextContent("—");
     expect(screen.getByText("belum ada pesanan siap hari ini")).toBeInTheDocument();

@@ -32,20 +32,20 @@ describe("format", () => {
     expect(formatRupiah(0)).toBe("Rp 0");
     expect(formatRupiah(1250500)).toBe("Rp 1.250.500");
   });
-  it("formatJam memakai zona Asia/Jakarta", () => {
+  it("formatTime memakai zona Asia/Jakarta", () => {
     expect(formatTime("2026-10-31T04:42:00Z")).toBe("11.42");
     expect(formatTime("2026-10-31T17:05:00Z")).toBe("00.05");
   });
-  it("formatTanggal", () => {
+  it("formatDate", () => {
     expect(formatDate("2026-10-31T04:42:00Z")).toBe("31 Okt 2026");
     expect(formatDate("2026-10-31T20:00:00Z")).toBe("1 Nov 2026");
   });
-  it("formatTelepon", () => {
+  it("formatPhone", () => {
     expect(formatPhone("081234567890")).toBe("0812-3456-7890");
     expect(formatPhone("6281234567890")).toBe("0812-3456-7890");
     expect(formatPhone("0812")).toBe("0812");
   });
-  it("WIB: tanggalWib, jamWib, geserWib, hariIniWib", () => {
+  it("WIB: wibDate, wibHour, toWibClock, todayWib", () => {
     expect(wibDate("2026-10-30T17:30:00Z")).toBe("2026-10-31"); // 00.30 WIB
     expect(wibHour("2026-10-30T17:30:00Z")).toBe(0);
     expect(toWibClock(Date.parse("2026-10-31T04:42:00Z")).getUTCHours()).toBe(11);
@@ -56,7 +56,7 @@ describe("format", () => {
   });
 });
 
-describe("waktuRelatif", () => {
+describe("formatRelativeTime", () => {
   const NOW = Date.parse("2026-11-13T10:00:00Z");
   const ago = (offsetMs: number) => new Date(NOW - offsetMs).toISOString();
   it("menit, jam, hari; di bawah 1 menit (atau jam server sedikit maju) -> Baru saja", () => {

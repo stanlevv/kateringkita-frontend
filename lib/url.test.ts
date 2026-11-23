@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { buildUrl } from "./url";
 
-describe("urlDengan", () => {
+describe("buildUrl", () => {
   it("menambah, mengganti, dan menghapus parameter", () => {
     expect(buildUrl("/pesanan", "q=a&status=ready", { q: "b", page: "2", status: null })).toBe("/pesanan?q=b&page=2");
     expect(buildUrl("/pesanan", new URLSearchParams("q=a"), { tanggal: "2026-10-31" })).toBe(

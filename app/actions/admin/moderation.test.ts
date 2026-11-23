@@ -46,7 +46,7 @@ describe("F19 moderasi", () => {
     expect(await moderate(1, "hapus" as never)).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
     expect(adminFetch).not.toHaveBeenCalled();
   });
-  it("hapusFotoMenu: url + alasan ke rute foto; alasan kosong / id / url tak valid -> galat tanpa API", async () => {
+  it("deleteMenuPhoto: url + alasan ke rute foto; alasan kosong / id / url tak valid -> galat tanpa API", async () => {
     await deleteMenuPhoto(4, "https://foto.test/a.jpg", "  Bukan makanan ");
     expect(adminFetch).toHaveBeenLastCalledWith("/menus/4/photos/remove", {
       method: "POST",

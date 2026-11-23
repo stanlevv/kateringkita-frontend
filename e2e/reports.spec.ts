@@ -2,41 +2,42 @@ import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import {
   ADMIN,
-  aksiPesanan,
-  daftarPembeli,
-  daftarPenjual,
-  hariIniWib,
-  masuk,
-  masukLewatForm,
-  pembeliKe,
-  penjualKe,
-  pesan,
-  siapHidrasi,
-  siapkanToko,
+  applyOrderAction,
+  registerCustomer,
+  registerMerchant,
+  todayWib,
+  login,
+  loginViaForm,
+  testCustomer,
+  testMerchant,
+  placeOrder,
+  waitForHydration,
+  prepareStore,
 } from "./helpers";
 
-// M-09: pesanan selesai masuk laporan hari ini dan bisa diunduh sebagai CSV.
+// Pesanan selesai masuk laporan hari ini dan bisa diunduh sebagai CSV.
 test("laporan hari ini memuat pesanan selesai dan CSV-nya", async ({ page }) => {
-  const penjual = penjualKe(4);
-  const pembeli = pembeliKe(4);
-  await daftarPenjual(penjual);
-  await daftarPembeli(pembeli);
-  const tokenPenjual = await masuk(penjual.phone);
-  const { menuId } = await siapkanToko(await masuk(ADMIN.phone), tokenPenjual, penjual);
-  const kode = await pesan(await masuk(pembeli.phone), menuId, 2); // 2 x Rp 15.000
-  for (const aksi of ["confirm", "cook", "ready", "complete"]) await aksiPesanan(tokenPenjual, kode, aksi);
+  const merchant = testMerchant(4);
+  const customer = testCustomer(4);
+  await registerMerchant(merchant);
+  await registerCustomer(customer);
+  const merchantToken = await login(merchant.phone);
+  const { menuId } = await prepareStore(await login(ADMIN.phone), merchantToken, merchant);
+  const orderCode = await placeOrder(await login(customer.phone), menuId, 2); // 2 x Rp 15.000
+  for (const action of ["confirm", "cook", "ready", "complete"])
+    await applyOrderAction(merchantToken, orderCode, action);
 
-  await masukLewatForm(page, penjual.phone);
+  await loginViaForm(page, merchant.phone);
   await page.goto("/laporan");
-  const hari = hariIniWib();
+  const today = todayWib();
   const kpi = (label: string) => page.getByText(label, { exact: true }).locator("xpath=following-sibling::p[1]");
   await expect(kpi("Omzet dan target")).toHaveText("Rp 30.000");
   await expect(kpi("Pesanan selesai")).toHaveText("1");
-  await expect(page.getByRole("row").filter({ hasText: kode })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: orderCode })).toBeVisible();
 
-  const tombol = page.getByRole("button", { name: "Unduh CSV" });
-  await siapHidrasi(tombol);
-  const [unduhan] = await Promise.all([page.waitForEvent("download"), tombol.click()]);
-  expect(unduhan.suggestedFilename()).toBe(`laporan-${hari}-${hari}.csv`);
-  expect(await readFile(await unduhan.path(), "utf8")).toContain(kode);
+  const downloadButton = page.getByRole("button", { name: "Unduh CSV" });
+  await waitForHydration(downloadButton);
+  const [download] = await Promise.all([page.waitForEvent("download"), downloadButton.click()]);
+  expect(download.suggestedFilename()).toBe(`laporan-${today}-${today}.csv`);
+  expect(await readFile(await download.path(), "utf8")).toContain(orderCode);
 });

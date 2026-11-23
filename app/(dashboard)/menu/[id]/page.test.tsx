@@ -25,7 +25,7 @@ describe("MF-E5 /menu/[id]", () => {
     await renderPage("999");
     expect(screen.getByText("Menu tidak ditemukan")).toBeInTheDocument();
   });
-  it("gagal muat biasa -> GagalMuat, bukan tidak ditemukan", async () => {
+  it("gagal muat biasa -> LoadError, bukan tidak ditemukan", async () => {
     getMenu.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "x" } });
     await renderPage("1");
     expect(screen.queryByText("Menu tidak ditemukan")).toBeNull();

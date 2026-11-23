@@ -3,85 +3,90 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const AKAR = resolve(__dirname, "..");
-const ABAIKAN = new Set(["node_modules", ".next"]);
+const ROOT = resolve(__dirname, "..");
+const IGNORED_DIRS = new Set(["node_modules", ".next"]);
 
-export function semuaBerkas(dir: string = AKAR): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    if (ABAIKAN.has(e.name)) return [];
-    const p = join(dir, e.name);
-    if (e.isDirectory()) return semuaBerkas(p);
-    return /\.tsx?$/.test(e.name) ? [p] : [];
+export function listSourceFiles(dir: string = ROOT): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (IGNORED_DIRS.has(entry.name)) return [];
+    const entryPath = join(dir, entry.name);
+    if (entry.isDirectory()) return listSourceFiles(entryPath);
+    return /\.tsx?$/.test(entry.name) ? [entryPath] : [];
   });
 }
 
 /** String jalur dari `import … from "…"`, `export … from "…"`, dan `vi.mock("…")`. */
-export function imporDari(berkas: string): string[] {
-  const teks = readFileSync(berkas, "utf8");
-  const pola = /(?:\bfrom\s+|\bvi\.mock\(\s*)["']([^"']+)["']/g;
-  return [...teks.matchAll(pola)].map((m) => m[1]);
+export function importPaths(file: string): string[] {
+  const text = readFileSync(file, "utf8");
+  const pattern = /(?:\bfrom\s+|\bvi\.mock\(\s*)["']([^"']+)["']/g;
+  return [...text.matchAll(pattern)].map((match) => match[1]);
 }
 
-const relatif = (p: string) => relative(AKAR, p).split(sep).join("/");
+const toRelative = (filePath: string) => relative(ROOT, filePath).split(sep).join("/");
 
 describe("struktur: tipe per domain", () => {
   it("tidak ada lib/types.ts dan lib/admin/types.ts", () => {
-    expect(existsSync(join(AKAR, "lib/types.ts"))).toBe(false);
-    expect(existsSync(join(AKAR, "lib/admin/types.ts"))).toBe(false);
+    expect(existsSync(join(ROOT, "lib/types.ts"))).toBe(false);
+    expect(existsSync(join(ROOT, "lib/admin/types.ts"))).toBe(false);
   });
 
   it("tidak ada impor @/lib/types atau @/lib/admin/types (juga bentuk relatifnya)", () => {
-    const lama = (p: string) => p === "@/lib/types" || p === "@/lib/admin/types" || /^(\.\.?\/)+types$/.test(p);
-    const pelanggar = semuaBerkas()
-      .filter((b) => !relatif(b).startsWith("types/") && relatif(b) !== "test/structure.test.ts")
-      .filter((b) => imporDari(b).some(lama))
-      .map(relatif);
-    expect(pelanggar).toEqual([]);
+    const isOldImport = (importPath: string) =>
+      importPath === "@/lib/types" || importPath === "@/lib/admin/types" || /^(\.\.?\/)+types$/.test(importPath);
+    const violations = listSourceFiles()
+      .filter((file) => !toRelative(file).startsWith("types/") && toRelative(file) !== "test/structure.test.ts")
+      .filter((file) => importPaths(file).some(isOldImport))
+      .map(toRelative);
+    expect(violations).toEqual([]);
   });
 });
 
 describe("struktur: pemanggil API di services/", () => {
-  const LAMA = ["lib/api.ts", "lib/merchant-api.ts", "lib/session.ts", "lib/data", "lib/admin"];
+  const OLD_PATHS = ["lib/api.ts", "lib/merchant-api.ts", "lib/session.ts", "lib/data", "lib/admin"];
 
   it("jalur lama sudah tidak ada", () => {
-    expect(LAMA.filter((p) => existsSync(join(AKAR, p)))).toEqual([]);
+    expect(OLD_PATHS.filter((oldPath) => existsSync(join(ROOT, oldPath)))).toEqual([]);
   });
 
   it("tidak ada impor ke jalur lama", () => {
-    const lama = (p: string) => /^@\/lib\/(api|merchant-api|session|data|admin)(\/|$)/.test(p);
-    const pelanggar = semuaBerkas()
-      .filter((b) => relatif(b) !== "test/structure.test.ts")
-      .filter((b) => imporDari(b).some(lama))
-      .map(relatif);
-    expect(pelanggar).toEqual([]);
+    const isOldImport = (importPath: string) => /^@\/lib\/(api|merchant-api|session|data|admin)(\/|$)/.test(importPath);
+    const violations = listSourceFiles()
+      .filter((file) => toRelative(file) !== "test/structure.test.ts")
+      .filter((file) => importPaths(file).some(isOldImport))
+      .map(toRelative);
+    expect(violations).toEqual([]);
   });
 
   it("berkas services/ selain api.ts bernama <fitur>.service.ts", () => {
-    const salah = (existsSync(join(AKAR, "services")) ? semuaBerkas(join(AKAR, "services")) : [])
-      .map(relatif)
+    const misplaced = (existsSync(join(ROOT, "services")) ? listSourceFiles(join(ROOT, "services")) : [])
+      .map(toRelative)
       .filter(
-        (b) =>
-          !/\.test\.tsx?$/.test(b) && b !== "services/api.ts" && !/^services\/[a-z]+(-[a-z]+)*\.service\.ts$/.test(b),
+        (file) =>
+          !/\.test\.tsx?$/.test(file) &&
+          file !== "services/api.ts" &&
+          !/^services\/[a-z]+(-[a-z]+)*\.service\.ts$/.test(file),
       );
-    expect(salah).toEqual([]);
+    expect(misplaced).toEqual([]);
   });
 });
 
 describe("struktur: custom hook di hooks/", () => {
   it("penjaga memindai berkas (bukan lolos kosong)", () => {
-    expect(semuaBerkas().length).toBeGreaterThan(50);
+    expect(listSourceFiles().length).toBeGreaterThan(50);
   });
 
   it("tidak ada berkas use[A-Z]*.ts(x) di luar hooks/", () => {
-    const salah = semuaBerkas()
-      .map(relatif)
-      .filter((b) => /(^|\/)use[A-Z][^/]*\.tsx?$/.test(b) && !/\.test\.tsx?$/.test(b) && !b.startsWith("hooks/"));
-    expect(salah).toEqual([]);
+    const misplaced = listSourceFiles()
+      .map(toRelative)
+      .filter(
+        (file) => /(^|\/)use[A-Z][^/]*\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file) && !file.startsWith("hooks/"),
+      );
+    expect(misplaced).toEqual([]);
   });
 });
 
 describe("struktur: komponen bersama di app/components/", () => {
-  const LAMA = [
+  const OLD_PATHS = [
     "components/ui",
     "components/shell",
     "components/landing",
@@ -93,97 +98,97 @@ describe("struktur: komponen bersama di app/components/", () => {
   ];
 
   it("jalur lama sudah tidak ada", () => {
-    expect(LAMA.filter((p) => existsSync(join(AKAR, p)))).toEqual([]);
+    expect(OLD_PATHS.filter((oldPath) => existsSync(join(ROOT, oldPath)))).toEqual([]);
   });
 
   it("ada app/components/{ui,shell,landing,promo}", () => {
-    const hilang = ["ui", "shell", "landing", "promo"].filter((d) => !existsSync(join(AKAR, "app/components", d)));
-    expect(hilang).toEqual([]);
+    const missing = ["ui", "shell", "landing", "promo"].filter((dir) => !existsSync(join(ROOT, "app/components", dir)));
+    expect(missing).toEqual([]);
   });
 
   it("tidak ada impor ke jalur lama", () => {
-    const lama = (p: string) =>
-      /^@\/components\/(ui|shell|landing|promo)(\/|$)/.test(p) ||
-      /^@\/components\/dashboard\/(GagalMuat|StatusToko)$/.test(p);
-    const pelanggar = semuaBerkas()
-      .filter((b) => relatif(b) !== "test/structure.test.ts")
-      .filter((b) => imporDari(b).some(lama))
-      .map(relatif);
-    expect(pelanggar).toEqual([]);
+    const isOldImport = (importPath: string) =>
+      /^@\/components\/(ui|shell|landing|promo)(\/|$)/.test(importPath) ||
+      /^@\/components\/dashboard\/(GagalMuat|StatusToko)$/.test(importPath);
+    const violations = listSourceFiles()
+      .filter((file) => toRelative(file) !== "test/structure.test.ts")
+      .filter((file) => importPaths(file).some(isOldImport))
+      .map(toRelative);
+    expect(violations).toEqual([]);
   });
 });
 
 describe("struktur: komponen khusus halaman di app/(grup)/<halaman>/components/", () => {
-  const POLA = /^app\/\(([^)/]+)\)\/([^/]+)\/components\//;
+  const PAGE_COMPONENTS_PATTERN = /^app\/\(([^)/]+)\)\/([^/]+)\/components\//;
 
   /** Jalur impor → jalur relatif terhadap fe/ tanpa ekstensi; null bila paket luar. */
-  const selesaikan = (dari: string, p: string): string | null => {
-    if (p.startsWith("@/")) return p.slice(2);
-    if (p.startsWith(".")) return relatif(resolve(dirname(dari), p));
+  const resolveImport = (fromFile: string, importPath: string): string | null => {
+    if (importPath.startsWith("@/")) return importPath.slice(2);
+    if (importPath.startsWith(".")) return toRelative(resolve(dirname(fromFile), importPath));
     return null;
   };
 
   it("fe/components/ tidak ada", () => {
-    expect(existsSync(join(AKAR, "components"))).toBe(false);
+    expect(existsSync(join(ROOT, "components"))).toBe(false);
   });
 
   it("penjaga menemukan folder components halaman (bukan lolos kosong)", () => {
     expect(
-      semuaBerkas()
-        .map(relatif)
-        .filter((b) => POLA.test(b)).length,
+      listSourceFiles()
+        .map(toRelative)
+        .filter((file) => PAGE_COMPONENTS_PATTERN.test(file)).length,
     ).toBeGreaterThan(50);
   });
 
   it("berkas di components/ halaman hanya diimpor dari folder halaman pemiliknya", () => {
-    const pelanggar: string[] = [];
-    for (const b of semuaBerkas()) {
-      for (const p of imporDari(b)) {
-        const tujuan = selesaikan(b, p);
-        const m = tujuan && POLA.exec(tujuan);
-        if (!m) continue;
-        const pemilik = `app/(${m[1]})/${m[2]}/`;
-        if (!relatif(b).startsWith(pemilik)) pelanggar.push(`${relatif(b)} -> ${p}`);
+    const violations: string[] = [];
+    for (const file of listSourceFiles()) {
+      for (const importPath of importPaths(file)) {
+        const target = resolveImport(file, importPath);
+        const match = target && PAGE_COMPONENTS_PATTERN.exec(target);
+        if (!match) continue;
+        const owner = `app/(${match[1]})/${match[2]}/`;
+        if (!toRelative(file).startsWith(owner)) violations.push(`${toRelative(file)} -> ${importPath}`);
       }
     }
-    expect(pelanggar).toEqual([]);
+    expect(violations).toEqual([]);
   });
 });
 
 describe("struktur: Route Handler di app/api/", () => {
-  const berkas = () => semuaBerkas().map(relatif);
+  const listFiles = () => listSourceFiles().map(toRelative);
 
   it("route.ts dan route.test.ts hanya di bawah app/api/; ketiga handler ada", () => {
-    const route = berkas().filter((b) => /(^|\/)route(\.test)?\.tsx?$/.test(b));
-    expect(route.filter((b) => !b.startsWith("app/api/"))).toEqual([]);
-    for (const r of [
+    const routeFiles = listFiles().filter((file) => /(^|\/)route(\.test)?\.tsx?$/.test(file));
+    expect(routeFiles.filter((file) => !file.startsWith("app/api/"))).toEqual([]);
+    for (const routePath of [
       "app/api/dashboard/sinkron/route.ts",
       "app/api/laporan/csv/route.ts",
       "app/api/pesanan/[code]/wa/route.ts",
     ]) {
-      expect(route).toContain(r);
+      expect(routeFiles).toContain(routePath);
     }
   });
 
   it('tidak ada alamat lama "/dashboard/sinkron", "/laporan/csv", `/pesanan/${…}/wa` di kode', () => {
-    const lama = [
+    const oldUrlPatterns = [
       /(?<!\/api)\/dashboard\/sinkron/,
       /(?<!\/api)\/laporan\/csv/,
       /(?<!\/api)\/pesanan\/(?:\$\{[^}]*\}|[^/\s"'`]+)\/wa\b/,
     ];
-    const pelanggar = berkas()
-      .filter((b) => b !== "test/structure.test.ts")
-      .filter((b) => lama.some((p) => p.test(readFileSync(join(AKAR, b), "utf8"))));
-    expect(pelanggar).toEqual([]);
+    const violations = listFiles()
+      .filter((file) => file !== "test/structure.test.ts")
+      .filter((file) => oldUrlPatterns.some((pattern) => pattern.test(readFileSync(join(ROOT, file), "utf8"))));
+    expect(violations).toEqual([]);
   });
 });
 
 describe("struktur: tema di styles/", () => {
   it("styles/kk-theme.css berisi @theme; globals.css mengimpornya dan tidak punya blok @theme", () => {
-    const tema = join(AKAR, "styles/kk-theme.css");
-    expect(existsSync(tema)).toBe(true);
-    expect(readFileSync(tema, "utf8")).toContain("@theme");
-    const globals = readFileSync(join(AKAR, "app/globals.css"), "utf8");
+    const themePath = join(ROOT, "styles/kk-theme.css");
+    expect(existsSync(themePath)).toBe(true);
+    expect(readFileSync(themePath, "utf8")).toContain("@theme");
+    const globals = readFileSync(join(ROOT, "app/globals.css"), "utf8");
     expect(globals).toContain('@import "../styles/kk-theme.css";');
     expect(globals).not.toContain("@theme");
   });

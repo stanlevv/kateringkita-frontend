@@ -18,7 +18,7 @@ const STABLE_MENUS: MerchantMenu[] = [
   { ...baseMenu, id: 1, quota_today: 10, sold_today: 0, held_today: 0, available: 10 },
 ];
 
-describe("useKuota - AUD-04 Kuota Atomik & Konkurensi", () => {
+describe("useQuota - AUD-04 Kuota Atomik & Konkurensi", () => {
   beforeEach(() => {
     adjustQuota.mockReset();
     vi.useFakeTimers();

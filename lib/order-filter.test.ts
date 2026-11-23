@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { summarizeItems } from "./order-filter";
 
-describe("ringkasItem", () => {
+describe("summarizeItems", () => {
   it("satu item", () => expect(summarizeItems({ items: [{ qty: 3, menu_name: "Es Teh" }] })).toBe("3× Es Teh"));
   it("lebih dari satu: +N lainnya", () => {
     expect(

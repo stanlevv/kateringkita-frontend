@@ -65,7 +65,7 @@ describe("master", () => {
       expect("error" in result && result.error.code).toBe("VALIDATION_ERROR");
     expect(adminFetch).not.toHaveBeenCalled();
   });
-  it("whitelist kind: setAktifMaster, tukarUrutan, simpanMaster tanpa panggilan dan tanpa isi field", async () => {
+  it("whitelist kind: setMasterActive, swapSortOrder, saveMaster tanpa panggilan dan tanpa isi field", async () => {
     const first = { id: 1, sort_order: 1 },
       second = { id: 2, sort_order: 2 };
     const activeResult = await setMasterActive("users", 1, true);
@@ -76,7 +76,7 @@ describe("master", () => {
     expect("error" in saveResult && saveResult.error.fields).toBeUndefined();
     expect(adminFetch).not.toHaveBeenCalled();
   });
-  it("tukarUrutan: sort_order negatif/pecahan/sama dan id tak valid ditolak", async () => {
+  it("swapSortOrder: sort_order negatif/pecahan/sama dan id tak valid ditolak", async () => {
     for (const [first, second] of [
       [
         { id: 1, sort_order: -1 },

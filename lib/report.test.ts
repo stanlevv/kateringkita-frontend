@@ -5,7 +5,7 @@ import type { Transaction } from "@/types/report";
 
 const TODAY = "2026-10-31";
 
-describe("LP-E1 cekRentang", () => {
+describe("LP-E1 validateRange", () => {
   it("rentang sah -> null", () => {
     expect(validateRange("2026-10-25", "2026-10-31", TODAY)).toBeNull();
     expect(validateRange("2026-10-31", "2026-10-31", TODAY)).toBeNull();
@@ -26,7 +26,7 @@ describe("LP-E1 cekRentang", () => {
   });
 });
 
-describe("LP-N1 parseRentang", () => {
+describe("LP-N1 parseRange", () => {
   it("tanpa parameter -> hari ini", () => {
     expect(parseRange(undefined, undefined, TODAY)).toEqual({ from: TODAY, to: TODAY, error: null });
   });
@@ -52,7 +52,7 @@ describe("LP-N1 parseRentang", () => {
     });
     expect(parseRange(undefined, "2026-10-25", TODAY).error).toBe("Lengkapi tanggal awal dan akhir.");
   });
-  it("jumlahHari inklusif", () => {
+  it("countDays inklusif", () => {
     expect(countDays("2026-10-25", "2026-10-31")).toBe(7);
     expect(countDays("2026-10-31", "2026-10-31")).toBe(1);
   });
@@ -72,7 +72,7 @@ const makeTransaction = (overrides: Partial<Transaction> = {}): Transaction => (
   ...overrides,
 });
 
-describe("LP-N4 buatCsv", () => {
+describe("LP-N4 createTransactionsCsv", () => {
   it("header & satu baris (waktu WIB, laba = omzet - HPP)", () => {
     const [header, row] = createTransactionsCsv([makeTransaction()]).trim().split("\r\n");
     expect(header).toBe("kode,waktu,menu,qty,omzet,hpp,laba,metode");
@@ -99,7 +99,7 @@ describe("LP-N4 buatCsv", () => {
   });
 });
 
-describe("LP-N2 perJam", () => {
+describe("LP-N2 groupByHour", () => {
   it("menjumlah per jam WIB, urut jam", () => {
     const result = groupByHour([
       makeTransaction({ code: "A", completed_at: "2026-10-31T04:10:00.000Z", total: 10000, qty: 1 }),

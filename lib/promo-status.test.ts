@@ -52,7 +52,7 @@ describe("promoStatus (PR-N1)", () => {
   });
 });
 
-describe("teksJenis", () => {
+describe("describePromoType", () => {
   it("persen, potongan, gratis biaya layanan", () => {
     expect(describePromoType({ ...base, value: 10, max_discount: 5000 })).toBe("Diskon 10% maks Rp 5.000");
     expect(describePromoType({ ...base, value: 10 })).toBe("Diskon 10%");

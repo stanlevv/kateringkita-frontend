@@ -216,7 +216,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
     expect(screen.queryByText(/QRIS statis/)).not.toBeInTheDocument();
     expect(screen.queryByText(/setelah fitur unggah/)).not.toBeInTheDocument();
   });
-  it("unggah logo -> memanggil unggahFoto(berkas, 'logo'); simpan mengirim logo_url baru", async () => {
+  it("unggah logo -> memanggil uploadPhoto(berkas, 'logo'); simpan mengirim logo_url baru", async () => {
     uploadPhoto.mockResolvedValue({ data: { public_url: "https://cdn.test/baru.png" } });
     tampil({ profile: { ...profile(), ...dgn } });
     pilih(0);
@@ -227,7 +227,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
     expect(saveProfile.mock.calls[0][0]).toMatchObject({ logo_url: "https://cdn.test/baru.png" });
     expect(saveProfile.mock.calls[0][0]).not.toHaveProperty("qris_image_url");
   });
-  it("unggah background -> unggahFoto(berkas, 'cover'); simpan mengirim cover_url baru", async () => {
+  it("unggah background -> uploadPhoto(berkas, 'cover'); simpan mengirim cover_url baru", async () => {
     uploadPhoto.mockResolvedValue({ data: { public_url: "https://cdn.test/cover.jpg" } });
     tampil({ profile: { ...profile(), ...dgn } });
     pilih(1);

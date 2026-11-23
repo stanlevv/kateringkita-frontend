@@ -20,7 +20,7 @@ test.describe("tanpa sesi", () => {
   });
 
   test("/api/laporan/csv -> 401", async ({ request }) => {
-    const res = await request.get("/api/laporan/csv?dari=2026-01-01&sampai=2026-01-31");
-    expect(res.status()).toBe(401);
+    const response = await request.get("/api/laporan/csv?dari=2026-01-01&sampai=2026-01-31");
+    expect(response.status()).toBe(401);
   });
 });

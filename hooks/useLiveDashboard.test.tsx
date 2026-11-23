@@ -209,7 +209,7 @@ describe("D8 jam server", () => {
 });
 
 describe("D5/D10 terima & awal", () => {
-  it("terima(o) lebih baru langsung tampil; poll lama yang tiba kemudian tidak menimpanya", async () => {
+  it("receiveOrder(o) lebih baru langsung tampil; poll lama yang tiba kemudian tidak menimpanya", async () => {
     const { result } = mountHook();
     await advance(4999);
     const resolveFetch = hangFetch();
@@ -222,7 +222,7 @@ describe("D5/D10 terima & awal", () => {
     );
     expect(result.current.orders.find((order) => order.code === "A")?.status).toBe("cooking");
   });
-  it("segarkan() saat fetch berjalan -> tetap 1 permintaan, diulang segera setelah selesai", async () => {
+  it("refresh() saat fetch berjalan -> tetap 1 permintaan, diulang segera setelah selesai", async () => {
     const { result } = mountHook();
     const resolveFetch = hangFetch();
     await advance(5000);
@@ -233,7 +233,7 @@ describe("D5/D10 terima & awal", () => {
     await advance(0);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
-  it("segarkan() -> fetch sekarang, tanpa menunggu 5 dtk", async () => {
+  it("refresh() -> fetch sekarang, tanpa menunggu 5 dtk", async () => {
     const { result } = mountHook();
     act(() => result.current.refresh());
     await advance(0);
@@ -241,7 +241,7 @@ describe("D5/D10 terima & awal", () => {
     await advance(4900);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
-  it("terimaMenu(m) mengganti menu ber-id sama", () => {
+  it("receiveMenu(m) mengganti menu ber-id sama", () => {
     const { result } = mountHook();
     act(() => result.current.receiveMenu({ ...MENUS[0], sold_today: 99 }));
     expect(result.current.menus[0].sold_today).toBe(99);

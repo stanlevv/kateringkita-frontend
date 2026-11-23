@@ -77,7 +77,7 @@ describe("antrean verifikasi", () => {
     expect(screen.getAllByText("Ada menu aktif")[1].parentElement).toHaveTextContent("belum terpenuhi");
     expect(screen.getAllByText("Menunggu").length).toBe(2);
   });
-  // AUD-35: checklist diisi penjual sendiri; verifikasi sekali klik bisa dipicu clickjacking, jadi tetap lewat konfirmasi
+  // Checklist diisi penjual sendiri; verifikasi sekali klik bisa dipicu clickjacking, jadi tetap lewat konfirmasi
   it("checklist lengkap: Verifikasi tetap meminta konfirmasi", async () => {
     render(<VerificationQueue rows={[antrian({})]} />);
     await userEvent.click(screen.getByRole("button", { name: "Verifikasi" }));

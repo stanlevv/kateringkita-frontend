@@ -4,7 +4,7 @@ import { tableTokenFromQr } from "./table-qr";
 
 const TOKEN = "18239d39dcdeb7616e3c5abb87316985";
 
-describe("tokenDariQr", () => {
+describe("tableTokenFromQr", () => {
   it("QR meja KateringKita (domain mana pun yang memakai jalur /meja/<token>)", () => {
     expect(tableTokenFromQr(`https://ketringkita.edufin.app/meja/${TOKEN}`)).toBe(TOKEN);
     expect(tableTokenFromQr(`https://ketringkita-frontend.vercel.app/meja/${TOKEN}/`)).toBe(TOKEN);

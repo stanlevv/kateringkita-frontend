@@ -14,7 +14,7 @@ describe("M-04, M-11 ChatWaLink", () => {
   });
 });
 
-describe("galatAksi CONFLICT", () => {
+describe("actionErrorView CONFLICT", () => {
   it("memakai pesan dari server, fallback ke teks tetap", async () => {
     const { actionErrorView } = await import("./action-error");
     expect(actionErrorView("CONFLICT", "confirm", "Batas waktu pesanan sudah habis.")).toMatchObject({

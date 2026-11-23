@@ -18,7 +18,7 @@ beforeEach(() => {
   requireAdmin.mockClear();
 });
 
-describe("kirimPengumuman", () => {
+describe("sendAnnouncement", () => {
   it("POST /admin/broadcasts dengan teks dirapikan", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 201, data: { sent: 3 } });
     expect(await sendAnnouncement({ audience: "all", title: " Libur ", body: " Tutup besok " })).toEqual({
@@ -41,7 +41,7 @@ describe("kirimPengumuman", () => {
   });
 });
 
-describe("simpanKontakCs", () => {
+describe("saveCustomerServiceContact", () => {
   it("PUT /admin/settings/cs-contact; kosong boleh; nomor salah ditolak", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: { cs_whatsapp: "085852157352" } });
     expect(await saveCustomerServiceContact(" 085852157352 ")).toEqual({ data: { cs_whatsapp: "085852157352" } });
@@ -59,7 +59,7 @@ describe("simpanKontakCs", () => {
   });
 });
 
-describe("simpanPemeliharaan (F27)", () => {
+describe("saveMaintenance (F27)", () => {
   it("PUT /admin/settings/maintenance dengan pesan dirapikan; pesan >200 ditolak tanpa API", async () => {
     adminFetch.mockResolvedValue({
       ok: true,

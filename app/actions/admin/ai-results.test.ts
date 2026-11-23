@@ -17,7 +17,7 @@ beforeEach(() => {
   adminFetch.mockReset().mockResolvedValue({ ok: true, status: 200, data: { id: 5 } });
 });
 
-describe("verifikasiHasilAi", () => {
+describe("verifyAiResult", () => {
   it("hanya super & ops; setujui dengan catatan opsional yang dipangkas", async () => {
     expect(await verifyAiResult(5, "disetujui", "  Angka sesuai  ")).toEqual({ data: null });
     expect(requireAdmin).toHaveBeenCalledWith("super", "ops");

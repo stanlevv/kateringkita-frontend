@@ -31,7 +31,7 @@ beforeEach(() => {
   setAdminActive.mockReset().mockResolvedValue({ data: { ...nonaktif, is_active: true } });
 });
 
-// AUD-35: mengaktifkan lagi admin nonaktif (sandi lama ikut aktif) tidak boleh jalan dengan sekali klik
+// Mengaktifkan lagi admin nonaktif (sandi lama ikut aktif) tidak boleh jalan dengan sekali klik
 describe("AdminTable", () => {
   it("Aktifkan meminta konfirmasi dulu", async () => {
     render(<AdminTable rows={[nonaktif]} sayaId={1} />);

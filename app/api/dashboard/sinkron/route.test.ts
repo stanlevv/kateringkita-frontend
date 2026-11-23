@@ -38,7 +38,7 @@ describe("D3 GET /api/dashboard/sinkron (M-04)", () => {
     expect(await response.json()).toEqual({ data: { orders: [{ code: "A" }], menus: [{ id: 1 }] } });
     expect(getChangedOrders).toHaveBeenCalledWith(SINCE);
   });
-  it("getPerubahan galat -> 503 { error }", async () => {
+  it("getChangedOrders galat -> 503 { error }", async () => {
     getChangedOrders.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } });
     const response = await callRoute(`?sejak=${encodeURIComponent(SINCE)}`);
     expect(response.status).toBe(503);

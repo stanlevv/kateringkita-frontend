@@ -15,7 +15,7 @@ beforeEach(() => {
   uploadPhoto.mockReset();
 });
 
-describe("FotoTambahan", () => {
+describe("ExtraPhotos", () => {
   it("unggah menambah URL di akhir; busy dilaporkan selama unggah", async () => {
     uploadPhoto.mockResolvedValue({ data: { public_url: "https://foto.test/baru.jpg" } });
     const onChange = vi.fn(),

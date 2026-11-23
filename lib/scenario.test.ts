@@ -15,7 +15,7 @@ afterEach(() => {
   jar.value = undefined;
 });
 
-describe("getSkenario", () => {
+describe("getScenario", () => {
   it("development membaca cookie", async () => {
     vi.stubEnv("NODE_ENV", "development");
     jar.value = "gagal-muat";
@@ -31,7 +31,7 @@ describe("getSkenario", () => {
     jar.value = "ngawur";
     expect(await getScenario()).toBeNull();
   });
-  it("SKENARIO punya label & deskripsi untuk 11 nilai (tanpa sesi-habis)", () => {
+  it("SCENARIOS punya label & deskripsi untuk 11 nilai (tanpa sesi-habis)", () => {
     expect(SCENARIOS).toHaveLength(11);
     expect(SCENARIOS.map((scenario) => scenario.id)).not.toContain("sesi-habis");
     for (const scenario of SCENARIOS) {
