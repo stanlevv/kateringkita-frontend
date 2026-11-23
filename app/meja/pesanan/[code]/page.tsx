@@ -1,4 +1,4 @@
-import { StatusPesanan } from "./StatusPesanan";
+import { StatusPesanan } from "./TableOrderStatus";
 
 // F21: tujuan kembali dari halaman bayar Midtrans; data dibaca dengan token tamu dari peramban
 export default async function StatusPesananMejaPage({ params }: { params: Promise<{ code: string }> }) {

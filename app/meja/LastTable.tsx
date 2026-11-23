@@ -3,8 +3,8 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { subscribe, readLastTable } from "@/lib/table-storage";
-import { MejaPesan } from "./MejaPesan";
-import { PindaiQr } from "./PindaiQr";
+import { MejaPesan } from "./TableMessage";
+import { PindaiQr } from "./QrScanner";
 
 const tanpaLangganan = () => () => {};
 // ?pindai=1 dari tombol "Scan meja lain": jangan lompat ke meja terakhir

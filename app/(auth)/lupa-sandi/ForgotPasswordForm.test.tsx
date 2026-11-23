@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import LupaSandiForm from "./LupaSandiForm";
+import LupaSandiForm from "./ForgotPasswordForm";
 
 const requestResetCode = vi.fn();
 const resetPassword = vi.fn();

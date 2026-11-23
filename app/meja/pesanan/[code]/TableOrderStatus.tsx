@@ -10,7 +10,7 @@ import { callAction } from "@/lib/action";
 import { formatRupiah } from "@/lib/format";
 import { subscribe, readGuestRaw, parseGuest } from "@/lib/table-storage";
 import type { TableOrder } from "@/types/table";
-import { MejaPesan } from "../../MejaPesan";
+import { MejaPesan } from "../../TableMessage";
 
 const LANGKAH = [
   { s: "holding", label: "Pembayaran" },

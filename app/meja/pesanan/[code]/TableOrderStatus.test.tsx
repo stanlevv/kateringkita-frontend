@@ -8,7 +8,7 @@ vi.mock("@/app/actions/table", () => ({
   payTableOrder: vi.fn(),
 }));
 
-import { StatusPesanan } from "./StatusPesanan";
+import { StatusPesanan } from "./TableOrderStatus";
 
 const pesanan = (o: Partial<TableOrder> = {}): TableOrder => ({
   code: "KK-1",

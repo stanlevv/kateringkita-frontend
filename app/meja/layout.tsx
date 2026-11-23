@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { DaftarSw } from "./DaftarSw";
+import { DaftarSw } from "./RegisterServiceWorker";
 
 // F21: area publik pelanggan (tanpa login, di luar matcher proxy). Ramah HP; dashboard tetap untuk layar lebar.
 export const metadata: Metadata = {

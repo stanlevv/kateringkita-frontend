@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import LupaSandiForm from "./LupaSandiForm";
+import LupaSandiForm from "./ForgotPasswordForm";
 
 export const metadata: Metadata = { title: "Lupa kata sandi", robots: { index: false, follow: true } };
 

@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
-vi.mock("./PindaiQr", () => ({ PindaiQr: () => <button type="button">Scan QR meja</button> }));
+vi.mock("./QrScanner", () => ({ PindaiQr: () => <button type="button">Scan QR meja</button> }));
 
-import { MejaTerakhir } from "./MejaTerakhir";
+import { MejaTerakhir } from "./LastTable";
 
 beforeEach(() => localStorage.clear());
 afterEach(() => {

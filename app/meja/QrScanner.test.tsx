@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
 
-import { PindaiQr } from "./PindaiQr";
+import { PindaiQr } from "./QrScanner";
 
 const T = "18239d39dcdeb7616e3c5abb87316985";
 const stop = vi.fn();

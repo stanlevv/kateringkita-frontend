@@ -1,6 +1,6 @@
 import { getTableMenu } from "@/services/table.service";
-import { MejaPesan } from "../MejaPesan";
-import { MenuMejaApp } from "./MenuMejaApp";
+import { MejaPesan } from "../TableMessage";
+import { MenuMejaApp } from "./TableMenuApp";
 
 // F21: halaman yang dibuka QR meja. Data selalu segar (stok & jam buka).
 export default async function MenuMejaPage({ params }: { params: Promise<{ token: string }> }) {

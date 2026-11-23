@@ -12,7 +12,7 @@ vi.mock("@/app/actions/table", () => ({
   payTableOrder: (...a: unknown[]) => payTableOrder(...a),
 }));
 
-import { MenuMejaApp } from "./MenuMejaApp";
+import { MenuMejaApp } from "./TableMenuApp";
 
 const menu = (o: Partial<TableMenu["menus"][number]>) => ({
   id: 1,
