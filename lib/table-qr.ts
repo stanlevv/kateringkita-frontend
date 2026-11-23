@@ -1,9 +1,14 @@
-// F21: isi QR meja = `${origin}/meja/${token}` (app/components/meja/QrMeja.tsx).
-// Hanya token yang diambil; tujuan selalu /meja/<token> di web ini sendiri, jadi QR dari
-// domain lain tidak bisa membelokkan pelanggan ke situs luar.
+// Pembaca isi QR meja. Isi QR = `${origin}/meja/${token}` (dibuat di app/components/meja/QrMeja.tsx).
+// Hanya token yang diambil; tujuan selalu /meja/<token> di web ini sendiri,
+// jadi QR dari domain lain tidak bisa membelokkan pembeli ke situs luar.
+
 const TABLE_PATH = /^\/meja\/([A-Za-z0-9_-]{16,64})\/?$/;
 
-/** Token meja dari teks QR, atau null bila bukan QR meja KateringKita. */
+/**
+ * Mengambil token meja dari teks hasil pindai QR.
+ * @param text teks dari QR
+ * @returns token, atau null bila bukan QR meja KateringKita
+ */
 export function tableTokenFromQr(text: string): string | null {
   let url: URL;
   try {

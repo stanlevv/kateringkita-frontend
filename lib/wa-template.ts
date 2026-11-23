@@ -1,8 +1,12 @@
+// Templat pesan WhatsApp ke pembeli: daftar placeholder, templat bawaan, pengisian, dan validasi.
+
 import { formatTime, formatRupiah } from "./format";
 import type { MerchantOrder, PaymentMethod } from "@/types/order";
 
+/** Panjang templat paling banyak (karakter). */
 export const MAX_TEMPLATE_LENGTH = 1000;
 
+/** Placeholder yang boleh dipakai di templat beserta penjelasannya. */
 export const PLACEHOLDER = [
   { code: "{kode}", description: "Kode pesanan" },
   { code: "{nama}", description: "Nama pembeli" },
@@ -13,6 +17,10 @@ export const PLACEHOLDER = [
   { code: "{metode_bayar}", description: "Cara pembayaran" },
 ] as const;
 
+/**
+ * Templat bawaan bila penjual belum menulis sendiri.
+ * Nama dan isinya dibaca test backend lewat regex (harus sama persis dengan templat di backend), jadi jangan diubah.
+ */
 export const TEMPLATE_BAWAAN = `Halo {nama}, pesanan {kode} sudah kami terima.
 
 Menu: {menu}
@@ -23,7 +31,7 @@ Waktu ambil: {waktu_ambil}
 
 Terima kasih sudah memesan.`;
 
-/** Nilai pengganti per placeholder, kunci tanpa kurung kurawal. */
+/** Nilai pengganti per placeholder; kuncinya nama placeholder tanpa kurung kurawal. */
 export type TemplateValues = Record<string, string>;
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
@@ -33,6 +41,10 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   online: "Bayar online",
 };
 
+/**
+ * Mengisi nilai placeholder dari data pesanan (kode, nama, menu, total, tempat ambil, waktu ambil, cara bayar).
+ * @param order pesanan
+ */
 export function templateValuesFromOrder(order: MerchantOrder): TemplateValues {
   return {
     kode: order.code,
@@ -47,13 +59,21 @@ export function templateValuesFromOrder(order: MerchantOrder): TemplateValues {
 
 const PLACEHOLDER_PATTERN = /\{[^{}\n]+\}/g;
 
-/** Placeholder dikenal diganti; yang tidak dikenal dibiarkan apa adanya. */
+/**
+ * Mengganti placeholder yang dikenal dengan nilainya; placeholder tidak dikenal dibiarkan apa adanya.
+ * @param text templat
+ * @param values nilai pengganti
+ */
 export function renderTemplate(text: string, values: TemplateValues): string {
   return text.replace(PLACEHOLDER_PATTERN, (placeholder) => values[placeholder.slice(1, -1)] ?? placeholder);
 }
 
 const KNOWN_PLACEHOLDERS: readonly string[] = PLACEHOLDER.map((placeholder) => placeholder.code);
 
+/**
+ * Mencari placeholder di templat yang tidak dikenal (tanpa duplikat).
+ * @param text templat
+ */
 export function findUnknownPlaceholders(text: string): string[] {
   return [
     ...new Set(
@@ -62,7 +82,11 @@ export function findUnknownPlaceholders(text: string): string[] {
   ];
 }
 
-/** Pesan galat pertama untuk templat, atau null bila valid (WA-E1, WA-E2). */
+/**
+ * Memeriksa templat: tidak kosong, tidak terlalu panjang, dan semua placeholder dikenal.
+ * @param text templat
+ * @returns pesan galat pertama, atau null bila valid
+ */
 export function validateTemplate(text: string): string | null {
   if (text.trim() === "") return "Templat tidak boleh kosong.";
   if (text.length > MAX_TEMPLATE_LENGTH)

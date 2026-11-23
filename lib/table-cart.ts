@@ -1,21 +1,37 @@
+// Keranjang di halaman pesan dari meja (fungsi murni, tanpa React).
+// Menu yang sama dengan opsi berbeda menjadi baris berbeda. Batas stok dihitung per menu
+// (jumlah semua barisnya); backend tetap memeriksa ulang saat pesanan dikirim.
+
 import type { MenuOption } from "@/types/menu";
 import type { TableMenuItem } from "@/types/table";
 
-// F21 keranjang pesan dari meja (murni, tanpa React). Menu sama dengan opsi berbeda = baris berbeda.
-// Batas stok dihitung per menu (jumlah semua barisnya); backend tetap memeriksa ulang saat pesan.
+/** Satu baris keranjang: kunci unik (menu + opsi), menu, jumlah, dan opsi yang dipilih. */
 export type CartLine = { key: string; menu: TableMenuItem; qty: number; options: MenuOption[] };
+/** Bentuk baris keranjang yang disimpan di localStorage dan dikirim saat memesan. */
 export type SavedCartLine = { menu_id: number; qty: number; option_ids: number[] };
 
+/** Membuat kunci unik baris keranjang dari id menu dan id opsi (urutan opsi tidak berpengaruh). */
 export const cartLineKey = (menuId: number, optionIds: number[]) =>
   `${menuId}:${[...optionIds].sort((first, second) => first - second).join(",")}`;
+/** Harga satu porsi: harga menu ditambah harga semua opsi. */
 export const unitPrice = (line: Pick<CartLine, "menu" | "options">) =>
   line.menu.price + line.options.reduce((sum, option) => sum + option.extra_price, 0);
+/** Total harga seluruh keranjang. */
 export const cartTotal = (lines: CartLine[]) => lines.reduce((sum, line) => sum + unitPrice(line) * line.qty, 0);
+/** Jumlah porsi di keranjang. */
 export const countItems = (lines: CartLine[]) => lines.reduce((sum, line) => sum + line.qty, 0);
+/** Jumlah porsi satu menu di keranjang, dari semua barisnya. */
 export const menuQty = (lines: CartLine[], menuId: number) =>
   lines.filter((line) => line.menu.id === menuId).reduce((sum, line) => sum + line.qty, 0);
 
-/** Tambah `qty` porsi; baris baru minimal `min_order_qty`. `null` = melebihi sisa stok. */
+/**
+ * Menambah porsi ke keranjang. Baris baru minimal sebanyak `min_order_qty` menu.
+ * @param lines isi keranjang sekarang
+ * @param menu menu yang ditambah
+ * @param options opsi yang dipilih
+ * @param qty jumlah porsi yang ditambah
+ * @returns keranjang baru, atau null bila melebihi sisa stok
+ */
 export function addToCart(lines: CartLine[], menu: TableMenuItem, options: MenuOption[], qty = 1): CartLine[] | null {
   const key = cartLineKey(
     menu.id,
@@ -29,7 +45,13 @@ export function addToCart(lines: CartLine[], menu: TableMenuItem, options: MenuO
     : [...lines, { key, menu, qty: addedQty, options }];
 }
 
-/** Ubah jumlah baris; di bawah minimum pesan = baris dihapus. `null` = melebihi sisa stok. */
+/**
+ * Mengubah jumlah porsi satu baris. Di bawah minimum pesan, baris dihapus.
+ * @param lines isi keranjang sekarang
+ * @param key kunci baris
+ * @param qty jumlah baru
+ * @returns keranjang baru, atau null bila melebihi sisa stok
+ */
 export function updateQty(lines: CartLine[], key: string, qty: number): CartLine[] | null {
   const target = lines.find((line) => line.key === key);
   if (!target) return lines;
@@ -38,10 +60,15 @@ export function updateQty(lines: CartLine[], key: string, qty: number): CartLine
   return lines.map((line) => (line === target ? { ...line, qty } : line));
 }
 
+/** Mengubah keranjang ke bentuk tersimpan (id menu, jumlah, id opsi). */
 export const toSavedLines = (lines: CartLine[]): SavedCartLine[] =>
   lines.map((line) => ({ menu_id: line.menu.id, qty: line.qty, option_ids: line.options.map((option) => option.id) }));
 
-/** Pulihkan keranjang tersimpan terhadap menu terkini; menu/opsi yang hilang atau habis dibuang. */
+/**
+ * Memulihkan keranjang tersimpan berdasarkan menu terbaru; menu atau opsi yang sudah hilang atau habis dibuang.
+ * @param savedLines keranjang dari localStorage
+ * @param menus menu terbaru dari server
+ */
 export function restoreCart(savedLines: SavedCartLine[], menus: TableMenuItem[]): CartLine[] {
   let cart: CartLine[] = [];
   for (const saved of savedLines) {

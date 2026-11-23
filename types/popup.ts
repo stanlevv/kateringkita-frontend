@@ -1,4 +1,6 @@
-// Pop-up promo mobile (GET /admin/popups)
+// Bentuk data pop-up promo di aplikasi mobile (GET /admin/popups).
+
+/** Satu pop-up promo: gambar, voucher tujuan, dan periode tayang. */
 export type Popup = {
   id: number;
   title: string;
@@ -10,6 +12,7 @@ export type Popup = {
   created_at: string;
 };
 
+/** Isian form pop-up yang dikirim ke backend. */
 export type PopupInput = {
   title: string;
   image_url: string;

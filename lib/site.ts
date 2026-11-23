@@ -1,11 +1,16 @@
-// Data situs untuk metadata, robots, sitemap, dan JSON-LD.
+// Data situs untuk metadata halaman, robots.txt, sitemap, dan JSON-LD (informasi untuk mesin pencari).
+
+/** Alamat utama situs dari env SITE_URL, tanpa garis miring di akhir. */
 export const SITE_URL = (process.env.SITE_URL || "https://ketringkita.edufin.app").replace(/\/+$/, "");
+/** Nama situs. */
 export const SITE_NAME = "KateringKita";
+/** Judul bawaan halaman. */
 export const SITE_TITLE = "KateringKita — Aplikasi Kelola Pesanan Katering Kampus";
+/** Deskripsi bawaan halaman untuk mesin pencari. */
 export const SITE_DESCRIPTION =
   "Terima pre-order makanan dari mahasiswa, atur kuota porsi harian, dan pantau penjualan dari satu dashboard. Untuk penjual katering di sekitar kampus.";
 
-// Rute di balik login (sama dengan matcher proxy.ts); tidak perlu dirayapi mesin pencari.
+/** Rute yang perlu login (sama dengan daftar di proxy.ts); tidak perlu dirayapi mesin pencari. */
 export const PRIVATE_PATHS = [
   "/dashboard",
   "/menu",

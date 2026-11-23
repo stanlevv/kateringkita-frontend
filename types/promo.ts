@@ -1,3 +1,6 @@
+// Bentuk data promo/voucher penjual dari backend (GET /merchant/promos).
+
+/** Satu voucher. `is_public` true = tampil di halaman toko dan bisa diklaim; false = kode rahasia. */
 export type Promo = {
   id: number;
   code: string;

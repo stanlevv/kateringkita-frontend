@@ -1,3 +1,5 @@
+// Data contoh ulasan untuk test (20 ulasan dengan bintang dan komentar bervariasi).
+
 import type { Review } from "@/types/review";
 import { menus } from "./menus";
 import { daysAgo } from "./time";
@@ -17,6 +19,7 @@ const COMMENTS: (string | null)[] = [
 ];
 const RATING = [5, 5, 4, 5, 3, 5, 4, 5, 2, 5, 4, 5, 5, 4, 3, 5, 4, 5, 5, 4];
 
+/** Daftar ulasan contoh. */
 export const reviews = (): Review[] => {
   const menuList = menus();
   return RATING.map((rating, i) => {

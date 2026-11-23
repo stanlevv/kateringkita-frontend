@@ -1,8 +1,15 @@
+// Aturan banner beranda: label status untuk penjual dan admin, serta validasi form yang sama dengan backend.
+
 import { CheckCircle2, Clock, EyeOff, XCircle, CalendarClock, type LucideIcon } from "lucide-react";
 import type { Tone } from "@/lib/order-status";
 import type { Banner } from "@/types/banner";
 
-// Banner beranda: label status untuk penjual & admin, dan aturan isian yang sama dengan backend (banner.dto).
+/**
+ * Menentukan label, warna, dan ikon status banner pada waktu tertentu.
+ * @param banner data banner
+ * @param now waktu sekarang dalam milidetik
+ * @returns label status (mis. "Tayang", "Terjadwal"), nada warna, dan ikon
+ */
 export function bannerStatus(banner: Banner, now: number): { label: string; tone: Tone; icon: LucideIcon } {
   if (banner.status === "menunggu") return { label: "Menunggu persetujuan", tone: "warning", icon: Clock };
   if (banner.status === "ditolak") return { label: "Ditolak", tone: "danger", icon: XCircle };
@@ -12,10 +19,15 @@ export function bannerStatus(banner: Banner, now: number): { label: string; tone
   return { label: "Tayang", tone: "success", icon: CheckCircle2 };
 }
 
-/** Banner yang memakai jatah 1 banner aktif per toko. */
+/**
+ * Mengecek apakah banner memakai jatah satu banner aktif per toko (menunggu atau disetujui dan belum berakhir).
+ * @param banner data banner
+ * @param now waktu sekarang dalam milidetik
+ */
 export const isBannerActive = (banner: Banner, now: number) =>
   (banner.status === "menunggu" || banner.status === "disetujui") && Date.parse(banner.ends_at) > now;
 
+/** Isian form banner yang dikirim ke backend. */
 export type BannerInput = {
   title: string;
   image_url: string;
@@ -26,6 +38,11 @@ export type BannerInput = {
   sort_order?: number;
 };
 
+/**
+ * Memeriksa isian form banner dengan aturan yang sama seperti backend.
+ * @param input isian form
+ * @returns pesan galat per field; objek kosong berarti isian valid
+ */
 export function validateBanner(input: BannerInput): Record<string, string> {
   const errors: Record<string, string> = {};
   const title = input.title.trim();

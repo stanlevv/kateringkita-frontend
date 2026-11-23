@@ -1,10 +1,13 @@
+// Pembantu "shell" dashboard penjual (kerangka halaman: sidebar, header, banner jam buka).
+
 import { formatTime, formatDate, toWibClock } from "./format";
 import { displayStatus } from "./order-status";
 import type { MerchantOrder } from "@/types/order";
 
 /**
- * SH-N1: jumlah pesanan yang menunggu tindakan penjual: menunggu konfirmasi + terkonfirmasi.
- * F26: VA/bayar online yang belum lunas tidak dihitung; Midtrans menerimanya otomatis begitu lunas.
+ * Menghitung pesanan yang menunggu tindakan penjual: menunggu konfirmasi ditambah sudah dikonfirmasi.
+ * Pesanan VA/online yang belum lunas tidak dihitung, karena Midtrans menerimanya otomatis begitu lunas.
+ * @param orders pesanan (cukup status dan data pembayaran)
  */
 export function countNeedsAction(
   orders: Pick<MerchantOrder, "status" | "payment_method" | "payment_status">[],
@@ -18,7 +21,13 @@ const toMinutes = (time: string) => {
   return hours * 60 + minutes;
 };
 
-/** SH-A1: apakah `ms` di luar rentang buka (WIB). Tepat jam tutup dihitung di luar; tutup < buka berarti lewat tengah malam. */
+/**
+ * Mengecek apakah suatu waktu berada di luar jam buka toko (WIB).
+ * Tepat jam tutup dihitung di luar; jam tutup lebih kecil dari jam buka berarti toko buka melewati tengah malam.
+ * @param timestamp waktu dalam milidetik
+ * @param openTime jam buka "HH:MM"
+ * @param closeTime jam tutup "HH:MM"
+ */
 export function isOutsideOpenHours(timestamp: number, openTime: string, closeTime: string): boolean {
   const clock = toWibClock(timestamp);
   const nowMinutes = clock.getUTCHours() * 60 + clock.getUTCMinutes();
@@ -31,19 +40,26 @@ export function isOutsideOpenHours(timestamp: number, openTime: string, closeTim
   return !isOpen;
 }
 
-/** "07:00","16:00" -> "07.00–16.00" */
+/** Menulis jam buka, mis. "07:00","16:00" menjadi "07.00–16.00". */
 export const openHoursLabel = (openTime: string, closeTime: string) =>
   `${openTime.replace(":", ".")}–${closeTime.replace(":", ".")}`;
 
 const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
-/** "Sab, 31 Okt · 11.42 WIB" */
+/**
+ * Menulis hari dan jam WIB, mis. "Sab, 31 Okt · 11.42 WIB".
+ * @param timestamp waktu dalam milidetik
+ */
 export function formatDayTime(timestamp: number): string {
   const iso = new Date(timestamp).toISOString();
   const day = DAY_NAMES[toWibClock(timestamp).getUTCDay()];
   return `${day}, ${formatDate(iso).replace(/ \d{4}$/, "")} · ${formatTime(iso)} WIB`;
 }
 
+/**
+ * Mengambil inisial nama (paling banyak 2 huruf), mis. "Dapur Diego" menjadi "DD"; "?" bila nama kosong.
+ * @param name nama
+ */
 export function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   return words.length
@@ -54,7 +70,14 @@ export function initials(name: string): string {
     : "?";
 }
 
-/** SH-N1: pilihan lebar sidebar di layar ≥ 1280 px. Disimpan di cookie agar layout server langsung merender yang benar (tanpa kedip). */
+/**
+ * Nama cookie pilihan lebar sidebar (layar 1280 px ke atas). Disimpan di cookie agar server langsung merender lebar yang benar tanpa kedip.
+ */
 export const SIDEBAR_COOKIE = "kk-sidebar";
+/** Lebar sidebar: lebar atau ringkas. */
 export type SidebarMode = "lebar" | "ringkas";
+/**
+ * Membaca mode sidebar dari nilai cookie; selain "ringkas" dianggap "lebar".
+ * @param value nilai cookie
+ */
 export const parseSidebarMode = (value: string | undefined): SidebarMode => (value === "ringkas" ? "ringkas" : "lebar");

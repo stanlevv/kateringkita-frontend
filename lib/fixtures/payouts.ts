@@ -1,6 +1,8 @@
+// Data contoh halaman pencairan penjual (GET /merchant/payouts) untuk test.
+
 import type { MyPayouts } from "@/types/payout";
 
-// F26: data contoh GET /merchant/payouts (rekening terisi, satu pencairan)
+/** Data pencairan contoh: rekening sudah terisi dan satu riwayat pencairan. */
 export const myPayouts = (): MyPayouts => ({
   banks: [
     { code: "bca", name: "BCA" },

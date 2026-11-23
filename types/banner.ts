@@ -1,6 +1,11 @@
-// Banner beranda mobile (GET /merchant/banners, GET /admin/banners)
+// Bentuk data banner beranda aplikasi mobile (GET /merchant/banners dan /admin/banners).
+
+/** Status persetujuan banner oleh admin. */
 export type BannerStatus = "menunggu" | "disetujui" | "ditolak" | "nonaktif";
 
+/**
+ * Satu banner beranda: gambar, tujuan klik (voucher atau toko), periode tayang, dan status persetujuannya.
+ */
 export type Banner = {
   id: number;
   title: string;
@@ -17,5 +22,5 @@ export type Banner = {
   created_at: string;
 };
 
-/** Pilihan voucher di form banner. */
+/** Pilihan voucher di form banner/pop-up: id, kode, dan label yang dibaca manusia. */
 export type VoucherOption = { id: number; code: string; label: string };

@@ -1,9 +1,13 @@
+// Bentuk data fitur pesan dari meja (GET /tables/:token, /guest/orders/:code, /merchant/tables).
+// Pembeli memindai QR di meja, memesan tanpa akun, lalu pesanan diantar ke meja.
+
 import type { MenuOption } from "@/types/menu";
 import type { OrderItem, OrderStatus, PaymentStatus } from "@/types/order";
 
-// F21 pesan dari meja (kontrak backend: GET /tables/:token, /guest/orders/:code, /merchant/tables)
+/** Satu meja toko. `token` adalah kode acak di QR meja. */
 export type Table = { id: number; label: string; token: string; is_active: boolean };
 
+/** Satu menu yang tampil di halaman pesan dari meja. */
 export type TableMenuItem = {
   id: number;
   name: string;
@@ -20,6 +24,7 @@ export type TableMenuItem = {
   options: MenuOption[];
 };
 
+/** Isi halaman pesan dari meja: label meja, data toko, dan daftar menu. */
 export type TableMenu = {
   table: { label: string };
   merchant: {
@@ -34,6 +39,7 @@ export type TableMenu = {
   menus: TableMenuItem[];
 };
 
+/** Pesanan tamu dari meja seperti yang dilihat tamu itu sendiri. */
 export type TableOrder = {
   code: string;
   status: OrderStatus;

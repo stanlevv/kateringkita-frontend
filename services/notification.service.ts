@@ -1,14 +1,23 @@
 import "server-only";
+
+// Notifikasi pengguna (GET /me/notifications, semua peran): pengumuman admin, hasil moderasi foto menu, dll.
+// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+
 import { apiFetch } from "@/services/api";
 import { getSessionToken } from "@/services/auth.service";
 import { getScenario } from "@/lib/scenario";
 import type { DataResult } from "@/types/api";
 import type { AppNotification } from "@/types/notification";
 
+/** Jumlah notifikasi per halaman. */
 export const LIMIT_NOTIFICATIONS = 20;
 type NotificationMeta = { total?: number; unread_count?: number };
 
-// GET /me/notifications (semua peran): pengumuman admin, hasil moderasi foto menu, dll.
+/**
+ * Mengambil satu halaman notifikasi beserta total dan jumlah yang belum dibaca.
+ * @param page nomor halaman, mulai 1
+ * @returns `{ data: { rows, total, unread } }` atau `{ error }`
+ */
 export async function getNotifications(
   page: number,
 ): Promise<DataResult<{ rows: AppNotification[]; total: number; unread: number }>> {
@@ -24,7 +33,9 @@ export async function getNotifications(
   return { data: { rows: response.data, total: meta.total ?? response.data.length, unread: meta.unread_count ?? 0 } };
 }
 
-/** Badge sidebar "Notifikasi"; galat dianggap 0 (sama dengan getJumlahTindakan). */
+/**
+ * Jumlah notifikasi belum dibaca untuk badge sidebar. Bila gagal dianggap 0 (sama seperti `getNeedsActionCount`).
+ */
 export async function getUnreadNotificationCount(): Promise<number> {
   const scenario = await getScenario();
   if (scenario === "gagal-muat" || scenario === "kosong" || scenario === "penjual-baru") return 0;

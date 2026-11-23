@@ -1,6 +1,15 @@
+// Kalkulator HPP (harga pokok produksi) di halaman Copilot penjual.
+// Dihitung di browser agar hasil langsung berubah saat mengetik; rumusnya tidak rahasia, jadi tidak perlu ke server.
+
+/** Satu bahan: nama, biaya beli, dan berapa porsi yang bisa dibuat dari biaya itu. */
 export type Ingredient = { name: string; cost: number; portions: number };
 
-/** HP-E1: pesan per field ("0.biaya", "0.porsi", "margin", "bahan"); objek kosong bila valid. */
+/**
+ * Memeriksa isian kalkulator HPP.
+ * @param ingredients daftar bahan
+ * @param margin target margin dalam persen
+ * @returns pesan galat per field (kunci "0.biaya", "0.porsi", "margin", "bahan"); objek kosong bila valid
+ */
 export function validateHpp(ingredients: Ingredient[], margin: number): Record<string, string> {
   const errors: Record<string, string> = {};
   if (ingredients.length === 0) errors.bahan = "Tambahkan minimal satu bahan.";
@@ -14,7 +23,13 @@ export function validateHpp(ingredients: Ingredient[], margin: number): Record<s
   return errors;
 }
 
-// F17: tetap dihitung di klien agar hasil tampil per ketikan tanpa round-trip; rumus tidak rahasia, jadi tanpa endpoint server
+/**
+ * Menghitung HPP per porsi dan harga jual yang disarankan (dibulatkan ke atas ke kelipatan Rp 500).
+ * @param ingredients daftar bahan
+ * @param targetMargin target margin dalam persen (0–90)
+ * @returns `{ hpp, suggested_price }` dalam rupiah
+ * @throws RangeError bila isian tidak valid (panggil `validateHpp` dulu)
+ */
 export function calculateHpp(
   ingredients: Ingredient[],
   targetMargin: number,

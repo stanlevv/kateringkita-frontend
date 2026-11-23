@@ -1,3 +1,4 @@
+// Test kalkulator HPP: validasi isian dan perhitungan harga jual.
 import { describe, expect, it } from "vitest";
 import { validateHpp, calculateHpp } from "./hpp";
 

@@ -1,3 +1,4 @@
+// Test merchantFetch dan adminFetch: path, token sesi, dan pengalihan ke halaman masuk saat sesi habis (401).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/auth.service", () => ({ getSessionToken: async () => "tok" }));

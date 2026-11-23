@@ -1,4 +1,8 @@
 import "server-only";
+
+// Data profil toko penjual dari backend (GET /merchant/profile).
+// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+
 import { cache } from "react";
 import { toResult, merchantFetch } from "@/services/api";
 import { toWibClock } from "@/lib/format";
@@ -6,8 +10,11 @@ import { getScenario } from "@/lib/scenario";
 import type { DataResult } from "@/types/api";
 import type { MerchantProfile } from "@/types/profile";
 
-// cache(): layout dan halaman berbagi satu bacaan per permintaan.
-// Skenario /pratinjau (hanya dev) ditumpuk di atas data sungguhan agar alur SH/PG tetap bisa dipicu.
+/**
+ * Mengambil profil toko. Dibungkus `cache()` agar layout dan halaman berbagi satu bacaan per permintaan.
+ * Skenario /pratinjau (hanya mode pengembangan) bisa mengubah hasilnya (dapur tutup, penjual baru, di luar jam buka).
+ * @returns `{ data }` atau `{ error }`
+ */
 export const getProfile = cache(async (): Promise<DataResult<MerchantProfile>> => {
   const scenario = await getScenario();
   if (scenario === "gagal-muat") return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };

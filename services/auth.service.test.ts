@@ -1,3 +1,4 @@
+// Test penjaga sesi: requireMerchant dan requireAdmin.
 import { describe, expect, it, vi } from "vitest";
 
 const redirect = (to: string): never => {

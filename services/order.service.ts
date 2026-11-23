@@ -1,4 +1,9 @@
 import "server-only";
+
+// Data pesanan penjual dari backend (GET /merchant/orders): daftar, antrean dashboard, perubahan terbaru, dan detail.
+// Skenario /pratinjau (hanya mode pengembangan) bisa memaksa hasil kosong atau gagal tanpa memanggil backend.
+// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+
 import { cache } from "react";
 import { toResult, merchantFetch } from "@/services/api";
 import { todayWib } from "@/lib/format";
@@ -8,15 +13,20 @@ import { getScenario } from "@/lib/scenario";
 import type { ApiError, DataResult } from "@/types/api";
 import type { MerchantOrder, OrderStatus } from "@/types/order";
 
-// Skenario /pratinjau (hanya dev) ditumpuk di atas data sungguhan (F04 D18).
+// Hasil galat yang dipakai bila skenario /pratinjau memaksa "gagal memuat".
 const LOAD_FAILED: { error: ApiError } = {
   error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." },
 };
 const totalFromMeta = (meta: unknown) => (meta as { total?: number } | undefined)?.total ?? 0;
 
+/** Penyaring daftar pesanan: status, tanggal (YYYY-MM-DD), kata pencarian, dan halaman. */
 export type OrderListFilter = { status?: OrderStatus; date?: string; q?: string; page?: number };
 
-/** Satu halaman daftar pesanan (M-04); filter dan halaman diproses server (D16). */
+/**
+ * Mengambil satu halaman daftar pesanan; penyaringan dan pembagian halaman dikerjakan server.
+ * @param filter penyaring
+ * @returns `{ data: { rows, total } }` atau `{ error }`
+ */
 export async function getOrders(
   filter: OrderListFilter = {},
 ): Promise<DataResult<{ rows: MerchantOrder[]; total: number }>> {
@@ -35,18 +45,25 @@ export async function getOrders(
     : (toResult(response) as { error: ApiError });
 }
 
-/** Antrean dashboard: semua yang masih aktif + semua pesanan hari ini, kode sama sekali (D16). */
+/**
+ * Mengambil antrean dashboard: semua pesanan yang masih berjalan ditambah semua pesanan hari ini (tanpa duplikat).
+ * Dibungkus `cache()` agar dalam satu permintaan cukup dipanggil sekali.
+ * @returns `{ data }` atau `{ error }`
+ */
 // shortcut: maks 100 per panggilan; tambah pagination antrean bila toko > 100 pesanan aktif/hari
 export const getQueue = cache(async (): Promise<DataResult<MerchantOrder[]>> => {
   const scenario = await getScenario();
   if (scenario === "gagal-muat") return LOAD_FAILED;
   if (scenario === "kosong" || scenario === "penjual-baru") return { data: [] };
+  // 1. Ambil pesanan yang masih berjalan dan pesanan hari ini secara bersamaan.
   const [activeResult, todayResult] = await Promise.all([
     merchantFetch<MerchantOrder[]>("/orders?status=holding,confirmed,cooking,ready&limit=100"),
     merchantFetch<MerchantOrder[]>(`/orders?date=${todayWib()}&limit=100`),
   ]);
+  // 2. Salah satu gagal -> kembalikan galatnya.
   for (const result of [activeResult, todayResult])
     if (!result.ok || !result.data) return toResult(result) as { error: ApiError };
+  // 3. Gabungkan per kode agar pesanan yang muncul di kedua daftar hanya tampil sekali.
   const byCode = new Map(
     [...(activeResult.data ?? []), ...(todayResult.data ?? [])].map((order) => [order.code, order]),
   );
@@ -54,13 +71,17 @@ export const getQueue = cache(async (): Promise<DataResult<MerchantOrder[]>> => 
 });
 
 /**
- * M-04, D3/D4: pesanan yang berubah sejak `sejak`. Maju memakai `updated_at` terbesar (API §1), bukan `page`,
- * maks 5 putaran agar tidak berputar; kode sama di dua putaran -> versi terakhir.
+ * Mengambil pesanan yang berubah sejak waktu tertentu (dipakai polling dashboard).
+ * Halaman berikutnya diambil dengan `updated_at` terbesar, bukan nomor halaman, paling banyak 5 kali agar tidak berputar terus.
+ * Kode yang muncul dua kali memakai versi terakhir.
+ * @param since waktu ISO; hanya pesanan dengan `updated_at` setelah ini
+ * @returns `{ data }` atau `{ error }`
  */
 export async function getChangedOrders(since: string): Promise<DataResult<MerchantOrder[]>> {
   const scenario = await getScenario();
   if (scenario === "gagal-muat" || scenario === "gagal-sinkron") return LOAD_FAILED;
   if (scenario === "kosong" || scenario === "penjual-baru") return { data: [] };
+  // 1. Ambil per 100 pesanan, mulai dari `since`.
   const byCode = new Map<string, MerchantOrder>();
   let cursor = since;
   for (let round = 0; round < 5; round++) {
@@ -68,18 +89,20 @@ export async function getChangedOrders(since: string): Promise<DataResult<Mercha
       `/orders?${new URLSearchParams({ updated_since: cursor, limit: "100" })}`,
     );
     if (!response.ok || !response.data) return toResult(response) as { error: ApiError };
+    // 2. Simpan per kode (versi terakhir menang), lalu majukan `cursor` ke `updated_at` terbesar.
     for (const order of response.data) byCode.set(order.code, order);
     const latest = response.data.reduce(
       (latestSoFar, order) => (Date.parse(order.updated_at) > Date.parse(latestSoFar) ? order.updated_at : latestSoFar),
       cursor,
     );
+    // 3. Berhenti bila halaman tidak penuh atau `updated_at` tidak maju lagi.
     if (response.data.length < 100 || Date.parse(latest) <= Date.parse(cursor)) break;
     cursor = latest;
   }
   return { data: [...byCode.values()] };
 }
 
-/** Badge sidebar: pesanan menunggu + terkonfirmasi; galat dianggap 0. */
+/** Jumlah pesanan menunggu dan terkonfirmasi untuk badge sidebar. Bila gagal dianggap 0. */
 export async function getNeedsActionCount(): Promise<number> {
   const scenario = await getScenario();
   if (scenario === "gagal-muat" || scenario === "kosong" || scenario === "penjual-baru") return 0;
@@ -87,6 +110,11 @@ export async function getNeedsActionCount(): Promise<number> {
   return (response.ok ? totalFromMeta(response.meta) : 0) + (scenario === "pesanan-baru" ? 1 : 0);
 }
 
+/**
+ * Mengambil satu pesanan berdasarkan kode.
+ * @param code kode pesanan, mis. "KK-20261031-7QF2"
+ * @returns `{ data }` atau `{ error }` (mis. NOT_FOUND)
+ */
 export async function getOrder(code: string): Promise<DataResult<MerchantOrder>> {
   return toResult(await merchantFetch<MerchantOrder>(`/orders/${encodeURIComponent(code)}`));
 }

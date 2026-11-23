@@ -1,3 +1,4 @@
+// Test templat pesan WhatsApp: placeholder, pengisian, dan validasi.
 import { describe, expect, it } from "vitest";
 import { orders } from "./fixtures/orders";
 import {

@@ -1,11 +1,16 @@
+// Aturan validasi form (memakai pustaka zod) untuk login, daftar, lupa sandi, menu, pengaturan toko, dan promo.
+// Aturannya disamakan dengan backend, sehingga galat sudah tampil di browser sebelum dikirim.
+// Fungsi validate* dipakai form di browser dan server action, jadi pemeriksaannya satu pintu.
+
 import { z } from "zod";
 import { formatRupiah } from "./format";
 import { validateTemplate } from "./wa-template";
 
-// --- Auth (M-01, M-02): aturan sama dengan be/src/auth/schemas.ts ---
+// --- Masuk dan daftar: aturan sama dengan be/src/auth/schemas.ts ---
 const requiredText = (message: string, max: number) =>
   z.string().trim().min(1, message).max(max, `Maksimal ${max} karakter.`);
 
+/** Form masuk: email atau nomor WA, dan kata sandi. */
 export const loginSchema = z.object({
   identifier: requiredText("Email atau nomor WA wajib diisi.", 255),
   password: z.string().min(1, "Kata sandi wajib diisi.").max(72, "Kata sandi maksimal 72 karakter."),
@@ -13,6 +18,7 @@ export const loginSchema = z.object({
 
 const waNumber = z.string().regex(/^08\d{8,11}$/, "Nomor WA harus diawali 08 dan 10–13 digit.");
 
+/** Aturan kata sandi baru: 8–72 karakter, ada huruf dan angka. */
 export const newPasswordSchema = z
   .string()
   .min(8, "Kata sandi minimal 8 karakter.")
@@ -20,6 +26,7 @@ export const newPasswordSchema = z
   .regex(/[A-Za-z]/, "Kata sandi harus mengandung huruf.")
   .regex(/\d/, "Kata sandi harus mengandung angka.");
 
+/** Form daftar langkah 1 (data pemilik), termasuk konfirmasi kata sandi harus sama. */
 export const ownerSchema = z
   .object({
     full_name: requiredText("Nama lengkap wajib diisi.", 150),
@@ -36,17 +43,19 @@ export const ownerSchema = z
     message: "Konfirmasi kata sandi tidak sama.",
   });
 
+/** Form daftar langkah 2 (data usaha). */
 export const businessSchema = z.object({
   business_name: requiredText("Nama usaha wajib diisi.", 150),
   merchant_type_id: z.string().min(1, "Jenis usaha wajib dipilih."),
   address: requiredText("Alamat wajib diisi.", 255),
 });
 
-// --- Lupa sandi (F11): aturan sama dengan be/src/dto/auth.dto.ts ---
+/** Form lupa sandi: email tujuan kode reset. */
 export const emailResetSchema = z.object({
   email: z.string().trim().min(1, "Email wajib diisi.").pipe(z.email("Format email tidak valid.")),
 });
 
+/** Form reset sandi: kode 6 angka dan kata sandi baru. */
 export const resetPasswordSchema = z
   .object({
     code: z.string().regex(/^\d{6}$/, "Kode berisi 6 angka."),
@@ -58,7 +67,7 @@ export const resetPasswordSchema = z
     message: "Konfirmasi kata sandi tidak sama.",
   });
 
-// --- Menu (M-07): aturan sama dengan API.md POST /merchant/menus ---
+// --- Menu: aturan sama dengan API.md POST /merchant/menus ---
 const integerField = (label: string, min: number, max?: number) => {
   const schema = z
     .number({ error: `${label} wajib diisi.` })
@@ -91,6 +100,9 @@ const menuFormObject = z.object({
     .max(20, "Maksimal 20 opsi."),
 });
 
+/**
+ * Form tambah/ubah menu, termasuk aturan antar-field (harga jual di atas HPP, hari pre-order 1–7, nama opsi tidak kembar).
+ */
 export const menuFormSchema = menuFormObject.check(crossFieldRules());
 
 // Aturan antar-field harus tetap jalan walau field lain salah tipe (mis. kategori belum dipilih),
@@ -118,7 +130,12 @@ function crossFieldRules() {
   return rules;
 }
 
-/** Pesan pertama per field (jalur bertitik, mis. options.1.name); objek kosong bila valid. */
+/**
+ * Menjalankan sebuah schema dan mengambil pesan pertama per field.
+ * @param schema aturan zod
+ * @param value isian yang diperiksa
+ * @returns pesan per field dengan nama field bertitik (mis. "options.1.name"); objek kosong bila valid
+ */
 export function validateFields(schema: z.ZodType, value: unknown): Record<string, string> {
   const result = schema.safeParse(value);
   const errors: Record<string, string> = {};
@@ -126,7 +143,7 @@ export function validateFields(schema: z.ZodType, value: unknown): Record<string
   return errors;
 }
 
-// --- Pengaturan toko (M-10, M-11): aturan sama dengan API.md PATCH /merchant/profile ---
+// --- Pengaturan toko: aturan sama dengan API.md PATCH /merchant/profile ---
 const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Jam harus berformat JJ:MM.");
 const profileFields = {
   business_name: requiredText("Nama usaha wajib diisi.", 150),
@@ -153,7 +170,12 @@ const partialProfileSchema = z
   })
   .partial();
 
-/** Satu pintu validasi untuk form (penuh) dan server action (penuh atau sebagian, mis. hanya wa_template). */
+/**
+ * Memeriksa form pengaturan toko. Dipakai form (isian lengkap) dan server action (lengkap atau sebagian, mis. hanya wa_template).
+ * @param value isian
+ * @param full true bila semua field wajib ada
+ * @returns pesan per field; objek kosong bila valid
+ */
 export function validateProfile(value: unknown, full = true): Record<string, string> {
   const errors = validateFields(full ? fullProfileSchema : partialProfileSchema, value);
   // Aturan antar-jam dicek terpisah agar tetap muncul walau field lain salah.
@@ -170,11 +192,17 @@ export function validateProfile(value: unknown, full = true): Record<string, str
   return errors;
 }
 
-/** Hasil parse: hanya field yang boleh diubah, sudah dirapikan (trim). Panggil setelah cekProfil kosong. */
+/**
+ * Mengambil hanya field profil yang boleh diubah, sudah dirapikan (spasi di ujung dibuang). Panggil setelah `validateProfile` kosong.
+ * @param value isian
+ * @param full true bila isian lengkap
+ * @throws galat zod bila isian tidak valid
+ */
 export function parseProfile(value: unknown, full = true) {
   return (full ? fullProfileSchema : partialProfileSchema).parse(value);
 }
 
+/** Form ganti sandi: sandi lama dan sandi baru yang harus berbeda. */
 export const changePasswordSchema = z
   .object({
     current_password: z.string().min(1, "Kata sandi lama wajib diisi.").max(72, "Kata sandi maksimal 72 karakter."),
@@ -185,7 +213,7 @@ export const changePasswordSchema = z
     message: "Kata sandi baru harus berbeda dari kata sandi lama.",
   });
 
-// --- Promo (M-13): aturan sama dengan API.md POST/PATCH /merchant/promos ---
+// --- Promo: aturan sama dengan API.md POST/PATCH /merchant/promos ---
 const dateTimeField = (message: string) =>
   z.string({ error: message }).refine((text) => text !== "" && !Number.isNaN(Date.parse(text)), message);
 const promoFormSchema = z.object({
@@ -207,7 +235,12 @@ const promoFormSchema = z.object({
   is_public: z.boolean().default(true),
 });
 
-/** Satu pintu validasi promo untuk form dan server action. `terpakai` = used_count promo yang diubah. */
+/**
+ * Memeriksa form promo, termasuk aturan antar-field (nilai sesuai jenis, kuota tidak di bawah yang terpakai, waktu selesai setelah mulai).
+ * @param value isian
+ * @param usedCount jumlah voucher yang sudah terpakai (untuk promo yang diubah)
+ * @returns pesan per field; objek kosong bila valid
+ */
 export function validatePromo(value: unknown, usedCount = 0): Record<string, string> {
   const errors = validateFields(promoFormSchema, value);
   const input = (typeof value === "object" && value !== null ? value : {}) as Record<string, unknown>;
@@ -222,7 +255,12 @@ export function validatePromo(value: unknown, usedCount = 0): Record<string, str
   return errors;
 }
 
-/** Hasil parse: hanya field promo yang boleh diubah, dirapikan (kode kapital; nilai/maks potongan sesuai jenis). Panggil setelah cekPromo kosong. */
+/**
+ * Mengambil hanya field promo yang boleh diubah: kode jadi huruf kapital, nilai dan maks potongan disesuaikan jenis promo.
+ * Panggil setelah `validatePromo` kosong.
+ * @param value isian
+ * @throws galat zod bila isian tidak valid
+ */
 export function parsePromo(value: unknown) {
   const promo = promoFormSchema.parse(value);
   return {

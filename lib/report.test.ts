@@ -1,3 +1,4 @@
+// Test aturan laporan: rentang tanggal, pengelompokan per jam, dan isi CSV.
 import { describe, expect, it } from "vitest";
 import { createTransactionsCsv, validateRange, countDays, parseRange, groupByHour } from "./report";
 import type { Transaction } from "@/types/report";

@@ -1,6 +1,11 @@
+// Informasi penyedia AI untuk halaman admin /admin/ai: tempat membuat API key, contoh model, dan status siap pakai.
+
 import type { AiProviderType } from "@/types/ai";
 
-/** F22: tiap jenis penyedia AI — tempat membuat key gratis & contoh model (nama model bisa berubah; admin bebas mengetik). */
+/**
+ * Data tiap jenis penyedia AI: nama, alamat untuk membuat API key gratis, dan contoh nama model.
+ * Nama model bisa berubah dari waktu ke waktu, jadi admin tetap bebas mengetik nama model sendiri.
+ */
 export const AI_PROVIDER_INFO: Record<AiProviderType, { name: string; keyUrl: string; exampleModels: string[] }> = {
   gemini: {
     name: "Google Gemini (AI Studio)",
@@ -19,9 +24,16 @@ export const AI_PROVIDER_INFO: Record<AiProviderType, { name: string; keyUrl: st
   },
   nvidia: { name: "NVIDIA NIM", keyUrl: "https://build.nvidia.com", exampleModels: ["meta/llama-3.3-70b-instruct"] },
 };
+/** Daftar semua jenis penyedia AI, urut seperti di `AI_PROVIDER_INFO`. */
 export const AI_PROVIDER_TYPES = Object.keys(AI_PROVIDER_INFO) as AiProviderType[];
 
-/** Status siap pakai untuk tampilan: nonaktif, istirahat (sampai jam), atau siap. */
+/**
+ * Menentukan status penyedia AI untuk ditampilkan: nonaktif, sedang istirahat, atau siap.
+ * Penyedia diistirahatkan sementara oleh backend setelah gagal berulang.
+ * @param provider data penyedia (cukup `is_active` dan `cooldown_until`)
+ * @param now waktu sekarang dalam milidetik; bisa diisi saat test
+ * @returns `{ kind: "nonaktif" }`, `{ kind: "istirahat", until }`, atau `{ kind: "siap" }`
+ */
 export function aiProviderStatus(provider: { is_active: boolean; cooldown_until: string | null }, now = Date.now()) {
   if (!provider.is_active) return { kind: "nonaktif" as const };
   if (provider.cooldown_until && Date.parse(provider.cooldown_until) > now)

@@ -1,8 +1,12 @@
+// Label bahasa Indonesia untuk log aktivitas admin: nama aksi, jenis target, dan daftar field yang berubah.
+// Tidak memanggil backend: hanya aturan dan label bersama untuk halaman admin dan actions-nya.
+
 import { formatTime, formatDate } from "@/lib/format";
 import { MASTER_TABS } from "@/services/admin-master.service";
 import { VERIFICATION_STATUSES } from "@/services/admin-merchant.service";
 import type { VerificationStatus } from "@/types/admin";
 
+/** Jumlah log per halaman. */
 export const LIMIT_LOG = 20;
 
 const MASTER_UNITS: Record<string, string> = Object.fromEntries(MASTER_TABS.map((tab) => [tab.kind, tab.unitName]));
@@ -33,7 +37,7 @@ const FIXED_ACTION_LABELS: Record<string, string> = {
   "ticket.close": "Tutup tiket bantuan",
 };
 
-/** Semua aksi yang dikenal, untuk pilihan filter: [kode, label]. */
+/** Semua aksi yang dikenal, untuk pilihan penyaring: pasangan [kode, label]. */
 export const LOG_ACTIONS: [string, string][] = [
   ...Object.entries(FIXED_ACTION_LABELS),
   ...Object.keys(MASTER_UNITS).flatMap((kind) =>
@@ -44,6 +48,11 @@ export const LOG_ACTIONS: [string, string][] = [
   ),
 ];
 
+/**
+ * Menerjemahkan kode aksi log menjadi label, mis. "master.categories.create" menjadi "Tambah kategori".
+ * @param action kode aksi
+ * @returns label, atau kode aslinya bila tidak dikenal
+ */
 export function actionLabel(action: string): string {
   if (FIXED_ACTION_LABELS[action]) return FIXED_ACTION_LABELS[action];
   const match = /^master\.([a-z-]+)\.([a-z]+)$/.exec(action);
@@ -52,7 +61,7 @@ export function actionLabel(action: string): string {
   return action;
 }
 
-/** Jenis target untuk filter: [kode, label]. */
+/** Jenis target untuk penyaring: pasangan [kode, label]. */
 export const LOG_TARGETS: [string, string][] = [
   ["merchant", "Penjual"],
   ["categories", "Kategori"],
@@ -63,6 +72,11 @@ export const LOG_TARGETS: [string, string][] = [
   ["ai_provider", "Penyedia AI"],
 ];
 
+/**
+ * Menulis target log, mis. "Penjual #12".
+ * @param type jenis target
+ * @param id id target
+ */
 export function targetLabel(type: string, id: string): string {
   if (type === "settings") return id === "service_fee" ? "Biaya layanan" : "Pengaturan";
   const label = LOG_TARGETS.find(([key]) => key === type)?.[1] ?? type;
@@ -100,7 +114,13 @@ const formatValue = (field: string, value: unknown): string => {
   return typeof value === "object" ? JSON.stringify(value) : String(value);
 };
 
-/** Field yang berubah dari `before` ke `after`, sudah berbentuk teks Indonesia; field tak dikenal memakai nama aslinya. */
+/**
+ * Membandingkan data sebelum dan sesudah, lalu mengembalikan field yang berubah dalam teks Indonesia.
+ * Field yang tidak dikenal memakai nama aslinya.
+ * @param before data sebelum (null bila data baru dibuat)
+ * @param after data sesudah
+ * @returns daftar `{ field, before, after }` yang nilainya berbeda
+ */
 export function listChanges(before: Record<string, unknown> | null, after: Record<string, unknown> | null) {
   const keys = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])];
   return keys

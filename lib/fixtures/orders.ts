@@ -1,3 +1,5 @@
+// Data contoh pesanan untuk test: semua status dan cara bayar, dengan waktu relatif terhadap sekarang.
+
 import type { MerchantOrder, OrderStatus, PaymentMethod, PaymentStatus } from "@/types/order";
 import { menus } from "./menus";
 import { pickupPoints } from "./meta";
@@ -262,9 +264,10 @@ function buildOrder(spec: Spec): MerchantOrder {
   };
 }
 
+/** Membuat daftar pesanan contoh. */
 export const orders = (): MerchantOrder[] => SPEC.map(buildOrder);
 
-/** Pesanan tambahan untuk skenario "pesanan-baru": masuk tepat saat ini. */
+/** Membuat satu pesanan tambahan yang masuk tepat saat ini (dipakai skenario "pesanan-baru"). */
 export const newOrder = (): MerchantOrder =>
   buildOrder({
     code: `${CODE_PREFIX}S6ZA`,

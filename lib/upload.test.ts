@@ -1,3 +1,4 @@
+// Test unggah foto: alur URL bertanda tangan dan pengecilan foto di browser.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestUpload = vi.fn();

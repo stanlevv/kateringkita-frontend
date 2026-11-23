@@ -1,3 +1,4 @@
+// Test tabel tampilan status pesanan dan aturan perpindahan status.
 import { describe, expect, it } from "vitest";
 import { nextStatus, statusView, orderStatusView, displayStatus, successText } from "./order-status";
 import type { MerchantOrder } from "@/types/order";

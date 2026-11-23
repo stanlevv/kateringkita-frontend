@@ -1,3 +1,4 @@
+// Test logika dashboard penjual: aksi optimistis, antrean per tab, stok, penggabungan polling, dan KPI hari ini.
 import { describe, expect, it } from "vitest";
 import { menus } from "./fixtures/menus";
 import { orders } from "./fixtures/orders";
@@ -104,7 +105,7 @@ describe("tab antrean (brief §3)", () => {
   it("jumlah tab Perlu tindakan sama dengan perluTindakan() (KPI & sidebar)", () => {
     const j = countQueueTabs(list);
     expect(j.tindakan).toBe(countNeedsAction(list));
-    // F26: daftar tetap memuat holding VA/online yang menunggu pembayaran; angka hanya yang perlu tindakan penjual
+    // Daftar tetap memuat holding VA/online yang menunggu pembayaran; angka hanya yang perlu tindakan penjual
     expect(j.tindakan).toBe(
       queueForTab(list, "tindakan", later).filter((order) => countNeedsAction([order]) === 1).length,
     );

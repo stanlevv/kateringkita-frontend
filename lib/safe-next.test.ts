@@ -1,3 +1,4 @@
+// Test pengaman alamat tujuan setelah login (?next=).
 import { describe, expect, it } from "vitest";
 import { safeNext } from "./safe-next";
 
@@ -17,7 +18,7 @@ describe("LG-N1 next aman (Review Focus 4)", () => {
     "",
     null,
     undefined,
-    // AUD-30: dinormalisasi menjadi "//evil.com" (protocol-relative) oleh URL parser maupun Next
+    // Dinormalisasi menjadi "//evil.com" (protocol-relative) oleh URL parser maupun Next
     "/..//evil.com",
     "/./..//evil.com/x",
   ])("%j -> /dashboard", (input) => expect(safeNext(input)).toBe("/dashboard"));

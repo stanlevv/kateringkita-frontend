@@ -1,3 +1,4 @@
+// Test penyaring menu: pencarian, kategori, tab status, dan margin.
 import { describe, expect, it } from "vitest";
 import { menus } from "./fixtures/menus";
 import { countMenuTabs, marginPercent, filterMenus, filterBySearchAndCategory } from "./menu-filter";

@@ -1,6 +1,12 @@
-// F22 AI gateway (kontrak backend: /admin/ai-providers). API key tidak pernah dikirim balik, hanya key_hint.
+// Bentuk data penyedia AI dan pemakaiannya dari backend (/admin/ai-providers, /admin/ai-usage).
+// API key tidak pernah dikirim balik oleh backend; yang ada hanya `key_hint` (beberapa huruf terakhir).
+
+/** Jenis layanan AI yang didukung. */
 export type AiProviderType = "gemini" | "groq" | "openrouter" | "nvidia";
 
+/**
+ * Satu penyedia AI yang tersimpan, termasuk kapan terakhir berhasil/gagal dan sampai kapan sedang diistirahatkan.
+ */
 export type AiProvider = {
   id: number;
   provider: AiProviderType;
@@ -16,8 +22,10 @@ export type AiProvider = {
   cooldown_until: string | null;
 };
 
+/** Daftar penyedia AI ditambah model Gemini cadangan dari pengaturan server (bila ada). */
 export type AiProviderList = { providers: AiProvider[]; env_gemini: { model: string } | null };
 
+/** Isian form tambah/ubah penyedia AI yang dikirim ke backend. */
 export type AiProviderInput = {
   provider: AiProviderType;
   label: string;
@@ -27,12 +35,18 @@ export type AiProviderInput = {
   is_active: boolean;
 };
 
+/**
+ * Hasil tombol "Uji" penyedia AI: berhasil (waktu respons dan contoh jawaban) atau gagal (pesan galat).
+ */
 export type AiTestResult = { ok: true; ms: number; sample: string } | { ok: false; message: string };
 
-// F25 pemakaian AI (kontrak backend: GET /admin/ai-usage?days=)
+/** Fitur yang memakai AI: asisten penjual, rekomendasi menu, atau uji koneksi. */
 export type AiFeature = "asisten" | "rekomendasi" | "uji";
 type UsageCounts = { panggilan: number; gagal: number; token: number };
 
+/**
+ * Laporan pemakaian AI beberapa hari terakhir: ringkasan, per penyedia, per fitur, per hari, dan kegagalan terakhir.
+ */
 export type AiUsage = {
   hari: number;
   ringkas: UsageCounts & { token_masuk: number; token_keluar: number; rata_ms: number | null };

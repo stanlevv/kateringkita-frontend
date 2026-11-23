@@ -1,3 +1,4 @@
+// Test aturan banner: label status dan validasi form.
 import { describe, expect, it } from "vitest";
 import type { Banner } from "@/types/banner";
 import { isBannerActive, validateBanner, bannerStatus } from "./banner";

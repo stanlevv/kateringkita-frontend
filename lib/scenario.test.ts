@@ -1,3 +1,4 @@
+// Test skenario pratinjau: dibaca dari cookie dan selalu mati di production.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const jar = { value: undefined as string | undefined };

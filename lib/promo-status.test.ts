@@ -1,3 +1,4 @@
+// Test status voucher dan teks jenis potongan.
 import { describe, expect, it } from "vitest";
 import { promos } from "./fixtures/promos";
 import { PROMO_STATUS, promoStatus, describePromoType } from "./promo-status";

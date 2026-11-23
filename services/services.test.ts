@@ -1,3 +1,4 @@
+// Test service data penjual: panggilan ke backend dan efek skenario pratinjau.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const jar = { value: undefined as string | undefined };

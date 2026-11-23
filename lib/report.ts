@@ -1,8 +1,14 @@
+// Aturan halaman Laporan penjual: rentang tanggal yang boleh, pengelompokan per jam, dan pembuatan file CSV.
+// Dipakai halaman /laporan, halaman keuangan admin, dan route unduhan CSV.
+
 import { formatTime, wibHour, wibDate } from "./format";
 import type { HourlyPoint, Transaction } from "@/types/report";
 
+/** Rentang laporan paling panjang (hari). */
 export const MAX_RANGE_DAYS = 92;
-// Di sini, bukan di komponen "use client": halaman server hanya menerima nilainya dari modul biasa.
+/**
+ * Jumlah transaksi per halaman. Ditaruh di modul biasa (bukan "use client") karena halaman server perlu membaca nilainya.
+ */
 export const LIMIT_TRANSACTIONS = 20;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -12,17 +18,32 @@ const isValidDate = (date: string) =>
   !Number.isNaN(dayStartMs(date)) &&
   new Date(dayStartMs(date)).toISOString().slice(0, 10) === date;
 
-/** Jumlah hari dalam rentang, ujung-ujungnya ikut dihitung. */
+/**
+ * Menghitung jumlah hari dalam rentang, tanggal awal dan akhir ikut dihitung.
+ * @param from tanggal awal (YYYY-MM-DD)
+ * @param to tanggal akhir (YYYY-MM-DD)
+ */
 export const countDays = (from: string, to: string) => Math.round((dayStartMs(to) - dayStartMs(from)) / 86400e3) + 1;
 
-/** AUD-48: unduhan CSV yang sah selalu fetch dari halaman kita (same-origin). Navigasi dari situs lain dijawab seperti
- *  tanpa sesi agar tidak membocorkan siapa yang sedang login. Header kosong (peramban lama) dibiarkan. */
+/**
+ * Mengecek apakah permintaan datang dari situs lain (header Sec-Fetch-Site).
+ * Unduhan CSV yang sah selalu di-fetch dari halaman kita sendiri. Permintaan dari situs lain dijawab seperti
+ * tanpa sesi agar tidak membocorkan siapa yang sedang login. Header kosong (browser lama) dibiarkan lewat.
+ * @param request permintaan yang masuk
+ * @returns true bila berasal dari situs lain
+ */
 export const isCrossSiteRequest = (request: Request) => {
   const fetchSite = request.headers.get("sec-fetch-site");
   return fetchSite !== null && fetchSite !== "same-origin";
 };
 
-/** LP-E1: pesan galat untuk rentang yang tidak boleh dipakai, atau null. */
+/**
+ * Memeriksa rentang tanggal laporan: format sah, akhir tidak sebelum awal, tidak melewati hari ini, dan paling panjang 92 hari.
+ * @param from tanggal awal
+ * @param to tanggal akhir
+ * @param today tanggal hari ini (WIB)
+ * @returns pesan galat, atau null bila rentang boleh dipakai
+ */
 export function validateRange(from: string, to: string, today: string): string | null {
   if (!isValidDate(from) || !isValidDate(to)) return "Tanggal tidak valid.";
   if (to < from) return "Tanggal akhir harus setelah tanggal awal.";
@@ -31,7 +52,13 @@ export function validateRange(from: string, to: string, today: string): string |
   return null;
 }
 
-/** Rentang dari URL; kosong atau tidak sah -> hari ini (galat hanya bila ada isian yang ditolak). */
+/**
+ * Membaca rentang tanggal dari URL. Bila kosong atau tidak sah, rentang menjadi hari ini.
+ * @param from nilai `dari` dari URL
+ * @param to nilai `sampai` dari URL
+ * @param today tanggal hari ini (WIB)
+ * @returns `{ from, to, error }`; `error` berisi pesan hanya bila ada isian yang ditolak
+ */
 export function parseRange(from: string | undefined, to: string | undefined, today: string) {
   const fallback = { from: today, to: today };
   if (!from && !to) return { ...fallback, error: null };
@@ -40,11 +67,20 @@ export function parseRange(from: string | undefined, to: string | undefined, tod
   return error ? { ...fallback, error } : { from, to, error: null };
 }
 
-/** Tanggal (YYYY-MM-DD, WIB) `n` hari sebelum `d`. */
+/**
+ * Tanggal (YYYY-MM-DD) sekian hari sebelum tanggal tertentu.
+ * @param date tanggal acuan
+ * @param days jumlah hari mundur
+ */
 export const daysBefore = (date: string, days: number) =>
   new Date(dayStartMs(date) - days * 86400e3).toISOString().slice(0, 10);
 
-/** LP-N2: total per jam WIB, urut jam; jam tanpa transaksi tidak muncul. Satu pesanan = satu `code`, walau punya banyak baris menu. */
+/**
+ * Menjumlahkan transaksi per jam WIB, urut dari jam terkecil. Jam tanpa transaksi tidak muncul.
+ * Satu pesanan dihitung sekali per jam walau punya beberapa baris menu.
+ * @param transactions transaksi selesai
+ * @returns angka per jam: jumlah pesanan, porsi, dan omzet
+ */
 export function groupByHour(transactions: Transaction[]): HourlyPoint[] {
   const byHour = new Map<number, HourlyPoint>();
   const countedOrders = new Set<string>();
@@ -68,10 +104,17 @@ function toCsvCell(value: string) {
   return /[",\r\n]/.test(safeText) ? `"${safeText.replaceAll('"', '""')}"` : safeText;
 }
 
-// F20: dipakai juga CSV keuangan admin (lib/finance.ts)
+/**
+ * Menyiapkan satu sel teks CSV (dipakai juga CSV keuangan admin di lib/finance.ts).
+ * Teks yang diawali karakter rumus (=, +, -, @) diberi tanda kutip tunggal agar tidak dijalankan aplikasi spreadsheet.
+ */
 export const csvCell = toCsvCell;
 
-/** LP-N4: isi CSV (kode,waktu,menu,qty,omzet,hpp,laba,metode). */
+/**
+ * Membuat isi CSV transaksi dengan kolom kode, waktu, menu, qty, omzet, hpp, laba, metode.
+ * @param transactions transaksi selesai
+ * @returns teks CSV dengan akhir baris CRLF
+ */
 export function createTransactionsCsv(transactions: Transaction[]): string {
   const rows = transactions.map((transaction) =>
     [

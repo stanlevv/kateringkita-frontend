@@ -1,6 +1,12 @@
+// Aturan data master admin (kategori, titik temu, jenis usaha) dan biaya layanan:
+// tab di URL, batas panjang (sama dengan be/src/admin/master.ts), dan validasi bersama untuk form dan server action.
+// Tidak memanggil backend: hanya aturan dan label bersama untuk halaman admin dan actions-nya.
+
 import type { MasterKind } from "@/types/admin";
 
-// A-01…A-03 — tab di URL, batas panjang (cermin be/src/admin/master.ts), dan validasi bersama form & server action.
+/**
+ * Pengaturan tiap tab data master: id di URL, jenis data, label, field tambahan (ikon/deskripsi), batas panjang, dan bisa diurutkan atau tidak.
+ */
 export const MASTER_TABS: {
   id: string;
   kind: MasterKind;
@@ -44,11 +50,28 @@ export const MASTER_TABS: {
   },
 ];
 
+/**
+ * Mencari tab berdasarkan jenis data.
+ * @param kind jenis data, mis. "categories"
+ * @returns tab, atau undefined bila jenisnya tidak dikenal
+ */
 export const tabByKind = (kind: string) => MASTER_TABS.find((tab) => tab.kind === kind);
+/**
+ * Mencari tab berdasarkan id di URL.
+ * @param id nilai `?tab=`
+ * @returns tab, atau tab pertama (kategori) bila tidak dikenal
+ */
 export const tabById = (id: string | undefined) => MASTER_TABS.find((tab) => tab.id === id) ?? MASTER_TABS[0];
 
+/** Isian form data master. */
 export type MasterInput = { name: string; icon?: string; description?: string };
 
+/**
+ * Memeriksa isian form data master: nama wajib dan batas panjang tiap field.
+ * @param kind jenis data
+ * @param input isian
+ * @returns pesan per field; objek kosong bila valid
+ */
 export function validateMaster(kind: string, input: unknown): Record<string, string> {
   const tab = tabByKind(kind);
   const data = (typeof input === "object" && input !== null ? input : {}) as Record<string, unknown>;
@@ -66,7 +89,11 @@ export function validateMaster(kind: string, input: unknown): Record<string, str
   return errors;
 }
 
-/** Body ke backend: hanya field milik jenis ini, dirapikan. Panggil setelah cekMaster kosong. */
+/**
+ * Menyusun body ke backend: hanya field milik jenis ini, sudah dirapikan. Panggil setelah `validateMaster` kosong.
+ * @param kind jenis data
+ * @param input isian
+ */
 export function toMasterBody(kind: string, input: MasterInput): Record<string, string | null> {
   const tab = tabByKind(kind)!;
   const body: Record<string, string | null> = { name: input.name.trim() };
@@ -74,8 +101,13 @@ export function toMasterBody(kind: string, input: MasterInput): Record<string, s
   return body;
 }
 
-// A-04 — biaya layanan
+// Batas biaya layanan (rupiah), sama dengan backend.
 const MAX_SERVICE_FEE = 100_000;
+/**
+ * Memeriksa biaya layanan: bilangan bulat, tidak negatif, paling banyak Rp 100.000.
+ * @param value nilai isian
+ * @returns pesan galat, atau undefined bila valid
+ */
 export function validateServiceFee(value: unknown): string | undefined {
   if (typeof value !== "number" || !Number.isInteger(value)) return "Biaya harus bilangan bulat.";
   if (value < 0) return "Biaya tidak boleh negatif.";

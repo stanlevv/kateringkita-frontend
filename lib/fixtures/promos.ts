@@ -1,7 +1,9 @@
+// Data contoh voucher untuk test, mewakili empat status: berjalan, terjadwal, berakhir, nonaktif.
+
 import type { Promo } from "@/types/promo";
 import { daysFromNow, daysAgo } from "./time";
 
-// Empat status tampilan: berjalan, terjadwal, berakhir, nonaktif.
+/** Daftar voucher contoh. */
 export const promos = (): Promo[] => [
   {
     id: 1,

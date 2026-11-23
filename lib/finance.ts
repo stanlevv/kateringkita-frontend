@@ -1,7 +1,9 @@
+// Pembuat file CSV rekap keuangan admin (dipakai route unduhan /api/admin/keuangan/csv).
+
 import { csvCell } from "./report";
 import type { FinanceSummary } from "@/types/admin";
 
-// F20: CSV rekap keuangan per toko + baris total (angka rupiah tanpa format, siap dihitung di spreadsheet)
+// Kolom angka yang diambil dari tiap baris rekap, urut sesuai judul kolom CSV di bawah.
 const CSV_COLUMNS = [
   "orders",
   "subtotal",
@@ -13,6 +15,12 @@ const CSV_COLUMNS = [
   "platform_net",
 ] as const;
 
+/**
+ * Membuat isi CSV rekap keuangan: satu baris per toko ditambah baris TOTAL.
+ * Angka rupiah ditulis tanpa format agar bisa langsung dihitung di spreadsheet.
+ * @param summary rekap keuangan dari backend
+ * @returns teks CSV dengan akhir baris CRLF
+ */
 export function createFinanceCsv(summary: FinanceSummary): string {
   const rows = [
     ...summary.rows.map((row) => [csvCell(row.business_name), ...CSV_COLUMNS.map((column) => row[column])]),

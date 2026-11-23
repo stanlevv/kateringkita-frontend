@@ -1,3 +1,4 @@
+// Test format rupiah, jam, tanggal, waktu relatif, dan nomor telepon (WIB).
 import { describe, expect, it, vi } from "vitest";
 import {
   formatTime,

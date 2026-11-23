@@ -1,3 +1,4 @@
+// Test pembaca token dari QR meja.
 import { describe, expect, it } from "vitest";
 import { tableTokenFromQr } from "./table-qr";
 

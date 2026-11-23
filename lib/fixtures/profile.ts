@@ -1,6 +1,9 @@
+// Data contoh profil toko untuk test.
+
 import type { MerchantProfile } from "@/types/profile";
 import { merchantTypes } from "./meta";
 
+/** Profil toko contoh. */
 export const profile = (): MerchantProfile => ({
   business_name: "Dapur Diego",
   description: "Katering nasi box dan kudapan harian untuk mahasiswa dan dosen Vokasi UB.",

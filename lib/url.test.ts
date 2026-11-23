@@ -1,3 +1,4 @@
+// Test pembuat alamat dengan query string.
 import { describe, expect, it } from "vitest";
 import { buildUrl } from "./url";
 

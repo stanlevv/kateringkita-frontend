@@ -1,13 +1,23 @@
+// Satu-satunya sumber label, warna, ikon, dan tombol untuk setiap status pesanan, serta aturan perpindahan status.
+// Dipakai kartu antrean dashboard, detail pesanan, dan server action pesanan.
+
 import type { LucideIcon } from "lucide-react";
 import { Ban, CheckCircle2, ChefHat, Clock, Hourglass, PackageCheck, ThumbsUp, TimerOff } from "lucide-react";
 import type { MerchantOrder } from "@/types/order";
 
+/**
+ * Status pesanan untuk tampilan. "holding" dipecah dua: menunggu konfirmasi penjual atau menunggu pembayaran online.
+ */
 export type DisplayStatus =
   "menunggu-konfirmasi" | "menunggu-bayar" | "confirmed" | "cooking" | "ready" | "completed" | "cancelled" | "expired";
+/** Aksi penjual yang mengubah status pesanan. */
 export type OrderAction = "confirm" | "cook" | "ready" | "complete" | "reject";
+/** Aksi tambahan di kartu pesanan (tolak, chat WhatsApp, lihat slip). */
 export type SecondaryAction = "reject" | "chat-wa" | "lihat-slip";
+/** Nada warna label status. */
 export type Tone = "warning" | "info" | "success" | "neutral" | "danger";
 
+/** Cara menampilkan satu status: label, warna, ikon, tombol utama (bila ada), dan tombol tambahan. */
 export type StatusView = {
   label: string;
   tone: Tone;
@@ -19,7 +29,7 @@ export type StatusView = {
   secondary: SecondaryAction[];
 };
 
-// Tabel brief v3 §4 — satu-satunya sumber label/warna/ikon/aksi status pesanan.
+/** Tabel tampilan untuk setiap status pesanan. */
 export const statusView: Record<DisplayStatus, StatusView> = {
   "menunggu-konfirmasi": {
     label: "Menunggu konfirmasi",
@@ -29,7 +39,7 @@ export const statusView: Record<DisplayStatus, StatusView> = {
     primaryLabel: "Konfirmasi",
     secondary: ["reject", "chat-wa"],
   },
-  // F26: VA/bayar online dikonfirmasi Midtrans; pesanan diterima otomatis begitu lunas, penjual tidak memverifikasi manual
+  // Pembayaran VA/online dikonfirmasi Midtrans; pesanan diterima otomatis begitu lunas, penjual tidak perlu memeriksa manual
   "menunggu-bayar": {
     label: "Menunggu pembayaran",
     tone: "warning",
@@ -66,7 +76,9 @@ export const statusView: Record<DisplayStatus, StatusView> = {
   expired: { label: "Kadaluarsa", tone: "danger", icon: TimerOff, secondary: ["lihat-slip"] },
 };
 
-/** Teks setelah aksi: tombol saat menunggu, toast sukses ("Pesanan KK-… dikonfirmasi"), toast gagal (DB-E1). */
+/**
+ * Teks untuk tiap aksi: tulisan tombol saat sedang diproses, akhir pesan toast sukses ("Pesanan KK-… dikonfirmasi"), dan pesan toast gagal.
+ */
 export const actionTexts: Record<OrderAction, { pending: string; success: string; failure: string }> = {
   confirm: { pending: "Mengonfirmasi…", success: "dikonfirmasi", failure: "Gagal mengonfirmasi. Coba lagi." },
   cook: { pending: "Memulai masak…", success: "mulai dimasak", failure: "Gagal memulai masak. Coba lagi." },
@@ -77,6 +89,12 @@ export const actionTexts: Record<OrderAction, { pending: string; success: string
 
 type StatusFields = Pick<MerchantOrder, "status" | "payment_method" | "payment_status">;
 
+/**
+ * Menentukan status tampilan sebuah pesanan.
+ * Pesanan "holding" yang dibayar online dan belum lunas menjadi "menunggu-bayar";
+ * pembayaran online dikonfirmasi otomatis oleh Midtrans, bukan oleh penjual.
+ * @param order pesanan (cukup status dan data pembayaran)
+ */
 export function displayStatus(order: StatusFields): DisplayStatus {
   if (order.status === "holding") {
     return order.payment_method !== "cod" && order.payment_status !== "paid" ? "menunggu-bayar" : "menunggu-konfirmasi";
@@ -84,11 +102,14 @@ export function displayStatus(order: StatusFields): DisplayStatus {
   return order.status;
 }
 
-// F21: pesanan dari meja diantar ke meja; "Siap diambil" hanya untuk titik temu.
+// Pesanan dari meja diantar ke meja; "Siap diambil" hanya untuk pesanan yang diambil di titik temu.
 const READY_FOR_TABLE = "Siap diantar";
 type WithTable = Partial<Pick<MerchantOrder, "table">>;
 
-/** `statusView` untuk satu pesanan; pesanan meja memakai "Siap diantar". */
+/**
+ * Mengambil tampilan status untuk satu pesanan. Pesanan dari meja memakai label "Siap diantar" alih-alih "Siap diambil".
+ * @param order pesanan (status, pembayaran, dan meja bila ada)
+ */
 export function orderStatusView(order: StatusFields & WithTable): StatusView {
   const view = statusView[displayStatus(order)];
   if (!order.table) return view;
@@ -99,11 +120,18 @@ export function orderStatusView(order: StatusFields & WithTable): StatusView {
   };
 }
 
-/** Akhir toast sukses ("Pesanan KK-… siap diantar"). */
+/**
+ * Akhir pesan toast setelah aksi berhasil, mis. "siap diantar" untuk pesanan meja.
+ * @param action aksi yang berhasil
+ * @param order pesanan (cukup data meja)
+ */
 export const successText = (action: OrderAction, order: WithTable) =>
   action === "ready" && order.table ? "siap diantar" : actionTexts[action].success;
 
-/** Label tahap "siap" di riwayat status. */
+/**
+ * Label tahap "siap" di riwayat status: "Siap diantar" untuk pesanan meja, "Siap diambil" untuk titik temu.
+ * @param order pesanan (cukup data meja)
+ */
 export const readyStepLabel = (order: WithTable) => (order.table ? READY_FOR_TABLE : "Siap diambil");
 
 const TRANSITIONS: Record<
@@ -117,7 +145,12 @@ const TRANSITIONS: Record<
   reject: { from: ["holding", "confirmed"], to: "cancelled", stamp: "cancelled_at" },
 };
 
-/** Fungsi murni: pesanan baru, atau CONFLICT bila transisi tak sah (API.md: 409). */
+/**
+ * Menghitung pesanan setelah aksi dijalankan, tanpa mengubah data asli (fungsi murni).
+ * @param order pesanan sekarang
+ * @param action aksi penjual
+ * @returns pesanan dengan status baru, atau `{ error: "CONFLICT" }` bila aksi tidak boleh untuk status ini (sama seperti jawaban 409 dari backend)
+ */
 export function nextStatus(order: MerchantOrder, action: OrderAction): MerchantOrder | { error: "CONFLICT" } {
   const transition = TRANSITIONS[action];
   if (!transition.from.includes(order.status)) return { error: "CONFLICT" };

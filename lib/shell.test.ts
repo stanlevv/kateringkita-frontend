@@ -1,3 +1,4 @@
+// Test pembantu shell dashboard: hitung perlu tindakan, jam buka, inisial, dan mode sidebar.
 import { describe, expect, it } from "vitest";
 import {
   isOutsideOpenHours,

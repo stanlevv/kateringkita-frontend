@@ -1,3 +1,4 @@
+// Test keranjang pesan dari meja: tambah, ubah jumlah, batas stok, dan pemulihan.
 import { describe, expect, it } from "vitest";
 import type { TableMenuItem } from "@/types/table";
 import {

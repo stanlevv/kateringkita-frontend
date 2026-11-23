@@ -1,4 +1,8 @@
-// GET /me/notifications; type: order_status | promo | info | moderation
+// Bentuk data notifikasi untuk semua peran (GET /me/notifications).
+
+/**
+ * Satu notifikasi. `type` bisa order_status, promo, info, atau moderation; `read_at` null berarti belum dibaca.
+ */
 export type AppNotification = {
   id: number;
   type: string;
