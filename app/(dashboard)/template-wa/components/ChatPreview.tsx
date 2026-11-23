@@ -1,7 +1,15 @@
+// Komponen ChatPreview: pratinjau pesan WhatsApp berbentuk gelembung chat di /template-wa. Teks sudah diisi data
+// pesanan contoh oleh TemplateEditor; kata kunci yang tidak dikenal (mis. {harga}) disorot merah.
 import { MessageCircle } from "lucide-react";
 import { findUnknownPlaceholders } from "@/lib/wa-template";
 
-/** WA-N2: gelembung chat. Kata kunci tak dikenal disorot (WA-E1). */
+/**
+ * Gelembung chat pratinjau.
+ * @param props.storeName nama toko di kepala chat
+ * @param props.text isi pesan yang sudah diisi data contoh
+ * @param props.note catatan di bawah pratinjau (asal data contoh)
+ * @returns section pratinjau
+ */
 export function ChatPreview({ storeName, text, note }: { storeName: string; text: string; note: string }) {
   return (
     <section aria-label="Pratinjau pesan" className="overflow-hidden rounded-lg border border-line bg-surface">

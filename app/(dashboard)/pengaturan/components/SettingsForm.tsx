@@ -1,3 +1,8 @@
+// Komponen SettingsForm: seluruh isi /pengaturan. Bagian Profil, Operasional, dan Titik temu adalah satu formulir yang
+// disimpan bersama lewat server action saveProfile (app/actions/profile.ts) dengan bilah "Simpan perubahan" yang
+// menempel di bawah. Bagian Pembayaran (PayoutBankAccount), Pesan dari meja (TableOrderSettings), dan Akun
+// (ChangePasswordForm) menyimpan sendiri-sendiri. Logo dan background diunggah langsung dari peramban (lib/upload.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -27,6 +32,7 @@ import { TableOrderSettings } from "./TableOrderSettings";
 import { PickupPointPicker } from "./PickupPointPicker";
 import { PayoutBankAccount } from "./PayoutBankAccount";
 
+/** Bagian halaman; `id` juga dipakai sebagai #hash tautan dan nilai ?lengkapi=, jadi tidak boleh diganti. */
 const SECTIONS = [
   { id: "profil", title: "Profil toko" },
   { id: "operasional", title: "Operasional" },
@@ -35,11 +41,13 @@ const SECTIONS = [
   { id: "meja", title: "Pesan dari meja" },
   { id: "akun", title: "Akun" },
 ] as const;
+/** Pilihan mode layanan (nilai = service_mode di API). */
 const SERVICE_MODES = [
   { value: "daily", label: "Harian", description: "Porsi satuan yang dijual setiap hari." },
   { value: "event", label: "Acara", description: "Pesanan besar yang dipesan lebih dulu." },
   { value: "both", label: "Keduanya", description: "Harian dan acara sekaligus." },
 ] as const;
+/** Nama isian untuk ringkasan galat (kunci = nama field API). */
 const FIELD_LABELS: Record<string, string> = {
   business_name: "Nama usaha",
   description: "Deskripsi",
@@ -54,8 +62,10 @@ const FIELD_LABELS: Record<string, string> = {
   pickup_point_ids: "Titik temu",
 };
 const MEGABYTE = 1024 * 1024;
+/** Teks isian menjadi angka; isian kosong menjadi NaN supaya validasi menganggapnya belum diisi. */
 const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
 
+/** Isi formulir profil (kunci = nama field API); angka disimpan sebagai teks isian. */
 type ProfileFormValues = {
   business_name: string;
   description: string;
@@ -71,6 +81,7 @@ type ProfileFormValues = {
   cover_url: string | null;
 };
 
+/** Isi formulir dari profil toko di backend. */
 const toFormValues = (merchantProfile: MerchantProfile): ProfileFormValues => ({
   business_name: merchantProfile.business_name,
   description: merchantProfile.description ?? "",
@@ -85,9 +96,18 @@ const toFormValues = (merchantProfile: MerchantProfile): ProfileFormValues => ({
   logo_url: merchantProfile.logo_url,
   cover_url: merchantProfile.cover_url ?? null,
 });
+// Isi formulir sebagai teks untuk mendeteksi perubahan; urutan titik temu tidak dianggap perubahan.
 const compareKey = (values: ProfileFormValues) =>
   JSON.stringify({ ...values, pickup_point_ids: [...values.pickup_point_ids].sort((first, second) => first - second) });
 
+/**
+ * Satu bagian berjudul. Judul bisa menerima fokus agar bagian yang dituju ?lengkapi= dibacakan pembaca layar.
+ * @param props.id id bagian (juga #hash tautan)
+ * @param props.title judul bagian
+ * @param props.highlighted true = diberi cincin sorot sementara
+ * @param props.children isi bagian
+ * @returns elemen section
+ */
 function Section({
   id,
   title,
@@ -116,6 +136,7 @@ function Section({
   );
 }
 
+/** Tampilan per jenis gambar: nama, ukuran bingkai, cara gambar mengisi bingkai, dan ukuran untuk next/image. */
 const IMAGE_KINDS = {
   logo: { name: "Logo toko", frameClass: "aspect-square w-40", fitClass: "object-contain", sizes: "160px" },
   // background profil toko tampil melebar di atas halaman toko aplikasi
@@ -127,7 +148,18 @@ const IMAGE_KINDS = {
   },
 } as const;
 
-/** Logo / background toko: pratinjau, unggah langsung ke penyimpanan (FE-08), hapus (PG-E3). F26: QRIS statis toko dihapus (bayar online lewat Midtrans). */
+/**
+ * Isian logo atau background toko: pratinjau, unggah langsung dari peramban ke penyimpanan, dan hapus. Selama
+ * unggahan berjalan, induk diberi tahu lewat onBusy supaya tombol Simpan menunggu. (Unggah gambar QRIS toko sudah
+ * dihapus karena pembayaran online lewat Midtrans.)
+ * @param props.id id isian, dipakai tautan ringkasan galat
+ * @param props.kind "logo" atau "cover" (juga jenis unggahan di lib/upload.ts)
+ * @param props.url alamat gambar sekarang, null bila belum ada
+ * @param props.error galat dari validasi formulir
+ * @param props.onChange dipanggil dengan alamat baru, atau null saat dihapus
+ * @param props.onBusy dipanggil true saat unggah mulai dan false saat selesai atau batal
+ * @returns grup isian gambar
+ */
 function ImageField({
   id,
   kind = "logo",
@@ -143,6 +175,7 @@ function ImageField({
   onChange: (newUrl: string | null) => void;
   onBusy: (busy: boolean) => void;
 }) {
+  // 1. Tampilan jenis gambar dan state unggahan. uploadToken menandai unggahan terbaru, jadi respons lama diabaikan.
   const imageKind = IMAGE_KINDS[kind];
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -151,13 +184,13 @@ function ImageField({
   const uploadRunning = useRef(false);
   const container = useRef<HTMLDivElement>(null);
   const moveFocus = useRef(false);
-  // Tombol Hapus hilang bersama gambar; fokus dipindah ke tombol pilih berkas.
+  // 2. Tombol Hapus hilang bersama gambar; fokus dipindah ke tombol pilih berkas.
   useEffect(() => {
     if (!moveFocus.current) return;
     moveFocus.current = false;
     container.current?.querySelector("button")?.focus();
   }, [url]);
-  // Pindah ke bagian lain (Hapus, pilih ulang, atau form direset): unggahan yang masih jalan dibatalkan.
+  // 3. Pindah ke bagian lain (Hapus, pilih ulang, atau form direset): unggahan yang masih jalan dibatalkan.
   function cancelUpload() {
     uploadToken.current++;
     if (uploadRunning.current) {
@@ -166,13 +199,16 @@ function ImageField({
       onBusy(false);
     }
   }
+  // 4. Saat isian dilepas (form direset dengan key baru), respons unggahan yang masih berjalan diabaikan.
   useEffect(
     () => () => {
       uploadToken.current++;
     },
     [],
   ); // form direset (key baru): respons lama diabaikan
+  // 5. Unggah berkas yang dipilih.
   async function chooseFile(file: File) {
+    // 1. Batalkan unggahan sebelumnya dan catat token unggahan ini.
     cancelUpload();
     const token = uploadToken.current;
     setUploadError(null);
@@ -180,6 +216,7 @@ function ImageField({
     uploadRunning.current = true;
     setUploading(true);
     onBusy(true);
+    // 2. Unggah; hasil diabaikan bila sudah ada unggahan yang lebih baru atau unggahan dibatalkan.
     const result = await uploadPhoto(file, kind);
     if (token !== uploadToken.current) return;
     uploadRunning.current = false;
@@ -253,6 +290,7 @@ function ImageField({
   );
 }
 
+/** Prop SettingsForm. */
 type Props = {
   profile: MerchantProfile;
   pickupPoints: PickupPoint[] | null;
@@ -262,8 +300,20 @@ type Props = {
   payouts?: MyPayouts | null; // F26; null = gagal dimuat
 };
 
-/** M-10, M-03, PG-*: pengaturan toko. */
+/**
+ * Formulir pengaturan toko lengkap dengan navigasi bagian, ringkasan galat, bilah simpan menempel, dan penjaga
+ * perubahan belum disimpan (useUnsavedGuard).
+ * @param props.profile profil toko dari backend
+ * @param props.pickupPoints semua titik temu, null = gagal dimuat
+ * @param props.user nama, nomor WA, dan email akun yang masuk
+ * @param props.incompleteSection id bagian dari ?lengkapi= yang digulir dan disorot 3 detik
+ * @param props.tables meja untuk pesan dari meja, null = gagal dimuat
+ * @param props.payouts saldo, rekening, dan riwayat pencairan, null = gagal dimuat
+ * @returns navigasi bagian, formulir, bagian yang tersimpan sendiri, dan dialog buang perubahan
+ */
 export function SettingsForm({ profile, pickupPoints, user, incompleteSection, tables = [], payouts = null }: Props) {
+  // 1. State formulir: isi awal (acuan "ada perubahan"), isi sekarang, isian disentuh, galat server, dan status simpan
+  //    atau unggah. resetCount dipakai sebagai key ImageField supaya Batalkan memasang ulang isian gambar.
   const [initialValues, setInitialValues] = useState(() => toFormValues(profile));
   const [values, setValues] = useState<ProfileFormValues>(initialValues);
   const [touched, setTouched] = useState<Set<string>>(new Set());
@@ -278,7 +328,7 @@ export function SettingsForm({ profile, pickupPoints, user, incompleteSection, t
     SECTIONS.some((section) => section.id === incompleteSection) ? incompleteSection! : null,
   );
 
-  // PG-A2: gulir ke bagian yang belum lengkap, sorot 3 detik.
+  // 2. Dari kartu "Siapkan toko": gulir ke bagian yang belum lengkap, fokuskan judulnya, dan sorot 3 detik.
   useEffect(() => {
     const sectionElement = SECTIONS.some((section) => section.id === incompleteSection)
       ? document.getElementById(incompleteSection!)
@@ -291,15 +341,19 @@ export function SettingsForm({ profile, pickupPoints, user, incompleteSection, t
     return () => clearTimeout(timer);
   }, [incompleteSection]);
 
+  // 3. Ada perubahan? useUnsavedGuard memasang penjaga saat meninggalkan halaman.
   const dirty = compareKey(values) !== compareKey(initialValues);
   const guard = useUnsavedGuard(dirty);
 
+  // 4. Pengubah isian; setiap perubahan menghapus galat server lama.
   const setField = <K extends keyof ProfileFormValues>(field: K, value: ProfileFormValues[K]) => {
     setServerErrors({});
     setValues((previous) => ({ ...previous, [field]: value }));
   };
   const markTouched = (field: string) => setTouched((previous) => new Set(previous).add(field));
   const blurHandler = (field: string) => () => markTouched(field);
+  // 5. Data yang dikirim (nama field = kontrak API), galat validasi, dan ringkasannya. Galat per isian baru tampil
+  //    setelah isian disentuh atau setelah mencoba menyimpan.
   const input = {
     business_name: values.business_name,
     description: values.description,
@@ -324,8 +378,9 @@ export function SettingsForm({ profile, pickupPoints, user, incompleteSection, t
       }))
     : [];
 
+  // 6. Batalkan perubahan: kembali ke isi awal.
   function cancelChanges() {
-    setResetCount((count) => count + 1); // pasang ulang Gambar: unggahan yang berjalan dibatalkan
+    setResetCount((count) => count + 1); // pasang ulang ImageField: unggahan yang berjalan dibatalkan
     setUploadingCount(0);
     setValues(initialValues);
     setServerErrors({});
@@ -333,7 +388,9 @@ export function SettingsForm({ profile, pickupPoints, user, incompleteSection, t
     setSubmitAttempted(false);
   }
 
+  // 7. Simpan formulir.
   async function submit(event: React.FormEvent) {
+    // 1. Jangan simpan tanpa perubahan atau saat unggahan berjalan; galat validasi memindahkan fokus ke ringkasan.
     event.preventDefault();
     if (!dirty || uploadingCount > 0) return; // Enter di dalam kolom tidak boleh menyimpan tanpa perubahan atau saat unggahan berjalan
     if (Object.keys(clientErrors).length > 0) {
@@ -341,6 +398,7 @@ export function SettingsForm({ profile, pickupPoints, user, incompleteSection, t
       setErrorFocusKey((count) => count + 1);
       return;
     }
+    // 2. Kirim sekali saja; galat per isian dari server dipetakan ke isian, galat umum menjadi toast.
     if (saving) return;
     setSaving(true);
     const result = await callAction(() => saveProfile(input));
@@ -357,6 +415,7 @@ export function SettingsForm({ profile, pickupPoints, user, incompleteSection, t
       }
       return;
     }
+    // 3. Berhasil: isi dari server menjadi acuan baru.
     const savedValues = toFormValues(result.data); // bentuk resmi dari server (mis. deskripsi kosong -> null)
     setInitialValues(savedValues);
     setValues(savedValues);

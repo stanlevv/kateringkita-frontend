@@ -1,3 +1,6 @@
+// Halaman /pengaturan: pengaturan toko (profil, jam buka dan operasional, titik temu, rekening pencairan, pesan dari
+// meja, akun). Server component: mengambil profil, titik temu, meja, dan data pencairan dari backend secara
+// bersamaan (services/profile, meta, table, payout), lalu menyerahkannya ke SettingsForm.
 import { LoadError } from "@/app/components/LoadError";
 import { SettingsForm } from "@/app/(dashboard)/pengaturan/components/SettingsForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
@@ -7,9 +10,16 @@ import { getTables } from "@/services/table.service";
 import { getMyPayouts } from "@/services/payout.service";
 import { requireMerchant } from "@/services/auth.service";
 
+/** Nilai sesi sebagai teks; selain string menjadi teks kosong. */
 const toText = (value: unknown) => (typeof value === "string" ? value : "");
 
-// M-10, PG-*. `?lengkapi=<bagian>` dari kartu "Siapkan toko" (PG-A2).
+/**
+ * Halaman pengaturan. Hanya profil yang wajib berhasil dimuat; bagian lain yang gagal ditampilkan galat di bagiannya
+ * sendiri (nilai null).
+ * @param props.searchParams parameter URL: `lengkapi` = id bagian yang harus dilengkapi (dari kartu "Siapkan toko"
+ * di dashboard); bagian itu digulir dan disorot
+ * @returns PageHeader berisi SettingsForm, atau LoadError bila profil gagal dimuat
+ */
 export default async function SettingsPage({
   searchParams,
 }: {

@@ -1,3 +1,7 @@
+// Komponen TableOrderSettings: bagian "Pesan dari meja" di /pengaturan. Penjual menyalakan fitur, menambah meja, dan
+// mencetak atau mengunduh QR tiap meja; pembeli memindai QR itu untuk memesan dari meja tanpa akun (halaman /meja).
+// Perubahan disimpan langsung lewat server action setDineIn, createTable, dan updateTable (app/actions/table.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -14,6 +18,10 @@ import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
 import type { Table } from "@/types/table";
 
+/**
+ * Mengunduh gambar QR satu meja (PNG 1024 px) lewat tautan sementara.
+ * @param table meja yang QR-nya diunduh
+ */
 async function downloadQr(table: Table) {
   const link = document.createElement("a");
   link.href = await createTableQrImage(table.token, 1024);
@@ -21,6 +29,12 @@ async function downloadQr(table: Table) {
   link.click();
 }
 
+/**
+ * Pengaturan pesan dari meja: sakelar fitur, tambah meja, dan kartu QR per meja (unduh, ganti QR, nonaktifkan).
+ * @param props.initialEnabled status fitur dari profil toko (dine_in_enabled)
+ * @param props.initialTables meja dari backend, null = gagal dimuat
+ * @returns sakelar, formulir tambah meja, dan daftar kartu QR
+ */
 export function TableOrderSettings({
   initialEnabled,
   initialTables,
@@ -28,6 +42,7 @@ export function TableOrderSettings({
   initialEnabled: boolean;
   initialTables: Table[] | null;
 }) {
+  // 1. Status fitur, daftar meja, isian nama meja, dan meja yang menunggu konfirmasi ganti QR.
   const [enabled, setEnabled] = useState(initialEnabled);
   const [tables, setTables] = useState<Table[]>(initialTables ?? []);
   const [label, setLabel] = useState("");
@@ -35,6 +50,7 @@ export function TableOrderSettings({
   const [adding, setAdding] = useState(false);
   const [tableToRegenerate, setTableToRegenerate] = useState<Table | null>(null);
 
+  // 2. Sakelar fitur: tampilan berubah dulu (optimistis), dikembalikan bila server gagal.
   async function toggleDineIn(nextEnabled: boolean) {
     setEnabled(nextEnabled);
     const result = await callAction(() => setDineIn(nextEnabled));
@@ -46,7 +62,9 @@ export function TableOrderSettings({
     toast({ tone: "success", message: nextEnabled ? "Pesan dari meja aktif" : "Pesan dari meja dimatikan" });
   }
 
+  // 3. Tambah meja; galat nama meja tampil di isiannya.
   async function addTable(event: FormEvent) {
+    // 1. Kirim nama meja.
     event.preventDefault();
     setAdding(true);
     const result = await callAction(() => createTable(label));
@@ -55,11 +73,13 @@ export function TableOrderSettings({
       setLabelError(result.error.fields?.label?.[0] ?? result.error.message);
       return;
     }
+    // 2. Berhasil: tambahkan ke daftar dan kosongkan isian.
     setTables((previousTables) => [...previousTables, result.data]);
     setLabel("");
     setLabelError(undefined);
   }
 
+  // 4. Ubah meja: aktif/nonaktif, atau ganti_token = buat QR baru (QR lama tidak berlaku lagi).
   async function changeTable(table: Table, input: { is_active?: boolean; ganti_token?: true }) {
     const result = await callAction(() => updateTable(table.id, input));
     if ("error" in result) {

@@ -1,7 +1,11 @@
+// Kerangka memuat /template-wa. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonBox, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// TemplateEditor: kata kunci + textarea 12 baris di kiri, pratinjau chat (ChatPreview) di kanan.
+/**
+ * Kerangka TemplateEditor: kata kunci + textarea 12 baris di kiri, pratinjau chat (ChatPreview) di kanan.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

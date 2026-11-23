@@ -1,7 +1,11 @@
+// Kerangka memuat /pengaturan. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonSection } from "@/app/components/ui/Skeleton";
 
-// Navigasi bagian (atas di tablet, kiri di ≥ 1024 px) lalu bagian-bagian formulir.
+/**
+ * Kerangka pengaturan: navigasi bagian (di atas pada tablet, di kiri pada layar ≥ 1024 px) lalu bagian formulir.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

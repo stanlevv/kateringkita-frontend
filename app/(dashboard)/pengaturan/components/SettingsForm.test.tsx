@@ -1,3 +1,6 @@
+// Test SettingsForm: bilah simpan menempel, validasi, ?lengkapi= (gulir, fokus, sorot), penjaga perubahan, unggah
+// logo dan background (termasuk respons terlambat), akun, dan rekening pencairan. Router, server action, dan
+// uploadPhoto dipalsukan (vi.mock).
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

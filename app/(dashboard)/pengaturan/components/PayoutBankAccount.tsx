@@ -1,3 +1,8 @@
+// Komponen PayoutBankAccount: bagian "Pembayaran & pencairan" di /pengaturan. Pencairan = transfer bagian toko
+// dari pembayaran non-tunai (yang masuk ke KateringKita lewat Midtrans) ke rekening penjual oleh admin. Menampilkan
+// saldo belum dicairkan, rekening pencairan, dan riwayat pencairan (GET /merchant/payouts lewat page.tsx); rekening
+// disimpan lewat server action saveBankAccount (app/actions/payouts.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -10,7 +15,9 @@ import { callAction } from "@/lib/action";
 import { formatRupiah, formatDate } from "@/lib/format";
 import type { MyPayouts } from "@/types/payout";
 
+/** Isian formulir rekening (kunci = nama field API); kata sandi wajib untuk mengganti rekening. */
 type BankAccountInput = { bank: string; account_number: string; account_name: string; password: string };
+/** Isi formulir dari rekening tersimpan; kata sandi selalu kosong. */
 const toFormValues = (payouts: MyPayouts | null): BankAccountInput => ({
   bank: payouts?.account?.bank ?? "",
   account_number: payouts?.account?.account_number ?? "",
@@ -19,16 +26,20 @@ const toFormValues = (payouts: MyPayouts | null): BankAccountInput => ({
 });
 
 /**
- * F26: pembayaran non-tunai masuk ke KateringKita lewat Midtrans; admin mentransfer bagian toko ke rekening ini.
- * Di luar form utama: tersimpan langsung, wajib kata sandi (dicek backend). `data` null = gagal dimuat.
+ * Saldo, rekening, dan riwayat pencairan. Berada di luar formulir utama pengaturan: rekening tersimpan langsung dan
+ * wajib kata sandi akun (dicek backend). Bila belum ada rekening, formulir langsung terbuka.
+ * @param props.data data pencairan dari backend, null = gagal dimuat
+ * @returns ringkasan saldo, rekening atau formulirnya, dan riwayat
  */
 export function PayoutBankAccount({ data }: { data: MyPayouts | null }) {
+  // 1. Data pencairan terakhir, mode ubah, isi formulir, galat, dan status simpan.
   const [payoutData, setPayoutData] = useState(data);
   const [editing, setEditing] = useState(!data?.account);
   const [values, setValues] = useState(() => toFormValues(data));
   const [errors, setErrors] = useState<Partial<Record<keyof BankAccountInput, string>>>({});
   const [saving, setSaving] = useState(false);
 
+  // 2. Data gagal dimuat.
   if (!payoutData)
     return (
       <p role="alert" className="text-danger">
@@ -36,6 +47,7 @@ export function PayoutBankAccount({ data }: { data: MyPayouts | null }) {
       </p>
     );
 
+  // 3. Pengubah isian (menghapus galat isian itu), batal ubah, dan simpan.
   const setField = (field: keyof BankAccountInput, value: string) => {
     setErrors((previous) => ({ ...previous, [field]: undefined }));
     setValues((previous) => ({ ...previous, [field]: value }));
@@ -46,11 +58,13 @@ export function PayoutBankAccount({ data }: { data: MyPayouts | null }) {
     setEditing(false);
   }
   async function submit(event: FormEvent) {
+    // 1. Kirim sekali saja.
     event.preventDefault();
     if (saving) return;
     setSaving(true);
     const result = await callAction(() => saveBankAccount(values));
     setSaving(false);
+    // 2. Galat per isian dari server ditampilkan di isiannya; galat umum menjadi toast.
     if ("error" in result) {
       if (result.error.fields)
         setErrors(
@@ -59,6 +73,7 @@ export function PayoutBankAccount({ data }: { data: MyPayouts | null }) {
       else toast({ tone: "danger", message: result.error.message });
       return;
     }
+    // 3. Berhasil: tampilkan rekening baru dan tutup formulir.
     setPayoutData(result.data);
     setValues(toFormValues(result.data));
     setErrors({});

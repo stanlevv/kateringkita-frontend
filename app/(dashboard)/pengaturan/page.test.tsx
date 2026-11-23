@@ -1,4 +1,5 @@
-// Data penjual dari backend ditiru dengan fixture.
+// Test halaman /pengaturan dan /template-wa: requireMerchant dipanggil, satu h1, semua bagian ada, dan skenario
+// gagal muat. Data penjual dari backend ditiru dengan fixture.
 vi.mock("@/services/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/api")>()),
   merchantFetch: async (path: string) => ({

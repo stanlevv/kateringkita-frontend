@@ -1,3 +1,7 @@
+// Komponen PickupPointPicker: daftar centang titik temu (tempat pembeli mengambil pesanan) di bagian Titik temu
+// /pengaturan. Daftar titik temu dari backend (GET /meta/pickup-points lewat page.tsx); pilihan disimpan bersama
+// formulir profil.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -6,7 +10,16 @@ import { Button } from "@/app/components/ui/Button";
 import { Checkbox } from "@/app/components/ui/Checkbox";
 import type { PickupPoint } from "@/types/meta";
 
-/** PG-E4: `points` null = daftar gagal dimuat; hanya bagian ini yang menampilkan galat. */
+/**
+ * Pilihan titik temu. Bila daftar gagal dimuat, hanya bagian ini yang menampilkan galat dan tombol Coba lagi
+ * (router.refresh), formulir lain tetap bisa dipakai.
+ * @param props.points semua titik temu, null = gagal dimuat
+ * @param props.value id titik temu yang dipilih
+ * @param props.onChange dipanggil dengan daftar id baru
+ * @param props.error galat validasi (mis. belum memilih satu pun)
+ * @param props.onBlur dipanggil saat fokus meninggalkan daftar (menandai isian disentuh)
+ * @returns daftar checkbox, atau pesan gagal muat
+ */
 export function PickupPointPicker({
   points,
   value,
@@ -35,6 +48,7 @@ export function PickupPointPicker({
       </div>
     );
   }
+  // Centang menambah id, hapus centang membuang id.
   const toggle = (id: number, checked: boolean) =>
     onChange(checked ? [...value, id] : value.filter((selectedId) => selectedId !== id));
   return (

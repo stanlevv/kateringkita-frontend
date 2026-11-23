@@ -1,3 +1,5 @@
+// Test TemplateEditor: sisip kata kunci di posisi kursor, pratinjau langsung, galat templat, kembalikan ke bawaan,
+// simpan, dan penjaga perubahan. Router dan saveProfile dipalsukan (vi.mock).
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

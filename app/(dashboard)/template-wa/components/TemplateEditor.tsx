@@ -1,3 +1,7 @@
+// Komponen TemplateEditor: penyunting templat WhatsApp di /template-wa. Kata kunci seperti {nama} dan {kode} diganti
+// data pesanan saat pesan dikirim (lib/wa-template.ts). Templat disimpan lewat server action saveProfile
+// (field wa_template). Templat WhatsApp = pola teks pesan yang sama untuk semua pesanan.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +25,14 @@ import {
 } from "@/lib/wa-template";
 import { ChatPreview } from "./ChatPreview";
 
-/** M-11, WA-*: `template` null = memakai templat bawaan. `order` = pesanan contoh untuk pratinjau. */
+/**
+ * Penyunting templat: tombol kata kunci (disisipkan di posisi kursor), isian templat, pratinjau langsung, kembalikan ke
+ * bawaan, dan penjaga perubahan belum disimpan.
+ * @param props.storeName nama toko untuk pratinjau
+ * @param props.template templat tersimpan, null = memakai templat bawaan
+ * @param props.order pesanan contoh untuk pratinjau, null bila toko belum punya pesanan
+ * @returns penyunting, pratinjau, dan dialog konfirmasi
+ */
 export function TemplateEditor({
   storeName,
   template,
@@ -31,6 +42,7 @@ export function TemplateEditor({
   template: string | null;
   order: MerchantOrder | null;
 }) {
+  // 1. Templat tersimpan (acuan "ada perubahan"), isi sekarang, status simpan, dan posisi kursor yang tertunda.
   const [savedTemplate, setSavedTemplate] = useState(template ?? TEMPLATE_BAWAAN);
   const [text, setText] = useState(savedTemplate);
   const [saving, setSaving] = useState(false);
@@ -38,11 +50,12 @@ export function TemplateEditor({
   const textarea = useRef<HTMLTextAreaElement>(null);
   const pendingCursor = useRef<number | null>(null);
 
+  // 2. Ada perubahan? Lalu validasi isi templat.
   const dirty = text !== savedTemplate;
   const guard = useUnsavedGuard(dirty);
   const templateError = validateTemplate(text);
 
-  // Kursor dikembalikan setelah React menulis ulang isi textarea.
+  // 3. Kursor dikembalikan setelah React menulis ulang isi textarea.
   useEffect(() => {
     if (pendingCursor.current === null) return;
     const element = textarea.current;
@@ -51,6 +64,7 @@ export function TemplateEditor({
     pendingCursor.current = null;
   }, [text]);
 
+  // 4. Sisipkan kata kunci menggantikan teks yang disorot, lalu taruh kursor setelahnya.
   function insertPlaceholder(placeholder: string) {
     const element = textarea.current;
     const selectionStart = element?.selectionStart ?? text.length;
@@ -59,6 +73,7 @@ export function TemplateEditor({
     setText(text.slice(0, selectionStart) + placeholder + text.slice(selectionEnd));
   }
 
+  // 5. Simpan; templat yang masih galat tidak dikirim.
   async function save() {
     if (templateError || saving) return;
     setSaving(true);
