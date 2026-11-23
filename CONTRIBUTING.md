@@ -97,6 +97,16 @@ Wajib dipakai saat memberi nama baru. Mengikuti nama tabel DB dan peran PRD.
 | pesanan baru           | newOrder / isNew       | kembali ke             | backTo                  |
 | judul / isi            | title / body           | terpakai               | used                    |
 | kartu                  | card                   | jam server             | serverNow               |
+| lupa sandi             | forgotPassword         | pindai (QR)            | scan / scanner          |
+| pesan (layar teks)     | message                | meja terakhir          | lastTable               |
+| daftarkan              | register               | kamera                 | camera                  |
+| hitung mundur          | countdown              | sedang jeda            | coolingDown             |
+| ringkasan galat        | errorSummary           | fokus ke galat         | errorFocusKey           |
+| pemesan                | customerName           | baru membayar          | justPaid                |
+| status akhir           | finalStatuses          | panel bawah (HP)       | sheet                   |
+| sejak                  | since                  | dari / sampai tanggal  | startDate / endDate     |
+| asal permintaan        | fetchSite              | tanpa sesi             | noSession               |
+| galat umum             | generalError           | sudah terdaftar        | alreadyRegistered       |
 
 Istilah yang belum ada di tabel: pilih padanan Inggris yang umum, lalu tambahkan ke tabel ini pada commit yang sama.
 
