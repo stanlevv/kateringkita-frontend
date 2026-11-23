@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, EyeOff, Flag, Star } from "lucide-react";
-import { moderasi } from "@/app/actions/admin/moderasi";
+import { CheckCircle2, EyeOff, Flag, Star, X } from "lucide-react";
+import { hapusFotoMenu, moderasi } from "@/app/actions/admin/moderasi";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -37,17 +37,23 @@ function Status({ dimoderasi, alasan, label }: { dimoderasi: boolean; alasan: st
   );
 }
 
-/** Foto utama lalu foto tambahan; klik membuka ukuran penuh agar admin bisa memeriksa isinya. */
-function FotoMenu({ m }: { m: MenuModerasi }) {
+/** Foto utama lalu foto tambahan; klik membuka ukuran penuh, tombol × menghapus satu foto (dengan alasan). */
+function FotoMenu({ m, onHapus }: { m: MenuModerasi; onHapus: (url: string) => void }) {
   const foto = [m.image_url, ...(m.gallery ?? [])].filter((u): u is string => !!u);
   if (!foto.length) return <span className="text-sm text-ink-muted">Tanpa foto</span>;
   return (
     <span className="flex flex-wrap gap-1">
       {foto.map((u, i) => (
-        <a key={u} href={u} target="_blank" rel="noopener noreferrer" aria-label={`Buka foto ${i + 1} ${m.name}${i === 0 && m.image_url ? " (utama)" : ""}`}
-          className="relative block size-10 overflow-hidden rounded-sm bg-subtle ring-offset-2 focus-visible:ring-2 focus-visible:ring-info">
-          <Image src={u} alt="" fill unoptimized sizes="40px" className="object-cover" />
-        </a>
+        <span key={u} className="relative">
+          <a href={u} target="_blank" rel="noopener noreferrer" aria-label={`Buka foto ${i + 1} ${m.name}${i === 0 && m.image_url ? " (utama)" : ""}`}
+            className="relative block size-10 overflow-hidden rounded-sm bg-subtle ring-offset-2 focus-visible:ring-2 focus-visible:ring-info">
+            <Image src={u} alt="" fill unoptimized sizes="40px" className="object-cover" />
+          </a>
+          <button type="button" onClick={() => onHapus(u)} aria-label={`Hapus foto ${i + 1} ${m.name}`}
+            className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full border border-line bg-surface text-danger shadow-sm hover:bg-danger-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info">
+            <X aria-hidden className="size-3" />
+          </button>
+        </span>
       ))}
     </span>
   );
@@ -60,6 +66,19 @@ export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] }
   const [pulih, setPulih] = useState<{ id: number; aksi: AksiModerasi } | null>(null);
   const [alasan, setAlasan] = useState("");
   const [sibuk, setSibuk] = useState(false);
+  const [hapusFoto, setHapusFoto] = useState<{ id: number; url: string } | null>(null);
+
+  async function hapus(id: number, url: string, teks: string) {
+    if (sibuk) return;
+    setSibuk(true);
+    const r = await panggil(() => hapusFotoMenu(id, url, teks));
+    setSibuk(false);
+    if ("error" in r) return toast({ tone: "danger", message: r.error.message });
+    setHapusFoto(null);
+    setAlasan("");
+    toast({ tone: "success", message: "Foto dihapus dari menu." });
+    router.refresh();
+  }
 
   async function kirim(id: number, aksi: AksiModerasi, teks?: string) {
     if (sibuk) return;
@@ -98,7 +117,7 @@ export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] }
   ) : (
     <DataTable<MenuModerasi> caption="Menu" rows={props.rows} rowKey={(m) => String(m.id)} columns={[
       { key: "menu", header: "Menu", cell: (m) => <span className="font-medium">{m.name}</span> },
-      { key: "foto", header: "Foto", cell: (m) => <FotoMenu m={m} /> },
+      { key: "foto", header: "Foto", cell: (m) => <FotoMenu m={m} onHapus={(url) => { setAlasan(""); setHapusFoto({ id: m.id, url }); }} /> },
       { key: "toko", header: "Toko", cell: (m) => m.merchant.business_name },
       { key: "harga", header: "Harga", align: "right", cell: (m) => formatRupiah(m.price) },
       { key: "aktif", header: "Dijual", cell: (m) => (m.is_active ? "Ya" : "Tidak") },
@@ -119,6 +138,21 @@ export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] }
           <Button variant="danger" disabled={!alasan.trim() || sibuk} onClick={() => dialog && kirim(dialog.id, dialog.aksi, alasan.trim())}>
             {dialog ? TEKS[dialog.aksi].label : ""}
           </Button>
+        </div>
+      </Dialog>
+      <Dialog open={hapusFoto !== null} onClose={() => setHapusFoto(null)} title="Hapus foto ini?">
+        {hapusFoto && (
+          <div className="relative aspect-video w-full max-w-xs overflow-hidden rounded-md bg-subtle">
+            <Image src={hapusFoto.url} alt="Foto yang akan dihapus" fill unoptimized sizes="320px" className="object-contain" />
+          </div>
+        )}
+        <p className="text-sm text-ink-muted">Menu tetap dijual. Bila ini foto utama, foto tambahan pertama menjadi foto utama.</p>
+        <Field label="Alasan" required help={`${alasan.length}/500`}>
+          <Textarea autoFocus value={alasan} maxLength={500} onChange={(e) => setAlasan(e.target.value)} />
+        </Field>
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={() => setHapusFoto(null)}>Batal</Button>
+          <Button variant="danger" disabled={!alasan.trim() || sibuk} onClick={() => hapusFoto && void hapus(hapusFoto.id, hapusFoto.url, alasan.trim())}>Hapus foto</Button>
         </div>
       </Dialog>
       <ConfirmDialog open={pulih !== null} onClose={() => setPulih(null)} tone="primary" busy={sibuk}
