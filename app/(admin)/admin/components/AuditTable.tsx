@@ -1,7 +1,8 @@
 // Komponen AuditTable: tabel log aksi admin di /admin/log (siapa, kapan, aksi apa, terhadap apa, alasan, dan field
 // yang berubah). Data diambil halaman /admin/log lalu dikirim lewat prop; label aksi dan target dari
 // services/admin-log.service.ts.
-// "use client": komponen ini berjalan di peramban (client component) karena membaca URL dengan usePathname/useSearchParams untuk tautan halaman.
+// "use client": komponen ini berjalan di peramban (client component) karena membaca URL (usePathname dan
+// useSearchParams) untuk tautan halaman.
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";

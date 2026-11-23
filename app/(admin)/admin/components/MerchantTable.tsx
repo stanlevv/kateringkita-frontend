@@ -1,6 +1,6 @@
 // Komponen MerchantTable: daftar penjual di /admin/penjual dengan kotak cari, filter status, filter dapur, dan
 // paginasi. Semua filter disimpan di URL; halaman server membaca URL itu lalu mengambil data dari backend.
-// "use client": komponen ini berjalan di peramban (client component) karena memakai state, timer, router, dan membaca URL.
+// "use client": berjalan di peramban (client component) karena memakai state, timer, router, dan membaca URL.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
