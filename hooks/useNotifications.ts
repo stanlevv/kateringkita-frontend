@@ -1,3 +1,7 @@
+// Hook useNotifications: memberi tahu penjual saat ada pesanan baru di dashboard (sorot kartu, bunyi, judul tab,
+// dan pengumuman untuk pembaca layar). Dipakai di DashboardLive (app/(dashboard)/dashboard/components).
+// Hook React = fungsi `useX` yang menyimpan state dan efek untuk komponen yang memanggilnya.
+// "use client": file ini hanya berjalan di peramban (client component), bukan di server.
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -6,12 +10,15 @@ import { countNeedsAction } from "@/lib/shell";
 import { toWibClock, wibDate } from "@/lib/format";
 import type { MerchantOrder } from "@/types/order";
 
+// Kunci localStorage (penyimpanan kecil di peramban) untuk pilihan suara. Nilainya "1"/"0"; jangan diganti,
+// karena pilihan yang sudah tersimpan di peramban penjual akan hilang.
 const SOUND_STORAGE_KEY = "kk_suara";
-const HIGHLIGHT_MS = 3000;
+const HIGHLIGHT_MS = 3000; // lama kartu pesanan baru disorot
 
 // Preferensi suara per peramban; cadangan di memori bila localStorage diblokir.
 let soundFallback: boolean | null = null;
 const soundListeners = new Set<() => void>();
+/** Membaca pilihan suara (bawaan: menyala). @returns true bila suara menyala */
 function readSoundEnabled(): boolean {
   try {
     const storedValue = localStorage.getItem(SOUND_STORAGE_KEY);
@@ -21,6 +28,7 @@ function readSoundEnabled(): boolean {
   }
   return soundFallback ?? true;
 }
+/** Menyimpan pilihan suara lalu memberi tahu semua komponen yang membacanya. */
 function writeSoundEnabled(enabled: boolean) {
   soundFallback = enabled;
   try {
@@ -30,6 +38,7 @@ function writeSoundEnabled(enabled: boolean) {
   }
   soundListeners.forEach((listener) => listener());
 }
+// Langganan perubahan pilihan suara untuk useSyncExternalStore (cara React membaca nilai dari luar React).
 const subscribeSound = (listener: () => void) => {
   soundListeners.add(listener);
   return () => {
@@ -40,11 +49,13 @@ const subscribeSound = (listener: () => void) => {
 /** Bunyi pendek lewat Web Audio (tanpa file aset). Diam bila peramban menolak. */
 function playBeep() {
   try {
+    // 1. Buat nada 880 Hz bervolume rendah.
     const audioContext = new AudioContext();
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
     oscillator.frequency.value = 880;
     gain.gain.value = 0.1;
+    // 2. Sambungkan ke speaker, mainkan 0,15 dtk, lalu tutup konteks audionya.
     oscillator.connect(gain).connect(audioContext.destination);
     oscillator.onended = () => void audioContext.close();
     oscillator.start();
@@ -54,18 +65,24 @@ function playBeep() {
   }
 }
 
-/**
- * DB-A3: pesanan baru = dibuat < 60 dtk saat pertama dimuat, atau muncul di muat ulang berikutnya.
- * Sorot 3 dtk, judul tab "(N) Pesanan baru" sampai jendela difokus lagi, bunyi bila suara aktif.
- */
 // Kode yang sudah berbunyi selama muat halaman ini (tahan StrictMode & pasang ulang komponen).
 const beepedCodes = new Set<string>();
 
 /** Penjual sedang tidak melihat tab ini. Di server: dianggap melihat (tanpa judul). */
 const isTabUnseen = () => typeof document !== "undefined" && (document.hidden || !document.hasFocus());
 
-/** `sekarang`: jam server (jam perangkat + selisih, D8) untuk menentukan "hari ini". */
+/**
+ * Mendeteksi pesanan baru dan memberi tahu penjual. Pesanan baru = dibuat < 60 dtk saat halaman pertama dimuat,
+ * atau muncul di penyegaran berikutnya. Kartunya disorot 3 dtk, judul tab menjadi "(N) Pesanan baru" sampai jendela
+ * difokus lagi, dan berbunyi bila suara menyala.
+ * @param orders antrean pesanan terbaru (dari useLiveDashboard)
+ * @param loadedAt jam server saat halaman dimuat (ms)
+ * @param now jam server sekarang (jam perangkat + selisih jam), untuk menentukan "hari ini" WIB
+ * @returns `newOrderCodes` (kode yang sedang disorot), `announcement` (teks untuk wilayah aria-live),
+ *   `soundOn`, dan `setSoundOn`
+ */
 export function useNotifications(orders: MerchantOrder[], loadedAt: number, now = loadedAt) {
+  // 1. Pilihan suara, pesanan sebelumnya, kode yang disorot, jumlah belum dilihat, dan nomor gelombang pengumuman.
   const soundOn = useSyncExternalStore(subscribeSound, readSoundEnabled, () => true);
   const [previousOrders, setPreviousOrders] = useState(orders);
   const [highlighted, setHighlighted] = useState<string[]>(() =>
@@ -77,8 +94,9 @@ export function useNotifications(orders: MerchantOrder[], loadedAt: number, now 
   const [announcementWave, setAnnouncementWave] = useState(0);
 
   if (orders !== previousOrders) {
-    // Pesanan dibuat hari ini (WIB, jam server) yang BARU menjadi "perlu tindakan": baru masuk, atau VA/online yang tadi
-    // menunggu bayar lalu lunas (F26, diterima otomatis). Yang belum lunas tidak berbunyi: penjual belum bisa apa-apa.
+    // 2. Cari pesanan hari ini (WIB, jam server) yang BARU menjadi "perlu tindakan": baru masuk, atau pesanan VA/online
+    //    yang tadi menunggu bayar lalu lunas (diterima otomatis). Yang belum lunas tidak berbunyi: penjual belum bisa
+    //    berbuat apa-apa.
     const previouslyActionable = new Set(
       previousOrders.filter((order) => countNeedsAction([order]) === 1).map((order) => order.code),
     );
@@ -99,6 +117,7 @@ export function useNotifications(orders: MerchantOrder[], loadedAt: number, now 
     }
   }
 
+  // 3. Bunyi sekali per kode, lalu hapus sorotan setelah HIGHLIGHT_MS. useEffect = kode setelah layar digambar.
   const soundOnRef = useRef(soundOn);
   useEffect(() => {
     soundOnRef.current = soundOn;
@@ -112,6 +131,7 @@ export function useNotifications(orders: MerchantOrder[], loadedAt: number, now 
     return () => clearTimeout(timer);
   }, [highlighted]);
 
+  // 4. Tab kembali dilihat: hitungan "belum dilihat" kembali nol.
   useEffect(() => {
     const markSeen = () => document.visibilityState === "visible" && setUnseenCount(0);
     window.addEventListener("focus", markSeen);
@@ -122,6 +142,7 @@ export function useNotifications(orders: MerchantOrder[], loadedAt: number, now 
     };
   }, []);
 
+  // 5. Selama ada yang belum dilihat, judul tab menjadi "(N) Pesanan baru"; dikembalikan saat hitungan nol.
   useEffect(() => {
     if (!unseenCount) return;
     const originalTitle = document.title;
@@ -131,8 +152,8 @@ export function useNotifications(orders: MerchantOrder[], loadedAt: number, now 
     };
   }, [unseenCount]);
 
-  // D9: diumumkan pembaca layar (aria-live) selama sorot berlangsung.
-  // Spasi tak terlihat bergantian agar gelombang berikut dengan teks sama tetap diumumkan.
+  // 6. Teks untuk pembaca layar (aria-live = wilayah yang isinya dibacakan otomatis saat berubah) selama sorotan
+  //    berlangsung. Spasi tak terlihat bergantian agar gelombang berikut dengan teks sama tetap dibacakan.
   const announcement = highlighted.length
     ? `${highlighted.length} pesanan baru masuk${announcementWave % 2 ? " " : ""}`
     : "";
