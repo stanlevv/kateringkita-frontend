@@ -12,12 +12,13 @@ import type { TicketStatus } from "@/types/admin";
  * @returns Badge berlabel status
  */
 export function TicketStatusBadge({ status }: { status: TicketStatus }) {
-  // Nilai di luar kontrak tetap tampil apa adanya, bukan merusak halaman.
+  // 1. Ambil label, warna, dan ikon status. Nilai di luar kontrak tetap tampil apa adanya, bukan merusak halaman.
   const view: (typeof TICKET_STATUSES)[TicketStatus] = TICKET_STATUSES[status] ?? {
     label: status,
     tone: "neutral",
     icon: TICKET_STATUSES.closed.icon,
   };
+  // 2. Tampilkan sebagai Badge.
   return (
     <Badge tone={view.tone} icon={view.icon}>
       {view.label}

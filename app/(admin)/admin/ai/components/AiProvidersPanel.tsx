@@ -190,7 +190,9 @@ function ProviderForm({ initial, onDone }: { initial: AiProvider | null; onDone:
  * @returns span berwarna
  */
 function StatusChip({ provider }: { provider: AiProvider }) {
+  // 1. Hitung status dari is_active dan cooldown_until.
   const status = aiProviderStatus(provider);
+  // 2. Label berwarna per status: abu-abu nonaktif, kuning istirahat, hijau siap.
   if (status.kind === "nonaktif")
     return <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-semibold text-ink-muted">Nonaktif</span>;
   if (status.kind === "istirahat")

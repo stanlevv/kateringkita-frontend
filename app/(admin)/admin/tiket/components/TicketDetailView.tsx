@@ -74,8 +74,10 @@ function MessageBubble({ message, customerName }: { message: TicketMessage; cust
  * @returns tampilan detail tiket
  */
 export function TicketDetailView({ ticket }: { ticket: TicketDetail }) {
+  // 1. Tiket tertutup menyembunyikan formulir balas; status pesanan terkait diterjemahkan ke label dan warna.
   const closed = ticket.status === "closed";
   const orderStatus = ticket.order && ticketOrderStatus(ticket.order.status);
+  // 2. Kolom kiri: info dan percakapan; kolom kanan: kartu pembeli dan pesanan terkait.
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink-muted">

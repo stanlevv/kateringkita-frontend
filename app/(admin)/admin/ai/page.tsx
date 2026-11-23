@@ -20,8 +20,10 @@ export default async function AdminAiPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
+  // 1. Hanya admin super; rentang pemakaian dari ?hari= (selain "30" dianggap 7 hari).
   await requireAdmin("super");
   const days = (await searchParams).hari === "30" ? 30 : 7;
+  // 2. Ambil penyedia dan pemakaian bersamaan.
   const [providers, usage] = await Promise.all([getAiProviders(), getAiUsage(days)]);
   return (
     <PageHeader

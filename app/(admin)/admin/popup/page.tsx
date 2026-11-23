@@ -16,9 +16,11 @@ import { PopupList } from "./components/PopupList";
  * @returns PageHeader berisi PopupList, atau LoadError bila pop-up gagal dimuat
  */
 export default async function PopupPage() {
+  // 1. Pastikan admin, lalu ambil pop-up dan voucher bersamaan.
   const session = await requireAdmin();
   // GET /admin/promos = promo platform saja (voucher pop-up harus voucher platform)
   const [popups, promos] = await Promise.all([adminFetch<Popup[]>("/popups"), adminFetch<Promo[]>("/promos")]);
+  // 2. Pilihan voucher: hanya yang aktif, publik, dan belum berakhir saat ini.
   // eslint-disable-next-line react-hooks/purity -- daftar voucher yang belum berakhir saat halaman dimuat
   const vouchers = promos.ok && promos.data ? voucherOptions(promos.data, Date.now()) : [];
   return (

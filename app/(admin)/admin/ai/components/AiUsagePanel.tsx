@@ -63,8 +63,10 @@ function UsageTable({ title, columns, children }: { title: string; columns: stri
  * @returns section Pemakaian
  */
 export function AiUsagePanel({ data }: { data: AiUsage }) {
+  // 1. Ringkasan untuk kartu KPI; jumlah hari menentukan label sumbu grafik (semua tanggal bila ≤ 7, sebagian bila 30).
   const summary = data.ringkas;
   const dayCount = data.per_hari.length;
+  // 2. Urutan tampilan: pilihan rentang, KPI, grafik token per hari, lalu tabel per penyedia/fitur/gagal terakhir.
   return (
     <section aria-labelledby="judul-pemakaian" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">

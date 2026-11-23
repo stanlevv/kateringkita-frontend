@@ -18,8 +18,10 @@ import { BannerAdmin } from "./components/BannerAdmin";
  * @returns PageHeader berisi BannerAdmin, atau LoadError bila banner gagal dimuat
  */
 export default async function BannerAdminPage() {
+  // 1. Pastikan admin, lalu ambil banner dan voucher platform bersamaan.
   const session = await requireAdmin();
   const [banners, promos] = await Promise.all([adminFetch<Banner[]>("/banners"), adminFetch<Promo[]>("/promos")]);
+  // 2. Pilihan voucher: hanya yang aktif, publik, dan belum berakhir saat ini.
   // eslint-disable-next-line react-hooks/purity -- daftar voucher yang belum berakhir saat halaman dimuat
   const vouchers = promos.ok && promos.data ? voucherOptions(promos.data, Date.now()) : [];
   return (
