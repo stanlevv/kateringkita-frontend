@@ -1,7 +1,12 @@
+// Komponen MenuFormSkeleton: kerangka memuat formulir menu. Dipakai loading.tsx di /menu/baru dan /menu/[id].
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonSection, SkeletonText } from "@/app/components/ui/Skeleton";
 
-/** Kerangka MenuForm: bagian-bagian formulir + tombol simpan, pratinjau pembeli di kanan (≥ 1280 px). */
+/**
+ * Kerangka MenuForm: bagian-bagian formulir dan tombol simpan, dengan pratinjau pembeli di kanan (layar ≥ 1280 px).
+ * @param props.title judul halaman (harus sama dengan judul halaman aslinya)
+ * @returns PageFrame berisi kerangka
+ */
 export function MenuFormSkeleton({ title }: { title: string }) {
   return (
     <PageFrame title={title}>

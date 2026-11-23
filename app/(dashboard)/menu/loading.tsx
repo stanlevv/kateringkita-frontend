@@ -1,8 +1,14 @@
+// Kerangka memuat /menu.
+// loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { Skeleton, SkeletonBox, SkeletonTabs, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// MN-S3: cari + kategori, tab status, lalu kartu MenuCard (foto 16:9, nama, harga, stok, stepper kuota, tombol).
+/**
+ * Kerangka katalog menu: cari dan kategori, tab status, lalu kartu seperti MenuCard (foto 16:9, nama, harga, stok,
+ * stepper kuota, tombol).
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Menu & Stok" actions={<LinkButton href="/menu/baru">Tambah menu</LinkButton>}>

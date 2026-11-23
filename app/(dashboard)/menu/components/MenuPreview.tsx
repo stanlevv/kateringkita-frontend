@@ -1,8 +1,18 @@
+// Komponen MenuPreview: pratinjau kartu menu seperti dilihat pembeli. Dipakai MenuForm.
 import Image from "next/image";
 import { UtensilsCrossed } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 
-/** Kartu menu seperti dilihat pembeli. Tanpa HPP (R-11). */
+/**
+ * Kartu menu seperti dilihat pembeli. HPP (modal) sengaja tidak ditampilkan karena tidak boleh terlihat pembeli.
+ * @param props.name nama menu
+ * @param props.price harga jual, atau null bila belum valid
+ * @param props.unit satuan (porsi, box, ...)
+ * @param props.category nama kategori
+ * @param props.photo alamat foto, atau null
+ * @param props.options opsi tambahan dan harganya
+ * @returns elemen `section`
+ */
 export function MenuPreview({
   name,
   price,

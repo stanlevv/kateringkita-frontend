@@ -1,3 +1,5 @@
+// Komponen OptionsEditor: daftar opsi tambahan menu (nama dan tambahan harga). Dipakai MenuForm.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
@@ -6,9 +8,20 @@ import { Field } from "@/app/components/ui/Field";
 import { IconButton } from "@/app/components/ui/IconButton";
 import { Input } from "@/app/components/ui/Input";
 
+/**
+ * Satu baris opsi di formulir. `id` = kunci baris untuk React (bukan id database), `touched` = isian sudah
+ * disentuh sehingga galatnya boleh tampil. Harga disimpan sebagai teks isian.
+ */
 export type OptionRow = { id: number; name: string; extra_price: string; touched: boolean };
 
-/** MF bagian 6: tambah/hapus/urutkan lewat tombol (tanpa seret). */
+/**
+ * Editor opsi: tambah, hapus, dan urutkan lewat tombol; tidak ada seret-lepas.
+ * @param props.rows baris opsi
+ * @param props.errors galat per isian, kunci `options.<i>.name` / `options.<i>.extra_price`
+ * @param props.showAllErrors tampilkan semua galat (setelah formulir dikirim), bukan hanya isian yang disentuh
+ * @param props.onChange dipanggil dengan baris baru
+ * @returns elemen `div`
+ */
 export function OptionsEditor({
   rows,
   errors,
@@ -20,8 +33,10 @@ export function OptionsEditor({
   showAllErrors: boolean;
   onChange: (rows: OptionRow[]) => void;
 }) {
+  /** Mengubah sebagian isi baris ke-i. */
   const updateRow = (i: number, patch: Partial<OptionRow>) =>
     onChange(rows.map((row, j) => (j === i ? { ...row, ...patch } : row)));
+  /** Menukar baris ke-i dengan tetangganya (-1 = naik, 1 = turun). */
   const move = (i: number, direction: number) => {
     const reordered = [...rows];
     [reordered[i], reordered[i + direction]] = [reordered[i + direction], reordered[i]];

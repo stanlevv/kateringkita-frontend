@@ -1,3 +1,6 @@
+// Komponen MenuCard: kartu satu menu di katalog /menu (foto, harga, margin, stok, stepper kuota, tombol).
+// Dipakai MenuCatalog.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import Image from "next/image";
@@ -12,7 +15,16 @@ import { marginPercent } from "@/lib/menu-filter";
 import type { MerchantMenu } from "@/types/menu";
 import { STOCK_BADGES } from "@/app/components/menu/QuotaRow";
 
-/** MN-N1: kartu menu. Foto memakai `unoptimized` karena host gambar backend belum diketahui (F04). */
+/**
+ * Kartu menu. Foto memakai `unoptimized` (tanpa optimasi gambar Next.js) karena alamat host gambar backend belum
+ * diketahui saat build.
+ * @param props.menu data menu
+ * @param props.onQuotaChange dipanggil dengan kuota baru (angka mutlak)
+ * @param props.onDelta dipanggil dengan selisih kuota dari tombol stepper (opsional)
+ * @param props.onDeactivate meminta konfirmasi menonaktifkan menu
+ * @param props.onActivate mengaktifkan lagi menu nonaktif
+ * @returns elemen `article`
+ */
 export function MenuCard({
   menu,
   onQuotaChange,

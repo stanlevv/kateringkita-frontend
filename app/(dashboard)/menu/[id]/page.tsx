@@ -1,3 +1,5 @@
+// Halaman /menu/[id]: formulir ubah menu. [id] = id menu dari URL.
+// Server component: mengambil menu (getMenu) dan kategori (getCategories) di server.
 import { SearchX } from "lucide-react";
 import { LoadError } from "@/app/components/LoadError";
 import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
@@ -8,11 +10,18 @@ import { getMenu } from "@/services/menu.service";
 import { getCategories } from "@/services/meta.service";
 import { requireMerchant } from "@/services/auth.service";
 
-// M-07, MF-N2 — Ubah menu. MF-E5: id tidak ada ditampilkan di halaman ini, bukan 404 global.
+/**
+ * Halaman ubah menu. Id yang bukan angka atau tidak ada ditampilkan di halaman ini sebagai "Menu tidak ditemukan"
+ * (dengan tautan kembali), bukan halaman 404 umum.
+ * @param props.params parameter rute: `id` (id menu)
+ * @returns PageHeader berisi MenuForm, keadaan tidak ditemukan, atau layar gagal muat
+ */
 export default async function EditMenuPage({ params }: { params: Promise<{ id: string }> }) {
+  // 1. Pastikan penjual sudah masuk. 2. Ambil menu hanya bila id berupa angka, bersamaan dengan kategori.
   await requireMerchant();
   const { id } = await params;
   const [menu, categories] = await Promise.all([/^\d{1,9}$/.test(id) ? getMenu(Number(id)) : null, getCategories()]);
+  // 3. Tentukan tampilan: tidak ditemukan, gagal muat, atau formulir.
   const menuMissing = !menu || ("error" in menu && menu.error.code === "NOT_FOUND");
   return (
     <PageHeader title="Ubah menu">

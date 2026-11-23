@@ -1,3 +1,5 @@
+// Komponen ExtraPhotos: foto tambahan menu (selain foto utama). Dipakai MenuForm.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -7,10 +9,18 @@ import { uploadPhoto } from "@/lib/upload";
 import { Button } from "@/app/components/ui/Button";
 import { FileDrop } from "@/app/components/ui/FileDrop";
 
+/** Batas jumlah foto tambahan per menu. */
 export const MAX_EXTRA_PHOTOS = 4;
 const MEGABYTE = 1024 * 1024;
 
-/** Foto tambahan menu (selain foto utama): unggah satu per satu, geser urutan, hapus. Urutan = urutan tampil di aplikasi. */
+/**
+ * Daftar foto tambahan: unggah satu per satu, geser urutan, dan hapus. Urutan daftar = urutan tampil di aplikasi.
+ * @param props.urls alamat foto tambahan sekarang
+ * @param props.onChange dipanggil dengan daftar alamat baru
+ * @param props.onBusy memberi tahu induk saat unggahan berjalan (tombol simpan menunggu)
+ * @param props.error galat dari validasi formulir (opsional)
+ * @returns elemen `div` role="group"
+ */
 export function ExtraPhotos({
   urls,
   onChange,
@@ -22,9 +32,11 @@ export function ExtraPhotos({
   onBusy: (busy: boolean) => void;
   error?: string;
 }) {
+  // 1. State unggahan dan galatnya.
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const uploadToken = useRef(0); // respons unggahan lama diabaikan bila komponen dilepas
+  // 2. Token unggahan: dinaikkan saat komponen dilepas, jadi respons unggahan lama diabaikan.
+  const uploadToken = useRef(0);
   useEffect(
     () => () => {
       uploadToken.current++;
@@ -33,6 +45,7 @@ export function ExtraPhotos({
   );
   const isFull = urls.length >= MAX_EXTRA_PHOTOS;
 
+  /** Mengunggah satu foto lalu menambahkannya di akhir daftar. */
   async function uploadFile(file: File) {
     const token = ++uploadToken.current;
     setUploadError(null);
@@ -45,11 +58,13 @@ export function ExtraPhotos({
     if ("error" in result) return setUploadError(result.error.message);
     onChange([...urls, result.data.public_url]);
   }
+  /** Menukar foto ke-i dengan tetangganya (-1 = kiri, 1 = kanan). */
   const move = (i: number, direction: -1 | 1) => {
     const reordered = [...urls];
     [reordered[i], reordered[i + direction]] = [reordered[i + direction], reordered[i]];
     onChange(reordered);
   };
+  // 3. Galat unggah didahulukan dari galat formulir.
   const message = uploadError ?? error;
 
   return (
