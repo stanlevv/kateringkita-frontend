@@ -107,6 +107,18 @@ Wajib dipakai saat memberi nama baru. Mengikuti nama tabel DB dan peran PRD.
 | sejak                  | since                  | dari / sampai tanggal  | startDate / endDate     |
 | asal permintaan        | fetchSite              | tanpa sesi             | noSession               |
 | galat umum             | generalError           | sudah terdaftar        | alreadyRegistered       |
+| kalkulator             | calculator             | contoh                 | example / sample        |
+| bagian (halaman)       | section                | jenis (gambar)         | kind                    |
+| sisipkan               | insert                 | kursor                 | cursor                  |
+| kata kunci (templat)   | placeholder            | bawaan                 | default                 |
+| unduh                  | download               | rentang                | range                   |
+| laba                   | profit                 | bintang (rating)       | stars / starRating      |
+| sakelar                | toggle                 | ganti (QR)             | regenerate              |
+| aksi simpan (prop)     | saveAction             | perlu dilengkapi       | incompleteSection       |
+| alur                   | flow                   | ketukan (cerita)       | beat                    |
+| kaki (struk)           | footer                 | jeda (animasi)         | pause                   |
+| cetak                  | print                  | banner toko            | merchantBanner          |
+| metode bayar           | paymentMethod          | jumlah hari            | dayCount                |
 
 Istilah yang belum ada di tabel: pilih padanan Inggris yang umum, lalu tambahkan ke tabel ini pada commit yang sama.
 
