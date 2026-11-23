@@ -1,4 +1,4 @@
-// Pembaca isi QR meja. Isi QR = `${origin}/meja/${token}` (dibuat di app/components/meja/QrMeja.tsx).
+// Pembaca isi QR meja. Isi QR = `${origin}/meja/${token}` (dibuat di app/components/table/TableQr.tsx).
 // Hanya token yang diambil; tujuan selalu /meja/<token> di web ini sendiri,
 // jadi QR dari domain lain tidak bisa membelokkan pembeli ke situs luar.
 
