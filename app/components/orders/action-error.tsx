@@ -1,10 +1,20 @@
+// Bagian aksi pesanan yang dipakai bersama antrean dashboard (OrderQueue) dan detail pesanan (OrderDetail):
+// cara menampilkan galat aksi, tautan Chat WA, tombol Tolak, dan dialog stok tidak cukup.
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { actionTexts, type OrderAction } from "@/lib/order-status";
 
-/** Cara menampilkan galat orderAction; dipakai antrean dashboard dan detail pesanan. */
+/**
+ * Menentukan cara menampilkan galat dari server action orderAction.
+ * OUT_OF_STOCK = kuota menu tidak cukup (tampilkan dialog stok); CONFLICT = status pesanan sudah berubah di server
+ * (toast peringatan lalu muat ulang data); galat lain = toast gagal dengan teks tetap.
+ * @param code kode galat dari backend
+ * @param action aksi yang gagal (confirm, cook, ready, complete, reject)
+ * @param message pesan galat dari server (dipakai untuk CONFLICT)
+ * @returns `{ kind: "stok" }`, atau `{ kind: "toast", tone, message, reload }` (`reload` = perlu muat ulang data)
+ */
 export function actionErrorView(
   code: string,
   action: OrderAction,
@@ -16,7 +26,12 @@ export function actionErrorView(
   return { kind: "toast", tone: "danger", message: actionTexts[action].failure, reload: false };
 }
 
-/** M-04, M-11: lewat Route Handler yang mengisi templat pesan toko lalu membuka wa.me. */
+/**
+ * Tautan Chat WA ke pembeli. Tautan menuju Route Handler (`/api/pesanan/<kode>/wa`) yang mengisi templat pesan toko
+ * lalu mengalihkan ke wa.me; dibuka di tab baru.
+ * @param props.code kode pesanan
+ * @returns elemen `a`
+ */
 export function ChatWaLink({ code }: { code: string }) {
   return (
     <a
@@ -34,6 +49,12 @@ export function ChatWaLink({ code }: { code: string }) {
   );
 }
 
+/**
+ * Tombol Tolak pesanan (gaya sekunder, teks merah).
+ * @param props.disabled nonaktif selama aksi lain berjalan
+ * @param props.onClick membuka dialog alasan tolak
+ * @returns Button
+ */
 export function RejectButton({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) {
   return (
     <Button variant="secondary" className="text-danger" disabled={disabled} onClick={onClick}>
@@ -42,7 +63,14 @@ export function RejectButton({ disabled, onClick }: { disabled?: boolean; onClic
   );
 }
 
-/** Stok tidak cukup saat konfirmasi (DB-E2). */
+/**
+ * Dialog saat pesanan tidak bisa dikonfirmasi karena kuota menu tidak cukup: pilih tambah kuota atau tolak pesanan.
+ * @param props.code kode pesanan; null = dialog tertutup
+ * @param props.onClose menutup dialog
+ * @param props.onReject membuka dialog tolak pesanan
+ * @param props.onAddQuota membawa penjual ke pengaturan kuota
+ * @returns Dialog
+ */
 export function OutOfStockDialog({
   code,
   onClose,

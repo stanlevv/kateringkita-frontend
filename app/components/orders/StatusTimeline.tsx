@@ -1,26 +1,37 @@
+// Komponen StatusTimeline: riwayat status pesanan dari cap waktu tiap tahap. Dipakai OrderDetail.
+// Komponen server biasa (tanpa "use client"): tidak memakai state, jadi bisa dirender di server maupun di klien.
 import { Ban, CheckCircle2, TimerOff } from "lucide-react";
 import { cx } from "@/app/components/ui/cx";
 import { formatTime, formatDate } from "@/lib/format";
 import { readyStepLabel } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 
+/** Tahap normal pesanan: kolom cap waktu dan labelnya. */
 const STEPS: [keyof MerchantOrder, string | null][] = [
   ["created_at", "Dipesan"],
   ["confirmed_at", "Dikonfirmasi"],
   ["cooking_at", "Mulai dimasak"],
-  ["ready_at", null], // labelTahapSiap: pesanan meja diantar, titik temu diambil
+  ["ready_at", null], // label dari readyStepLabel: pesanan meja "diantar", pesanan titik temu "diambil"
   ["completed_at", "Selesai"],
 ];
+/** Siapa yang membatalkan pesanan. */
 const ACTOR_LABELS = { merchant: "penjual", customer: "pembeli", system: "sistem" } as const;
 
-/** PS-N2/PS-A1: tahap yang sudah dilalui dari cap waktu; dibatalkan/kadaluarsa menutup dengan pelaku + alasan. */
+/**
+ * Daftar tahap yang sudah dilalui pesanan, diurutkan seperti alurnya. Pesanan dibatalkan atau kadaluarsa ditutup
+ * dengan baris merah berisi pelaku dan alasannya.
+ * @param props.order data pesanan
+ * @returns elemen `ol`
+ */
 export function StatusTimeline({ order }: { order: MerchantOrder }) {
+  // 1. Ambil tahap yang cap waktunya terisi.
   const steps = STEPS.filter(([field]) => order[field]).map(([field, label]) => ({
     label: label ?? readyStepLabel(order),
     time: order[field] as string,
     detail: null as string | null,
     failed: false,
   }));
+  // 2. Dibatalkan/kadaluarsa: tambah baris penutup dengan pelaku dan alasan.
   if (order.status === "cancelled" || order.status === "expired") {
     steps.push({
       label: order.cancelled_by

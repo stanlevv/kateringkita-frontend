@@ -1,8 +1,16 @@
+// Komponen VerificationBanner: banner status verifikasi toko di atas konten dashboard penjual.
+// Dipakai app/(dashboard)/layout.tsx. Data `merchant` berasal dari sesi login (requireMerchant).
 import Link from "next/link";
 import { Banner } from "@/app/components/ui/Banner";
 
-/** R-15 — banner status verifikasi toko di atas konten penjual; terverifikasi tidak menampilkan apa pun. */
+/**
+ * Banner sesuai status verifikasi toko: sedang diperiksa, perlu perbaikan (dengan catatan admin dan tautan ke
+ * Pengaturan), atau ditangguhkan (dengan alasan). Toko yang sudah terverifikasi tidak menampilkan apa pun.
+ * @param props.merchant data toko dari sesi (bisa null)
+ * @returns Banner, atau null bila tidak ada yang perlu diberitahukan
+ */
 export function VerificationBanner({ merchant }: { merchant: Record<string, unknown> | null }) {
+  // 1. Ambil catatan admin dan alasan penangguhan bila berupa teks. 2. Pilih banner menurut status verifikasi.
   const note = typeof merchant?.verification_note === "string" ? merchant.verification_note : null;
   const suspendedReason = typeof merchant?.suspended_reason === "string" ? merchant.suspended_reason : null;
   switch (merchant?.verification_status) {

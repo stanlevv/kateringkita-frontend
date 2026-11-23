@@ -1,3 +1,6 @@
+// Komponen QuotaRow: satu baris kuota menu (nama, badge stok, rincian porsi, stepper kuota, tombol +5/+10).
+// Dipakai QuotaPanel di dashboard. Badge stoknya juga dipakai MenuCard di halaman Menu.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { CircleCheck, CircleX, TriangleAlert } from "lucide-react";
@@ -8,13 +11,21 @@ import { menuStockLevel, type StockLevel } from "@/lib/dashboard";
 import type { Tone } from "@/lib/order-status";
 import type { MerchantMenu } from "@/types/menu";
 
+/** Label, warna, dan ikon badge untuk tiap tingkat stok (habis, menipis, aman). */
 export const STOCK_BADGES: Record<StockLevel, { label: string; tone: Tone; icon: typeof CircleX }> = {
   habis: { label: "Habis", tone: "danger", icon: CircleX },
   menipis: { label: "Menipis", tone: "warning", icon: TriangleAlert },
   aman: { label: "Aman", tone: "success", icon: CircleCheck },
 };
 
-/** Brief §5: baris kuota; batas bawah = terjual + ditahan (DB-E4). */
+/**
+ * Baris kuota satu menu. Kuota tidak bisa diturunkan di bawah porsi yang sudah terjual ditambah yang sedang ditahan
+ * pesanan (ditahan = pesanan yang menunggu konfirmasi). Menu habis mendapat tombol cepat +5 dan +10.
+ * @param props.menu data menu
+ * @param props.onQuotaChange dipanggil dengan kuota baru (angka mutlak)
+ * @param props.onDelta dipanggil dengan selisih (+1, -1, +5, ...); bila ada, tombol memakai ini, bukan onQuotaChange
+ * @returns elemen `li`
+ */
 export function QuotaRow({
   menu,
   onQuotaChange,

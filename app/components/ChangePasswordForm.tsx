@@ -1,3 +1,7 @@
+// Komponen ChangePasswordForm: formulir ganti kata sandi akun yang sedang masuk.
+// Dipakai Pengaturan penjual, halaman Akun admin, dan layar wajib ganti sandi admin. Data dikirim lewat server
+// action changePassword (app/actions/account.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -17,9 +21,15 @@ const FIELD_LABELS: Record<string, string> = {
   confirm: "Ulangi kata sandi baru",
 };
 
-/** PG-N2, PG-E2: formulir sendiri, terpisah dari simpan pengaturan toko. */
-/** `onSelesai`: dipanggil setelah sandi diganti (admin dengan sandi sementara → muat ulang panel). */
+/**
+ * Formulir ganti kata sandi, terpisah dari tombol simpan pengaturan toko. Galat tampil di bawah isian setelah
+ * isian disentuh, dan ringkasan galat muncul di atas saat formulir dikirim.
+ * @param props.onPasswordChanged dipanggil setelah sandi berhasil diganti (opsional; admin dengan sandi sementara
+ * memakainya untuk memuat ulang panel)
+ * @returns elemen `form`
+ */
 export function ChangePasswordForm({ onPasswordChanged }: { onPasswordChanged?: () => void } = {}) {
+  // 1. State isian, isian yang sudah disentuh, dan galat dari server.
   const [values, setValues] = useState(EMPTY_FORM);
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -27,6 +37,7 @@ export function ChangePasswordForm({ onPasswordChanged }: { onPasswordChanged?: 
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  // 2. Hitung galat dari aturan formulir (dan konfirmasi sandi yang harus sama), lalu gabungkan dengan galat server.
   const clientErrors = validateFields(changePasswordSchema, values);
   if (values.confirm !== values.new_password) clientErrors.confirm = "Konfirmasi kata sandi tidak sama.";
   const allErrors = { ...serverErrors, ...clientErrors };
@@ -38,6 +49,7 @@ export function ChangePasswordForm({ onPasswordChanged }: { onPasswordChanged?: 
         message: `${FIELD_LABELS[field] ?? field}: ${message}`,
       }))
     : [];
+  // 3. Pengubah isian: setiap ketikan menghapus galat server lama.
   const setField = (field: keyof typeof EMPTY_FORM, value: string) => {
     setServerErrors({});
     setValues((previous) => ({ ...previous, [field]: value }));
@@ -45,18 +57,21 @@ export function ChangePasswordForm({ onPasswordChanged }: { onPasswordChanged?: 
   const blur = (field: string) => () => setTouched((previous) => new Set(previous).add(field));
 
   async function submit(event: React.FormEvent) {
+    // 1. Masih ada galat: tampilkan ringkasan dan pindahkan fokus ke sana.
     event.preventDefault();
     if (Object.keys(clientErrors).length > 0) {
       setSubmitAttempted(true);
       setFocusKey((count) => count + 1);
       return;
     }
+    // 2. Kirim sekali saja (abaikan klik kedua selama mengirim).
     if (submitting) return;
     setSubmitting(true);
     const result = await callAction(() =>
       changePassword({ current_password: values.current_password, new_password: values.new_password }),
     );
     setSubmitting(false);
+    // 3. Gagal: galat per isian dari server, atau toast untuk galat umum.
     if ("error" in result) {
       if (result.error.fields) {
         setServerErrors(
@@ -69,6 +84,7 @@ export function ChangePasswordForm({ onPasswordChanged }: { onPasswordChanged?: 
       }
       return;
     }
+    // 4. Berhasil: kosongkan formulir, beri tahu pengguna, lalu panggil onPasswordChanged.
     setValues(EMPTY_FORM);
     setTouched(new Set());
     setSubmitAttempted(false);

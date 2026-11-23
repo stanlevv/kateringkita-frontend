@@ -1,3 +1,8 @@
+// Komponen OrderDetail: rincian satu pesanan (pemesan, item, harga, riwayat status) dan tombol aksinya.
+// Dipakai halaman /pesanan/[code] dan laci slip di dashboard (tanpa tombol aksi).
+// Status pesanan: holding = menunggu konfirmasi/pembayaran, confirmed = dikonfirmasi, cooking = dimasak,
+// ready = siap, completed = selesai, cancelled = dibatalkan, expired = kadaluarsa (tidak dikonfirmasi tepat waktu).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -17,6 +22,7 @@ import { ChatWaLink, actionErrorView, OutOfStockDialog, RejectButton } from "./a
 import { RejectDialog } from "./RejectDialog";
 import { StatusTimeline } from "./StatusTimeline";
 
+/** Satu baris rincian harga (label kiri, nominal kanan); `bold` untuk baris Total. */
 const PriceRow = ({ label, value, bold }: { label: string; value: string; bold?: boolean }) => (
   <div className={cx("flex justify-between gap-3", bold ? "font-semibold text-ink" : "text-ink-muted")}>
     <dt>{label}</dt>
@@ -24,6 +30,7 @@ const PriceRow = ({ label, value, bold }: { label: string; value: string; bold?:
   </div>
 );
 
+/** Bagian rincian dengan judul (Pemesan, Pesanan, Riwayat status). */
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-3">
     <h2 className="font-semibold text-ink">{title}</h2>
@@ -31,8 +38,12 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 );
 
-/** Tombol aksi sama dengan OrderCard (statusView), tetapi langsung terkirim tanpa jendela Batalkan. */
+/**
+ * Tombol aksi pesanan. Pilihan tombolnya sama dengan OrderCard (dari orderStatusView), tetapi aksi langsung dikirim
+ * tanpa jendela Batalkan 5 detik seperti di dashboard.
+ */
 function OrderActions({ order }: { order: MerchantOrder }) {
+  // State: aksi yang sedang dikirim, dialog tolak, dan dialog stok tidak cukup.
   const router = useRouter();
   const [sending, setSending] = useState<OrderAction | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -40,18 +51,22 @@ function OrderActions({ order }: { order: MerchantOrder }) {
   const view = orderStatusView(order);
 
   async function runAction(action: OrderAction, reason?: string) {
+    // 1. Kunci tombol lalu kirim aksi ke server.
     setSending(action);
     const result = await callAction(() => orderAction(order.code, action, reason));
     if ("data" in result) {
-      // Tombol tetap terkunci sampai status pada prop berubah (Aksi di-key status); jangan buka kunci di jeda refresh.
+      // 2. Berhasil: tombol tetap terkunci sampai status pada prop berubah (OrderActions di-key status), jadi kunci
+      // tidak terbuka di jeda sebelum data baru tiba.
       toast({ tone: "success", message: `Pesanan ${order.code} ${successText(action, order)}` });
     } else {
+      // 3. Gagal: buka kunci, lalu tampilkan galat; hanya CONFLICT yang perlu memuat ulang data.
       setSending(null);
       const errorView = actionErrorView(result.error.code, action, result.error.message);
       if (errorView.kind === "stok") setOutOfStockOpen(true);
       else toast({ tone: errorView.tone, message: errorView.message });
       if (errorView.kind === "stok" || !errorView.reload) return;
     }
+    // 4. Muat ulang data server (router.refresh) agar status baru tampil.
     router.refresh();
   }
 
@@ -92,7 +107,14 @@ function OrderActions({ order }: { order: MerchantOrder }) {
   );
 }
 
-/** PS-N2, PS-A1. `aksi={false}` untuk laci slip (dashboard sudah punya aksi di kartu). Selalu memakai prop; aksi sukses memuat ulang halaman. */
+/**
+ * Rincian satu pesanan. Selalu menampilkan data dari prop; setelah aksi berhasil halaman dimuat ulang sehingga prop
+ * berisi status terbaru.
+ * @param props.order data pesanan
+ * @param props.showActions tampilkan tombol aksi (bawaan true; false untuk laci slip di dashboard karena kartu
+ * dashboard sudah punya tombol aksi)
+ * @returns elemen `div` berisi rincian
+ */
 export function OrderDetail({ order, showActions = true }: { order: MerchantOrder; showActions?: boolean }) {
   const orderDay = wibDate(order.created_at);
   return (
