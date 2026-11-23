@@ -1,3 +1,4 @@
+// Test ModerationTable: sembunyikan ulasan dengan alasan, pulihkan menu lewat konfirmasi, kolom foto, dan hapus foto.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";

@@ -1,3 +1,7 @@
+// Komponen ModerationTable: tabel moderasi di /admin/moderasi untuk ulasan pembeli atau menu toko. Moderasi =
+// menyembunyikan ulasan atau menurunkan menu yang melanggar (dengan alasan), memulihkannya, atau menghapus satu foto menu.
+// Aksi lewat server action moderate dan deleteMenuPhoto (app/actions/admin/moderation.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState } from "react";
@@ -18,7 +22,8 @@ import { callAction } from "@/lib/action";
 import { formatRupiah, formatDate } from "@/lib/format";
 import type { ModerationAction, ModerationMenu, ModerationReview } from "@/types/admin";
 
-// hide/takedown: dialog alasan; unhide/restore: konfirmasi (AUD-35: tidak jalan dengan sekali klik)
+// Teks tombol dan dialog per aksi. hide/takedown (sembunyikan/turunkan) lewat dialog alasan; unhide/restore lewat
+// konfirmasi, supaya tidak jalan dengan sekali klik.
 const ACTION_TEXTS: Record<
   ModerationAction,
   { label: string; title: string; successMessage: string; body?: string; confirmLabel?: string }
@@ -41,6 +46,13 @@ const ACTION_TEXTS: Record<
   },
 };
 
+/**
+ * Lencana status moderasi, ditambah alasan bila sedang dimoderasi.
+ * @param props.moderated true bila ulasan disembunyikan atau menu diturunkan
+ * @param props.reason alasan moderasi (boleh null)
+ * @param props.label teks lencana: [normal, dimoderasi]
+ * @returns lencana (dan alasan)
+ */
 function ModerationStatus({
   moderated,
   reason,
@@ -64,7 +76,13 @@ function ModerationStatus({
   );
 }
 
-/** Foto utama lalu foto tambahan; klik membuka ukuran penuh, tombol × menghapus satu foto (dengan alasan). */
+/**
+ * Foto utama lalu foto tambahan sebuah menu. Klik membuka ukuran penuh di tab baru; tombol × menghapus satu foto (dengan
+ * alasan, lewat dialog di ModerationTable).
+ * @param props.menu menu yang fotonya ditampilkan
+ * @param props.onDelete dipanggil dengan URL foto yang akan dihapus
+ * @returns deretan foto kecil, atau teks "Tanpa foto"
+ */
 function MenuPhotos({ menu, onDelete }: { menu: ModerationMenu; onDelete: (url: string) => void }) {
   const photos = [menu.image_url, ...(menu.gallery ?? [])].filter((url): url is string => !!url);
   if (!photos.length) return <span className="text-sm text-ink-muted">Tanpa foto</span>;
@@ -95,10 +113,18 @@ function MenuPhotos({ menu, onDelete }: { menu: ModerationMenu; onDelete: (url: 
   );
 }
 
-/** F19 — daftar ulasan atau menu dengan aksi moderasi; alasan wajib untuk sembunyikan/turunkan. */
+/**
+ * Tabel moderasi ulasan atau menu. Alasan wajib untuk sembunyikan, turunkan, dan hapus foto. Setelah aksi berhasil tampil
+ * toast dan data halaman dimuat ulang (router.refresh).
+ * @param props jenis data dan barisnya (dua bentuk: ulasan atau menu)
+ * @param props.kind jenis data: "ulasan" atau "menu" (sama dengan nilai ?jenis= di URL)
+ * @param props.rows ulasan atau menu satu halaman, sesuai `kind`
+ * @returns tabel dengan dialog alasan, dialog hapus foto, dan dialog konfirmasi; atau EmptyState bila kosong
+ */
 export function ModerationTable(
   props: { kind: "ulasan"; rows: ModerationReview[] } | { kind: "menu"; rows: ModerationMenu[] },
 ) {
+  // 1. State: dialog alasan, konfirmasi pulihkan, isi alasan (dipakai bersama), tanda sibuk, dan foto yang akan dihapus.
   const router = useRouter();
   const [dialog, setDialog] = useState<{ id: number; action: ModerationAction } | null>(null);
   const [restoring, setRestoring] = useState<{ id: number; action: ModerationAction } | null>(null);
@@ -106,6 +132,7 @@ export function ModerationTable(
   const [busy, setBusy] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState<{ id: number; url: string } | null>(null);
 
+  // 2. Hapus satu foto menu dengan alasan; menu tetap dijual.
   async function deletePhoto(id: number, url: string, reasonText: string) {
     if (busy) return;
     setBusy(true);
@@ -118,6 +145,7 @@ export function ModerationTable(
     router.refresh();
   }
 
+  // 3. Jalankan aksi moderasi (alasan hanya untuk sembunyikan/turunkan).
   async function submit(id: number, action: ModerationAction, reasonText?: string) {
     if (busy) return;
     setBusy(true);
@@ -131,6 +159,7 @@ export function ModerationTable(
     router.refresh();
   }
 
+  // 4. Tombol aksi per baris: sembunyikan/turunkan membuka dialog alasan, tampilkan lagi/pulihkan membuka konfirmasi.
   const actionButton = (id: number, action: ModerationAction) => (
     <Button
       variant={action === "hide" || action === "takedown" ? "danger" : "secondary"}
@@ -147,6 +176,7 @@ export function ModerationTable(
     return <EmptyState icon={Flag} title="Tidak ada data" body="Belum ada data yang cocok dengan filter ini." />;
   }
 
+  // 5. Kolom tabel berbeda untuk ulasan dan menu.
   const table =
     props.kind === "ulasan" ? (
       <DataTable<ModerationReview>

@@ -1,3 +1,7 @@
+// Komponen MaintenanceForm: saklar mode pemeliharaan di /admin/promo. Mode pemeliharaan = penjual dan pembeli tidak
+// bisa memakai KateringKita sementara dan melihat pesan dari admin; panel admin dan pembayaran yang berjalan tetap
+// diproses. Disimpan lewat server action saveMaintenance (app/actions/admin/promos.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState } from "react";
@@ -12,14 +16,20 @@ import { toast } from "@/app/components/ui/Toast";
 import { callAction } from "@/lib/action";
 import type { Maintenance } from "@/types/meta";
 
-/** F27: saklar mode pemeliharaan. Saat aktif penjual & pembeli tidak bisa memakai KateringKita; panel admin tetap jalan. */
+/**
+ * Saklar mode pemeliharaan dengan pesan untuk pengguna. Menyalakan wajib dikonfirmasi; mematikan langsung.
+ * @param props.maintenance status sekarang dari backend: `aktif` dan `pesan` (kunci API)
+ * @returns bagian formulir dengan pesan, tombol, dan dialog konfirmasi
+ */
 export function MaintenanceForm({ maintenance }: { maintenance: Maintenance }) {
+  // 1. Isian pesan (awalnya pesan yang tersimpan), galat, dialog konfirmasi, dan tanda sedang menyimpan.
   const router = useRouter();
   const [message, setMessage] = useState(maintenance.pesan ?? "");
   const [error, setError] = useState<string>();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // 2. Simpan status (nyala/mati) beserta pesan, lalu muat ulang data halaman. Pesan lebih dari 200 karakter ditolak.
   async function save(active: boolean) {
     if (message.trim().length > 200) return setError("Pesan maksimal 200 karakter.");
     setSaving(true);

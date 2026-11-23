@@ -1,3 +1,7 @@
+// Komponen AnnouncementForm: formulir pengumuman di /admin/pengumuman (penerima, judul, isi). Pengumuman dikirim
+// sebagai notifikasi aplikasi lewat server action sendAnnouncement (app/actions/admin/announcements.ts,
+// POST /admin/broadcasts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state.
 "use client";
 
 import { useState } from "react";
@@ -9,14 +13,20 @@ import { Input, Select, Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
 import { callAction } from "@/lib/action";
 
+// Pilihan penerima (nilai dikirim ke API) dan labelnya.
 const AUDIENCE_LABELS: Record<AnnouncementAudience, string> = {
   all: "Semua pembeli dan penjual",
   customer: "Semua pembeli",
   merchant: "Semua penjual",
 };
 
-/** Broadcast pengumuman ke notifikasi aplikasi; dikonfirmasi dulu karena tidak bisa ditarik kembali. */
+/**
+ * Formulir kirim pengumuman. Dikonfirmasi dulu karena pengumuman tidak bisa ditarik kembali. Setelah terkirim, judul
+ * dan isi dikosongkan (penerima tetap).
+ * @returns formulir dengan dialog konfirmasi
+ */
 export function AnnouncementForm() {
+  // 1. Isian (kuncinya sama dengan field API), galat per isian, dialog konfirmasi, dan tanda sibuk.
   const [values, setValues] = useState<{ audience: AnnouncementAudience; title: string; body: string }>({
     audience: "customer",
     title: "",
@@ -26,6 +36,7 @@ export function AnnouncementForm() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // 2. Tombol kirim: periksa judul dan isi wajib, lalu buka konfirmasi.
   function validate(event: React.FormEvent) {
     event.preventDefault();
     const newErrors: Record<string, string> = {};
@@ -35,11 +46,14 @@ export function AnnouncementForm() {
     if (!Object.keys(newErrors).length) setConfirmOpen(true);
   }
 
+  // 3. Setelah dikonfirmasi: kirim; galat per isian dari backend ditampilkan di isiannya.
   async function submit() {
+    // 1. Kirim lalu tutup konfirmasi.
     setBusy(true);
     const result = await callAction(() => sendAnnouncement(values));
     setBusy(false);
     setConfirmOpen(false);
+    // 2. Gagal: tandai isian dan toast. Berhasil: toast jumlah akun penerima, kosongkan judul dan isi.
     if ("error" in result) {
       if (result.error.fields)
         setErrors(

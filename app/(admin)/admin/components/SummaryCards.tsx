@@ -1,3 +1,6 @@
+// Komponen SummaryCards: isi halaman /admin (ringkasan): jumlah pesanan hari ini per status, omzet, pesanan tertahan
+// yang hampir kedaluwarsa, ubin jumlah penjual per status (menaut ke daftar terkait), dan aksi admin terakhir.
+// Server component: hanya menampilkan data yang dikirim halaman.
 import Link from "next/link";
 import { Banknote, CheckCircle2, ChevronRight, Hourglass, PauseCircle, Store, Timer, Wrench } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -10,6 +13,7 @@ import type { AdminSummary, AdminOrderStatus } from "@/types/admin";
 import { formatTime, formatRupiah, formatDate } from "@/lib/format";
 import { statusView, type DisplayStatus } from "@/lib/order-status";
 
+// Urutan status pesanan yang ditampilkan, dipasangkan dengan status tampilan di lib/order-status.ts.
 const ORDER_STATUSES: [AdminOrderStatus, DisplayStatus][] = [
   ["holding", "menunggu-konfirmasi"],
   ["confirmed", "confirmed"],
@@ -20,6 +24,7 @@ const ORDER_STATUSES: [AdminOrderStatus, DisplayStatus][] = [
   ["expired", "expired"],
 ];
 
+// Ubin jumlah penjual: kunci data, label, tujuan tautan, dan ikon.
 const MERCHANT_TILES: { key: keyof AdminSummary["merchants"]; label: string; href: string; icon: LucideIcon }[] = [
   { key: "pending", label: "Menunggu verifikasi", href: "/admin/verifikasi", icon: Hourglass },
   { key: "needs_fix", label: "Perlu perbaikan", href: "/admin/verifikasi", icon: Wrench },
@@ -28,8 +33,14 @@ const MERCHANT_TILES: { key: keyof AdminSummary["merchants"]; label: string; hre
   { key: "open_now", label: "Buka sekarang", href: "/admin/penjual?status=verified&open=1", icon: Store },
 ];
 
+// Gaya tautan pembungkus ubin (dengan cincin fokus keyboard).
 const TILE_LINK_CLASS = `block rounded-lg ${focusRing}`;
 
+/**
+ * Kartu ringkasan platform hari ini (WIB).
+ * @param props.data ringkasan dari backend (GET /admin/summary)
+ * @returns tiga bagian: pesanan hari ini dan KPI, ubin penjual, aksi admin terakhir
+ */
 export function SummaryCards({ data }: { data: AdminSummary }) {
   return (
     <div className="flex flex-col gap-6">

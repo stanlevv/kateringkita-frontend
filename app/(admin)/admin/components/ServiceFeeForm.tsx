@@ -1,3 +1,6 @@
+// Komponen ServiceFeeForm: formulir biaya layanan per pesanan di /admin/promo. Disimpan lewat server action
+// saveServiceFee (app/actions/admin/promos.ts); aturan angka dari validateServiceFee (services/admin-master.service.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState } from "react";
@@ -11,19 +14,26 @@ import { callAction } from "@/lib/action";
 import { validateServiceFee } from "@/services/admin-master.service";
 import { formatRupiah } from "@/lib/format";
 
-/** A-04 — biaya layanan per pesanan. */
+/**
+ * Formulir biaya layanan per pesanan (bilangan bulat 0–100.000 Rupiah).
+ * @param props.currentFee biaya yang berlaku sekarang
+ * @returns formulir dengan biaya sekarang, isian biaya baru, dan tombol Simpan
+ */
 export function ServiceFeeForm({ currentFee }: { currentFee: number }) {
   const router = useRouter();
   const [text, setText] = useState(String(currentFee));
   const [error, setError] = useState<string>();
   const [saving, setSaving] = useState(false);
 
+  // Simpan biaya baru.
   async function submit(event: React.FormEvent) {
+    // 1. Ubah teks menjadi angka (kosong = NaN supaya ditolak) dan periksa aturannya.
     event.preventDefault();
     const fee = text.trim() === "" ? NaN : Number(text);
     const problem = validateServiceFee(fee);
     if (problem) return setError(problem);
     setError(undefined);
+    // 2. Tidak berubah: cukup beri tahu. Berubah: kirim ke server lalu muat ulang data halaman.
     if (fee === currentFee) return void toast({ tone: "info", message: "Tidak ada perubahan" });
     setSaving(true);
     const result = await callAction(() => saveServiceFee(fee));

@@ -1,3 +1,4 @@
+// Test SummaryCards: tautan ubin, angka dan omzet, status pesanan berlabel, dan log terakhir.
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SummaryCards } from "./SummaryCards";

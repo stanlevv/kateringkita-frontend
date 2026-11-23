@@ -1,3 +1,4 @@
+// Test AnnouncementForm: galat isian kosong, konfirmasi, kirim, dan toast jumlah penerima.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";

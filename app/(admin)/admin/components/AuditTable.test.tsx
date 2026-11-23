@@ -1,3 +1,4 @@
+// Test AuditTable: isi kolom log, keadaan kosong, dan paginasi yang mempertahankan filter URL.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

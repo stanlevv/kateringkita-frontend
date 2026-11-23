@@ -190,10 +190,12 @@ export function AdminTable({ rows, currentAdminId }: { rows: AdminAccount[]; cur
   // 2. Menjalankan satu aksi akun: tutup konfirmasi, tampilkan toast, lalu muat ulang data (router.refresh).
   //    Mengembalikan data hasil aksi (dipakai reset sandi), atau null bila gagal.
   async function runAction<T>(request: () => Promise<ActionResult<T>>, successMessage: string) {
+    // 1. Panggil server action, lalu tutup dialog konfirmasi apa pun hasilnya.
     setBusy(true);
     const result = await callAction(request);
     setBusy(false);
     setConfirmation(null);
+    // 2. Gagal: toast galat. Berhasil: toast sukses dan muat ulang data.
     if ("error" in result) {
       toast({ tone: "danger", message: result.error.message });
       return null;

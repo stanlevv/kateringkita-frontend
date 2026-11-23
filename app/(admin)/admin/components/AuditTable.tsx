@@ -64,8 +64,10 @@ export function AuditTable({
   total: number;
   filtered: boolean;
 }) {
+  // 1. URL sekarang, untuk tautan halaman yang mempertahankan filter.
   const path = usePathname();
   const params = useSearchParams();
+  // 2. Kosong: halaman di luar jangkauan (tautan ke halaman 1), hasil filter kosong, atau belum ada log sama sekali.
   if (rows.length === 0) {
     if (page > 1) {
       return (

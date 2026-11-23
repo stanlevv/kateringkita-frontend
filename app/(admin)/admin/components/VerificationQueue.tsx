@@ -1,3 +1,6 @@
+// Komponen VerificationQueue: isi halaman /admin/verifikasi. Antrean verifikasi = penjual yang menunggu diperiksa admin
+// (toko baru, atau toko yang sudah memperbaiki data setelah diminta). Tiap kartu berisi checklist dan tombol aksi admin
+// (setujui/verifikasi, minta perbaikan, tangguhkan) dari AdminActionDialog. Server component: hanya menampilkan data.
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { EmptyState } from "@/app/components/ui/EmptyState";
@@ -8,7 +11,12 @@ import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
 import { VerificationStatus } from "./VerificationStatus";
 
-/** A-05 — antrean verifikasi, terlama dulu (urutan dari backend). */
+/**
+ * Antrean verifikasi, terlama dulu (urutan dari backend). Label "Diperbarui penjual" muncul bila penjual mengubah
+ * tokonya setelah admin memberi catatan.
+ * @param props.rows penjual di antrean
+ * @returns daftar kartu penjual, atau EmptyState bila antrean kosong
+ */
 export function VerificationQueue({ rows }: { rows: VerificationQueueItem[] }) {
   if (rows.length === 0)
     return (
