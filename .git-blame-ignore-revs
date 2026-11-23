@@ -1,2 +1,6 @@
 # style: format seluruh kode dengan prettier (F28)
 2e2acb943154910320b56e5941fd779c91307882
+# refactor(web-dasar): ganti nama file types, lib, services (F28)
+21e6b7028deb9935e19763fbd088f48bbbf2a467
+# refactor(web-dasar): nama kode bahasa Inggris yang jelas di types, lib, services (F28)
+ba20ed2123aa29619ec6232bbea640ad5635a450
