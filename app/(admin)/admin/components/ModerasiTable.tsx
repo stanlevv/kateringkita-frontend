@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, EyeOff, Flag, Star } from "lucide-react";
 import { moderasi } from "@/app/actions/admin/moderasi";
@@ -33,6 +34,22 @@ function Status({ dimoderasi, alasan, label }: { dimoderasi: boolean; alasan: st
     </span>
   ) : (
     <Badge tone="success" icon={CheckCircle2}>{label[0]}</Badge>
+  );
+}
+
+/** Foto utama lalu foto tambahan; klik membuka ukuran penuh agar admin bisa memeriksa isinya. */
+function FotoMenu({ m }: { m: MenuModerasi }) {
+  const foto = [m.image_url, ...(m.gallery ?? [])].filter((u): u is string => !!u);
+  if (!foto.length) return <span className="text-sm text-ink-muted">Tanpa foto</span>;
+  return (
+    <span className="flex flex-wrap gap-1">
+      {foto.map((u, i) => (
+        <a key={u} href={u} target="_blank" rel="noopener noreferrer" aria-label={`Buka foto ${i + 1} ${m.name}${i === 0 && m.image_url ? " (utama)" : ""}`}
+          className="relative block size-10 overflow-hidden rounded-sm bg-subtle ring-offset-2 focus-visible:ring-2 focus-visible:ring-info">
+          <Image src={u} alt="" fill unoptimized sizes="40px" className="object-cover" />
+        </a>
+      ))}
+    </span>
   );
 }
 
@@ -81,6 +98,7 @@ export function ModerasiTable(props: { jenis: "ulasan"; rows: UlasanModerasi[] }
   ) : (
     <DataTable<MenuModerasi> caption="Menu" rows={props.rows} rowKey={(m) => String(m.id)} columns={[
       { key: "menu", header: "Menu", cell: (m) => <span className="font-medium">{m.name}</span> },
+      { key: "foto", header: "Foto", cell: (m) => <FotoMenu m={m} /> },
       { key: "toko", header: "Toko", cell: (m) => m.merchant.business_name },
       { key: "harga", header: "Harga", align: "right", cell: (m) => formatRupiah(m.price) },
       { key: "aktif", header: "Dijual", cell: (m) => (m.is_active ? "Ya" : "Tidak") },

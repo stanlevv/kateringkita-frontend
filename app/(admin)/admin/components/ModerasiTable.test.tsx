@@ -42,6 +42,17 @@ describe("F19 ModerasiTable", () => {
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Ya, pulihkan" })); });
     expect(moderasi).toHaveBeenCalledWith(9, "restore", undefined);
   });
+  it("kolom Foto: foto utama lalu foto tambahan, tiap foto membuka ukuran penuh; tanpa foto → teks", () => {
+    const g = ["https://foto.test/b.jpg", "https://foto.test/c.jpg"];
+    const { unmount } = render(<ModerasiTable jenis="menu" rows={[{ ...menu, image_url: "https://foto.test/a.jpg", gallery: g }]} />);
+    const links = screen.getAllByRole("link", { name: /Buka foto/ });
+    expect(links.map((l) => l.getAttribute("href"))).toEqual(["https://foto.test/a.jpg", ...g]);
+    expect(links[0]).toHaveAccessibleName("Buka foto 1 Es Teh (utama)");
+    expect(links[0]).toHaveAttribute("target", "_blank");
+    unmount();
+    render(<ModerasiTable jenis="menu" rows={[menu]} />);
+    expect(screen.getByText("Tanpa foto")).toBeInTheDocument();
+  });
   it("kosong -> empty state", () => {
     render(<ModerasiTable jenis="menu" rows={[]} />);
     expect(screen.getByText("Tidak ada data")).toBeInTheDocument();
