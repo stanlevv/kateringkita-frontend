@@ -6,7 +6,7 @@
 ![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-990%20Tes-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
+[![ci](https://github.com/stanlevv/kateringkita-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/stanlevv/kateringkita-frontend/actions/workflows/ci.yml)
 ![Playwright](https://img.shields.io/badge/Playwright-14%20Scenarios-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)
 
@@ -132,16 +132,40 @@ app/
 ├── api/                       # Next.js Route Handlers (sinkronisasi live, download CSV)
 ├── actions/                   # Server Actions (auth, profile, menu, pesanan, admin)
 ├── components/                # Komponen UI modular
-│   ├── ui/                    # Button, Input, Modal, Stepper, Table, Notification
-│   ├── shell/                 # Sidebar navigasi, Header, ProfileDropdown
+│   ├── ui/                    # Button, Input, Dialog, Stepper, DataTable, Toast
+│   ├── shell/                 # Sidebar navigasi, Header, AccountMenu
 │   └── menu/, orders/, ...    # Komponen domain spesifik (QuotaRow, OrderCard)
 hooks/                         # Custom React Hooks (useQuota, useLiveDashboard, useNotifications)
 services/                      # API client caller, token handling, domain services
 lib/                           # Logika murni, schema validasi Zod, formatting rupiah
 styles/                        # Theme tokens & custom CSS variables
-test/                          # Konfigurasi pengujian Vitest & arsitektur assertions
-e2e/                           # End-to-end automation test suite (Playwright)
+test/                          # Setup Vitest, penjaga struktur (structure.test.ts) & kerangka memuat (page-skeleton.test.ts)
+e2e/                           # End-to-end test Playwright (helpers.ts + spek per alur)
 ```
+
+---
+
+## 🧭 Cara membaca kode ini
+
+Setiap fitur mengikuti jalur yang sama, dari layar sampai backend:
+
+```text
+halaman (app/…/page.tsx) → server action (app/actions) → services → services/api.ts → backend
+```
+
+- **Halaman** (`page.tsx`) adalah server component: mengambil data lewat `services/<fitur>.service.ts` lalu merender komponen.
+- **Server action** (`app/actions/*.ts`, ditandai `"use server"`) dipanggil dari tombol/form di browser, tetapi berjalan di server.
+- **services/** memanggil REST API backend; `services/api.ts` menambahkan token sesi dari cookie `kk_session`.
+- Logika murni (tanpa jaringan) ada di `lib/`, tipe data JSON backend di `types/`, hook React di `hooks/`.
+
+Contoh penelusuran, penjual menerima pesanan:
+
+1. `app/(dashboard)/pesanan/[code]/page.tsx` mengambil pesanan dengan `getOrder` dari `services/order.service.ts`, lalu merender `OrderDetail`.
+2. Tombol **Konfirmasi** di `app/components/orders/OrderDetail.tsx` memanggil server action `orderAction(code, "confirm")` di `app/actions/orders.ts`.
+3. `orderAction` memeriksa sesi penjual, lalu memanggil `merchantFetch` di `services/api.ts` → `POST /merchant/orders/:code/confirm` di backend.
+
+Aturan nama (kode bahasa Inggris, teks untuk pengguna bahasa Indonesia) dan glosarium istilah ada di [CONTRIBUTING.md](CONTRIBUTING.md).
+Sebelum commit, jalankan `npm run format:check`, `npm run lint`, dan `npm test`.
 
 ---
 
@@ -176,14 +200,15 @@ npm run dev
 
 ## 🧪 Skrip & Pengujian Kualitas
 
-| Perintah              | Deskripsi                                                 |
-| --------------------- | --------------------------------------------------------- |
-| `npm run dev`         | Menjalankan server pengembang Next.js di `localhost:3000` |
-| `npm run build`       | Melakukan build produksi Next.js                          |
-| `npm test`            | Menjalankan 804 automated unit tests menggunakan Vitest   |
-| `npm run lint`        | Menjalankan ESLint 9 untuk memeriksa kualitas kode        |
-| `npx tsc --noEmit`    | Memeriksa kepatuhan tipe TypeScript di seluruh proyek     |
-| `npx playwright test` | Menjalankan 14 skenario end-to-end testing di peramban    |
+| Perintah               | Deskripsi                                                 |
+| ---------------------- | --------------------------------------------------------- |
+| `npm run dev`          | Menjalankan server pengembang Next.js di `localhost:3000` |
+| `npm run build`        | Melakukan build produksi Next.js                          |
+| `npm test`             | Menjalankan unit test Vitest (tanpa backend)              |
+| `npm run format:check` | Memeriksa format kode dengan Prettier                     |
+| `npm run lint`         | Menjalankan ESLint 9 untuk memeriksa kualitas kode        |
+| `npx tsc --noEmit`     | Memeriksa kepatuhan tipe TypeScript di seluruh proyek     |
+| `npx playwright test`  | Menjalankan 14 skenario end-to-end testing di peramban    |
 
 ---
 
