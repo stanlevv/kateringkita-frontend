@@ -1,3 +1,5 @@
+// Test route handler /api/dashboard/sinkron: `sejak` tidak sah -> 400 tanpa memanggil backend, sukses -> 200 tanpa cache,
+// galat backend -> 503, dan sesi diperiksa sebelum mengambil data. Services dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 

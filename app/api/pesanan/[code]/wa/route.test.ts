@@ -1,3 +1,5 @@
+// Test route handler /api/pesanan/[code]/wa: wajib sesi penjual, kode pesanan di-encode, hanya tautan https://wa.me/
+// yang diikuti, dan galat atau tautan lain kembali ke detail pesanan dengan ?wa=gagal. redirect dan services dipalsukan.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const redirect = vi.fn((url: string) => {

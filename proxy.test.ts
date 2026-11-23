@@ -1,3 +1,5 @@
+// Test proxy.ts: tanpa cookie sesi dialihkan ke /login?next=<path+query> (parameter internal _rsc dibuang), dengan
+// cookie lanjut, dan matcher mencakup semua halaman dashboard serta admin.
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { config, proxy } from "./proxy";

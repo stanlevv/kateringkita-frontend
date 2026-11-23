@@ -1,3 +1,5 @@
+// Test route handler /api/laporan/csv: isi dan nama file CSV, galat backend, rentang tanggal tidak sah, server sesi
+// mati, tanpa sesi penjual, dan permintaan dari situs lain. Sesi dan getTransactions dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
@@ -71,7 +73,7 @@ describe("LP-N4 rute CSV", () => {
   });
 });
 
-// AUD-48: navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
+// Navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
 describe("XS-Leak", () => {
   it.each(["cross-site", "same-site", "none"])(
     "sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca",

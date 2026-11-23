@@ -1,3 +1,5 @@
+// Test route handler /api/admin/keuangan/csv: isi CSV (baris toko aman dari rumus Excel dan baris TOTAL), bukan admin,
+// rentang salah, galat backend, dan permintaan dari situs lain. Sesi dan getFinanceSummary dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
@@ -54,7 +56,7 @@ describe("F20 CSV keuangan", () => {
   });
 });
 
-// AUD-48: navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
+// Navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
 describe("XS-Leak", () => {
   it.each(["cross-site", "same-site", "none"])(
     "sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca",

@@ -1,3 +1,5 @@
+// Test route handler /api/skenario: cookie kk_skenario dipasang atau dihapus, nilai tak dikenal diabaikan, produksi
+// dijawab 404, dan tujuan `ke` ke situs lain diganti /pratinjau (mencegah open redirect).
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "./route";
