@@ -14,3 +14,5 @@ c74e8807f9aea2ff1729c3e7fe814f8a6ad37e7b
 e277ee5b67b3a015376192f723e6ed73747b5392
 # refactor(web-ui): nama kode bahasa Inggris yang jelas (F28)
 4114a7501926b02179728ab7491fee88bcdfa52a
+# refactor(web-ui): ganti sisa prop test Stepper ke bahasa Inggris (F28)
+3de9cc5dcf22d1f1ef0ad9b5d310754315072157
