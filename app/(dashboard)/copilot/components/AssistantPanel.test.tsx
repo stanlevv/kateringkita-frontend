@@ -1,3 +1,5 @@
+// Test AssistantPanel: pertanyaan kosong, contoh pertanyaan, jawaban terstruktur, alasan penolakan dari server, dan
+// asisten belum aktif. Server action askAssistant dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { AssistantPanel } from "./AssistantPanel";

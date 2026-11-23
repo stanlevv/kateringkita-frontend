@@ -1,3 +1,4 @@
+// Test /pratinjau: 404 di production sebelum requireMerchant, dan daftar skenario di development.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { requireMerchant } = vi.hoisted(() => ({ requireMerchant: vi.fn(async () => ({})) }));

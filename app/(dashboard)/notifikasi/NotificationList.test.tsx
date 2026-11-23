@@ -1,3 +1,5 @@
+// Test NotificationList: judul, isi, penanda belum dibaca, tandai semua dibaca lalu refresh, dan keadaan kosong.
+// Router dan server action dipalsukan (vi.mock).
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

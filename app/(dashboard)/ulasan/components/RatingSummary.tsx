@@ -1,13 +1,22 @@
+// Komponen ringkasan ulasan di /ulasan: StarRating (bintang), RatingSummary (rata-rata dan sebaran bintang), dan
+// MenuRatings (rata-rata per menu sebagai tautan filter). Data ulasan datang dari page.tsx; perhitungannya di
+// lib/review.ts. Server component: tidak ada state, jadi cukup dirender di server.
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { summarizeByMenu, summarizeReviews, reviewsUrl } from "@/lib/review";
 import type { Review } from "@/types/review";
 
+/** Angka dengan satu desimal gaya Indonesia, mis. 4.5 -> "4,5". */
 const formatDecimal = (value: number) =>
   value.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-/** Bintang sebagai ikon; pembaca layar mendapat teks "4 dari 5 bintang". */
+/**
+ * Lima ikon bintang; pembaca layar mendapat teks "4 dari 5 bintang" (ikon disembunyikan dengan aria-hidden).
+ * @param props.value nilai rating (dibulatkan untuk jumlah bintang yang terisi)
+ * @param props.label teks untuk pembaca layar; bawaan "<nilai> dari 5 bintang"
+ * @returns deretan bintang
+ */
 export function StarRating({ value, label }: { value: number; label?: string }) {
   return (
     <span className="inline-flex items-center gap-0.5">
@@ -23,7 +32,12 @@ export function StarRating({ value, label }: { value: number; label?: string }) 
   );
 }
 
-/** UL-N1: rata-rata toko, jumlah ulasan, sebaran 5→1. */
+/**
+ * Ringkasan toko: rata-rata, jumlah ulasan, dan sebaran jumlah ulasan per bintang 5 sampai 1 (angka juga ditulis,
+ * bukan hanya panjang bilah).
+ * @param props.reviews semua ulasan toko
+ * @returns section ringkasan
+ */
 export function RatingSummary({ reviews }: { reviews: Review[] }) {
   const { total, average, distribution } = summarizeReviews(reviews);
   return (
@@ -56,7 +70,13 @@ export function RatingSummary({ reviews }: { reviews: Review[] }) {
   );
 }
 
-/** UL-N2: rata-rata per menu; tautan menyaring daftar lewat ?menu=. */
+/**
+ * Rating per menu; tiap menu adalah tautan yang menyaring daftar lewat ?menu=. Menu aktif ditandai aria-current.
+ * @param props.reviews semua ulasan toko
+ * @param props.menus semua menu toko (menu tanpa ulasan tetap tampil)
+ * @param props.menuId menu yang sedang disaring, kosong = semua menu
+ * @returns nav berisi tautan per menu
+ */
 export function MenuRatings({
   reviews,
   menus,

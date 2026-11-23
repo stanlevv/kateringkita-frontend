@@ -1,3 +1,7 @@
+// Komponen AssistantPanel: asisten AI toko (copilot) di /copilot. Penjual mengetik pertanyaan atau memilih contoh;
+// pertanyaan dikirim lewat server action askAssistant (app/actions/assistant.ts, POST /merchant/assistant). Backend
+// menjawab dengan konteks menu, HPP, dan penjualan 30 hari toko itu sendiri.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
@@ -11,29 +15,44 @@ import { Textarea } from "@/app/components/ui/Input";
 import { callAction } from "@/lib/action";
 import type { AssistantAnswer } from "@/types/ai-result";
 
+/** Contoh pertanyaan yang bisa langsung dikirim dengan satu klik. */
 const EXAMPLE_QUESTIONS = [
   "Menu mana yang margin-nya paling tipis dan berapa harga yang lebih sehat?",
   "Buatkan paket snack box rapat 50 orang dari menu saya beserta harganya.",
   "Berapa kuota harian yang wajar untuk tiap menu berdasarkan penjualan 30 hari terakhir?",
 ];
 
+/** Pesan untuk kode galat yang umum (kunci = kode galat dari backend). */
 const ERROR_MESSAGES: Record<string, string> = {
   SERVICE_UNAVAILABLE: "Asisten AI belum diaktifkan di server.",
   RATE_LIMITED: "Terlalu banyak pertanyaan. Coba lagi beberapa menit lagi.",
   NETWORK: "Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.",
 };
 
-// F17: tanya-jawab dengan konteks menu, HPP, dan penjualan toko sendiri
+/**
+ * Panel tanya-jawab asisten AI. Jawaban tampil di bawah formulir bersama poin penting dan asumsinya.
+ * useTransition dipakai agar tombol menampilkan status menunggu selama jawaban disusun.
+ * @returns Card berisi contoh pertanyaan, formulir, dan jawaban
+ */
 export function AssistantPanel() {
+  // 1. Isi pertanyaan, jawaban terakhir, pesan galat, dan status menunggu.
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<AssistantAnswer | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // 2. Pengirim pertanyaan (dipakai formulir dan tombol contoh).
+  /**
+   * Mengirim pertanyaan dari formulir atau dari tombol contoh.
+   * @param event event submit formulir (kosong bila dari tombol contoh)
+   * @param questionText teks pertanyaan; bawaan isi kotak pertanyaan
+   */
   function submit(event?: FormEvent, questionText = question) {
+    // 1. Tolak pertanyaan kosong.
     event?.preventDefault();
     const trimmed = questionText.trim();
     if (!trimmed) return setErrorMessage("Tulis pertanyaan dulu.");
+    // 2. Kirim; tampilkan jawaban atau pesan galat.
     setQuestion(trimmed);
     setErrorMessage(null);
     startTransition(async () => {

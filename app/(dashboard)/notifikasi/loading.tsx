@@ -1,7 +1,11 @@
+// Kerangka memuat /notifikasi. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Daftar notifikasi: ikon, judul, isi dua baris, waktu
+/**
+ * Kerangka daftar notifikasi: ikon, judul, isi, dan waktu untuk lima baris.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Notifikasi" description="Pengumuman dari admin dan kabar tentang toko kamu.">

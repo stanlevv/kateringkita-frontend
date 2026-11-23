@@ -1,3 +1,7 @@
+// Komponen HppCalculator: kalkulator HPP di /copilot. Penjual mengisi bahan (biaya beli dan jumlah porsi yang
+// dihasilkan) dan target margin; hasil HPP per porsi dan saran harga jual dihitung langsung di peramban
+// (lib/hpp.ts). HPP = harga pokok penjualan (modal bahan per porsi); margin = persen laba dari harga jual.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -10,16 +14,24 @@ import { LinkButton } from "@/app/components/ui/LinkButton";
 import { formatRupiah } from "@/lib/format";
 import { validateHpp, calculateHpp } from "@/lib/hpp";
 
+/** Satu baris bahan di formulir; angka disimpan sebagai teks isian. `id` hanya untuk key React. */
 type IngredientRow = { id: number; name: string; cost: string; portions: string };
+/** Teks isian menjadi angka; isian kosong menjadi NaN supaya validasi menganggapnya belum diisi. */
 const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
 
-/** M-12 (P2), HP-N1/N2/E1: hitung HPP per porsi dan saran harga; hasil langsung. */
+/**
+ * Kalkulator HPP. Galat per isian baru tampil setelah isian itu ditinggalkan (blur). Tombol "Pakai untuk menu"
+ * membuka /menu/baru dengan HPP dan harga terisi lewat parameter URL.
+ * @returns grid berisi daftar bahan dan panel hasil
+ */
 export function HppCalculator() {
+  // 1. State baris bahan, margin, id baris berikutnya, dan isian yang sudah disentuh.
   const [rows, setRows] = useState<IngredientRow[]>([{ id: 0, name: "", cost: "", portions: "" }]);
   const [margin, setMargin] = useState("30");
   const [nextId, setNextId] = useState(1);
   const [touched, setTouched] = useState<Set<string>>(new Set());
 
+  // 2. Validasi dan hitung setiap render; hasil hanya ada bila tidak ada galat.
   const ingredients = rows.map((row) => ({
     name: row.name,
     cost: toNumber(row.cost),
@@ -28,6 +40,7 @@ export function HppCalculator() {
   const errors = validateHpp(ingredients, toNumber(margin));
   const result = Object.keys(errors).length === 0 ? calculateHpp(ingredients, toNumber(margin)) : null;
 
+  // 3. Pengubah baris dan penanda isian yang sudah disentuh.
   const updateRow = (rowId: number, changes: Partial<IngredientRow>) =>
     setRows((previousRows) => previousRows.map((row) => (row.id === rowId ? { ...row, ...changes } : row)));
   const touchHandler = (id: string) => () => setTouched((previousTouched) => new Set(previousTouched).add(id));

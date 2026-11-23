@@ -1,3 +1,6 @@
+// Halaman /ulasan: ringkasan rating toko, rating per menu, dan daftar ulasan pembeli dengan filter.
+// Server component: membaca searchParams (?menu=&bintang=&page=), mengambil semua ulasan dan menu dari backend
+// (services/review.service.ts dan menu.service.ts), lalu menyaring dan membagi halaman di server.
 import { LoadError } from "@/app/components/LoadError";
 import { MenuRatings, RatingSummary } from "@/app/(dashboard)/ulasan/components/RatingSummary";
 import { ReviewList } from "@/app/(dashboard)/ulasan/components/ReviewList";
@@ -7,17 +10,29 @@ import { getReviews } from "@/services/review.service";
 import { requireMerchant } from "@/services/auth.service";
 import { filterReviews } from "@/lib/review";
 
+/**
+ * Parameter URL sebagai angka bulat dalam batas; selain itu undefined (dianggap tidak diisi).
+ * @param value nilai parameter URL
+ * @param min batas bawah
+ * @param max batas atas
+ * @returns angka, atau undefined
+ */
 const parseNumberParam = (value: string | string[] | undefined, min: number, max: number) => {
   const parsed = typeof value === "string" && /^\d{1,9}$/.test(value) ? Number(value) : NaN;
   return parsed >= min && parsed <= max ? parsed : undefined;
 };
 
-// M-14 — Ulasan (UL-N1…N3, UL-S1). Filter menu, bintang, dan halaman tinggal di URL.
+/**
+ * Halaman ulasan. Filter menu, bintang, dan halaman disimpan di URL, jadi tautan bisa dibagikan.
+ * @param props.searchParams parameter URL: `menu` (id menu), `bintang` (1-5), `page`
+ * @returns PageHeader berisi ringkasan, rating per menu, dan daftar ulasan; atau LoadError bila gagal dimuat
+ */
 export default async function ReviewsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // 1. Pastikan penjual sudah masuk, lalu ambil ulasan, menu, dan parameter URL bersamaan.
   await requireMerchant();
   const [reviews, menus, params] = await Promise.all([getReviews(), getMenus(), searchParams]);
   if ("error" in reviews) {
@@ -30,6 +45,7 @@ export default async function ReviewsPage({
       </PageHeader>
     );
   }
+  // 2. Saring ulasan; nomor halaman dijepit ke halaman terakhir yang ada (10 ulasan per halaman).
   const filter = { menu: parseNumberParam(params.menu, 1, 999_999_999), stars: parseNumberParam(params.bintang, 1, 5) };
   const { rows, total } = filterReviews(reviews.data, filter, 1);
   const currentPage = Math.min(parseNumberParam(params.page, 1, 99_999) ?? 1, Math.max(1, Math.ceil(total / 10)));

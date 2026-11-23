@@ -1,3 +1,5 @@
+// Test komponen /ulasan: RatingSummary (rata-rata dan sebaran), MenuRatings (tautan ?menu=), dan ReviewList (nama
+// disamarkan, filter bintang, kosong). Data dari fixture lib/fixtures.
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { menus } from "@/lib/fixtures/menus";

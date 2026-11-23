@@ -1,7 +1,15 @@
+// Halaman /pratinjau (khusus mode pengembangan): memilih skenario data contoh untuk mencoba tampilan dashboard,
+// mis. toko kosong atau gagal memuat. Skenario disimpan di cookie lewat route /api/skenario dan dibaca
+// lib/scenario.ts. Di production halaman ini memanggil notFound(), yaitu menampilkan halaman 404 Next.js.
 import { notFound } from "next/navigation";
 import { requireMerchant } from "@/services/auth.service";
 import { getScenario, SCENARIOS } from "@/lib/scenario";
 
+/**
+ * Halaman pemilih skenario. Dicek production lebih dulu, sebelum requireMerchant, supaya halaman ini tidak pernah
+ * terbuka di production.
+ * @returns daftar tautan skenario dan tautan hapus skenario
+ */
 export default async function PreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
   await requireMerchant();

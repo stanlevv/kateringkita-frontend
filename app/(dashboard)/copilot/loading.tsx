@@ -1,3 +1,4 @@
+// Kerangka memuat /copilot. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Card } from "@/app/components/ui/Card";
 import {
@@ -9,7 +10,10 @@ import {
   SkeletonText,
 } from "@/app/components/ui/Skeleton";
 
-// Kalkulator HPP (baris bahan + hasil di kanan) lalu panel asisten AI.
+/**
+ * Kerangka kalkulator HPP (baris bahan + hasil di kanan) lalu panel asisten AI.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

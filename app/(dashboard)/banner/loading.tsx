@@ -1,7 +1,11 @@
+// Kerangka memuat /banner. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonList } from "@/app/components/ui/Skeleton";
 
-// BannerToko: tombol ajukan + kartu banner
+/**
+ * Kerangka MerchantBanners: tombol ajukan dan kartu banner dua kolom.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

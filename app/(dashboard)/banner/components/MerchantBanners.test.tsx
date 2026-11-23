@@ -1,3 +1,5 @@
+// Test MerchantBanners: keadaan kosong, banner menunggu menyembunyikan tombol ajukan, alasan penolakan, status
+// berakhir, dan ajukan ulang. Router dan server action dipalsukan (vi.mock).
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

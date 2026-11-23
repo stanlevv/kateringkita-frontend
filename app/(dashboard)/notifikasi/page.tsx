@@ -1,10 +1,17 @@
+// Halaman /notifikasi: kotak masuk penjual (pengumuman admin, kabar foto menu yang dihapus admin, dan lainnya).
+// Server component: membaca searchParams (?page=), mengambil satu halaman notifikasi dari backend lewat
+// services/notification.service.ts (GET /me/notifications), lalu menyerahkannya ke NotificationList.
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { requireMerchant } from "@/services/auth.service";
 import { getNotifications } from "@/services/notification.service";
 import { NotificationList } from "./NotificationList";
 
-// Notifikasi penjual: pengumuman admin, foto menu yang dihapus admin, dll. Dibuka = semua ditandai dibaca.
+/**
+ * Halaman notifikasi. Membuka halaman ini menandai semua notifikasi sebagai sudah dibaca (dikerjakan NotificationList).
+ * @param props.searchParams parameter URL: `page` (angka 1-5 digit; nilai lain dianggap halaman 1)
+ * @returns PageHeader berisi NotificationList, atau LoadError bila gagal dimuat
+ */
 export default async function NotificationsPage({
   searchParams,
 }: {

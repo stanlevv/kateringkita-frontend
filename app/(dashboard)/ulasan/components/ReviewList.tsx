@@ -1,3 +1,5 @@
+// Komponen ReviewList: tautan filter bintang, daftar ulasan (nama pembeli disamarkan), dan paginasi lewat URL di
+// /ulasan. Data sudah disaring dan dipotong per halaman oleh page.tsx. Server component (tanpa state).
 import Link from "next/link";
 import { MessageSquareOff, SearchX } from "lucide-react";
 import { cx, focusRing } from "@/app/components/ui/cx";
@@ -9,9 +11,18 @@ import { LIMIT_REVIEWS, maskName, reviewsUrl } from "@/lib/review";
 import type { Review } from "@/types/review";
 import { StarRating } from "./RatingSummary";
 
+/** Filter yang sedang aktif: id menu dan jumlah bintang (keduanya boleh kosong). */
 type Filter = { menu?: number; stars?: number };
 
-/** UL-N3, UL-S1: filter bintang (tautan), daftar ulasan, paginasi 10 lewat URL. */
+/**
+ * Daftar ulasan dengan filter bintang berupa tautan (filter menu tetap dipertahankan) dan paginasi 10 per halaman.
+ * @param props.rows ulasan di halaman ini
+ * @param props.total jumlah ulasan yang cocok dengan filter
+ * @param props.page halaman sekarang
+ * @param props.filter filter aktif (menu, stars)
+ * @param props.noReviews true bila toko belum punya ulasan sama sekali (pesan berbeda dari "tidak ditemukan")
+ * @returns filter, daftar, dan paginasi; atau EmptyState
+ */
 export function ReviewList({
   rows,
   total,

@@ -1,3 +1,7 @@
+// Komponen NotificationList: daftar notifikasi penjual di /notifikasi dengan penanda belum dibaca dan paginasi.
+// Data datang dari page.tsx; saat tampil, komponen memanggil server action markAllNotificationsRead
+// (app/actions/notifications.ts) agar semua notifikasi ditandai dibaca.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -10,10 +14,20 @@ import { cx } from "@/app/components/ui/cx";
 import { formatTime, formatDate } from "@/lib/format";
 import type { AppNotification } from "@/types/notification";
 
+/** Jumlah notifikasi per halaman (sama dengan LIMIT_NOTIFICATIONS di service). */
 const LIMIT = 20;
+/** Ikon per jenis notifikasi (kunci = nilai `type` dari API); jenis lain memakai ikon lonceng. */
 const TYPE_ICONS = { moderation: ImageOff, info: Megaphone } as const;
 
-/** Daftar notifikasi; yang belum dibaca ditandai titik. Saat dibuka semua ditandai dibaca, lalu badge sidebar disegarkan. */
+/**
+ * Daftar notifikasi; yang belum dibaca ditandai titik. Saat dibuka semua ditandai dibaca, lalu badge sidebar
+ * disegarkan dengan router.refresh() (meminta ulang data server tanpa memuat ulang seluruh halaman).
+ * @param props.rows notifikasi di halaman ini
+ * @param props.total jumlah semua notifikasi (untuk paginasi)
+ * @param props.page halaman sekarang
+ * @param props.unread jumlah yang belum dibaca; 0 berarti tidak perlu memanggil server
+ * @returns daftar notifikasi dan paginasi, atau EmptyState bila kosong
+ */
 export function NotificationList({
   rows,
   total,
@@ -25,6 +39,7 @@ export function NotificationList({
   page: number;
   unread: number;
 }) {
+  // 1. Tandai semua dibaca sekali saja per tampilan (ref mencegah panggilan ganda saat efek berjalan ulang).
   const router = useRouter();
   const markedRead = useRef(false);
   useEffect(() => {
@@ -35,6 +50,7 @@ export function NotificationList({
     });
   }, [unread, router]);
 
+  // 2. Belum ada notifikasi sama sekali.
   if (rows.length === 0) {
     return (
       <EmptyState

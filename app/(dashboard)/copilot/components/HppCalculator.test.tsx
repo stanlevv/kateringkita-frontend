@@ -1,3 +1,4 @@
+// Test HppCalculator: hasil langsung dan tautan Pakai untuk menu, galat per isian, dan hapus baris bahan.
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";

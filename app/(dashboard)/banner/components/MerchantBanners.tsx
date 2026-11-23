@@ -1,3 +1,7 @@
+// Komponen MerchantBanners: daftar banner toko di /banner dengan status (menunggu, tayang, ditolak, berakhir) dan
+// dialog BannerForm untuk mengajukan atau mengubah. Banner disimpan dan dihapus lewat server action
+// saveMerchantBanner dan deleteMerchantBanner (app/actions/banner.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -15,14 +19,23 @@ import { isBannerActive, bannerStatus } from "@/lib/banner";
 import { formatDate } from "@/lib/format";
 import type { Banner, VoucherOption } from "@/types/banner";
 
-/** Banner toko: satu banner aktif (menunggu / tayang) per toko; ditolak bisa diajukan ulang. */
+/**
+ * Banner toko. Satu toko hanya boleh punya satu banner aktif (menunggu atau tayang), jadi tombol Ajukan disembunyikan
+ * selama ada banner aktif. Banner yang ditolak bisa diajukan ulang.
+ * @param props.banners banner milik toko
+ * @param props.vouchers voucher toko yang bisa dijadikan tujuan banner
+ * @returns tombol ajukan, kartu banner, dan dialog formulir
+ */
 export function MerchantBanners({ banners, vouchers }: { banners: Banner[]; vouchers: VoucherOption[] }) {
+  // 1. Isi dialog: null = tertutup, "new" = banner baru, objek Banner = ubah banner itu.
   const router = useRouter();
   const [form, setForm] = useState<Banner | "new" | null>(null);
+  // 2. Status tayang dihitung terhadap jam sekarang.
   // eslint-disable-next-line react-hooks/purity -- status tayang/berakhir dihitung saat render
   const now = Date.now();
   const hasActiveBanner = banners.some((banner) => isBannerActive(banner, now));
 
+  // 3. Hapus banner, lalu muat ulang data server.
   async function deleteBanner(banner: Banner) {
     const result = await callAction(() => deleteMerchantBanner(banner.id));
     if ("error" in result) return toast({ tone: "danger", message: result.error.message });

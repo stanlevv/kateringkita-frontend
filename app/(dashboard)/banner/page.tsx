@@ -1,3 +1,6 @@
+// Halaman /banner: penjual mengajukan banner tokonya untuk beranda aplikasi pembeli, melihat status dan alasan
+// penolakan admin, lalu mengajukan ulang. Server component: mengambil banner (GET /merchant/banners) dan promo toko
+// (untuk pilihan voucher tujuan banner) dari backend.
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { LoadError } from "@/app/components/LoadError";
 import { voucherOptions } from "@/lib/voucher-options";
@@ -7,10 +10,14 @@ import { getPromos } from "@/services/promo.service";
 import type { Banner } from "@/types/banner";
 import { MerchantBanners } from "./components/MerchantBanners";
 
-// Banner beranda toko (rancangan voucher 2026-11-16 §5.4): ajukan, lihat status & alasan, ajukan ulang.
+/**
+ * Halaman banner toko.
+ * @returns PageHeader berisi MerchantBanners, atau LoadError bila banner gagal dimuat
+ */
 export default async function BannerPage() {
   await requireMerchant();
   const [banners, promos] = await Promise.all([merchantFetch<Banner[]>("/banners"), getPromos()]);
+  // Hanya voucher yang belum berakhir saat halaman dimuat yang bisa dipilih sebagai tujuan banner.
   // eslint-disable-next-line react-hooks/purity -- daftar voucher yang belum berakhir saat halaman dimuat
   const vouchers = "data" in promos ? voucherOptions(promos.data, Date.now()) : [];
   return (

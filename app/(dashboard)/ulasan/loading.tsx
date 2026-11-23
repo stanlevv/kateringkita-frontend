@@ -1,7 +1,11 @@
+// Kerangka memuat /ulasan. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonPills, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Ringkasan rating (angka + 5 baris bintang), lalu rating per menu di kiri dan daftar ulasan di kanan.
+/**
+ * Kerangka ulasan: ringkasan rating (angka + 5 baris bintang), lalu rating per menu di kiri dan daftar ulasan di kanan.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Ulasan">
