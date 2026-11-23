@@ -9,7 +9,7 @@ import type { StoreInfo } from "./StoreStatus";
 /**
  * Bilah atas. Kotak cari adalah form GET biasa ke /pesanan?q=... sehingga tetap jalan tanpa JavaScript.
  * @param props.userName nama pengguna untuk menu akun
- * @param props.storeName nama toko (atau "Admin")
+ * @param props.merchantName nama toko (atau "Admin")
  * @param props.store status dapur untuk drawer ponsel, atau null bila gagal dimuat
  * @param props.badge jumlah pesanan perlu tindakan
  * @param props.unreadNotifications jumlah notifikasi belum dibaca
@@ -19,7 +19,7 @@ import type { StoreInfo } from "./StoreStatus";
  */
 export function Header({
   userName,
-  storeName,
+  merchantName,
   store,
   badge,
   unreadNotifications = 0,
@@ -27,7 +27,7 @@ export function Header({
   level,
 }: {
   userName: string;
-  storeName: string;
+  merchantName: string;
   store: StoreInfo | null;
   badge: number;
   unreadNotifications?: number;
@@ -59,7 +59,7 @@ export function Header({
         <span className="hidden md:block">
           <Clock />
         </span>
-        <AccountMenu userName={userName} storeName={storeName} admin={admin} />
+        <AccountMenu userName={userName} merchantName={merchantName} admin={admin} />
       </div>
     </header>
   );

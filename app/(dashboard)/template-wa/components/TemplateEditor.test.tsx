@@ -21,7 +21,7 @@ const renderEditor = (
     <>
       <a href="/dashboard">Beranda</a>
       <Toaster />
-      <TemplateEditor storeName="Dapur Diego" template={template} order={order} />
+      <TemplateEditor merchantName="Dapur Diego" template={template} order={order} />
     </>,
   );
 const editor = () => screen.getByLabelText(/Isi templat/) as HTMLTextAreaElement;

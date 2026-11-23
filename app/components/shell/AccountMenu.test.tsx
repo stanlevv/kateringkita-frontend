@@ -11,7 +11,7 @@ const trigger = () => screen.getByRole("button", { name: /Rohan Rifqi/ });
 
 describe("SH-N2 menu akun (disclosure)", () => {
   it("Keluar berupa form terpisah dari Pengaturan akun", async () => {
-    render(<AccountMenu userName="Rohan Rifqi" storeName="Dapur Barokah" />);
+    render(<AccountMenu userName="Rohan Rifqi" merchantName="Dapur Barokah" />);
     expect(trigger()).toHaveAttribute("aria-expanded", "false");
     await userEvent.click(trigger());
     expect(trigger()).toHaveAttribute("aria-expanded", "true");
@@ -23,7 +23,7 @@ describe("SH-N2 menu akun (disclosure)", () => {
     expect(screen.queryByRole("menu")).toBeNull();
   });
   it("Esc menutup dan fokus kembali ke tombol", async () => {
-    render(<AccountMenu userName="Rohan Rifqi" storeName="Dapur Barokah" />);
+    render(<AccountMenu userName="Rohan Rifqi" merchantName="Dapur Barokah" />);
     await userEvent.click(trigger());
     await userEvent.tab();
     await userEvent.keyboard("{Escape}");
@@ -31,7 +31,7 @@ describe("SH-N2 menu akun (disclosure)", () => {
     expect(trigger()).toHaveFocus();
   });
   it("Tab keluar dari menu menutupnya", async () => {
-    render(<AccountMenu userName="Rohan Rifqi" storeName="Dapur Barokah" />);
+    render(<AccountMenu userName="Rohan Rifqi" merchantName="Dapur Barokah" />);
     await userEvent.click(trigger());
     await userEvent.tab(); // tautan
     await userEvent.tab(); // Keluar

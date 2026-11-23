@@ -47,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       ? { isOpen: profile.data.is_open, openTime: profile.data.open_time, closeTime: profile.data.close_time }
       : null;
   const userName = String(user.full_name ?? "Penjual");
-  const storeName = String(merchant?.business_name ?? "");
+  const merchantName = String(merchant?.business_name ?? "");
 
   return (
     <StoreStatusProvider store={store}>
@@ -67,7 +67,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="flex min-w-0 flex-1 flex-col">
           <Header
             userName={userName}
-            storeName={storeName}
+            merchantName={merchantName}
             store={store}
             badge={badge}
             unreadNotifications={unreadNotifications}

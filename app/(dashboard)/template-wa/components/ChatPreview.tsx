@@ -5,12 +5,12 @@ import { findUnknownPlaceholders } from "@/lib/wa-template";
 
 /**
  * Gelembung chat pratinjau.
- * @param props.storeName nama toko di kepala chat
+ * @param props.merchantName nama toko di kepala chat
  * @param props.text isi pesan yang sudah diisi data contoh
  * @param props.note catatan di bawah pratinjau (asal data contoh)
  * @returns section pratinjau
  */
-export function ChatPreview({ storeName, text, note }: { storeName: string; text: string; note: string }) {
+export function ChatPreview({ merchantName, text, note }: { merchantName: string; text: string; note: string }) {
   return (
     <section aria-label="Pratinjau pesan" className="overflow-hidden rounded-lg border border-line bg-surface">
       <div className="flex items-center gap-3 border-b border-line bg-subtle p-3">
@@ -20,7 +20,7 @@ export function ChatPreview({ storeName, text, note }: { storeName: string; text
         >
           <MessageCircle className="size-5" />
         </span>
-        <p className="font-semibold text-ink">{storeName}</p>
+        <p className="font-semibold text-ink">{merchantName}</p>
       </div>
       <div className="min-h-48 bg-subtle p-4">
         <div className="ml-auto max-w-[90%] whitespace-pre-wrap break-words rounded-lg bg-success-bg p-3 text-ink shadow-sm">

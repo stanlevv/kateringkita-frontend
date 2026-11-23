@@ -28,17 +28,17 @@ import { ChatPreview } from "./ChatPreview";
 /**
  * Penyunting templat: tombol kata kunci (disisipkan di posisi kursor), isian templat, pratinjau langsung, kembalikan ke
  * bawaan, dan penjaga perubahan belum disimpan.
- * @param props.storeName nama toko untuk pratinjau
+ * @param props.merchantName nama toko untuk pratinjau
  * @param props.template templat tersimpan, null = memakai templat bawaan
  * @param props.order pesanan contoh untuk pratinjau, null bila toko belum punya pesanan
  * @returns penyunting, pratinjau, dan dialog konfirmasi
  */
 export function TemplateEditor({
-  storeName,
+  merchantName,
   template,
   order,
 }: {
-  storeName: string;
+  merchantName: string;
   template: string | null;
   order: MerchantOrder | null;
 }) {
@@ -153,7 +153,7 @@ export function TemplateEditor({
         </div>
 
         <ChatPreview
-          storeName={storeName}
+          merchantName={merchantName}
           text={order ? renderTemplate(text, templateValuesFromOrder(order)) : text}
           note={order ? `Contoh dari pesanan ${order.code}.` : "Pratinjau terisi data pesanan setelah ada pesanan."}
         />

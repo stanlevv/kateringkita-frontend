@@ -24,7 +24,7 @@ export default async function WhatsappTemplatePage() {
         <LoadError title="Template belum bisa dimuat" body="Data toko gagal dimuat. Coba lagi." />
       ) : (
         <TemplateEditor
-          storeName={profile.data.business_name}
+          merchantName={profile.data.business_name}
           template={profile.data.wa_template}
           order={"error" in orders ? null : (orders.data.rows[0] ?? null)}
         />

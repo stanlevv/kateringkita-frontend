@@ -20,17 +20,17 @@ const itemClass = cx(
  * Menu akun berpola disclosure (tombol buka/tutup biasa, bukan role="menu"): tombol ber-`aria-expanded` (memberi tahu
  * pembaca layar panel terbuka atau tidak) + daftar biasa. Esc, klik di luar, dan Tab keluar menutup panel.
  * @param props.userName nama pengguna (inisial dan nama di tombol)
- * @param props.storeName nama toko (atau "Admin")
+ * @param props.merchantName nama toko (atau "Admin")
  * @param props.admin panel admin: tautan akun ke /admin/akun
  * @returns elemen `div` berisi tombol dan panel
  */
 export function AccountMenu({
   userName,
-  storeName,
+  merchantName,
   admin = false,
 }: {
   userName: string;
-  storeName: string;
+  merchantName: string;
   admin?: boolean;
 }) {
   // 1. Status buka, ref wadah (untuk deteksi klik luar) dan ref tombol (untuk mengembalikan fokus).
@@ -79,7 +79,7 @@ export function AccountMenu({
         </span>
         <span className="hidden text-left leading-tight lg:block">
           <span className="block text-sm font-semibold text-ink">{userName}</span>
-          <span className="block text-xs text-ink-muted">{storeName}</span>
+          <span className="block text-xs text-ink-muted">{merchantName}</span>
         </span>
         <span className="sr-only lg:hidden">{userName}</span>
         <ChevronDown aria-hidden className="size-4 text-ink-muted" />
