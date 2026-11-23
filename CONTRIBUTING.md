@@ -68,6 +68,12 @@ Wajib dipakai saat memberi nama baru. Mengikuti nama tabel DB dan peran PRD.
 | verifikasi     | verification     | samarkan            | mask                    |
 | templat        | template         | sisa (waktu)        | remaining / secondsLeft |
 | transaksi      | transaction      | isian (form)        | input                   |
+| tinjau         | review           | minta               | request                 |
+| uji            | test             | catat               | record                  |
+| balas          | reply            | tukar               | swap                    |
+| urutan         | sortOrder        | alasan              | reason                  |
+| catatan        | note             | kontak CS           | customerServiceContact  |
+| penerima       | audience         | pesan dari meja     | tableOrder              |
 
 Istilah yang belum ada di tabel: pilih padanan Inggris yang umum, lalu tambahkan ke tabel ini pada commit yang sama.
 
