@@ -1,8 +1,12 @@
+// Kerangka memuat /admin/promo. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PromoListSkeleton } from "@/app/components/promo/PromoListSkeleton";
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonField, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Dua formulir (biaya layanan, kontak CS) lalu daftar promo platform.
+/**
+ * Kerangka promo dan biaya: dua formulir (biaya layanan, kontak CS) lalu daftar promo platform.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Promo & biaya" description="Promo yang berlaku di semua toko dan biaya layanan per pesanan.">

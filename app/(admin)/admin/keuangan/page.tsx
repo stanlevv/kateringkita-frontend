@@ -1,3 +1,7 @@
+// Halaman /admin/keuangan: rekap keuangan platform per toko dari pesanan selesai dalam rentang tanggal, khusus admin
+// super. Server component: membaca searchParams (?dari=&sampai=), mengambil rekap lewat getFinanceSummary
+// (services/admin-finance.service.ts, GET /admin/finance), dan menyediakan tautan unduh CSV (berkas tabel yang bisa
+// dibuka di Excel) ke /api/admin/keuangan/csv dengan rentang yang sama.
 import { Download, Landmark, ReceiptText, Store, Tag } from "lucide-react";
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
@@ -13,6 +17,7 @@ import { getFinanceSummary } from "@/services/admin-finance.service";
 import { requireAdmin } from "@/services/auth.service";
 import type { FinanceSummary } from "@/types/admin";
 
+// Satu baris rekap (satu toko). rupiahCell membuat isi sel Rupiah dari kolom angka yang dipilih.
 type FinanceRow = FinanceSummary["rows"][number];
 const rupiahCell = (field: keyof FinanceRow) => (row: FinanceRow) => formatRupiah(Number(row[field]));
 const COLUMNS: Column<FinanceRow>[] = [
@@ -26,16 +31,23 @@ const COLUMNS: Column<FinanceRow>[] = [
   { key: "toko-net", header: "Hak toko", align: "right", cell: rupiahCell("merchant_net") },
 ];
 
-// F20 — rekap keuangan platform per toko (pesanan selesai). Rentang di URL: ?dari&sampai.
+/**
+ * Halaman rekap keuangan. Hak toko = subtotal dikurangi diskon promo toko; pendapatan platform = biaya layanan
+ * dikurangi diskon promo platform (angka dihitung backend).
+ * @param props.searchParams parameter URL: `dari` dan `sampai` (YYYY-MM-DD, WIB); kosong = hari ini
+ * @returns PageHeader berisi pemilih rentang, 4 KPI, dan tabel per toko (atau LoadError)
+ */
 export default async function FinancePage({
   searchParams,
 }: {
   searchParams: Promise<{ dari?: string; sampai?: string }>;
 }) {
+  // 1. Khusus admin super. Rentang yang tidak sah menjadi hari ini, dengan pesan galat untuk RangePicker.
   await requireAdmin("super");
   const params = await searchParams;
   const today = todayWib();
   const { from: startDate, to: endDate, error: rangeError } = parseRange(params.dari, params.sampai, today);
+  // 2. Ambil rekap dari backend dan siapkan gaya tombol unduh CSV.
   const response = await getFinanceSummary({ from: startDate, to: endDate });
   const downloadClass = cx(
     "inline-flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle",

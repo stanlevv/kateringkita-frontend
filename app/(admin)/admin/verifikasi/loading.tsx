@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/verifikasi. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Antrean verifikasi: kartu toko (nama, pemilik & WA, catatan, tombol setujui/tolak).
+/**
+ * Kerangka antrean verifikasi: 3 kartu toko (nama, pemilik dan WhatsApp, catatan, tombol aksi).
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

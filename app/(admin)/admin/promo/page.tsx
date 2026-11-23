@@ -1,3 +1,6 @@
+// Halaman /admin/promo: promo platform (berlaku di semua toko), biaya layanan per pesanan, kontak CS, dan mode
+// pemeliharaan. Server component: mengambil promo (GET /admin/promos) dan setelan (GET /admin/settings) lewat
+// adminFetch secara bersamaan. Mode pemeliharaan = saklar yang menutup aplikasi untuk penjual dan pembeli sementara.
 import { savePlatformPromo, setPlatformPromoActive } from "@/app/actions/admin/promos";
 import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
 import { CustomerServiceContactForm } from "@/app/(admin)/admin/components/CustomerServiceContactForm";
@@ -10,10 +13,14 @@ import { requireAdmin } from "@/services/auth.service";
 import type { Promo } from "@/types/promo";
 import type { Maintenance } from "@/types/meta";
 
-// A-02…A-04 — Promo platform, biaya layanan, kontak CS; F27 mode pemeliharaan.
+/**
+ * Halaman promo dan biaya. Formulir setelan (biaya layanan, kontak CS, pemeliharaan) hanya tampil untuk admin super;
+ * daftar promo platform tampil untuk semua tingkat.
+ * @returns PageHeader berisi formulir setelan (khusus super) dan PromoList mode admin
+ */
 export default async function PromoPlatformPage() {
   const { user } = await requireAdmin();
-  const canEditSettings = user.admin_level === "super"; // Fase 1: ubah biaya & kontak CS khusus super
+  const canEditSettings = user.admin_level === "super"; // ubah biaya, kontak CS, dan pemeliharaan khusus super
   const [promos, settings] = await Promise.all([
     adminFetch<Promo[]>("/promos"),
     adminFetch<{ service_fee: number; cs_whatsapp: string | null; maintenance: Maintenance }>("/settings"),

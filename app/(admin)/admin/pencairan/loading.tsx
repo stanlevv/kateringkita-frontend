@@ -1,8 +1,12 @@
+// Kerangka memuat /admin/pencairan. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Card } from "@/app/components/ui/Card";
 import { SkeletonTable, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Saldo per toko, dana yang harus dikembalikan, riwayat pencairan.
+/**
+ * Kerangka pencairan: tiga kartu tabel (saldo per toko, dana yang harus dikembalikan, riwayat pencairan).
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

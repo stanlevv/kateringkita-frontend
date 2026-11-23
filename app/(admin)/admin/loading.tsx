@@ -1,9 +1,13 @@
+// Kerangka memuat /admin. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Card } from "@/app/components/ui/Card";
 import { SkeletonCard, SkeletonKpi, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// G-1 Ringkasan: pesanan hari ini + 2 KPI, 5 ubin penjual, aksi admin terakhir. Halaman admin lain punya loading.tsx
-// sendiri (dijaga test/page-skeleton.test.ts), jadi kerangka ini tidak muncul di halaman yang salah.
+/**
+ * Kerangka ringkasan: pesanan hari ini dan 2 KPI, 5 ubin penjual, lalu aksi admin terakhir. Halaman admin lain punya
+ * loading.tsx sendiri (dijaga test/page-skeleton.test.ts), jadi kerangka ini tidak muncul di halaman yang salah.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Ringkasan" description="Kondisi platform hari ini (WIB).">

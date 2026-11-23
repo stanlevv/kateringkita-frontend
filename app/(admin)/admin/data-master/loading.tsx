@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/data-master. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonTabs, SkeletonTable } from "@/app/components/ui/Skeleton";
 
-// MasterTable: tab jenis data, tombol tambah, tabel.
+/**
+ * Kerangka MasterTable: tab jenis data, tombol tambah, lalu tabel.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

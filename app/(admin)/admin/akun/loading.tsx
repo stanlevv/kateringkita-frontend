@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/akun. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Skeleton, SkeletonField, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Data akun (3 baris) + ChangePasswordForm (3 isian + tombol).
+/**
+ * Kerangka akun: data akun (3 baris) lalu ChangePasswordForm (3 isian dan tombol).
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Pengaturan akun" description="Ganti kata sandi akun admin Anda.">

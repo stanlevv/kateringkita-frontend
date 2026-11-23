@@ -1,8 +1,13 @@
+// Kerangka memuat /admin/penjual/<id>. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { Skeleton, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// MerchantDetail: lencana status, lalu bagian berisi pasangan label–nilai. Judul (nama toko) dikerangkakan.
+/**
+ * Kerangka MerchantDetail: lencana status, lalu bagian berisi pasangan label–nilai. Judul (nama toko) belum diketahui,
+ * jadi PageFrame tanpa judul.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

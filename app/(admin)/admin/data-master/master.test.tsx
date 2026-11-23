@@ -1,3 +1,5 @@
+// Test halaman /admin/data-master (tab di URL, geser urutan, nama kembar, nonaktifkan) dan /admin/promo (promo
+// platform, biaya layanan).
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

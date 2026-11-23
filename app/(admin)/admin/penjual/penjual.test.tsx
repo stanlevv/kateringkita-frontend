@@ -1,3 +1,4 @@
+// Test halaman /admin/verifikasi, /admin/penjual, dan /admin/penjual/<id>: requireAdmin, filter URL ke backend, 404.
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

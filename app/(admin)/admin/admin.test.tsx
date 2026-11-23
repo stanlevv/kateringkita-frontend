@@ -1,3 +1,5 @@
+// Test shell admin (requireAdmin, menu per tingkat admin, layar ganti sandi sementara), halaman ringkasan /admin, dan
+// halaman /admin/log (filter URL diteruskan ke backend).
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

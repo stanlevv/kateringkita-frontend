@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/moderasi. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonBox, SkeletonPills, SkeletonTable } from "@/app/components/ui/Skeleton";
 
-// Pil jenis, pil status + cari, lalu tabel moderasi.
+/**
+ * Kerangka moderasi: pil jenis, pil status dan kotak cari, lalu tabel.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame

@@ -1,8 +1,13 @@
+// Halaman /admin/pengumuman: kirim pengumuman (broadcast) ke notifikasi aplikasi pembeli dan/atau penjual, tampil di
+// tab Info. Server component tanpa data awal; pengiriman dikerjakan AnnouncementForm.
 import { AnnouncementForm } from "@/app/(admin)/admin/components/AnnouncementForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { requireAdmin } from "@/services/auth.service";
 
-// Broadcast pengumuman admin → notifikasi tab Info di aplikasi pembeli/penjual.
+/**
+ * Halaman pengumuman. Semua tingkat admin bisa membukanya; backend yang menentukan siapa boleh mengirim.
+ * @returns PageHeader berisi AnnouncementForm
+ */
 export default async function AnnouncementsPage() {
   await requireAdmin();
   return (

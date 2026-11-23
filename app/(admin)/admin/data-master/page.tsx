@@ -1,3 +1,6 @@
+// Halaman /admin/data-master: data master, yaitu daftar pilihan yang dipakai penjual (kategori menu, titik temu, jenis
+// usaha). Server component: membaca searchParams (?tab=) lalu mengambil data tab itu lewat adminFetch
+// (GET /admin/master/<jenis>) dan menyerahkannya ke MasterTable. searchParams = parameter di URL setelah tanda tanya.
 import { Suspense } from "react";
 import { MasterTable } from "@/app/(admin)/admin/components/MasterTable";
 import { LoadError } from "@/app/components/LoadError";
@@ -7,7 +10,12 @@ import { tabById } from "@/services/admin-master.service";
 import type { MasterItem } from "@/types/admin";
 import { requireAdmin } from "@/services/auth.service";
 
-// A-01…A-03 — Data master. Tab aktif di URL (?tab=); nilai tak dikenal jatuh ke Kategori.
+/**
+ * Halaman data master. Tab aktif ada di URL (?tab=); nilai yang tidak dikenal jatuh ke tab Kategori. MasterTable
+ * dibungkus Suspense karena membaca useSearchParams di peramban.
+ * @param props.searchParams parameter URL: `tab` (id tab, mis. "titik-temu")
+ * @returns PageHeader berisi MasterTable, atau LoadError bila data gagal dimuat
+ */
 export default async function MasterDataPage({
   searchParams,
 }: {

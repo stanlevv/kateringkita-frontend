@@ -1,9 +1,14 @@
+// Halaman /admin/akun: data akun admin yang sedang masuk dan formulir ganti kata sandi.
+// Server component: data akun diambil dari sesi (requireAdmin), tanpa memanggil backend lagi.
 import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { LEVEL_LABELS, type AdminLevel } from "@/lib/admin-level";
 import { requireAdmin } from "@/services/auth.service";
 
-// Fase 1: akun admin sendiri (ganti sandi). Nama/nomor diubah oleh admin super lain bila perlu.
+/**
+ * Halaman akun admin. Hanya kata sandi yang bisa diganti di sini; nama dan nomor diubah oleh admin super lain bila perlu.
+ * @returns PageHeader berisi data akun (nama, nomor HP, tingkat) dan ChangePasswordForm
+ */
 export default async function AdminAccountPage() {
   const { user } = await requireAdmin();
   const level = LEVEL_LABELS[user.admin_level as AdminLevel] ?? "-";

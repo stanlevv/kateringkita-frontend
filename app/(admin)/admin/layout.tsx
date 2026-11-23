@@ -1,3 +1,9 @@
+// Layout panel admin: membungkus /admin dan semua halaman di bawahnya dengan sidebar, header, dan area konten.
+// Layout = file khusus Next.js yang membungkus semua halaman di folder ini. Ini server component (tanpa "use client"):
+// dijalankan di server, jadi boleh membaca sesi dan cookie langsung.
+// Data: sesi admin (requireAdmin di services/auth.service.ts) dan cookie kk-sidebar (sidebar lebar atau ringkas).
+// Peran admin: super boleh membuka semua menu; ops dan support tidak melihat menu khusus super (keuangan, pencairan,
+// AI, kelola admin, server). Menu disaring di lib/admin-level.ts; backend tetap memeriksa hak akses setiap permintaan.
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Header } from "@/app/components/shell/Header";
@@ -7,9 +13,15 @@ import { requireAdmin } from "@/services/auth.service";
 import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
 import { ForcedPasswordChange } from "./components/ForcedPasswordChange";
 
+// metadata = judul tab browser; robots mencegah panel admin muncul di mesin pencari.
 export const metadata: Metadata = { title: "Panel admin", robots: { index: false, follow: false } };
 
-// F18 — shell admin. Data dari backend sungguhan, jadi tanpa banner "Data contoh" dan tanpa status dapur.
+/**
+ * Membungkus halaman admin dengan sidebar dan header. Berbeda dari panel penjual: tanpa banner "Data contoh" dan tanpa
+ * status dapur, karena admin tidak punya toko dan datanya selalu dari backend sungguhan.
+ * @param props.children halaman admin yang sedang dibuka
+ * @returns shell admin; isi halaman diganti ForcedPasswordChange bila admin masih memakai sandi sementara
+ */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const [{ user }, cookieStore] = await Promise.all([requireAdmin(), cookies()]);
   return (
@@ -37,7 +49,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             store={null}
             badge={0}
           />
-          {/* Fase 1: akun dengan sandi sementara wajib ganti dulu; backend juga menolak /admin/* sampai diganti */}
+          {/* Akun dengan sandi sementara wajib ganti sandi dulu; backend juga menolak /admin/* sampai sandinya diganti */}
           <main id="konten" tabIndex={-1} className="flex-1 p-4 md:p-6">
             {user.must_change_password ? <ForcedPasswordChange /> : children}
           </main>

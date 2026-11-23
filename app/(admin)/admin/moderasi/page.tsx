@@ -1,3 +1,6 @@
+// Halaman /admin/moderasi: moderasi ulasan dan menu, yaitu menyembunyikan ulasan atau menurunkan menu yang melanggar
+// dari katalog. Server component: membaca searchParams (?jenis=ulasan|menu&status=&q=&page=), mengambil data lewat
+// adminFetch (GET /admin/reviews atau /admin/menus), lalu menyerahkannya ke ModerationTable.
 import Link from "next/link";
 import { ModerationTable } from "@/app/(admin)/admin/components/ModerationTable";
 import { LoadError } from "@/app/components/LoadError";
@@ -9,11 +12,13 @@ import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { ModerationMenu, PageMeta, ModerationReview } from "@/types/admin";
 
+// Jumlah baris per halaman, jenis data (nilai ?jenis= dan path backend), dan pilihan filter status.
 const LIMIT = 20;
 const KINDS = { ulasan: { label: "Ulasan", path: "/reviews" }, menu: { label: "Menu", path: "/menus" } } as const;
 const STATUS_FILTERS = { "": "Semua", active: "Normal", moderated: "Dimoderasi" } as const;
 type ModerationKind = keyof typeof KINDS;
 
+// Gaya tautan pil; pil yang aktif berwarna utama.
 const pillClass = (active: boolean) =>
   cx(
     "inline-flex min-h-11 items-center rounded-md border px-4 font-medium",
@@ -21,12 +26,17 @@ const pillClass = (active: boolean) =>
     active ? "border-primary bg-primary text-surface" : "border-line-strong bg-surface text-ink hover:bg-subtle",
   );
 
-// F19 — moderasi ulasan & menu. Filter di URL; suspend toko ada di halaman Penjual.
+/**
+ * Halaman moderasi. Filter ada di URL. Menangguhkan toko tidak ada di sini, tetapi di halaman Penjual.
+ * @param props.searchParams parameter URL: `jenis` ("ulasan"/"menu"), `status` ("active"/"moderated"), `q`, `page`
+ * @returns PageHeader berisi pil jenis, pil status, kotak cari, ModerationTable, dan paginasi (atau LoadError)
+ */
 export default async function ModerationPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
+  // 1. Baca parameter URL; nilai yang tidak dikenal jatuh ke bawaan (ulasan, semua status, halaman 1).
   await requireAdmin();
   const params = await searchParams;
   const kind: ModerationKind = params.jenis === "menu" ? "menu" : "ulasan";
@@ -34,6 +44,7 @@ export default async function ModerationPage({
   const search = params.q?.trim() ?? "";
   const pageParam = Number(params.page);
   const page = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 100_000 ? pageParam : 1;
+  // 2. Pembuat URL halaman ini. Pindah jenis membuang kata cari; status dan halaman 1 tidak ditulis bila kosong.
   const moderationUrl = (options: { kind?: ModerationKind; status?: string; page?: number }) => {
     const urlParams = new URLSearchParams({ jenis: options.kind ?? kind });
     const statusValue = options.status ?? status;
@@ -43,6 +54,7 @@ export default async function ModerationPage({
     return `/admin/moderasi?${urlParams}`;
   };
 
+  // 3. Ambil satu halaman data dari backend sesuai jenis dan filter.
   const apiQuery = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
   if (status) apiQuery.set("status", status);
   if (search) apiQuery.set("q", search);
