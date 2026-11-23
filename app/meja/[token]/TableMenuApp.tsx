@@ -1,3 +1,10 @@
+// Komponen TableMenuApp: aplikasi pesan dari meja untuk pembeli di halaman /meja/[token]. Menampilkan toko, nomor
+// meja, dan menu per kategori; pembeli menambah menu ke keranjang, mengisi nama, lalu "Pesan & bayar".
+// Data toko dan menu datang dari page.tsx (backend GET /tables/:token). Keranjang dan nama tamu disimpan di
+// localStorage HP (lib/table-storage.ts) supaya tidak hilang saat halaman dimuat ulang. Pesanan dibuat lewat server
+// action createTableOrder, lalu payTableOrder meminta tautan bayar Midtrans (layanan pembayaran online).
+// Token tamu (guest_token) dari backend disimpan di localStorage; hanya dengan token itu status pesanan bisa dibuka.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, dan localStorage.
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
@@ -38,10 +45,19 @@ import {
 import type { MenuOption } from "@/types/menu";
 import type { TableMenu, TableMenuItem } from "@/types/table";
 
-// Panel bawah di HP, kotak di layar lebar
+// Kelas Dialog: panel dari bawah di HP, kotak di tengah pada layar lebar.
 const SHEET_CLASS = "mx-auto mb-0 mt-auto max-h-[88dvh] rounded-b-none rounded-t-2xl sm:mb-auto sm:rounded-2xl";
+// "07:00" -> "07.00" (penulisan jam yang lazim di Indonesia).
 const toDottedTime = (time: string) => time.replace(":", ".");
 
+/**
+ * Tombol kurang/tambah jumlah dengan angka di tengah.
+ * @param props.value jumlah sekarang
+ * @param props.onChange dipanggil dengan jumlah baru (value - 1 atau value + 1)
+ * @param props.label nama menu, untuk label pembaca layar ("Kurangi Nasi Ayam")
+ * @param props.min batas bawah; tombol kurang mati di batas ini (bawaan 0)
+ * @returns grup dua tombol dan angka
+ */
 function Stepper({
   value,
   onChange,
@@ -78,6 +94,12 @@ function Stepper({
   );
 }
 
+/**
+ * Foto menu bulat dengan lencana jumlah di keranjang dan cap "Habis" bila stok habis.
+ * @param props.menu menu yang ditampilkan
+ * @param props.qty jumlah porsi menu ini di keranjang (lencana tampil bila > 0)
+ * @returns foto menu, atau ikon piring bila tidak ada foto
+ */
 function MenuPhoto({ menu, qty }: { menu: TableMenuItem; qty: number }) {
   const soldOut = menu.badge === "sold_out";
   return (
@@ -112,6 +134,14 @@ function MenuPhoto({ menu, qty }: { menu: TableMenuItem; qty: number }) {
   );
 }
 
+/**
+ * Kartu satu menu: foto, nama, deskripsi, harga, sisa stok bila menipis, minimal pesan, dan tombol tambah.
+ * @param props.menu menu yang ditampilkan
+ * @param props.qty jumlah porsi menu ini di keranjang (kartu diberi garis aksen bila > 0)
+ * @param props.storeOpen apakah toko sedang buka; bila tutup, tombol tambah mati
+ * @param props.onAdd dipanggil saat tombol tambah ditekan
+ * @returns elemen `<li>` kartu menu
+ */
 function TableMenuCard({
   menu,
   qty,
@@ -170,6 +200,12 @@ function TableMenuCard({
   );
 }
 
+/**
+ * Isi panel pilih opsi tambahan (mis. "Less sugar") dan jumlah sebelum menu masuk keranjang.
+ * @param props.menu menu yang punya opsi
+ * @param props.onAdd dipanggil dengan opsi terpilih dan jumlah saat tombol "Tambah ke pesanan" ditekan
+ * @returns daftar opsi, stepper jumlah, dan tombol tambah berisi harga total
+ */
 function OptionPicker({ menu, onAdd }: { menu: TableMenuItem; onAdd: (options: MenuOption[], qty: number) => void }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [qty, setQty] = useState(menu.min_order_qty);
@@ -219,10 +255,18 @@ function OptionPicker({ menu, onAdd }: { menu: TableMenuItem; onAdd: (options: M
   );
 }
 
+/**
+ * Halaman pesan dari meja: header toko, navigasi kategori, daftar menu, baki keranjang di bawah, panel opsi, dan
+ * panel keranjang berisi formulir nama, WhatsApp, catatan, serta tombol Pesan & bayar.
+ * @param props.token token meja dari URL; dipakai sebagai kunci keranjang dan untuk membuat pesanan
+ * @param props.data toko, meja, dan menu dari backend
+ * @returns seluruh isi halaman /meja/[token]
+ */
 export function TableMenuApp({ token, data }: { token: string; data: TableMenu }) {
+  // 1. Keranjang dibaca dari localStorage lewat useSyncExternalStore (hook React untuk data di luar React) dan
+  //    dicocokkan dengan menu terbaru; saat render di server keranjang dianggap kosong.
   const router = useRouter();
   const { merchant, table } = data;
-  // keranjang tersimpan di peramban (bertahan saat muat ulang); render server = kosong
   const rawCart = useSyncExternalStore(
     subscribe,
     () => readCartRaw(token),
@@ -230,6 +274,7 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
   );
   const cartLines = useMemo(() => restoreCart(parseCart(rawCart), data.menus), [rawCart, data.menus]);
   const setCartLines = (lines: CartLine[]) => saveCart(token, toSavedLines(lines));
+  // 2. Nama pemesan: yang diketik sekarang, atau nama tersimpan dari pesanan sebelumnya. Lalu state panel dan formulir.
   const savedName = useSyncExternalStore(subscribe, readGuestName, () => "");
   const [typedName, setTypedName] = useState<string | null>(null);
   const customerName = typedName ?? savedName;
@@ -240,7 +285,9 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // 3. Kelompokkan menu per kategori (urutan kategori mengikuti urutan menu dari server).
   const categories = useMemo(() => {
+    // 1. Kumpulkan menu ke kategorinya, dikunci dengan slug kategori.
     const bySlug = new Map<string, { slug: string; name: string; items: TableMenuItem[] }>();
     for (const menu of data.menus) {
       const category = bySlug.get(menu.category.slug) ?? {
@@ -251,15 +298,19 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
       category.items.push(menu);
       bySlug.set(menu.category.slug, category);
     }
+    // 2. Map menjaga urutan masuk, jadi kategori tampil sesuai urutan menu pertamanya.
     return [...bySlug.values()];
   }, [data.menus]);
   const [activeCategory, setActiveCategory] = useState(categories[0]?.slug);
 
-  // meja diingat untuk start_url PWA (/meja)
+  // 4. Ingat meja ini, supaya /meja (halaman awal saat dibuka dari layar utama HP) langsung membukanya lagi.
   useEffect(() => saveLastTable(token), [token]);
 
-  // sorot kategori yang sedang terlihat
+  // 5. Sorot tombol kategori yang bagiannya sedang terlihat di layar. IntersectionObserver adalah API peramban yang
+  //    memberi tahu saat elemen masuk atau keluar layar; dipilih bagian yang paling atas.
   useEffect(() => {
+    // 1. Saat bagian kategori masuk atau keluar layar, pilih yang paling atas di antara yang terlihat. rootMargin
+    //    menyempitkan area pantau ke bagian atas layar, di bawah navigasi kategori.
     const observer = new IntersectionObserver(
       (entries) => {
         const topEntry = entries
@@ -269,6 +320,7 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
       },
       { rootMargin: "-80px 0px -60% 0px" },
     );
+    // 2. Pantau setiap bagian kategori; berhenti memantau saat komponen dilepas atau kategori berubah.
     categories.forEach((category) => {
       const section = document.getElementById(`kat-${category.slug}`);
       if (section) observer.observe(section);
@@ -276,9 +328,11 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
     return () => observer.disconnect();
   }, [categories]);
 
+  // 6. Total harga dan jumlah porsi untuk baki keranjang.
   const total = cartTotal(cartLines);
   const itemCount = countItems(cartLines);
 
+  // 7. Tambah menu ke keranjang; false (dan peringatan) bila melebihi sisa stok.
   function addMenu(menu: TableMenuItem, options: MenuOption[], qty: number) {
     const nextLines = addToCart(cartLines, menu, options, qty);
     if (!nextLines) {
@@ -289,15 +343,19 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
     return true;
   }
 
+  // 8. Ubah jumlah satu baris keranjang dari panel keranjang.
   function changeQty(lineKey: string, qty: number) {
     const nextLines = updateQty(cartLines, lineKey, qty);
     if (nextLines) setCartLines(nextLines);
     else toast({ tone: "warning", message: "Jumlah melebihi sisa porsi." });
   }
 
+  // 9. Pesan & bayar.
   async function placeOrder(event: FormEvent) {
+    // 1. Nama pemesan wajib, karena dipakai untuk memanggil pembeli saat pesanan diantar.
     event.preventDefault();
     if (!customerName.trim()) return setErrorMessage("Isi nama pemesan agar pesanan bisa diantar ke kamu.");
+    // 2. Buat pesanan lewat server action; galat dari backend (termasuk galat per field) digabung jadi satu pesan.
     setSubmitting(true);
     setErrorMessage(null);
     const result = await callAction(() =>
@@ -312,13 +370,15 @@ export function TableMenuApp({ token, data }: { token: string; data: TableMenu }
       setSubmitting(false);
       return setErrorMessage([result.error.message, ...Object.values(result.error.fields ?? {}).flat()].join(" "));
     }
+    // 3. Simpan token tamu dan nama, lalu minta tautan bayar Midtrans. Halaman status menjadi tujuan kembali setelah bayar.
     const { code, guest_token } = result.data;
     saveGuest(code, { tamu: guest_token, meja: token });
     saveGuestName(customerName.trim());
     const payment = await callAction(() =>
       payTableOrder(code, guest_token, `${window.location.origin}/meja/pesanan/${code}`),
     );
-    // dikosongkan saat diteruskan, bukan selagi form masih terbuka menunggu tautan bayar (sempat tampil "Rp 0")
+    // 4. Kosongkan keranjang baru sekarang, bukan selagi formulir masih terbuka menunggu tautan bayar (dulu sempat
+    //    tampil "Rp 0"). Lalu buka halaman bayar; bila tautan gagal dibuat, buka halaman status yang punya tombol bayar.
     setCartLines([]);
     if ("data" in payment) return window.location.assign(payment.data.payment_url);
     router.push(`/meja/pesanan/${code}`); // halaman status menyediakan tombol bayar ulang

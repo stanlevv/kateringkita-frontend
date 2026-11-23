@@ -1,3 +1,6 @@
+// Test pemindai QR meja (QrScanner): izin kamera belakang, QR bukan meja diabaikan, QR meja membuka menunya lalu
+// kamera dimatikan, izin ditolak, peramban tanpa BarcodeDetector, dan tombol Tutup kamera.
+// BarcodeDetector, getUserMedia, dan pemutaran video dipalsukan karena jsdom (peramban tiruan untuk test) tidak punya.
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

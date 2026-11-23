@@ -1,3 +1,6 @@
+// Test aplikasi pesan dari meja (TableMenuApp): toko dan meja tampil, menu habis tidak bisa ditambah, alur tambah menu
+// (dengan opsi) -> keranjang -> Pesan & bayar -> Midtrans, keranjang baru dikosongkan saat diteruskan, dan toko tutup.
+// Server action createTableOrder/payTableOrder dan router dipalsukan (vi.mock); localStorage memakai milik jsdom.
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

@@ -1,3 +1,12 @@
+// Komponen TableOrderStatus: status pesanan dari meja di halaman /meja/pesanan/[code], tempat pembeli kembali dari
+// halaman bayar Midtrans. Menampilkan judul status, hitung mundur dan tombol bayar selama menunggu pembayaran, langkah
+// pesanan, rincian item, dan tautan pesan lagi.
+// Data diambil lewat server action getTableOrderStatus (backend GET /guest/orders/:code) dengan token tamu dari
+// localStorage; tanpa token itu (mis. dibuka di HP lain) pesanan tidak bisa dilihat. Data diambil ulang tiap 5 detik
+// (polling) sampai pesanan berakhir.
+// Status pesanan dari backend: holding (menunggu pembayaran), confirmed (lunas, diterima toko), cooking (sedang
+// dimasak), ready (siap diantar), completed (selesai), cancelled (dibatalkan toko), expired (waktu bayar habis).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, dan localStorage.
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -12,6 +21,7 @@ import { subscribe, readGuestRaw, parseGuest } from "@/lib/table-storage";
 import type { TableOrder } from "@/types/table";
 import { TableMessage } from "../../TableMessage";
 
+// Langkah yang ditampilkan berurutan; cancelled dan expired tidak punya langkah (ditampilkan sebagai gagal).
 const STEPS = [
   { status: "holding", label: "Pembayaran" },
   { status: "confirmed", label: "Diterima toko" },
@@ -19,8 +29,11 @@ const STEPS = [
   { status: "ready", label: "Siap diantar" },
   { status: "completed", label: "Selesai" },
 ] as const;
+// Posisi tiap status di STEPS, untuk menentukan langkah yang sudah lewat dan yang sedang berjalan.
 const STEP_INDEX: Record<string, number> = { holding: 0, confirmed: 1, cooking: 2, ready: 3, completed: 4 };
+// Status akhir: setelah ini polling berhenti.
 const FINAL_STATUSES = ["completed", "cancelled", "expired"];
+// Judul dan penjelasan per status, selain holding yang teksnya bergantung pada apakah pembeli baru membayar.
 const STATUS_TEXT: Record<string, { title: string; body: string }> = {
   confirmed: { title: "Pesanan diterima", body: "Pembayaran lunas. Dapur akan segera memasak pesananmu." },
   cooking: { title: "Sedang dimasak", body: "Pesananmu sedang disiapkan dapur." },
@@ -32,29 +45,40 @@ const STATUS_TEXT: Record<string, { title: string; body: string }> = {
     body: "Pesanan ini dibatalkan toko. Bila sudah membayar, hubungi kasir untuk pengembalian dana.",
   },
 };
+// 125 -> "02:05" (menit:detik).
 const formatCountdown = (seconds: number) =>
   `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
+/**
+ * Halaman status satu pesanan dari meja.
+ * @param props.code kode pesanan dari URL
+ * @returns null saat render di server; TableMessage bila token tamu tidak ada atau pesanan gagal dimuat; teks
+ *   "Memuat pesanan…" sebelum data pertama; selain itu halaman status lengkap
+ */
 export function TableOrderStatus({ code }: { code: string }) {
-  // undefined = render server; null = pesanan dibuat di perangkat lain
+  // 1. Baca data tamu dari localStorage lewat useSyncExternalStore (hook React untuk data di luar React).
+  //    undefined = render di server (belum tahu); null = pesanan dibuat di perangkat lain.
   const rawGuest = useSyncExternalStore(
     subscribe,
     () => readGuestRaw(code),
     () => undefined,
   );
   const guest = useMemo(() => (rawGuest === undefined ? undefined : parseGuest(rawGuest)), [rawGuest]);
-  // kembali dari Midtrans membawa ?transaction_status=...; notifikasi lunas bisa tiba beberapa detik kemudian
+  // 2. Kembali dari Midtrans membawa ?transaction_status=...; notifikasi lunas ke backend bisa tiba beberapa detik
+  //    kemudian, jadi selama itu tampil "Memeriksa pembayaran…" alih-alih tombol bayar.
   const justPaid = useSyncExternalStore(
     subscribe,
     () => /transaction_status=(settlement|capture)/.test(window.location.search),
     () => false,
   );
+  // 3. State pesanan, galat, sisa waktu bayar (detik), dan proses bayar. `finishedRef` menandai status akhir.
   const [order, setOrder] = useState<TableOrder | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [paying, setPaying] = useState(false);
   const finishedRef = useRef(false);
 
+  // 4. Ambil status terbaru; tidak dipanggil lagi bila pesanan sudah berakhir.
   const loadOrder = useCallback(async () => {
     if (!guest || finishedRef.current) return;
     const result = await callAction(() => getTableOrderStatus(code, guest.tamu));
@@ -65,7 +89,7 @@ export function TableOrderStatus({ code }: { code: string }) {
     finishedRef.current = FINAL_STATUSES.includes(result.data.status);
   }, [code, guest]);
 
-  // pantau tiap 5 detik sampai selesai/batal/kedaluwarsa
+  // 5. Polling: ambil sekali segera, lalu tiap 5 detik sampai selesai, dibatalkan, atau kedaluwarsa.
   useEffect(() => {
     if (!guest) return;
     const firstLoad = setTimeout(() => void loadOrder(), 0);
@@ -76,6 +100,7 @@ export function TableOrderStatus({ code }: { code: string }) {
     };
   }, [guest, loadOrder]);
 
+  // 6. Hitung mundur sisa waktu bayar, berkurang satu tiap detik sampai 0.
   useEffect(() => {
     if (secondsLeft === null || secondsLeft <= 0) return;
     const timer = setTimeout(
@@ -85,6 +110,7 @@ export function TableOrderStatus({ code }: { code: string }) {
     return () => clearTimeout(timer);
   }, [secondsLeft]);
 
+  // 7. Tombol bayar: pakai tautan bayar yang sudah ada, atau minta tautan baru lewat server action payTableOrder.
   async function pay() {
     if (!guest || !order) return;
     if (order.payment_url) return window.location.assign(order.payment_url);
@@ -97,6 +123,7 @@ export function TableOrderStatus({ code }: { code: string }) {
     setErrorMessage(result.error.message);
   }
 
+  // 8. Layar pengganti: belum tahu, tanpa token tamu, gagal dimuat, atau sedang memuat.
   if (guest === undefined) return null;
   if (guest === null) {
     return (
@@ -118,6 +145,7 @@ export function TableOrderStatus({ code }: { code: string }) {
     );
   }
 
+  // 9. Teks dan ikon sesuai status.
   const awaitingPayment = order.status === "holding";
   const statusText = awaitingPayment
     ? justPaid
@@ -184,7 +212,7 @@ export function TableOrderStatus({ code }: { code: string }) {
       {!failed && (
         <ol className="flex flex-col gap-0">
           {STEPS.map((step, i) => {
-            // pesanan selesai: langkah terakhir pun tercentang (URUT completed = indeks langkah terakhir)
+            // pesanan selesai: langkah terakhir pun tercentang (STEP_INDEX completed = indeks langkah terakhir)
             const done =
               order.status === "completed" ||
               STEP_INDEX[order.status] > i ||

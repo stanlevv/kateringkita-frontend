@@ -1,8 +1,15 @@
+// Halaman /meja/[token]: halaman yang terbuka saat pembeli memindai QR di meja. [token] adalah token meja dari QR.
+// Server component: mengambil toko, meja, dan menu dari backend (GET /tables/:token) tanpa login, lalu menyerahkannya
+// ke TableMenuApp. Data diambil ulang setiap kali halaman dibuka (tanpa cache), jadi stok dan jam buka selalu terbaru.
 import { getTableMenu } from "@/services/table.service";
 import { TableMessage } from "../TableMessage";
 import { TableMenuApp } from "./TableMenuApp";
 
-// F21: halaman yang dibuka QR meja. Data selalu segar (stok & jam buka).
+/**
+ * Halaman menu meja.
+ * @param props.params parameter route; `token` = token meja dari URL
+ * @returns TableMenuApp; atau TableMessage "QR meja tidak aktif" (404) dan "Menu belum bisa dimuat" (galat lain)
+ */
 export default async function TableMenuPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const result = await getTableMenu(token);

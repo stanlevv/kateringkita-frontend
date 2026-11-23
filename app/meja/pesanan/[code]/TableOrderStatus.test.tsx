@@ -1,3 +1,5 @@
+// Test status pesanan dari meja (TableOrderStatus): tanpa token tamu tidak memanggil server, status menunggu bayar
+// (hitung mundur dan tombol bayar), status diterima, dan status selesai. Server action dipalsukan (vi.mock).
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TableOrder } from "@/types/table";

@@ -1,3 +1,5 @@
+// Test halaman /meja (LastTable): tanpa riwayat tampil petunjuk dan tombol pindai, dengan meja terakhir di localStorage
+// langsung dialihkan ke meja itu, dan ?pindai=1 tetap menampilkan pemindai. Router dan QrScanner dipalsukan (vi.mock).
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
