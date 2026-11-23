@@ -4,3 +4,5 @@
 21e6b7028deb9935e19763fbd088f48bbbf2a467
 # refactor(web-dasar): nama kode bahasa Inggris yang jelas di types, lib, services (F28)
 ba20ed2123aa29619ec6232bbea640ad5635a450
+# refactor(web-dasar): ganti sisa nama satu huruf yang bukan indeks loop (F28)
+389674f490f1139f854640ba24274d336d4a69a6
