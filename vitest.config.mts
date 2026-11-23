@@ -2,14 +2,14 @@ import { configDefaults, defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 
-const dari = (p: string) => fileURLToPath(new URL(p, import.meta.url));
+const fromRoot = (relativePath: string) => fileURLToPath(new URL(relativePath, import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": dari("./"),
-      "server-only": dari("./test/empty.ts"),
+      "@": fromRoot("./"),
+      "server-only": fromRoot("./test/empty.ts"),
     },
   },
   test: {

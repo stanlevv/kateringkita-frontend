@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import Home from "./page";
 
-let down = false;
+let backendDown = false;
 const getSession = vi.fn();
 vi.mock("@/services/auth.service", () => ({
-  getSession: () => (down ? Promise.reject(new Error("down")) : getSession()),
+  getSession: () => (backendDown ? Promise.reject(new Error("down")) : getSession()),
 }));
 
 // jsdom tidak punya IntersectionObserver/matchMedia; animasi landing cukup dibuat diam.
@@ -20,7 +20,7 @@ vi.stubGlobal("matchMedia", () => ({ matches: true }));
 
 beforeEach(() => {
   getSession.mockReset();
-  down = false;
+  backendDown = false;
 });
 
 describe("landing", () => {
@@ -45,7 +45,7 @@ describe("landing", () => {
   });
 
   it("backend mati -> header pengunjung", async () => {
-    down = true;
+    backendDown = true;
     render(await Home());
     expect(screen.getAllByRole("link", { name: "Masuk" }).length).toBeGreaterThan(0);
   });
@@ -65,10 +65,10 @@ describe("landing", () => {
     getSession.mockResolvedValue(null);
     const { container } = render(await Home());
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!);
-    const faq = ld["@graph"].find((n: { "@type": string }) => n["@type"] === "FAQPage");
-    const tampil = [...container.querySelectorAll("#faq summary")].map((s) => s.textContent);
-    expect(tampil.length).toBeGreaterThan(0);
-    expect(faq.mainEntity.map((q: { name: string }) => q.name)).toEqual(tampil);
+    const jsonLd = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!);
+    const faq = jsonLd["@graph"].find((node: { "@type": string }) => node["@type"] === "FAQPage");
+    const shownQuestions = [...container.querySelectorAll("#faq summary")].map((summary) => summary.textContent);
+    expect(shownQuestions.length).toBeGreaterThan(0);
+    expect(faq.mainEntity.map((question: { name: string }) => question.name)).toEqual(shownQuestions);
   });
 });

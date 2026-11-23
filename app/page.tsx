@@ -40,118 +40,131 @@ const H2 =
   "mt-3 font-display text-[clamp(1.9rem,3.6vw,2.75rem)] font-extrabold leading-[1.1] tracking-tight text-balance";
 
 // Semua klaim di halaman ini harus sesuai fitur yang ada (LD-S1): tanpa angka pengguna atau testimoni karangan.
-const SOROTAN = ["Kuota porsi harian", "Antrean pesanan langsung", "Laporan & ekspor CSV"];
+const HIGHLIGHTS = ["Kuota porsi harian", "Antrean pesanan langsung", "Laporan & ekspor CSV"];
 
-const FAKTA = [
-  { nilai: "5 menit", ket: "porsi ditahan untuk pembeli saat checkout" },
-  { nilai: "5 detik", ket: "antrean pesanan diperbarui tanpa muat ulang" },
-  { nilai: "Tunai · VA · Online", ket: "bayar non-tunai lewat Midtrans, pesanan diterima otomatis begitu lunas" },
+const FACTS = [
+  { value: "5 menit", caption: "porsi ditahan untuk pembeli saat checkout" },
+  { value: "5 detik", caption: "antrean pesanan diperbarui tanpa muat ulang" },
+  { value: "Tunai · VA · Online", caption: "bayar non-tunai lewat Midtrans, pesanan diterima otomatis begitu lunas" },
 ];
 
-const FITUR: { icon: LucideIcon; judul: string; isi: string }[] = [
+const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
   {
     icon: Gauge,
-    judul: "Kuota porsi harian",
-    isi: "Atur jumlah porsi tiap menu untuk hari itu. Saat porsi habis, menu otomatis tidak bisa dipesan lagi.",
+    title: "Kuota porsi harian",
+    body: "Atur jumlah porsi tiap menu untuk hari itu. Saat porsi habis, menu otomatis tidak bisa dipesan lagi.",
   },
   {
     icon: ListChecks,
-    judul: "Antrean pesanan langsung",
-    isi: "Pesanan baru muncul sendiri di dashboard. Terima, masak, lalu tandai siap diambil, dengan jeda 5 detik untuk membatalkan salah ketuk.",
+    title: "Antrean pesanan langsung",
+    body: "Pesanan baru muncul sendiri di dashboard. Terima, masak, lalu tandai siap diambil, dengan jeda 5 detik untuk membatalkan salah ketuk.",
   },
   {
     icon: MapPin,
-    judul: "Titik ambil di kampus",
-    isi: "Tentukan titik temu dan jam operasional, jadi mahasiswa tahu kapan dan di mana mengambil pesanannya.",
+    title: "Titik ambil di kampus",
+    body: "Tentukan titik temu dan jam operasional, jadi mahasiswa tahu kapan dan di mana mengambil pesanannya.",
   },
   {
     icon: MessageCircle,
-    judul: "Template pesan WhatsApp",
-    isi: "Kabari pembeli dengan pesan yang sudah berisi kode, menu, dan jam ambil. Tidak perlu mengetik ulang.",
+    title: "Template pesan WhatsApp",
+    body: "Kabari pembeli dengan pesan yang sudah berisi kode, menu, dan jam ambil. Tidak perlu mengetik ulang.",
   },
   {
     icon: ChartColumn,
-    judul: "Laporan penjualan",
-    isi: "Pantau omzet, pesanan selesai, menu terlaris, dan jam tersibuk. Unduh CSV untuk pembukuan.",
+    title: "Laporan penjualan",
+    body: "Pantau omzet, pesanan selesai, menu terlaris, dan jam tersibuk. Unduh CSV untuk pembukuan.",
   },
   {
     icon: Calculator,
-    judul: "Kalkulator HPP & promo",
-    isi: "Hitung harga pokok per porsi sebelum menentukan harga jual, lalu buat kode promo toko saat perlu.",
+    title: "Kalkulator HPP & promo",
+    body: "Hitung harga pokok per porsi sebelum menentukan harga jual, lalu buat kode promo toko saat perlu.",
   },
   {
     icon: QrCode,
-    judul: "Pesan dari meja",
-    isi: "Cetak QR untuk tiap meja. Pelanggan memilih menu dan bayar online tanpa membuat akun, lalu pesanannya masuk ke antrean yang sama.",
+    title: "Pesan dari meja",
+    body: "Cetak QR untuk tiap meja. Pelanggan memilih menu dan bayar online tanpa membuat akun, lalu pesanannya masuk ke antrean yang sama.",
   },
   {
     icon: Wallet,
-    judul: "Bayar online, dana dicairkan",
-    isi: "Pembeli bayar lewat Virtual Account, QRIS, atau e-wallet melalui Midtrans. Bagian toko ditransfer ke rekening yang Anda daftarkan.",
+    title: "Bayar online, dana dicairkan",
+    body: "Pembeli bayar lewat Virtual Account, QRIS, atau e-wallet melalui Midtrans. Bagian toko ditransfer ke rekening yang Anda daftarkan.",
   },
   {
     icon: Sparkles,
-    judul: "Asisten AI",
-    isi: "Tanyakan strategi harga dari Kalkulator HPP. Pembeli juga dibantu AI memilih menu yang sedang tersedia sesuai budget.",
+    title: "Asisten AI",
+    body: "Tanyakan strategi harga dari Kalkulator HPP. Pembeli juga dibantu AI memilih menu yang sedang tersedia sesuai budget.",
   },
 ];
 
-const LANGKAH = [
+const STEPS = [
   {
-    judul: "Daftar sebagai penjual",
-    isi: "Isi data diri dan usaha Anda. Admin memeriksa data sebelum toko ditampilkan ke pembeli.",
+    title: "Daftar sebagai penjual",
+    body: "Isi data diri dan usaha Anda. Admin memeriksa data sebelum toko ditampilkan ke pembeli.",
   },
-  { judul: "Pasang menu dan porsi", isi: "Tambahkan foto, harga, dan kuota porsi untuk hari yang Anda pilih." },
+  { title: "Pasang menu dan porsi", body: "Tambahkan foto, harga, dan kuota porsi untuk hari yang Anda pilih." },
   {
-    judul: "Terima pesanan pertama",
-    isi: "Pesanan dari aplikasi mahasiswa atau QR di meja masuk ke antrean. Proses, lalu kabari pembeli saat siap.",
+    title: "Terima pesanan pertama",
+    body: "Pesanan dari aplikasi mahasiswa atau QR di meja masuk ke antrean. Proses, lalu kabari pembeli saat siap.",
   },
 ];
 
 // Satu sumber untuk teks yang tampil dan JSON-LD FAQPage (Google mensyaratkan keduanya sama).
 const FAQ = [
   {
-    q: "Apa itu KateringKita?",
-    a: "KateringKita adalah layanan pre-order katering untuk lingkungan kampus. Mahasiswa memesan lewat aplikasi KateringKita di ponsel atau memindai QR di meja toko, sedangkan penjual mengelola menu, kuota porsi, dan pesanan dari dashboard web ini.",
+    question: "Apa itu KateringKita?",
+    answer:
+      "KateringKita adalah layanan pre-order katering untuk lingkungan kampus. Mahasiswa memesan lewat aplikasi KateringKita di ponsel atau memindai QR di meja toko, sedangkan penjual mengelola menu, kuota porsi, dan pesanan dari dashboard web ini.",
   },
   {
-    q: "Siapa yang bisa mendaftar sebagai penjual?",
-    a: "Usaha katering atau dapur rumahan yang melayani mahasiswa di sekitar kampus. Setelah mendaftar, admin memeriksa data usaha Anda sebelum toko tampil di aplikasi.",
+    question: "Siapa yang bisa mendaftar sebagai penjual?",
+    answer:
+      "Usaha katering atau dapur rumahan yang melayani mahasiswa di sekitar kampus. Setelah mendaftar, admin memeriksa data usaha Anda sebelum toko tampil di aplikasi.",
   },
   {
-    q: "Bagaimana kuota porsi mencegah pesanan berlebih?",
-    a: "Setiap menu punya kuota porsi harian. Saat pembeli checkout, porsinya ditahan selama 5 menit sehingga pembeli lain melihat sisa porsi yang sebenarnya. Begitu kuota habis, menu tidak bisa dipesan lagi.",
+    question: "Bagaimana kuota porsi mencegah pesanan berlebih?",
+    answer:
+      "Setiap menu punya kuota porsi harian. Saat pembeli checkout, porsinya ditahan selama 5 menit sehingga pembeli lain melihat sisa porsi yang sebenarnya. Begitu kuota habis, menu tidak bisa dipesan lagi.",
   },
   {
-    q: "Metode pembayaran apa saja yang bisa dipakai?",
-    a: "Tunai saat pesanan diambil, Virtual Account, atau bayar online (QRIS dan e-wallet) lewat Midtrans. Pembayaran non-tunai dikonfirmasi otomatis, jadi pesanan langsung masuk antrean begitu lunas.",
+    question: "Metode pembayaran apa saja yang bisa dipakai?",
+    answer:
+      "Tunai saat pesanan diambil, Virtual Account, atau bayar online (QRIS dan e-wallet) lewat Midtrans. Pembayaran non-tunai dikonfirmasi otomatis, jadi pesanan langsung masuk antrean begitu lunas.",
   },
   {
-    q: "Bagaimana dana pembayaran non-tunai sampai ke penjual?",
-    a: "Pembayaran Virtual Account dan online masuk ke KateringKita lewat Midtrans. Setelah pesanan selesai, admin mentransfer bagian toko, yaitu subtotal dikurangi promo toko, ke rekening yang Anda isi di Pengaturan. Saldo dan riwayat pencairan terlihat di halaman yang sama.",
+    question: "Bagaimana dana pembayaran non-tunai sampai ke penjual?",
+    answer:
+      "Pembayaran Virtual Account dan online masuk ke KateringKita lewat Midtrans. Setelah pesanan selesai, admin mentransfer bagian toko, yaitu subtotal dikurangi promo toko, ke rekening yang Anda isi di Pengaturan. Saldo dan riwayat pencairan terlihat di halaman yang sama.",
   },
   {
-    q: "Apakah perlu memasang aplikasi khusus?",
-    a: "Tidak. Dashboard penjual berjalan di browser, baik di laptop maupun ponsel. Aplikasi ponsel hanya dibutuhkan pembeli pre-order; pesanan dari meja cukup lewat browser.",
+    question: "Apakah perlu memasang aplikasi khusus?",
+    answer:
+      "Tidak. Dashboard penjual berjalan di browser, baik di laptop maupun ponsel. Aplikasi ponsel hanya dibutuhkan pembeli pre-order; pesanan dari meja cukup lewat browser.",
   },
   {
-    q: "Apakah data penjualan bisa diunduh?",
-    a: "Bisa. Halaman laporan menampilkan omzet, pesanan selesai, menu terlaris, dan sebaran pesanan per jam, lalu dapat diunduh sebagai berkas CSV yang rapi dibuka di Excel.",
+    question: "Apakah data penjualan bisa diunduh?",
+    answer:
+      "Bisa. Halaman laporan menampilkan omzet, pesanan selesai, menu terlaris, dan sebaran pesanan per jam, lalu dapat diunduh sebagai berkas CSV yang rapi dibuka di Excel.",
   },
 ];
 
-const ORG = `${SITE_URL}/#organisasi`;
+const ORGANIZATION_ID = `${SITE_URL}/#organisasi`;
 const JSON_LD = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "Organization", "@id": ORG, name: SITE_NAME, url: SITE_URL, logo: `${SITE_URL}/apple-icon.png` },
+    {
+      "@type": "Organization",
+      "@id": ORGANIZATION_ID,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/apple-icon.png`,
+    },
     {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#situs`,
       name: SITE_NAME,
       url: SITE_URL,
       inLanguage: "id-ID",
-      publisher: { "@id": ORG },
+      publisher: { "@id": ORGANIZATION_ID },
     },
     {
       "@type": "SoftwareApplication",
@@ -161,14 +174,14 @@ const JSON_LD = {
       operatingSystem: "Web",
       inLanguage: "id-ID",
       description: SITE_DESCRIPTION,
-      publisher: { "@id": ORG },
+      publisher: { "@id": ORGANIZATION_ID },
     },
     {
       "@type": "FAQPage",
-      mainEntity: FAQ.map(({ q, a }) => ({
+      mainEntity: FAQ.map(({ question, answer }) => ({
         "@type": "Question",
-        name: q,
-        acceptedAnswer: { "@type": "Answer", text: a },
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
       })),
     },
   ],
@@ -178,14 +191,14 @@ const JSON_LD = {
 export default async function Home() {
   // LD-A1: backend mati atau sesi tidak valid -> tampilkan header pengunjung.
   const session = await getSession().catch(() => null);
-  const masuk = session?.user.role === "merchant";
-  const admin = session?.user.role === "admin";
-  const cta = admin
-    ? { href: "/admin", teks: "Ke panel admin" }
-    : masuk
-      ? { href: "/dashboard", teks: "Buka dashboard" }
-      : { href: "/register", teks: "Daftar jadi penjual" };
-  const tamu = !masuk && !admin;
+  const isMerchant = session?.user.role === "merchant";
+  const isAdmin = session?.user.role === "admin";
+  const cta = isAdmin
+    ? { href: "/admin", label: "Ke panel admin" }
+    : isMerchant
+      ? { href: "/dashboard", label: "Buka dashboard" }
+      : { href: "/register", label: "Daftar jadi penjual" };
+  const isVisitor = !isMerchant && !isAdmin;
 
   return (
     <div className="bg-surface text-ink">
@@ -215,7 +228,7 @@ export default async function Home() {
             </a>
           </nav>
           <div className="flex items-center gap-2">
-            {tamu && (
+            {isVisitor && (
               <Link
                 href="/login"
                 className="hidden min-h-11 items-center rounded-md px-3 text-sm font-semibold hover:bg-subtle sm:inline-flex"
@@ -224,7 +237,7 @@ export default async function Home() {
               </Link>
             )}
             <LinkButton href={cta.href} className="whitespace-nowrap text-sm sm:text-base">
-              {cta.teks}
+              {cta.label}
             </LinkButton>
           </div>
         </div>
@@ -254,10 +267,10 @@ export default async function Home() {
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <LinkButton href={cta.href} size="lg">
-                  {cta.teks}
+                  {cta.label}
                   <ArrowRight aria-hidden className="size-5" />
                 </LinkButton>
-                {tamu ? (
+                {isVisitor ? (
                   <LinkButton href="/login" variant="secondary" size="lg">
                     Masuk
                   </LinkButton>
@@ -268,10 +281,10 @@ export default async function Home() {
                 )}
               </div>
               <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-ink-muted">
-                {SOROTAN.map((t) => (
-                  <li key={t} className="flex items-center gap-2">
+                {HIGHLIGHTS.map((highlight) => (
+                  <li key={highlight} className="flex items-center gap-2">
                     <Check aria-hidden className="size-4 text-success" />
-                    {t}
+                    {highlight}
                   </li>
                 ))}
               </ul>
@@ -284,13 +297,13 @@ export default async function Home() {
 
         <section aria-label="KateringKita secara singkat" className="border-y border-line bg-surface">
           <dl className={`${WRAP} grid gap-6 py-8 sm:grid-cols-3 sm:gap-0`}>
-            {FAKTA.map(({ nilai, ket }) => (
+            {FACTS.map(({ value, caption }) => (
               <div
-                key={nilai}
+                key={value}
                 className="flex flex-col-reverse gap-1 sm:border-l sm:border-line sm:px-8 sm:first:border-l-0 sm:first:pl-0"
               >
-                <dt className="text-sm text-ink-muted">{ket}</dt>
-                <dd className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{nilai}</dd>
+                <dt className="text-sm text-ink-muted">{caption}</dt>
+                <dd className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{value}</dd>
               </div>
             ))}
           </dl>
@@ -309,16 +322,16 @@ export default async function Home() {
               </p>
             </div>
             <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {FITUR.map(({ icon: Icon, judul, isi }) => (
+              {FEATURES.map(({ icon: Icon, title, body }) => (
                 <li
-                  key={judul}
+                  key={title}
                   className="rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-line-strong motion-reduce:transition-none"
                 >
                   <span className="flex size-11 items-center justify-center rounded-xl bg-primary-soft text-primary">
                     <Icon aria-hidden className="size-5" />
                   </span>
-                  <h3 className="mt-5 font-display text-lg font-bold">{judul}</h3>
-                  <p className="mt-2 text-ink-muted">{isi}</p>
+                  <h3 className="mt-5 font-display text-lg font-bold">{title}</h3>
+                  <p className="mt-2 text-ink-muted">{body}</p>
                 </li>
               ))}
             </ul>
@@ -338,13 +351,13 @@ export default async function Home() {
                 Pendaftaran cukup sekali. Setelah itu, Anda hanya perlu memperbarui porsi untuk setiap hari berjualan.
               </p>
               <LinkButton href={cta.href} size="lg" className="mt-8">
-                {cta.teks}
+                {cta.label}
                 <ArrowRight aria-hidden className="size-5" />
               </LinkButton>
             </div>
             <ol className="grid gap-4">
-              {LANGKAH.map(({ judul, isi }, i) => (
-                <li key={judul} className="flex gap-5 rounded-2xl border border-line bg-canvas p-6">
+              {STEPS.map(({ title, body }, i) => (
+                <li key={title} className="flex gap-5 rounded-2xl border border-line bg-canvas p-6">
                   <span
                     aria-hidden
                     className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent font-display text-lg font-extrabold"
@@ -352,8 +365,8 @@ export default async function Home() {
                     {i + 1}
                   </span>
                   <div>
-                    <h3 className="font-display text-lg font-bold">{judul}</h3>
-                    <p className="mt-1 text-ink-muted">{isi}</p>
+                    <h3 className="font-display text-lg font-bold">{title}</h3>
+                    <p className="mt-1 text-ink-muted">{body}</p>
                   </div>
                 </li>
               ))}
@@ -373,16 +386,16 @@ export default async function Home() {
               </p>
             </div>
             <div className="divide-y divide-line rounded-2xl border border-line bg-surface">
-              {FAQ.map(({ q, a }) => (
-                <details key={q} className="group px-6">
+              {FAQ.map(({ question, answer }) => (
+                <details key={question} className="group px-6">
                   <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 font-display font-bold [&::-webkit-details-marker]:hidden">
-                    {q}
+                    {question}
                     <ChevronDown
                       aria-hidden
                       className="size-5 shrink-0 text-ink-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
                     />
                   </summary>
-                  <p className="pb-5 text-ink-muted">{a}</p>
+                  <p className="pb-5 text-ink-muted">{answer}</p>
                 </details>
               ))}
             </div>
@@ -408,7 +421,7 @@ export default async function Home() {
                 href={cta.href}
                 className="mt-8 inline-flex min-h-12 shrink-0 items-center gap-2 rounded-md bg-ink px-6 text-lg font-semibold text-surface transition-colors hover:bg-steel focus-visible:outline-ink motion-reduce:transition-none lg:mt-0"
               >
-                {cta.teks}
+                {cta.label}
                 <ArrowRight aria-hidden className="size-5" />
               </Link>
             </div>
@@ -450,7 +463,7 @@ export default async function Home() {
           <nav aria-label="Akun">
             <p className="text-sm font-semibold">Akun</p>
             <ul className="mt-2 text-sm text-ink-muted">
-              {tamu ? (
+              {isVisitor ? (
                 <>
                   <li>
                     <Link href="/login" className="inline-flex min-h-11 items-center hover:text-ink">
@@ -471,7 +484,7 @@ export default async function Home() {
               ) : (
                 <li>
                   <Link href={cta.href} className="inline-flex min-h-11 items-center hover:text-ink">
-                    {cta.teks}
+                    {cta.label}
                   </Link>
                 </li>
               )}

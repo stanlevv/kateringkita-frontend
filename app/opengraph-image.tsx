@@ -9,18 +9,18 @@ export const contentType = "image/png";
 
 // Bentuk sama dengan LogoMark (app/components/shell/Brand.tsx), diisi putih.
 const LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M9.4 3.9c-.55.75-.55 1.5 0 2.25M12 3.4c-.6.8-.6 1.6 0 2.4M14.6 3.9c-.55.75-.55 1.5 0 2.25" stroke="#fff" stroke-opacity=".75" stroke-width="1.2" stroke-linecap="round"/><circle cx="12" cy="8.9" r="1.25" fill="#fff"/><path d="M5.4 17.2a6.6 6.6 0 0 1 13.2 0z" fill="#fff"/><rect x="4" y="18.4" width="16" height="2" rx="1" fill="#fff"/></svg>`;
-const ORANYE = "#C2410C",
+const ORANGE = "#C2410C",
   INK = "#262017",
   MUTED = "#665D55",
-  GARIS = "#E8E5DF";
+  LINE_COLOR = "#E8E5DF";
 
 export default async function Image() {
-  const [tebal, sedang] = await Promise.all([
+  const [boldFont, mediumFont] = await Promise.all([
     readFile(join(process.cwd(), "assets/fonts/PlusJakartaSans-ExtraBold.ttf")),
     readFile(join(process.cwd(), "assets/fonts/PlusJakartaSans-Medium.ttf")),
   ]);
-  const baris = { display: "flex", justifyContent: "space-between" } as const;
-  const garis = { display: "flex", height: 2, background: GARIS, margin: "18px 0" } as const;
+  const rowStyle = { display: "flex", justifyContent: "space-between" } as const;
+  const dividerStyle = { display: "flex", height: 2, background: LINE_COLOR, margin: "18px 0" } as const;
 
   return new ImageResponse(
     <div
@@ -57,7 +57,7 @@ export default async function Image() {
             />
           </div>
           <div style={{ display: "flex", marginLeft: 18, fontSize: 38, fontWeight: 800, letterSpacing: -1 }}>
-            Katering<span style={{ color: ORANYE }}>Kita</span>
+            Katering<span style={{ color: ORANGE }}>Kita</span>
           </div>
         </div>
         <div
@@ -73,7 +73,7 @@ export default async function Image() {
           {/* tanpa koma/titik: Satori memberi celah sebelum tanda baca pada bobot 800 */}
           <span>Kelola pesanan</span>
           <span>katering kampus</span>
-          <span style={{ color: ORANYE }}>tanpa porsi tersisa</span>
+          <span style={{ color: ORANGE }}>tanpa porsi tersisa</span>
         </div>
         <div style={{ display: "flex", fontSize: 26, fontWeight: 500, color: MUTED }}>
           Pre-order untuk penjual katering di sekitar kampus
@@ -88,28 +88,28 @@ export default async function Image() {
             padding: "30px 30px 34px",
             background: "#FFFDF8",
             borderRadius: 18,
-            border: `2px solid ${GARIS}`,
+            border: `2px solid ${LINE_COLOR}`,
             boxShadow: "0 30px 60px -20px rgba(38,32,23,.35)",
             transform: "rotate(3deg)",
             fontSize: 22,
             fontWeight: 500,
           }}
         >
-          <div style={{ ...baris, fontWeight: 800 }}>
+          <div style={{ ...rowStyle, fontWeight: 800 }}>
             <span>KK-4K0T</span>
             <span>07.42</span>
           </div>
-          <div style={garis} />
-          <div style={baris}>
+          <div style={dividerStyle} />
+          <div style={rowStyle}>
             <span>2× Nasi Ayam Bakar</span>
             <span>30.000</span>
           </div>
-          <div style={{ ...baris, marginTop: 8 }}>
+          <div style={{ ...rowStyle, marginTop: 8 }}>
             <span>2× Es Teh</span>
             <span>8.000</span>
           </div>
-          <div style={garis} />
-          <div style={{ ...baris, fontSize: 26, fontWeight: 800 }}>
+          <div style={dividerStyle} />
+          <div style={{ ...rowStyle, fontSize: 26, fontWeight: 800 }}>
             <span>TOTAL</span>
             <span>Rp38.000</span>
           </div>
@@ -120,9 +120,9 @@ export default async function Image() {
               alignSelf: "flex-start",
               marginTop: 22,
               padding: "6px 14px",
-              border: `3px solid ${ORANYE}`,
+              border: `3px solid ${ORANGE}`,
               borderRadius: 8,
-              color: ORANYE,
+              color: ORANGE,
               fontSize: 20,
               fontWeight: 800,
               transform: "rotate(-4deg)",
@@ -136,8 +136,8 @@ export default async function Image() {
     {
       ...size,
       fonts: [
-        { name: "Jakarta", data: tebal, weight: 800, style: "normal" },
-        { name: "Jakarta", data: sedang, weight: 500, style: "normal" },
+        { name: "Jakarta", data: boldFont, weight: 800, style: "normal" },
+        { name: "Jakarta", data: mediumFont, weight: 500, style: "normal" },
       ],
     },
   );
