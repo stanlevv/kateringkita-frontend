@@ -6,3 +6,7 @@
 ba20ed2123aa29619ec6232bbea640ad5635a450
 # refactor(web-dasar): ganti sisa nama satu huruf yang bukan indeks loop (F28)
 389674f490f1139f854640ba24274d336d4a69a6
+# refactor(web-actions): ganti nama file actions ke bahasa Inggris (F28)
+68daceed0204249cd2998619fa93bb9b483e95a9
+# refactor(web-actions): nama kode bahasa Inggris yang jelas (F28)
+c74e8807f9aea2ff1729c3e7fe814f8a6ad37e7b
