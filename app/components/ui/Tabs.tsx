@@ -1,5 +1,5 @@
 // Komponen Tabs: deretan tab (role="tablist") yang bisa dipindah dengan panah kiri/kanan.
-// Dipakai OrderQueue, MasterTable, DaftarHasilAi, TiketTable.
+// Dipakai OrderQueue, MenuCatalog, MasterTable, DaftarHasilAi, TiketTable.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
@@ -27,7 +27,8 @@ export function Tabs({
   onChange: (id: string) => void;
   label: string;
 }) {
-  // Panah kiri/kanan: pilih tab sebelah (berputar di ujung) dan pindahkan fokus ke sana.
+  // 1. Panah kiri/kanan: pilih tab sebelah (berputar di ujung) dan pindahkan fokus ke sana.
+  //    Tombol lain diabaikan. 2. Di JSX: hanya tab aktif yang masuk urutan Tab (tabIndex 0), lainnya -1.
   const moveFocus = (event: React.KeyboardEvent, i: number) => {
     const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
     if (!step) return;

@@ -28,6 +28,7 @@ const subscribeOnline = (listener: () => void) => {
 // Data awal dari halaman server; `loadedAt` = jam server saat halaman dimuat (ms).
 type InitialData = { orders: MerchantOrder[]; menus: MerchantMenu[]; loadedAt: number };
 
+// shortcut: antrean & kuota "hari ini" tetap saat tab lewat tengah malam WIB; muat ulang bila tanggal berganti, tambah bila dashboard perlu lintas hari
 /**
  * Menyimpan antrean pesanan dan menu dashboard, lalu menyegarkannya bertahap lewat `GET /api/dashboard/sinkron`.
  * Hanya satu permintaan pada satu waktu (`setTimeout` berantai): tiap 5 dtk saat tab terlihat, 30 dtk saat
@@ -38,7 +39,6 @@ type InitialData = { orders: MerchantOrder[]; menus: MerchantMenu[]; loadedAt: n
  *   `clockOffset` (selisih jam server − jam perangkat, ms), `receiveOrder`/`receiveMenu` (masukkan hasil aksi
  *   pengguna langsung), dan `refresh` (segarkan sekarang)
  */
-// shortcut: antrean & kuota "hari ini" tetap saat tab lewat tengah malam WIB; muat ulang bila tanggal berganti, tambah bila dashboard perlu lintas hari
 export function useLiveDashboard(initial: InitialData) {
   // 1. Isi store dari data awal halaman.
   const [orders, setOrders] = useState(initial.orders);

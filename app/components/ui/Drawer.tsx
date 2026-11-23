@@ -1,5 +1,7 @@
 // Komponen Drawer: panel yang meluncur dari sisi layar, dibangun di atas Dialog.
 // Dipakai OrderSlipDrawer (slip pesanan) dan MobileNav (menu navigasi).
+// "use client": komponen ini berjalan di peramban (client component) karena menerima fungsi `onClose` dan dipakai
+// komponen klien.
 "use client";
 
 import type { ReactNode } from "react";

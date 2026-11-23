@@ -15,8 +15,10 @@ import { CircleAlert } from "lucide-react";
  * @returns elemen `div`, atau null bila tanpa galat
  */
 export function ErrorSummary({ errors, focusKey }: { errors: { id: string; message: string }[]; focusKey?: number }) {
+  // 1. Ref ke kotak ringkasan agar bisa difokus.
   const ref = useRef<HTMLDivElement>(null);
   const hasErrors = errors.length > 0;
+  // 2. Pindahkan fokus ke ringkasan saat galat muncul atau `focusKey` berganti. 3. Tanpa galat tidak dirender.
   useEffect(() => {
     if (hasErrors) ref.current?.focus();
   }, [hasErrors, focusKey]);

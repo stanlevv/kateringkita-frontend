@@ -27,9 +27,10 @@ export function CollapsibleSidebar({
   topContent: ReactNode;
   children: ReactNode;
 }) {
-  // Mode berjalan di state; tombol menukar mode lalu menulis cookie.
+  // 1. Mode berjalan di state, mulai dari nilai cookie yang dibaca server.
   const [mode, setMode] = useState(initialMode);
   const isWide = mode === "lebar";
+  // 2. Tombol menukar mode lalu menulis cookie setahun agar render server berikutnya langsung memakai mode ini.
   function toggleMode() {
     const nextMode = isWide ? "ringkas" : "lebar";
     setMode(nextMode);
