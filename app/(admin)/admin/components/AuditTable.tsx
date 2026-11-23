@@ -1,3 +1,7 @@
+// Komponen AuditTable: tabel log aksi admin di /admin/log (siapa, kapan, aksi apa, terhadap apa, alasan, dan field
+// yang berubah). Data diambil halaman /admin/log lalu dikirim lewat prop; label aksi dan target dari
+// services/admin-log.service.ts.
+// "use client": komponen ini berjalan di peramban (client component) karena membaca URL dengan usePathname/useSearchParams untuk tautan halaman.
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
@@ -11,6 +15,7 @@ import type { AuditLog } from "@/types/admin";
 import { formatTime, formatDate } from "@/lib/format";
 import { buildUrl } from "@/lib/url";
 
+// Kolom tabel log. Kolom Perubahan berisi daftar "field: lama → baru" dari before/after.
 const COLUMNS: Column<AuditLog>[] = [
   {
     key: "waktu",
@@ -39,6 +44,15 @@ const COLUMNS: Column<AuditLog>[] = [
   },
 ];
 
+/**
+ * Tabel log aksi admin dengan paginasi 20 baris. Bila kosong, pesannya membedakan halaman di luar jangkauan, hasil
+ * filter kosong, dan belum ada log sama sekali.
+ * @param props.rows log satu halaman
+ * @param props.page nomor halaman sekarang
+ * @param props.total jumlah semua log yang cocok
+ * @param props.filtered true bila ada filter aktif di URL
+ * @returns tabel dengan paginasi, atau EmptyState
+ */
 export function AuditTable({
   rows,
   page,

@@ -1,3 +1,5 @@
+// Komponen MerchantDetail: isi halaman /admin/penjual/<id> (status dan aksi admin, profil toko, pemilik, checklist,
+// dan log aksi admin untuk toko ini). Server component: hanya menampilkan data yang dikirim halaman.
 import Link from "next/link";
 import { isChecklistComplete, whatsappLink } from "@/services/admin-merchant.service";
 import { listChanges, actionLabel } from "@/services/admin-log.service";
@@ -7,12 +9,14 @@ import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
 import { VerificationStatus } from "./VerificationStatus";
 
+// Satu baris label–nilai di daftar deskripsi (dl).
 const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-col sm:flex-row sm:gap-4">
     <dt className="w-40 shrink-0 text-ink-muted">{label}</dt>
     <dd className="min-w-0 break-words">{children}</dd>
   </div>
 );
+// Kartu bagian berjudul.
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="rounded-lg border border-line bg-surface p-4">
     <h2 className="mb-3 text-lg font-semibold">{title}</h2>
@@ -20,7 +24,12 @@ const SectionCard = ({ title, children }: { title: string; children: React.React
   </section>
 );
 
-/** A-05 — profil lengkap penjual, checklist, aksi sesuai status, dan log toko. */
+/**
+ * Detail penjual: status verifikasi dan tombol aksi, catatan atau alasan penangguhan, profil toko, pemilik, checklist,
+ * dan log toko terbaru dengan tautan ke log lengkap.
+ * @param props.merchant detail penjual dari backend
+ * @returns kumpulan kartu bagian
+ */
 export function MerchantDetail({ merchant }: { merchant: AdminMerchantDetail }) {
   return (
     <div className="flex flex-col gap-4">

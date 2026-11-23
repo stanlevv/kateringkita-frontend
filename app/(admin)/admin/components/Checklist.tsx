@@ -1,8 +1,15 @@
+// Komponen Checklist: daftar kelengkapan toko (WhatsApp valid, alamat, titik temu, menu aktif, menu berfoto, jam buka) yang
+// diperiksa admin sebelum memverifikasi penjual. Label butir dari CHECKLIST_LABELS (services/admin-merchant.service.ts).
 import { Check, X } from "lucide-react";
 import { CHECKLIST_LABELS } from "@/services/admin-merchant.service";
 import type { Checklist as ChecklistItems } from "@/types/admin";
 
-/** Checklist kelengkapan toko: ikon + teks (tidak hanya warna). */
+/**
+ * Checklist kelengkapan toko. Tiap butir memakai ikon dan teks (tidak hanya warna), plus teks tersembunyi untuk pembaca
+ * layar.
+ * @param props.checklist status tiap butir dari backend (true = terpenuhi)
+ * @returns daftar butir
+ */
 export function Checklist({ checklist }: { checklist: ChecklistItems }) {
   return (
     <ul aria-label="Checklist toko" className="flex flex-col gap-1 text-sm">

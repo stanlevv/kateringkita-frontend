@@ -1,3 +1,7 @@
+// Komponen MasterTable: tabel data master per tab di /admin/data-master. Data master = daftar pilihan yang dipakai
+// penjual: kategori menu, titik temu, dan jenis usaha. Data tidak dihapus, hanya dinonaktifkan.
+// Perubahan lewat server action setMasterActive dan swapSortOrder (app/actions/admin/master.ts); tambah/ubah di MasterForm.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, router, dan membaca URL.
 "use client";
 
 import { useState } from "react";
@@ -19,8 +23,15 @@ import type { MasterItem } from "@/types/admin";
 import { buildUrl } from "@/lib/url";
 import { MasterForm } from "./MasterForm";
 
-/** A-01…A-03 — data master per tab (tab di URL). Titik temu urut nama; kategori & jenis usaha bisa dinaik-turunkan. */
+/**
+ * Tabel data master satu tab. Tab aktif ada di URL (?tab=). Titik temu diurutkan nama; kategori dan jenis usaha bisa
+ * dinaikkan atau diturunkan urutannya.
+ * @param props.tabId id tab dari URL (nilai tidak dikenal = tab pertama)
+ * @param props.rows data tab itu dari backend
+ * @returns tab, tombol tambah, tabel (atau keadaan kosong), dialog formulir, dan dialog konfirmasi nonaktif
+ */
 export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[] }) {
+  // 1. Tab yang dipilih, dialog formulir ("new" = tambah baru), data yang akan dinonaktifkan, dan tanda sibuk.
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
@@ -29,27 +40,31 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
   const [deactivating, setDeactivating] = useState<MasterItem | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // 2. Aktifkan atau nonaktifkan satu data, lalu muat ulang (router.refresh).
   async function setActive(item: MasterItem, active: boolean) {
     setBusy(true);
     const result = await callAction(() => setMasterActive(tab.kind, item.id, active));
     setBusy(false);
     setDeactivating(null);
-    if ("error" in result) return toast({ tone: "danger", message: result.error.message }); // 409: nama toko ikut di pesan
+    if ("error" in result) return toast({ tone: "danger", message: result.error.message }); // 409: pesan menyebut toko yang masih memakainya
     toast({ tone: "success", message: active ? "Diaktifkan" : "Dinonaktifkan" });
     router.refresh();
   }
 
+  // 3. Geser satu baris naik (-1) atau turun (+1) dengan menukar nilai sort_order dengan tetangganya.
   async function move(index: number, direction: -1 | 1) {
+    // 1. Ambil baris yang digeser dan tetangganya beserta urutannya.
     const current = rows[index],
       neighbor = rows[index + direction];
     let currentOrder = current.sort_order ?? 0,
       neighborOrder = neighbor.sort_order ?? 0;
-    // Nilai kembar: tak ada yang bisa ditukar, jadi pakai peringkat daftar (1-based) agar urutan pasti berubah.
+    // 2. Nilai kembar: tak ada yang bisa ditukar, jadi pakai peringkat daftar (mulai 1) agar urutan pasti berubah.
     if (currentOrder === neighborOrder) {
       const lowerIndex = Math.min(index, index + direction);
       neighborOrder = lowerIndex + (direction < 0 ? 1 : 2);
       currentOrder = lowerIndex + (direction < 0 ? 2 : 1);
-    } // sb = nilai baru item ini
+    } // neighborOrder = nilai baru baris yang digeser (swapSortOrder menukar kedua nilai)
+    // 3. Kirim ke server; gagal = toast, berhasil = muat ulang.
     setBusy(true);
     const result = await callAction(() =>
       swapSortOrder(
@@ -63,6 +78,7 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
     router.refresh();
   }
 
+  // 4. Kolom tabel; kolom tambahan (ikon atau keterangan) hanya untuk tab yang memilikinya.
   const columns: Column<MasterItem>[] = [
     { key: "name", header: "Nama", cell: (item) => <span className="font-semibold">{item.name}</span> },
     ...(tab.extraField

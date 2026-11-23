@@ -1,3 +1,7 @@
+// Komponen MasterForm: isi dialog tambah/ubah satu data master (nama, plus ikon atau keterangan bila tab memilikinya).
+// Disimpan lewat server action saveMaster (app/actions/admin/master.ts); aturan isian dari validateMaster
+// (services/admin-master.service.ts), sama dengan yang dipakai server action.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state.
 "use client";
 
 import { useState } from "react";
@@ -10,7 +14,14 @@ import { callAction } from "@/lib/action";
 import { validateMaster, type MASTER_TABS } from "@/services/admin-master.service";
 import type { MasterItem } from "@/types/admin";
 
-/** A-01…A-03 — isi dialog tambah/ubah data master. `item` ada = mode ubah. */
+/**
+ * Isi dialog tambah/ubah data master. Galat baru tampil setelah tombol Simpan pernah ditekan.
+ * @param props.tab tab data master (jenis data, kolom tambahan, batas panjang)
+ * @param props.item data yang diubah; null = tambah baru
+ * @param props.onSaved dipanggil setelah tersimpan
+ * @param props.onClose menutup dialog
+ * @returns formulir
+ */
 export function MasterForm({
   tab,
   item,
@@ -22,6 +33,7 @@ export function MasterForm({
   onSaved: () => void;
   onClose: () => void;
 }) {
+  // 1. Isian (nama dan kolom tambahan), tanda sudah dicoba kirim, galat dari server, dan tanda sedang menyimpan.
   const extraField = tab.extraField;
   const [name, setName] = useState(item?.name ?? "");
   const [extra, setExtra] = useState((extraField && item?.[extraField]) || "");
@@ -29,17 +41,21 @@ export function MasterForm({
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  // 2. Periksa isian di peramban; galat lokal didahulukan, lalu galat dari server.
   const input = { name, ...(extraField ? { [extraField]: extra } : {}) };
   const localErrors = validateMaster(tab.kind, input);
   const errorFor = (field: string) => (submitAttempted ? (localErrors[field] ?? serverErrors[field]) : undefined);
 
+  // 3. Simpan ke server.
   async function submit(event: React.FormEvent) {
+    // 1. Isian belum sah: tampilkan galat tanpa memanggil server. Cegah kirim ganda.
     event.preventDefault();
     if (Object.keys(localErrors).length > 0) return setSubmitAttempted(true);
     if (saving) return;
     setSaving(true);
     const result = await callAction(() => saveMaster(tab.kind, item?.id ?? null, input));
     setSaving(false);
+    // 2. Gagal: 409 CONFLICT (nama kembar) ditandai di isian nama; galat per isian ditandai di isiannya.
     if ("error" in result) {
       if (result.error.code === "CONFLICT") {
         setServerErrors({ name: result.error.message });
@@ -50,7 +66,7 @@ export function MasterForm({
         );
         setSubmitAttempted(true);
       }
-      toast({ tone: "danger", message: result.error.message }); // 409 nama kembar: pesan backend apa adanya
+      toast({ tone: "danger", message: result.error.message }); // pesan backend apa adanya (mis. nama kembar)
       return;
     }
     toast({ tone: "success", message: item ? "Perubahan disimpan" : "Data ditambahkan" });

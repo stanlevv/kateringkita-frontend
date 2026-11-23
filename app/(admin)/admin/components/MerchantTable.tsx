@@ -1,3 +1,6 @@
+// Komponen MerchantTable: daftar penjual di /admin/penjual dengan kotak cari, filter status, filter dapur, dan
+// paginasi. Semua filter disimpan di URL; halaman server membaca URL itu lalu mengambil data dari backend.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, timer, router, dan membaca URL.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -16,9 +19,11 @@ import { formatPhone } from "@/lib/format";
 import { buildUrl } from "@/lib/url";
 import { VerificationStatus } from "./VerificationStatus";
 
+// Alamat detail penjual dan label status dapur.
 const detailHref = (merchant: MerchantSummary) => `/admin/penjual/${merchant.id}`;
 const openLabel = (merchant: MerchantSummary) => (merchant.is_open ? "Buka" : "Tutup");
 
+// Kolom tabel layar lebar. Di layar sempit daftar tampil sebagai kartu.
 const COLUMNS: Column<MerchantSummary>[] = [
   {
     key: "toko",
@@ -40,7 +45,15 @@ const COLUMNS: Column<MerchantSummary>[] = [
   { key: "menu", header: "Menu aktif", align: "right", cell: (merchant) => merchant.menu_count },
 ];
 
-/** A-05 — daftar penjual. Pencarian (ditunda), filter, dan halaman tinggal di URL. */
+/**
+ * Daftar penjual. Pencarian dikirim ke URL setelah jeda mengetik 400 ms (debounce), filter lain langsung; mengubah
+ * filter kembali ke halaman 1.
+ * @param props.rows penjual satu halaman
+ * @param props.page nomor halaman sekarang
+ * @param props.total jumlah semua penjual yang cocok
+ * @param props.filtered true bila ada filter aktif (mengubah pesan saat kosong)
+ * @returns kotak cari dan filter, lalu tabel (layar lebar) atau kartu, dan paginasi
+ */
 export function MerchantTable({
   rows,
   page,
@@ -52,16 +65,18 @@ export function MerchantTable({
   total: number;
   filtered: boolean;
 }) {
+  // 1. Kata cari di URL dan isi kotak cari (bisa berbeda selama pengguna masih mengetik).
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
   const query = params.get("q") ?? "";
   const [searchText, setSearchText] = useState(query);
-  // Nilai terbaru untuk timer; state di closure bisa basi saat timer berjalan.
+  // 2. Nilai terbaru untuk timer; state di dalam closure bisa basi (nilai lama) saat timer berjalan.
   const latest = useRef({ params: params.toString(), searchText });
   useEffect(() => {
     latest.current = { params: params.toString(), searchText };
   });
+  // 3. Timer jeda mengetik; dibatalkan saat komponen dilepas.
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const cancelTimer = () => {
     clearTimeout(timer.current);
@@ -69,11 +84,12 @@ export function MerchantTable({
   };
   useEffect(() => cancelTimer, []);
 
-  // Tautan/Back/Hapus filter mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
+  // 4. Tautan, tombol Back, atau Hapus filter mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
   useEffect(() => {
     if (!timer.current && latest.current.searchText.trim() !== query) setSearchText(query);
   }, [query]);
 
+  // 5. Ganti URL dengan filter baru (halaman kembali ke 1), ketik ke kotak cari, dan hapus semua filter.
   function navigate(changes: Record<string, string>) {
     cancelTimer();
     // Filter lain membawa ketikan q yang belum sempat dikirim.

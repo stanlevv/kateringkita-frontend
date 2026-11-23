@@ -1,3 +1,5 @@
+// Test komponen penjual admin: VerificationQueue, AdminActionDialog, MerchantDetail, MerchantTable, dan
+// VerificationBanner (banner status toko di panel penjual).
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
