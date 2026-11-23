@@ -30,7 +30,7 @@ describe("orderAction (M-04, M-08, D15)", () => {
   });
   it("tidak punya parameter status klien dan tidak membaca daftar pesanan", () => {
     const src = readFileSync("app/actions/orders.ts", "utf8");
-    expect(src).toContain("orderAction(code: string, aksi: AksiPesanan, reason?: string)");
+    expect(src).toMatch(/orderAction\(\s*code: string,\s*aksi: AksiPesanan,\s*reason\?: string,?\s*\)/);
     expect(src).not.toContain("current");
     expect(src).not.toContain("@/services/orderService");
   });
