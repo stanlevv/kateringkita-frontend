@@ -3,7 +3,7 @@ import { Card } from "@/app/components/ui/Card";
 import { SkeletonCard, SkeletonKpi, SkeletonText } from "@/app/components/ui/Skeleton";
 
 // G-1 Ringkasan: pesanan hari ini + 2 KPI, 5 ubin penjual, aksi admin terakhir. Halaman admin lain punya loading.tsx
-// sendiri (dijaga test/rangka.test.ts), jadi kerangka ini tidak muncul di halaman yang salah.
+// sendiri (dijaga test/page-skeleton.test.ts), jadi kerangka ini tidak muncul di halaman yang salah.
 export default function Loading() {
   return (
     <PageFrame title="Ringkasan" description="Kondisi platform hari ini (WIB).">

@@ -13,7 +13,7 @@ import {
   pesan,
   siapHidrasi,
   siapkanToko,
-} from "./bantu";
+} from "./helpers";
 
 // M-09: pesanan selesai masuk laporan hari ini dan bisa diunduh sebagai CSV.
 test("laporan hari ini memuat pesanan selesai dan CSV-nya", async ({ page }) => {

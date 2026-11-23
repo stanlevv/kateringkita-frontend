@@ -33,7 +33,7 @@ describe("struktur: tipe per domain", () => {
   it("tidak ada impor @/lib/types atau @/lib/admin/types (juga bentuk relatifnya)", () => {
     const lama = (p: string) => p === "@/lib/types" || p === "@/lib/admin/types" || /^(\.\.?\/)+types$/.test(p);
     const pelanggar = semuaBerkas()
-      .filter((b) => !relatif(b).startsWith("types/") && relatif(b) !== "test/struktur.test.ts")
+      .filter((b) => !relatif(b).startsWith("types/") && relatif(b) !== "test/structure.test.ts")
       .filter((b) => imporDari(b).some(lama))
       .map(relatif);
     expect(pelanggar).toEqual([]);
@@ -50,7 +50,7 @@ describe("struktur: pemanggil API di services/", () => {
   it("tidak ada impor ke jalur lama", () => {
     const lama = (p: string) => /^@\/lib\/(api|merchant-api|session|data|admin)(\/|$)/.test(p);
     const pelanggar = semuaBerkas()
-      .filter((b) => relatif(b) !== "test/struktur.test.ts")
+      .filter((b) => relatif(b) !== "test/structure.test.ts")
       .filter((b) => imporDari(b).some(lama))
       .map(relatif);
     expect(pelanggar).toEqual([]);
@@ -106,7 +106,7 @@ describe("struktur: komponen bersama di app/components/", () => {
       /^@\/components\/(ui|shell|landing|promo)(\/|$)/.test(p) ||
       /^@\/components\/dashboard\/(GagalMuat|StatusToko)$/.test(p);
     const pelanggar = semuaBerkas()
-      .filter((b) => relatif(b) !== "test/struktur.test.ts")
+      .filter((b) => relatif(b) !== "test/structure.test.ts")
       .filter((b) => imporDari(b).some(lama))
       .map(relatif);
     expect(pelanggar).toEqual([]);
@@ -172,7 +172,7 @@ describe("struktur: Route Handler di app/api/", () => {
       /(?<!\/api)\/pesanan\/(?:\$\{[^}]*\}|[^/\s"'`]+)\/wa\b/,
     ];
     const pelanggar = berkas()
-      .filter((b) => b !== "test/struktur.test.ts")
+      .filter((b) => b !== "test/structure.test.ts")
       .filter((b) => lama.some((p) => p.test(readFileSync(join(AKAR, b), "utf8"))));
     expect(pelanggar).toEqual([]);
   });

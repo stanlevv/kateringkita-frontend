@@ -1,5 +1,5 @@
 import { defineConfig } from "@playwright/test";
-import { API, JWT_SECRET_UJI, PORT_API, PORT_WEB, URL_DB } from "./e2e/bantu";
+import { API, JWT_SECRET_UJI, PORT_API, PORT_WEB, URL_DB } from "./e2e/helpers";
 
 const web = `http://localhost:${PORT_WEB}`;
 const tsx = "node ../be/node_modules/tsx/dist/cli.mjs";

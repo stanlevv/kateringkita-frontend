@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, daftarPenjual, masuk, masukLewatForm, penjualKe, siapHidrasi, verifikasiPenjual } from "./bantu";
+import { ADMIN, daftarPenjual, masuk, masukLewatForm, penjualKe, siapHidrasi, verifikasiPenjual } from "./helpers";
 
 test.describe("penjual", () => {
   test.describe.configure({ mode: "serial" }); // beforeAll mendaftar akun: tidak boleh diulang setelah satu tes gagal

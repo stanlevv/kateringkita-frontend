@@ -9,7 +9,7 @@ import {
   penjualKe,
   pesan,
   siapkanToko,
-} from "./bantu";
+} from "./helpers";
 
 // M-04, M-05: pesanan masuk ke dashboard tanpa muat ulang, diproses sampai selesai, dan Chat WA mengarah ke wa.me.
 test("pesanan baru muncul sendiri lalu diproses sampai selesai", async ({ page, context }) => {

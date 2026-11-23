@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
-import { buatAdmin, isiEnvBackend, PORT_API, PORT_WEB, URL_DB } from "./bantu";
+import { buatAdmin, isiEnvBackend, PORT_API, PORT_WEB, URL_DB } from "./helpers";
 
 // mysql2 hanya terpasang di be/, bukan di fe/
 const mysql: typeof import("../../be/node_modules/mysql2/promise") = createRequire(

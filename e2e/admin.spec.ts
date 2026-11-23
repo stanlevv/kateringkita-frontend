@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, daftarPenjual, masukLewatForm, penjualKe, siapHidrasi } from "./bantu";
+import { ADMIN, daftarPenjual, masukLewatForm, penjualKe, siapHidrasi } from "./helpers";
 
 // A-05: toko baru berstatus Menunggu sampai admin memverifikasinya di /admin/verifikasi.
 test("admin memverifikasi toko baru", async ({ page }) => {

@@ -8,7 +8,7 @@ import { PageHeader } from "./PageHeader";
  * Kerangka satu halaman. Judul & deskripsi statis langsung tampil memakai PageHeader asli, jadi saat data datang
  * hanya isinya yang berganti. Tanpa `title` (judul dari data, mis. kode pesanan) judulnya ikut dikerangkakan.
  * Kerangka baru muncul setelah 150 ms (animate-muncul) supaya perpindahan yang cepat tidak berkedip; `actions` ikut
- * tertunda. Judul/deskripsi harus sama persis dengan halamannya (dijaga test/rangka.test.ts).
+ * tertunda. Judul/deskripsi harus sama persis dengan halamannya (dijaga test/page-skeleton.test.ts).
  * @param props.title judul halaman (opsional)
  * @param props.description deskripsi halaman (opsional)
  * @param props.actions tombol di kanan judul (opsional)
