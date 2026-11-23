@@ -1,5 +1,5 @@
-import { HppKalkulator } from "@/app/(dashboard)/copilot/components/HppKalkulator";
-import { AsistenPanel } from "@/app/(dashboard)/copilot/components/AsistenPanel";
+import { HppKalkulator } from "@/app/(dashboard)/copilot/components/HppCalculator";
+import { AsistenPanel } from "@/app/(dashboard)/copilot/components/AssistantPanel";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { requireMerchant } from "@/services/auth.service";
 

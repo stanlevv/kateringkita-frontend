@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { AsistenPanel } from "./AsistenPanel";
+import { AsistenPanel } from "./AssistantPanel";
 
 const askAssistant = vi.fn();
 vi.mock("@/app/actions/assistant", () => ({ askAssistant: (...a: unknown[]) => askAssistant(...a) }));

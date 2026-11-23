@@ -23,9 +23,9 @@ import type { PickupPoint } from "@/types/meta";
 import type { Table } from "@/types/table";
 import type { MyPayouts } from "@/types/payout";
 import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
-import { PesanMeja } from "./PesanMeja";
+import { PesanMeja } from "./TableOrderSettings";
 import { PickupPointPicker } from "./PickupPointPicker";
-import { RekeningPencairan } from "./RekeningPencairan";
+import { RekeningPencairan } from "./PayoutBankAccount";
 
 const BAGIAN = [
   { id: "profil", judul: "Profil toko" },

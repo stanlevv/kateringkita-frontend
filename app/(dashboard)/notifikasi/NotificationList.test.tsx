@@ -5,7 +5,7 @@ const refresh = vi.fn();
 const markAllNotificationsRead = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/notifications", () => ({ markAllNotificationsRead: () => markAllNotificationsRead() }));
-import { DaftarNotifikasi } from "./DaftarNotifikasi";
+import { DaftarNotifikasi } from "./NotificationList";
 import type { AppNotification } from "@/types/notification";
 
 const n = (o: Partial<AppNotification>): AppNotification => ({

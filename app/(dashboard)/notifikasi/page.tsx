@@ -2,7 +2,7 @@ import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { requireMerchant } from "@/services/auth.service";
 import { getNotifications } from "@/services/notification.service";
-import { DaftarNotifikasi } from "./DaftarNotifikasi";
+import { DaftarNotifikasi } from "./NotificationList";
 
 // Notifikasi penjual: pengumuman admin, foto menu yang dihapus admin, dll. Dibuka = semua ditandai dibaca.
 export default async function NotifikasiPage({

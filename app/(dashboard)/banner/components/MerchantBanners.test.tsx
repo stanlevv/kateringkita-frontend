@@ -10,7 +10,7 @@ vi.mock("@/app/actions/banner", () => ({
 }));
 vi.mock("@/lib/upload", () => ({ uploadPhoto: vi.fn() }));
 import type { Banner } from "@/types/banner";
-import { BannerToko } from "./BannerToko";
+import { BannerToko } from "./MerchantBanners";
 
 const nanti = new Date(Date.now() + 3 * 86400e3).toISOString();
 const lalu = new Date(Date.now() - 86400e3).toISOString();

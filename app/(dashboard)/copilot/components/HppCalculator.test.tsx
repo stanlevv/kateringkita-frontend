@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { HppKalkulator } from "./HppKalkulator";
+import { HppKalkulator } from "./HppCalculator";
 
 const ketik = async (label: string | RegExp, teks: string, i = 0) => {
   const el = screen.getAllByLabelText(label)[i];
