@@ -1,3 +1,6 @@
+// Komponen MenuCatalog: isi halaman /menu (cari, kategori, tab status, kartu menu, nonaktifkan/aktifkan, kuota).
+// Data berasal dari page.tsx. Filter disimpan di URL (?q=&kategori=&status=) sehingga bisa dibagikan dan Back bekerja.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -26,6 +29,7 @@ import { buildUrl } from "@/lib/url";
 import { MenuCard } from "./MenuCard";
 import { useQuota } from "@/hooks/useQuota";
 
+/** Label tab status; kuncinya juga nilai `?status=` di URL. */
 const STATUS_LABELS: Record<MenuStatusFilter, string> = {
   semua: "Semua",
   aktif: "Aktif",
@@ -35,7 +39,14 @@ const STATUS_LABELS: Record<MenuStatusFilter, string> = {
 };
 const ADD_MENU_BUTTON = <LinkButton href="/menu/baru">Tambah menu</LinkButton>;
 
-/** MN-N1…N4, MN-A1/A2, MN-E1, MN-S1…S3. Filter tinggal di URL. */
+/**
+ * Katalog menu dengan pencarian, filter kategori, dan tab status. Perubahan aktif/nonaktif dan kuota langsung tampil
+ * (optimistis) dan dibatalkan bila server menolak.
+ * @param props.menus daftar menu dari server
+ * @param props.categories daftar kategori untuk filter
+ * @param props.loadFailed pengambilan data di server gagal
+ * @returns layar gagal muat, keadaan belum ada menu, atau katalog
+ */
 export function MenuCatalog({
   menus,
   categories,
@@ -45,6 +56,7 @@ export function MenuCatalog({
   categories: Category[];
   loadFailed: boolean;
 }) {
+  // 1. Baca filter dari URL (useSearchParams = parameter URL di klien).
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
@@ -54,7 +66,8 @@ export function MenuCatalog({
   const status: MenuStatusFilter = MENU_STATUS_FILTERS.find((value) => value === statusParam) ?? "semua";
 
   const [localMenus, setLocalMenus] = useState<Record<number, MerchantMenu>>({});
-  // D13: overlay lokal hanya sampai data server berikutnya tiba (pola useQuota).
+  // 2. Salinan lokal menu yang baru diubah. Salinan ini hanya berlaku sampai data server berikutnya tiba (pola yang
+  // sama dengan useQuota), supaya data server yang lebih baru tidak tertimpa.
   const [seenMenus, setSeenMenus] = useState(menus);
   if (menus !== seenMenus) {
     setSeenMenus(menus);
@@ -63,13 +76,14 @@ export function MenuCatalog({
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [pendingDeactivate, setPendingDeactivate] = useState<MerchantMenu | null>(null);
 
-  // Baris dari server disalin utuh (terjual & ditahan ikut berubah).
+  // 3. Kuota lewat useQuota. Menu hasil simpan dari server disalin utuh (terjual dan ditahan ikut berubah).
   const { changeQuotaBy, setQuota, withDraft } = useQuota(
     (menu) => setLocalMenus((previous) => ({ ...previous, [menu.id]: menu })),
     menus,
   );
 
-  // Nilai terbaru untuk timer/handler; state di closure bisa basi saat timer berjalan.
+  // 4. Nilai terbaru untuk timer dan handler: state yang tertangkap di closure (fungsi yang dibuat saat render lama)
+  // bisa basi saat timer berjalan, jadi dibaca dari ref.
   const latest = useRef({ params: params.toString(), searchInput });
   useEffect(() => {
     latest.current = { params: params.toString(), searchInput };
@@ -81,11 +95,12 @@ export function MenuCatalog({
   };
   useEffect(() => cancelTimer, []);
 
-  // Back/tautan mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
+  // 5. Back/tautan mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
   useEffect(() => {
     if (!timer.current && latest.current.searchInput.trim() !== searchQuery) setSearchInput(searchQuery);
   }, [searchQuery]);
 
+  /** Menulis perubahan filter ke URL; tab "semua" dihapus dari URL karena itu nilai bawaan. */
   function navigate(changes: Partial<Record<"q" | "kategori" | "status", string>>) {
     cancelTimer();
     // Perubahan kategori/tab membawa ketikan q yang belum sempat dikirim.
@@ -93,19 +108,21 @@ export function MenuCatalog({
     router.replace(buildUrl(path, latest.current.params, nextParams, ["semua"]), { scroll: false });
   }
 
-  // MN-N2: pencarian ke URL setelah 300 ms berhenti mengetik.
+  /** Kotak cari: URL baru diperbarui 300 ms setelah pengguna berhenti mengetik (debounce). */
   function updateSearch(value: string) {
     setSearchInput(value);
     cancelTimer();
     timer.current = setTimeout(() => navigate({ q: value.trim() }), 300);
   }
 
+  /** Menghapus semua filter dan isi kotak cari. */
   function clearFilters() {
     cancelTimer();
     setSearchInput("");
     router.replace(path, { scroll: false });
   }
 
+  // 6. Gagal muat atau belum ada menu sama sekali.
   if (loadFailed)
     return (
       <LoadError
@@ -124,20 +141,25 @@ export function MenuCatalog({
     );
   }
 
+  // 7. Menu yang ditampilkan = data server + salinan lokal + draf kuota, lalu disaring.
   const displayedMenus = menus.map((menu) => localMenus[menu.id] ?? menu).map(withDraft);
   const tabCounts = countMenuTabs(filterBySearchAndCategory(displayedMenus, { q: searchQuery, category }));
   const filteredMenus = filterMenus(displayedMenus, { q: searchQuery, category, status });
 
+  /** Mengaktifkan/menonaktifkan menu secara optimistis; gagal dikembalikan, nonaktif sukses bisa dibatalkan. */
   async function setActive(menu: MerchantMenu, active: boolean) {
+    // 1. Ubah tampilan dulu, lalu kirim ke server.
     const setFlag = (value: boolean) =>
       setLocalMenus((previous) => ({ ...previous, [menu.id]: { ...(previous[menu.id] ?? menu), is_active: value } }));
     setFlag(active);
     const result = await callAction(() => setMenuActive(menu.id, active));
     if ("error" in result) {
-      setFlag(!active); // MN-E1
+      // 2. Gagal: kembalikan tampilan dan tampilkan pesan server.
+      setFlag(!active);
       toast({ tone: "danger", message: result.error.message });
       return;
     }
+    // 3. Berhasil: toast; untuk nonaktif ada tombol Batalkan yang mengaktifkan lagi.
     toast(
       active
         ? { tone: "success", message: "Menu diaktifkan" }
@@ -149,6 +171,7 @@ export function MenuCatalog({
     );
   }
 
+  // 8. Pesan keadaan kosong sesuai filter yang dipakai.
   const categoryName = categories.find((candidate) => candidate.slug === category)?.name ?? category;
   const emptyMessage = searchQuery
     ? `Tidak ada menu yang cocok dengan "${searchQuery}"`

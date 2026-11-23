@@ -1,3 +1,7 @@
+// Komponen MenuForm: formulir tambah dan ubah menu (info dasar, foto, harga, stok, pre-order, opsi) dengan pratinjau
+// pembeli. Dipakai /menu/baru dan /menu/[id]. Data disimpan lewat server action saveMenu (app/actions/menus.ts);
+// foto diunggah langsung dari peramban lewat lib/upload.ts.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -26,7 +30,9 @@ import { MenuPreview } from "./MenuPreview";
 import { OptionsEditor, type OptionRow } from "./OptionsEditor";
 
 const MEGABYTE = 1024 * 1024;
+/** Teks isian menjadi angka; isian kosong menjadi NaN supaya validasi menganggapnya belum diisi. */
 const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
+/** Nama isian untuk ringkasan galat (kunci = nama field API). */
 const FIELD_LABELS: Record<string, string> = {
   image_url: "Foto",
   gallery: "Foto tambahan",
@@ -41,11 +47,13 @@ const FIELD_LABELS: Record<string, string> = {
   min_order_qty: "Minimum pesan",
   preorder_days: "Hari pre-order",
 };
+/** Nama isian untuk ringkasan galat; galat opsi ditulis "Opsi N". */
 const fieldLabel = (fieldKey: string) => {
   const match = /^options\.(\d+)\./.exec(fieldKey);
   return match ? `Opsi ${Number(match[1]) + 1}` : (FIELD_LABELS[fieldKey] ?? fieldKey);
 };
 
+/** Isi formulir; angka disimpan sebagai teks isian dan baru diubah ke angka saat validasi/kirim. */
 type FormValues = {
   name: string;
   category_id: string;
@@ -60,12 +68,15 @@ type FormValues = {
   min_order_qty: string;
   options: OptionRow[];
 };
+/** Unggahan foto utama: berkas, pratinjau lokal, dan statusnya (mengunggah, gagal, selesai). */
 type PhotoUpload = { file: File; preview: string; status: "mengunggah" | "gagal" | "selesai"; message?: string };
 
-// Tanda UI (t) tidak dihitung sebagai perubahan.
+// Isi formulir sebagai teks untuk membandingkan dengan isi awal. Tanda `touched` di opsi tidak ikut, karena itu
+// hanya tanda tampilan, bukan perubahan data.
 const serialize = (values: FormValues) =>
   JSON.stringify({ ...values, options: values.options.map((option) => [option.name, option.extra_price]) });
 
+/** Isi awal: dari menu (mode ubah), dari prefill Kalkulator HPP, atau nilai bawaan. */
 const initialValues = (
   menu: MerchantMenu | undefined,
   prefill: { hpp?: number; price?: number } | undefined,
@@ -89,6 +100,7 @@ const initialValues = (
   })),
 });
 
+/** Satu bagian formulir berjudul (Info dasar, Foto, Harga, ...). */
 function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-label={title} className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-4 sm:p-6">
@@ -98,7 +110,15 @@ function FormSection({ title, children }: { title: string; children: ReactNode }
   );
 }
 
-/** M-07, MF-*: form tambah/ubah menu. `menu` ada = mode ubah. */
+/**
+ * Formulir tambah/ubah menu. Galat tampil setelah isian disentuh; saat dikirim, semua galat tampil di ringkasan
+ * atas. Perubahan yang belum disimpan dijaga dialog "Buang perubahan?" saat meninggalkan halaman.
+ * HPP = harga pokok produksi (modal per porsi), tidak terlihat pembeli.
+ * @param props.categories daftar kategori
+ * @param props.menu menu yang diubah; ada = mode ubah, tidak ada = mode tambah
+ * @param props.prefill harga dan HPP awal dari Kalkulator HPP (opsional)
+ * @returns formulir, pratinjau pembeli, dan dialog penjaga perubahan
+ */
 export function MenuForm({
   categories,
   menu,
@@ -108,6 +128,7 @@ export function MenuForm({
   menu?: MerchantMenu;
   prefill?: { hpp?: number; price?: number };
 }) {
+  // 1. State isian, foto, galat, dan status simpan.
   const router = useRouter();
   const [initialSnapshot] = useState(() => serialize(initialValues(menu, prefill)));
   const [values, setValues] = useState<FormValues>(() => initialValues(menu, prefill));
@@ -122,7 +143,9 @@ export function MenuForm({
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const uploadToken = useRef(0); // token unggahan terbaru; respons lama diabaikan
+  const uploadToken = useRef(0); // token unggahan terbaru; respons unggahan lama diabaikan
+  // 2. Pratinjau foto memakai blob URL (alamat sementara berkas lokal di peramban); dilepas saat komponen dilepas
+  // supaya memorinya kembali.
   const photoRef = useRef(photo);
   useEffect(() => {
     photoRef.current = photo;
@@ -134,6 +157,7 @@ export function MenuForm({
     [],
   );
 
+  // 3. Ada perubahan yang belum disimpan? useUnsavedGuard memasang penjaga saat meninggalkan halaman.
   const dirty =
     serialize(values) !== initialSnapshot ||
     (photo !== null && photo.status !== "gagal") ||
@@ -141,11 +165,13 @@ export function MenuForm({
     JSON.stringify(gallery) !== JSON.stringify(menu?.gallery ?? []);
   const guard = useUnsavedGuard(dirty && !saved);
 
+  // 4. Pengubah isian; setiap perubahan menghapus galat server lama.
   const setField = <K extends keyof FormValues>(field: K, value: FormValues[K]) => {
     setServerErrors({});
     setValues((previous) => ({ ...previous, [field]: value }));
   };
   const touch = (field: string) => setTouched((previous) => new Set(previous).add(field));
+  // 5. Data yang akan dikirim (nama field = kontrak API), lalu galat validasi dan ringkasannya.
   const input = {
     name: values.name,
     category_id: toNumber(values.category_id),
@@ -176,6 +202,7 @@ export function MenuForm({
     : [];
   const blur = (field: string) => () => touch(field);
 
+  // 6. Laba dan margin untuk ditampilkan, nama kategori untuk pratinjau, dan status unggahan.
   const price = toNumber(values.price),
     hpp = toNumber(values.hpp);
   const canCalculate = Number.isFinite(price) && Number.isFinite(hpp) && price > 0;
@@ -183,21 +210,25 @@ export function MenuForm({
   const categoryName = categories.find((category) => String(category.id) === values.category_id)?.name ?? "";
   const uploading = photo?.status === "mengunggah" || galleryUploading;
 
+  /** Mengunggah foto utama; respons yang sudah tidak terbaru diabaikan. */
   async function upload(file: File, preview: string) {
     const token = ++uploadToken.current;
     setPhoto({ file, preview, status: "mengunggah" });
     const result = await uploadPhoto(file, "menu");
     if (token !== uploadToken.current) return;
-    if ("error" in result) return setPhoto({ file, preview, status: "gagal", message: result.error.message }); // MF-E3
+    // Gagal: simpan pesan dan berkasnya supaya tombol "Coba unggah lagi" bisa mengulang.
+    if ("error" in result) return setPhoto({ file, preview, status: "gagal", message: result.error.message });
     setImageUrl(result.data.public_url);
     setPhoto({ file, preview, status: "selesai" });
   }
+  /** Memilih foto baru: lepas pratinjau lama lalu mulai unggah. */
   function selectPhoto(file: File) {
     if (photo) URL.revokeObjectURL(photo.preview);
     setPhotoError(null);
     setServerErrors({});
     void upload(file, URL.createObjectURL(file));
   }
+  /** Menghapus foto utama; unggahan yang masih berjalan diabaikan. */
   function removePhoto() {
     uploadToken.current++;
     if (photo) URL.revokeObjectURL(photo.preview);
@@ -207,20 +238,23 @@ export function MenuForm({
     setServerErrors({});
   }
 
+  /** Mengirim formulir ke server lalu kembali ke /menu bila berhasil. */
   async function submit(event: React.FormEvent) {
+    // 1. Masih ada galat: tampilkan ringkasan dan pindahkan fokus ke sana.
     event.preventDefault();
     if (Object.keys(clientErrors).length > 0) {
       setSubmitAttempted(true);
       setFocusKey((count) => count + 1);
       return;
     }
+    // 2. Kirim sekali saja.
     if (saving) return;
     setSaving(true);
     const result = await callAction(() => saveMenu(menu?.id ?? null, input));
+    // 3. Gagal: galat per isian dari server dipetakan ke isian dan ringkasan; galat umum menjadi toast.
     if ("error" in result) {
-      setSaving(false); // sukses: tetap "Menyimpan…" sampai halaman berpindah
+      setSaving(false); // saat sukses tombol tetap "Menyimpan…" sampai halaman berpindah
       if (result.error.fields) {
-        // MF-E4
         setServerErrors(
           Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
         );
@@ -231,6 +265,7 @@ export function MenuForm({
       }
       return;
     }
+    // 4. Berhasil: matikan penjaga perubahan, beri tahu, lalu pindah ke katalog.
     setSaved(true);
     toast({ tone: "success", message: "Menu disimpan" });
     router.push("/menu");

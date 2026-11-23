@@ -33,6 +33,7 @@ export function OptionsEditor({
   showAllErrors: boolean;
   onChange: (rows: OptionRow[]) => void;
 }) {
+  // 1. Pengubah baris: ubah isi satu baris atau tukar urutannya. 2. Render daftar dan tombol Tambah opsi.
   /** Mengubah sebagian isi baris ke-i. */
   const updateRow = (i: number, patch: Partial<OptionRow>) =>
     onChange(rows.map((row, j) => (j === i ? { ...row, ...patch } : row)));
