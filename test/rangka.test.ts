@@ -7,6 +7,12 @@ import { describe, expect, it } from "vitest";
 const AKAR = resolve(__dirname, "..");
 // Alat dev; cukup kerangka netral app/(dashboard)/loading.tsx.
 const KECUALI = new Set(["app/(dashboard)/pratinjau"]);
+// Judul halaman dari data (kode pesanan, nama toko, kode tiket), jadi judul kerangkanya ikut dikerangkakan.
+const JUDUL_DARI_DATA = new Set([
+  "app/(dashboard)/pesanan/[code]",
+  "app/(admin)/admin/penjual/[id]",
+  "app/(admin)/admin/tiket/[code]",
+]);
 
 const relatif = (p: string) => relative(AKAR, p).split(sep).join("/");
 const baca = (p: string) => readFileSync(p, "utf8");
@@ -41,12 +47,21 @@ describe("kerangka memuat", () => {
 
   it("judul & deskripsi kerangka = PageHeader halaman", () => {
     const beda: string[] = [];
+    let diperiksa = 0;
+    let berkasKerangka = 0;
     for (const d of halaman) {
       const berkas = join(d, "loading.tsx");
       if (!existsSync(berkas)) continue;
+      berkasKerangka++;
       const kerangka = baca(berkas);
-      const judul = /\btitle="([^"]+)"/.exec(kerangka)?.[1];
-      if (!judul) continue; // judul dari data (kode pesanan, nama toko) ikut dikerangkakan
+      // `title=` milik PageFrame; `judul=` masih dipakai RangkaFormMenu (halaman menu baru/ubah).
+      const judul = /\b(?:title|judul)="([^"]+)"/.exec(kerangka)?.[1];
+      if (!judul) {
+        // Hanya halaman yang judulnya dari data (kode pesanan, nama toko) boleh tanpa judul statis.
+        if (!JUDUL_DARI_DATA.has(relatif(d))) beda.push(`${relatif(berkas)}: tidak ada judul statis`);
+        continue;
+      }
+      diperiksa++;
       const header = [...sumber(d).matchAll(/<PageHeader\s+title="([^"]+)"(?:\s+description="([^"]+)")?/g)].filter(
         (m) => m[1] === judul,
       );
@@ -57,5 +72,7 @@ describe("kerangka memuat", () => {
         beda.push(`${relatif(berkas)}: deskripsi "${deskripsi ?? ""}", halaman "${harus ?? ""}"`);
     }
     expect(beda).toEqual([]);
+    // Penjaga agar tidak lolos diam-diam: semua kerangka berjudul statis benar-benar dibandingkan.
+    expect(diperiksa).toBe(berkasKerangka - JUDUL_DARI_DATA.size);
   });
 });
