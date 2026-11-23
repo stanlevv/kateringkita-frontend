@@ -34,16 +34,35 @@ export function ServiceFeeForm({ nilai }: { nilai: number }) {
   }
 
   return (
-    <form onSubmit={kirim} noValidate aria-label="Biaya layanan" className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4">
+    <form
+      onSubmit={kirim}
+      noValidate
+      aria-label="Biaya layanan"
+      className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4"
+    >
       <h2 className="text-lg font-semibold text-ink">Biaya layanan</h2>
-      <p className="text-ink-muted">Saat ini <span className="font-mono font-semibold text-ink">{formatRupiah(nilai)}</span> per pesanan.</p>
+      <p className="text-ink-muted">
+        Saat ini <span className="font-mono font-semibold text-ink">{formatRupiah(nilai)}</span> per pesanan.
+      </p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="sm:w-64">
           <Field label="Biaya baru (Rp)" id="biaya" help="Bilangan bulat 0–100.000." error={galat}>
-            <Input type="number" inputMode="numeric" min={0} step={1} value={teks} onChange={(e) => { setGalat(undefined); setTeks(e.target.value); }} />
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={teks}
+              onChange={(e) => {
+                setGalat(undefined);
+                setTeks(e.target.value);
+              }}
+            />
           </Field>
         </div>
-        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">Simpan</Button>
+        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">
+          Simpan
+        </Button>
       </div>
     </form>
   );

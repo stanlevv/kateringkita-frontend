@@ -14,7 +14,12 @@ import { LIMIT_TRANSAKSI } from "@/lib/laporan";
 import type { PaymentMethod } from "@/types/order";
 import type { Transaction } from "@/types/report";
 
-const METODE: Record<PaymentMethod, string> = { qris: "QRIS toko", va: "Virtual Account", cod: "Tunai", online: "Bayar online" };
+const METODE: Record<PaymentMethod, string> = {
+  qris: "QRIS toko",
+  va: "Virtual Account",
+  cod: "Tunai",
+  online: "Bayar online",
+};
 const laba = (t: Transaction) => t.total - t.hpp_total;
 const waktu = (t: Transaction) => `${formatTanggal(t.completed_at)}, ${formatJam(t.completed_at)}`;
 
@@ -30,7 +35,19 @@ const KOLOM: Column<Transaction>[] = [
 ];
 
 /** LP-N3 (halaman sudah dipotong server), LP-N4/E2 unduh CSV, LP-S1. */
-export function TransactionTable({ rows, total, page, dari, sampai }: { rows: Transaction[]; total: number; page: number; dari: string; sampai: string }) {
+export function TransactionTable({
+  rows,
+  total,
+  page,
+  dari,
+  sampai,
+}: {
+  rows: Transaction[];
+  total: number;
+  page: number;
+  dari: string;
+  sampai: string;
+}) {
   const router = useRouter();
   const [mengunduh, setMengunduh] = useState(false);
 
@@ -41,7 +58,11 @@ export function TransactionTable({ rows, total, page, dari, sampai }: { rows: Tr
       // Sesi habis: proxy mengalihkan ke halaman masuk (HTML, status 200) atau rute menjawab 401.
       if (res.redirected || res.status === 401) {
         const ke = `/login?next=${encodeURIComponent(`/laporan?dari=${dari}&sampai=${sampai}`)}`;
-        toast({ tone: "danger", message: "Sesi berakhir, silakan masuk lagi.", action: { label: "Masuk lagi", onClick: () => router.push(ke) } });
+        toast({
+          tone: "danger",
+          message: "Sesi berakhir, silakan masuk lagi.",
+          action: { label: "Masuk lagi", onClick: () => router.push(ke) },
+        });
         return;
       }
       if (!res.ok || !res.headers.get("content-type")?.startsWith("text/csv")) {
@@ -65,12 +86,23 @@ export function TransactionTable({ rows, total, page, dari, sampai }: { rows: Tr
     <Card className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-ink">Buku transaksi</h2>
-        <Button variant="secondary" onClick={unduh} disabled={total === 0} loading={mengunduh} loadingText="Mengunduh...">
-          <Download aria-hidden className="size-4" />Unduh CSV
+        <Button
+          variant="secondary"
+          onClick={unduh}
+          disabled={total === 0}
+          loading={mengunduh}
+          loadingText="Mengunduh..."
+        >
+          <Download aria-hidden className="size-4" />
+          Unduh CSV
         </Button>
       </div>
       {total === 0 ? (
-        <EmptyState icon={ReceiptText} title="Belum ada transaksi di rentang ini" body="Transaksi muncul setelah ada pesanan yang selesai. Coba pilih rentang tanggal lain." />
+        <EmptyState
+          icon={ReceiptText}
+          title="Belum ada transaksi di rentang ini"
+          body="Transaksi muncul setelah ada pesanan yang selesai. Coba pilih rentang tanggal lain."
+        />
       ) : (
         <>
           {/* Delapan kolom tidak muat di bawah 1024 px; di sana kartu bertumpuk dengan data yang sama. */}
@@ -84,7 +116,9 @@ export function TransactionTable({ rows, total, page, dari, sampai }: { rows: Tr
                   <span className="font-mono font-semibold text-ink">{t.code}</span>
                   <span className="text-sm text-ink-muted">{waktu(t)}</span>
                 </span>
-                <span className="text-ink">{t.qty}× {t.menu_name}</span>
+                <span className="text-ink">
+                  {t.qty}× {t.menu_name}
+                </span>
                 <span className="flex flex-wrap justify-between gap-2 text-sm text-ink-muted">
                   <span>{METODE[t.payment_method]}</span>
                   <span className="font-mono">Omzet {formatRupiah(t.total)}</span>
@@ -96,7 +130,12 @@ export function TransactionTable({ rows, total, page, dari, sampai }: { rows: Tr
               </li>
             ))}
           </ul>
-          <Pagination page={page} total={total} limit={LIMIT_TRANSAKSI} hrefFor={(p) => `/laporan?dari=${dari}&sampai=${sampai}${p > 1 ? `&page=${p}` : ""}`} />
+          <Pagination
+            page={page}
+            total={total}
+            limit={LIMIT_TRANSAKSI}
+            hrefFor={(p) => `/laporan?dari=${dari}&sampai=${sampai}${p > 1 ? `&page=${p}` : ""}`}
+          />
         </>
       )}
     </Card>

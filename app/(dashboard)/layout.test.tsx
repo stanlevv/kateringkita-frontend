@@ -1,13 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: { business_name: "Dapur" } }) }));
+vi.mock("@/services/authService", () => ({
+  requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: { business_name: "Dapur" } }),
+}));
 vi.mock("@/services/profileService", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
 vi.mock("@/services/orderService", () => ({ getJumlahTindakan: async () => 7 }));
 vi.mock("@/services/notifikasiService", () => ({ getJumlahNotif: async () => 4 }));
 let pemeliharaan = { aktif: false, pesan: null as string | null };
 vi.mock("@/services/metaService", () => ({ getPemeliharaan: async () => pemeliharaan }));
 let kuki: string | undefined;
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: (k: string) => (k === "kk-sidebar" && kuki ? { value: kuki } : undefined) }) }));
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: (k: string) => (k === "kk-sidebar" && kuki ? { value: kuki } : undefined) }),
+}));
 import DashboardLayout from "./layout";
 
 describe("shell dashboard", () => {

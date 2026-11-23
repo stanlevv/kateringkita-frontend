@@ -23,8 +23,13 @@ export type MenuMejaItem = {
 export type MenuMeja = {
   table: { label: string };
   merchant: {
-    slug: string; business_name: string; description: string | null; logo_url: string | null;
-    is_open: boolean; open_time: string; close_time: string;
+    slug: string;
+    business_name: string;
+    description: string | null;
+    logo_url: string | null;
+    is_open: boolean;
+    open_time: string;
+    close_time: string;
   };
   menus: MenuMejaItem[];
 };

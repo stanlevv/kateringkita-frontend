@@ -4,13 +4,21 @@ import RegisterPage from "./register/page";
 
 let down = false;
 const getSession = vi.fn();
-const redirect = vi.fn((to: string) => { throw new Error(`REDIRECT ${to}`); });
-vi.mock("@/services/authService", () => ({ getSession: () => (down ? Promise.reject(new Error("down")) : getSession()) }));
+const redirect = vi.fn((to: string) => {
+  throw new Error(`REDIRECT ${to}`);
+});
+vi.mock("@/services/authService", () => ({
+  getSession: () => (down ? Promise.reject(new Error("down")) : getSession()),
+}));
 vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to) }));
 vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("@/services/api", () => ({ apiFetch: async () => ({ ok: true, status: 200, data: [] }) }));
 
-beforeEach(() => { getSession.mockReset(); redirect.mockClear(); down = false; });
+beforeEach(() => {
+  getSession.mockReset();
+  redirect.mockClear();
+  down = false;
+});
 const sp = (o = {}) => Promise.resolve(o);
 const merchant = { user: { role: "merchant" }, merchant: {} };
 

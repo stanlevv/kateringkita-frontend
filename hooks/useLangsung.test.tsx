@@ -7,27 +7,46 @@ import type { MerchantOrder } from "@/types/order";
 import { useLangsung } from "@/hooks/useLangsung";
 
 const T0 = Date.parse("2026-11-01T03:00:00.000Z");
-const o = (p: Partial<MerchantOrder>): MerchantOrder => ({ ...fixOrders()[0], status: "confirmed", hold_until: null, seconds_left: null, ...p });
+const o = (p: Partial<MerchantOrder>): MerchantOrder => ({
+  ...fixOrders()[0],
+  status: "confirmed",
+  hold_until: null,
+  seconds_left: null,
+  ...p,
+});
 const A = o({ code: "A", updated_at: "2026-11-01T02:59:50.000Z" });
 const B = o({ code: "B", updated_at: "2026-11-01T02:59:40.000Z" });
 const M = fixMenus().slice(0, 2);
 
 const fetchMock = vi.fn();
 const balas = (orders: MerchantOrder[] = [], menus: MerchantMenu[] = M) =>
-  ({ ok: true, status: 200, redirected: false, url: "", json: async () => ({ data: { orders, menus } }) }) as unknown as Response;
-const gagal = () => ({ ok: false, status: 503, redirected: false, url: "", json: async () => ({ error: {} }) }) as unknown as Response;
+  ({
+    ok: true,
+    status: 200,
+    redirected: false,
+    url: "",
+    json: async () => ({ data: { orders, menus } }),
+  }) as unknown as Response;
+const gagal = () =>
+  ({ ok: false, status: 503, redirected: false, url: "", json: async () => ({ error: {} }) }) as unknown as Response;
 /** Fetch yang menggantung sampai `lepas()`; menolak saat dibatalkan. */
 function gantung() {
   let lepas: (r: Response) => void = () => {};
-  fetchMock.mockImplementationOnce((_u: string, init: RequestInit) => new Promise<Response>((res, rej) => {
-    lepas = res;
-    init.signal?.addEventListener("abort", () => rej(new DOMException("batal", "AbortError")));
-  }));
+  fetchMock.mockImplementationOnce(
+    (_u: string, init: RequestInit) =>
+      new Promise<Response>((res, rej) => {
+        lepas = res;
+        init.signal?.addEventListener("abort", () => rej(new DOMException("batal", "AbortError")));
+      }),
+  );
   return (r: Response) => lepas(r);
 }
 const maju = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
 const sejakDari = (n: number) => new URL(fetchMock.mock.calls[n][0] as string, "http://x").searchParams.get("sejak");
-const pasang = (orders = [A, B], menus = M) => renderHook((p: { orders: MerchantOrder[]; menus: MerchantMenu[] }) => useLangsung({ ...p, dimuat: T0 }), { initialProps: { orders, menus } });
+const pasang = (orders = [A, B], menus = M) =>
+  renderHook((p: { orders: MerchantOrder[]; menus: MerchantMenu[] }) => useLangsung({ ...p, dimuat: T0 }), {
+    initialProps: { orders, menus },
+  });
 
 let terlihat: DocumentVisibilityState = "visible";
 const setTerlihat = (v: DocumentVisibilityState) => {
@@ -45,8 +64,12 @@ beforeEach(() => {
   vi.spyOn(document, "visibilityState", "get").mockImplementation(() => terlihat);
   vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
   // Peramban lama (Safari < 17.4, Chrome < 116) tanpa AbortSignal.any/timeout: siklus tetap harus jalan.
-  vi.spyOn(AbortSignal, "any").mockImplementation(() => { throw new TypeError("AbortSignal.any tidak ada"); });
-  vi.spyOn(AbortSignal, "timeout").mockImplementation(() => { throw new TypeError("AbortSignal.timeout tidak ada"); });
+  vi.spyOn(AbortSignal, "any").mockImplementation(() => {
+    throw new TypeError("AbortSignal.any tidak ada");
+  });
+  vi.spyOn(AbortSignal, "timeout").mockImplementation(() => {
+    throw new TypeError("AbortSignal.timeout tidak ada");
+  });
   assign.mockReset();
   reload.mockReset();
   vi.stubGlobal("location", { ...window.location, assign, reload });
@@ -118,7 +141,13 @@ describe("D7 galat", () => {
     await maju(5000);
     expect(result.current.putus).toBe(true);
     expect(result.current.terakhir).toBe(T0);
-    for (const [jeda, n] of [[10_000, 2], [20_000, 3], [40_000, 4], [60_000, 5], [60_000, 6]]) {
+    for (const [jeda, n] of [
+      [10_000, 2],
+      [20_000, 3],
+      [40_000, 4],
+      [60_000, 5],
+      [60_000, 6],
+    ]) {
       await maju(jeda - 100);
       expect(fetchMock).toHaveBeenCalledTimes(n - 1);
       await maju(100);
@@ -143,7 +172,10 @@ describe("D7 galat", () => {
     expect(result.current.putus).toBe(false);
   });
   it("sesi habis (redirected) -> muat ulang halaman, tanpa jadwal lagi", async () => {
-    fetchMock.mockImplementation(async () => ({ ok: true, status: 200, redirected: true, url: "http://localhost/login?alasan=sesi-habis" }) as Response);
+    fetchMock.mockImplementation(
+      async () =>
+        ({ ok: true, status: 200, redirected: true, url: "http://localhost/login?alasan=sesi-habis" }) as Response,
+    );
     pasang();
     await maju(5000);
     expect(reload).toHaveBeenCalled();
@@ -154,7 +186,13 @@ describe("D7 galat", () => {
 
 describe("D8 jam server", () => {
   it("holding di respons -> selisih ~ 2000 ms", async () => {
-    const h = o({ code: "H", status: "holding", updated_at: "2026-11-01T03:00:04.000Z", hold_until: new Date(T0 + 5000 + 302_000).toISOString(), seconds_left: 300 });
+    const h = o({
+      code: "H",
+      status: "holding",
+      updated_at: "2026-11-01T03:00:04.000Z",
+      hold_until: new Date(T0 + 5000 + 302_000).toISOString(),
+      seconds_left: 300,
+    });
     fetchMock.mockImplementationOnce(async () => balas([h]));
     const { result } = pasang();
     expect(result.current.selisih).toBe(0);
@@ -172,7 +210,9 @@ describe("D5/D10 terima & awal", () => {
     const baru = { ...A, status: "cooking" as const, updated_at: "2026-11-01T03:00:05.000Z" };
     act(() => result.current.terima(baru));
     expect(result.current.orders.find((x) => x.code === "A")?.status).toBe("cooking");
-    await act(async () => lepas(balas([{ ...A, status: "confirmed" as const, updated_at: "2026-11-01T03:00:00.000Z" }])));
+    await act(async () =>
+      lepas(balas([{ ...A, status: "confirmed" as const, updated_at: "2026-11-01T03:00:00.000Z" }])),
+    );
     expect(result.current.orders.find((x) => x.code === "A")?.status).toBe("cooking");
   });
   it("segarkan() saat fetch berjalan -> tetap 1 permintaan, diulang segera setelah selesai", async () => {
@@ -239,7 +279,10 @@ describe("review F16: sinkron tidak melewatkan pesanan", () => {
     expect(result.current.orders.map((x) => x.code)).toEqual(["C"]);
   });
   it("2. sesi habis: handler /api/dashboard/sinkron mengalihkan ke /login?alasan=sesi-habis -> location.reload, bukan ke url JSON", async () => {
-    fetchMock.mockImplementation(async () => ({ ok: true, status: 200, redirected: true, url: "http://localhost/login?alasan=sesi-habis" }) as Response);
+    fetchMock.mockImplementation(
+      async () =>
+        ({ ok: true, status: 200, redirected: true, url: "http://localhost/login?alasan=sesi-habis" }) as Response,
+    );
     pasang();
     await maju(5000);
     expect(fetchMock.mock.calls[0][0]).toMatch(/^\/api\/dashboard\/sinkron\?sejak=/);
@@ -279,7 +322,17 @@ describe("review F16: sinkron tidak melewatkan pesanan", () => {
   });
   it("6. selisih jam dari respons aksi holding (terima)", () => {
     const { result } = pasang();
-    act(() => result.current.terima(o({ code: "H", status: "holding", updated_at: "2026-11-01T03:00:00.000Z", hold_until: new Date(T0 + 303_000).toISOString(), seconds_left: 300 })));
+    act(() =>
+      result.current.terima(
+        o({
+          code: "H",
+          status: "holding",
+          updated_at: "2026-11-01T03:00:00.000Z",
+          hold_until: new Date(T0 + 303_000).toISOString(),
+          seconds_left: 300,
+        }),
+      ),
+    );
     expect(result.current.selisih).toBe(3000);
   });
 });

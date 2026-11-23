@@ -10,7 +10,11 @@ import { requireAdmin } from "@/services/authService";
 const STATUS = ["pending", "needs_fix", "verified", "suspended"];
 
 // A-05 — Daftar penjual. Filter di URL.
-export default async function PenjualPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function PenjualPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   await requireAdmin();
   const sp = await searchParams;
   const q = new URLSearchParams();
@@ -31,10 +35,18 @@ export default async function PenjualPage({ searchParams }: { searchParams: Prom
     <PageHeader title="Penjual" description="Semua penjual yang terdaftar.">
       {res.ok && res.data ? (
         <Suspense>
-          <MerchantTable rows={res.data} page={page} total={meta?.total ?? res.data.length} tersaring={!!(cari || status || open)} />
+          <MerchantTable
+            rows={res.data}
+            page={page}
+            total={meta?.total ?? res.data.length}
+            tersaring={!!(cari || status || open)}
+          />
         </Suspense>
       ) : (
-        <GagalMuat judul="Daftar penjual belum bisa dimuat" isi="Terjadi kesalahan saat mengambil daftar penjual. Periksa koneksi lalu coba lagi." />
+        <GagalMuat
+          judul="Daftar penjual belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil daftar penjual. Periksa koneksi lalu coba lagi."
+        />
       )}
     </PageHeader>
   );

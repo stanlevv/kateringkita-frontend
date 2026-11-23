@@ -36,7 +36,15 @@ describe("/api/skenario", () => {
   });
   it("ke berbahaya -> kembali ke /pratinjau (cegah open redirect)", async () => {
     vi.stubEnv("NODE_ENV", "development");
-    for (const x of ["//evil.com", "https://evil.com", "/\\evil.com", "/\t/evil.com", "/\u007f/evil.com", "evil.com", ""]) {
+    for (const x of [
+      "//evil.com",
+      "https://evil.com",
+      "/\\evil.com",
+      "/\t/evil.com",
+      "/\u007f/evil.com",
+      "evil.com",
+      "",
+    ]) {
       const res = await call(`nilai=hapus&ke=${encodeURIComponent(x)}`);
       expect(res.headers.get("location")).toBe("http://localhost:3000/pratinjau");
     }

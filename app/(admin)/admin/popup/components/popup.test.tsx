@@ -16,8 +16,15 @@ import { DaftarPopup, statusPopup } from "./DaftarPopup";
 const NOW = Date.now();
 const iso = (h: number) => new Date(NOW + h * 3600e3).toISOString();
 const p = (o: Partial<Popup>): Popup => ({
-  id: 1, title: "Promo akhir pekan", image_url: "https://foto.test/p.webp", promo: null, starts_at: iso(-1), ends_at: iso(24), is_active: true,
-  created_at: iso(-2), ...o,
+  id: 1,
+  title: "Promo akhir pekan",
+  image_url: "https://foto.test/p.webp",
+  promo: null,
+  starts_at: iso(-1),
+  ends_at: iso(24),
+  is_active: true,
+  created_at: iso(-2),
+  ...o,
 });
 
 beforeEach(() => {
@@ -37,7 +44,12 @@ describe("statusPopup", () => {
 
 describe("DaftarPopup", () => {
   it("kartu: status, voucher, Nonaktifkan → PATCH is_active false", async () => {
-    render(<><Toaster /><DaftarPopup popups={[p({ promo: { id: 7, code: "HEMAT3K" } })]} vouchers={[]} bolehUbah /></>);
+    render(
+      <>
+        <Toaster />
+        <DaftarPopup popups={[p({ promo: { id: 7, code: "HEMAT3K" } })]} vouchers={[]} bolehUbah />
+      </>,
+    );
     const k = within(screen.getByRole("article"));
     expect(k.getByText("Tayang")).toBeInTheDocument();
     expect(k.getByText(/Voucher HEMAT3K/)).toBeInTheDocument();
@@ -47,21 +59,34 @@ describe("DaftarPopup", () => {
   });
 
   it("buat pop-up: unggah (popup), voucher platform opsional, periode → simpanPopup(null, …)", async () => {
-    render(<><Toaster /><DaftarPopup popups={[]} vouchers={[{ id: 7, code: "HEMAT3K", label: "Potongan Rp3.000" }]} bolehUbah /></>);
+    render(
+      <>
+        <Toaster />
+        <DaftarPopup popups={[]} vouchers={[{ id: 7, code: "HEMAT3K", label: "Potongan Rp3.000" }]} bolehUbah />
+      </>,
+    );
     expect(screen.getByText("Belum ada pop-up")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Buat pop-up" }));
     await userEvent.type(screen.getByLabelText(/Judul/), "Promo akhir pekan");
-    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [new File(["x"], "p.png", { type: "image/png" })] } });
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, {
+      target: { files: [new File(["x"], "p.png", { type: "image/png" })] },
+    });
     await waitFor(() => expect(screen.getByRole("img", { name: "Pratinjau pop-up" })).toBeInTheDocument());
     expect(unggahFoto).toHaveBeenCalledWith(expect.any(File), "popup", expect.anything());
     await userEvent.selectOptions(screen.getByLabelText(/Voucher/), "7");
     fireEvent.change(screen.getByLabelText(/Mulai/), { target: { value: "2026-11-20T07:00" } });
     fireEvent.change(screen.getByLabelText(/Selesai/), { target: { value: "2026-11-27T07:00" } });
     await userEvent.click(screen.getByRole("button", { name: "Simpan pop-up" }));
-    await waitFor(() => expect(simpanPopup).toHaveBeenCalledWith(null, {
-      title: "Promo akhir pekan", image_url: "https://foto.test/platform/popup/a.webp", promo_id: 7,
-      starts_at: "2026-11-20T00:00:00.000Z", ends_at: "2026-11-27T00:00:00.000Z", is_active: true,
-    }));
+    await waitFor(() =>
+      expect(simpanPopup).toHaveBeenCalledWith(null, {
+        title: "Promo akhir pekan",
+        image_url: "https://foto.test/platform/popup/a.webp",
+        promo_id: 7,
+        starts_at: "2026-11-20T00:00:00.000Z",
+        ends_at: "2026-11-27T00:00:00.000Z",
+        is_active: true,
+      }),
+    );
   });
 
   it("support hanya melihat", () => {

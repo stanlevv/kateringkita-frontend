@@ -1,11 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/authService", () => ({ getSessionToken: async () => "tok" }));
-vi.mock("next/navigation", () => ({ redirect: (to: string): never => { throw new Error(`REDIRECT ${to}`); } }));
+vi.mock("next/navigation", () => ({
+  redirect: (to: string): never => {
+    throw new Error(`REDIRECT ${to}`);
+  },
+}));
 
 // merchantFetch/adminFetch satu berkas dengan apiFetch, jadi apiFetch tak bisa di-mock: yang diamati adalah panggilan fetch-nya.
 const fetchMock = vi.fn();
-const balas = (status: number, body: unknown) => fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status }));
+const balas = (status: number, body: unknown) =>
+  fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status }));
 const panggilan = () => {
   const [url, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit & { headers: Record<string, string> }];
   return { url, init };

@@ -7,7 +7,11 @@ import { LIMIT_HASIL_AI, tabHasilAi } from "@/lib/hasil-ai";
 import { DaftarHasilAi } from "./components/DaftarHasilAi";
 
 // Rubrik AI: verifikasi manual hasil AI tersimpan. Semua tingkat admin melihat; super & ops menyetujui / menolak.
-export default async function HasilAiPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function HasilAiPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const session = await requireAdmin();
   const sp = await searchParams;
   const tab = tabHasilAi(sp.status);
@@ -28,9 +32,19 @@ export default async function HasilAiPage({ searchParams }: { searchParams: Prom
       description="Keluaran asisten toko dan rekomendasi pembeli yang sudah lolos validasi format. Periksa, lalu setujui atau tolak dengan alasan."
     >
       {res.ok && res.data ? (
-        <DaftarHasilAi rows={res.data} tab={tab} fitur={fitur} page={page} total={total} bolehUbah={session.user.admin_level !== "support"} />
+        <DaftarHasilAi
+          rows={res.data}
+          tab={tab}
+          fitur={fitur}
+          page={page}
+          total={total}
+          bolehUbah={session.user.admin_level !== "support"}
+        />
       ) : (
-        <GagalMuat judul="Hasil AI belum bisa dimuat" isi="Terjadi kesalahan saat mengambil hasil AI. Periksa koneksi lalu coba lagi." />
+        <GagalMuat
+          judul="Hasil AI belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil hasil AI. Periksa koneksi lalu coba lagi."
+        />
       )}
     </PageHeader>
   );

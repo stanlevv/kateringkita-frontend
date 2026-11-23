@@ -33,9 +33,17 @@ export function FilterLogServer() {
       </label>
       <label className="flex min-w-60 flex-1 flex-col gap-1.5 text-sm font-medium text-ink">
         Request ID atau path
-        <Input value={q} maxLength={128} placeholder="mis. 5be7b0db-… atau /orders" onChange={(e) => setQ(e.target.value)} />
+        <Input
+          value={q}
+          maxLength={128}
+          placeholder="mis. 5be7b0db-… atau /orders"
+          onChange={(e) => setQ(e.target.value)}
+        />
       </label>
-      <Button type="submit"><Search aria-hidden className="size-4" />Cari</Button>
+      <Button type="submit">
+        <Search aria-hidden className="size-4" />
+        Cari
+      </Button>
     </form>
   );
 }

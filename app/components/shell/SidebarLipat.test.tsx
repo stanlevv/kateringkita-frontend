@@ -9,10 +9,16 @@ import { SidebarLipat } from "./SidebarLipat";
 const aside = (c: HTMLElement) => c.querySelector("aside")!;
 
 describe("SH-N1 sidebar bisa diciutkan/dilebarkan", () => {
-  afterEach(() => { document.cookie = "kk-sidebar=; path=/; max-age=0"; });
+  afterEach(() => {
+    document.cookie = "kk-sidebar=; path=/; max-age=0";
+  });
 
   it("mulai dari mode cookie; tombol mengganti mode dan menyimpannya di cookie", () => {
-    const { container } = render(<SidebarLipat mode="lebar" atas={null}>isi</SidebarLipat>);
+    const { container } = render(
+      <SidebarLipat mode="lebar" atas={null}>
+        isi
+      </SidebarLipat>,
+    );
     expect(aside(container)).toHaveAttribute("data-sidebar", "lebar");
 
     fireEvent.click(screen.getByRole("button", { name: "Ciutkan menu" }));
@@ -25,7 +31,11 @@ describe("SH-N1 sidebar bisa diciutkan/dilebarkan", () => {
   });
 
   it("mode ringkas dari server langsung dirender ringkas (tanpa kedip)", () => {
-    const { container } = render(<SidebarLipat mode="ringkas" atas={null}>isi</SidebarLipat>);
+    const { container } = render(
+      <SidebarLipat mode="ringkas" atas={null}>
+        isi
+      </SidebarLipat>,
+    );
     expect(aside(container)).toHaveAttribute("data-sidebar", "ringkas");
   });
 

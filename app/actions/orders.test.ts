@@ -6,7 +6,10 @@ vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
 const requireMerchant = vi.fn(async () => ({}));
 vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
+  merchantFetch: (...a: unknown[]) => merchantFetch(...a),
+}));
 import { orders } from "@/lib/fixtures/orders";
 import { orderAction } from "./orders";
 
@@ -38,7 +41,10 @@ describe("orderAction (M-04, M-08, D15)", () => {
   });
   it("reject mengirim alasan yang dipangkas", async () => {
     await orderAction("KK/1", "reject", "  Stok habis ");
-    expect(merchantFetch).toHaveBeenCalledWith("/orders/KK%2F1/reject", { method: "POST", body: JSON.stringify({ reason: "Stok habis" }) });
+    expect(merchantFetch).toHaveBeenCalledWith("/orders/KK%2F1/reject", {
+      method: "POST",
+      body: JSON.stringify({ reason: "Stok habis" }),
+    });
   });
   it("reject tanpa alasan -> VALIDATION_ERROR tanpa fetch", async () => {
     const r = await orderAction(KODE, "reject", "  ");
@@ -46,16 +52,31 @@ describe("orderAction (M-04, M-08, D15)", () => {
     expect(merchantFetch).not.toHaveBeenCalled();
   });
   it("aksi tak dikenal atau kode bukan string -> VALIDATION_ERROR tanpa fetch", async () => {
-    for (const [code, aksi] of [[KODE, "hapus"], [KODE, "toString"], [42, "confirm"], [null, "confirm"]] as const) {
+    for (const [code, aksi] of [
+      [KODE, "hapus"],
+      [KODE, "toString"],
+      [42, "confirm"],
+      [null, "confirm"],
+    ] as const) {
       const r = await orderAction(code as never, aksi as never);
       expect("error" in r && r.error.code).toBe("VALIDATION_ERROR");
     }
     expect(merchantFetch).not.toHaveBeenCalled();
   });
   it("galat backend diteruskan apa adanya (409, 404)", async () => {
-    merchantFetch.mockResolvedValue({ ok: false, status: 409, error: { code: "CONFLICT", message: "Pesanan belum dibayar." } });
-    expect(await orderAction(KODE, "confirm")).toEqual({ error: { code: "CONFLICT", message: "Pesanan belum dibayar." } });
-    merchantFetch.mockResolvedValue({ ok: false, status: 404, error: { code: "NOT_FOUND", message: "Pesanan tidak ditemukan." } });
+    merchantFetch.mockResolvedValue({
+      ok: false,
+      status: 409,
+      error: { code: "CONFLICT", message: "Pesanan belum dibayar." },
+    });
+    expect(await orderAction(KODE, "confirm")).toEqual({
+      error: { code: "CONFLICT", message: "Pesanan belum dibayar." },
+    });
+    merchantFetch.mockResolvedValue({
+      ok: false,
+      status: 404,
+      error: { code: "NOT_FOUND", message: "Pesanan tidak ditemukan." },
+    });
     expect(await orderAction("KK-X", "cook")).toMatchObject({ error: { code: "NOT_FOUND" } });
   });
   it("DB-E1 skenario gagal-aksi -> INTERNAL_ERROR tanpa fetch", async () => {

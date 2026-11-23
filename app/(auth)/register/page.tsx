@@ -7,7 +7,8 @@ import RegisterForm from "./RegisterForm";
 
 export const metadata: Metadata = {
   title: "Daftar jadi penjual katering kampus",
-  description: "Buka toko katering di KateringKita: daftar sebagai penjual, pasang menu dan kuota porsi, lalu terima pre-order dari mahasiswa.",
+  description:
+    "Buka toko katering di KateringKita: daftar sebagai penjual, pasang menu dan kuota porsi, lalu terima pre-order dari mahasiswa.",
   alternates: { canonical: "/register" },
 };
 

@@ -54,7 +54,9 @@ export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
       <div className="flex items-center justify-between gap-2">
         <div className={cx(rail && "hidden sb-lebar:block")}>
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Status dapur</p>
-          <p className={cx("text-sm font-semibold", bukaUntukPembeli ? "text-success" : "text-ink-muted")}>{bukaUntukPembeli ? "Buka" : "Tutup"}</p>
+          <p className={cx("text-sm font-semibold", bukaUntukPembeli ? "text-success" : "text-ink-muted")}>
+            {bukaUntukPembeli ? "Buka" : "Tutup"}
+          </p>
         </div>
         <Switch
           checked={isOpen}

@@ -1,7 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { menus } from "./fixtures/menus";
 import { orders } from "./fixtures/orders";
-import { antrean, batasSejak, ganti, jumlahTab, ringkasHariIni, satukanPesanan, selisihJam, sisaHold, stokMenu, pangkasOptimis, terapkanOptimis, terapkanWaktu, urutKuota } from "./dashboard";
+import {
+  antrean,
+  batasSejak,
+  ganti,
+  jumlahTab,
+  ringkasHariIni,
+  satukanPesanan,
+  selisihJam,
+  sisaHold,
+  stokMenu,
+  pangkasOptimis,
+  terapkanOptimis,
+  terapkanWaktu,
+  urutKuota,
+} from "./dashboard";
 import { perluTindakan } from "./shell";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
@@ -42,7 +56,10 @@ describe("DB-A4 waktu tahan", () => {
     expect(sisaHold(o({ status: "confirmed", hold_until: null }), 0)).toBeNull();
   });
   it("habis -> Kadaluarsa, tetap di Perlu tindakan 3 dtk lalu keluar (tetap di Semua)", () => {
-    const list = [o({ code: "A", status: "holding", hold_until: iso(10_000), created_at: LAMA }), o({ code: "B", status: "holding", hold_until: iso(100_000), created_at: LAMA })];
+    const list = [
+      o({ code: "A", status: "holding", hold_until: iso(10_000), created_at: LAMA }),
+      o({ code: "B", status: "holding", hold_until: iso(100_000), created_at: LAMA }),
+    ];
     const t1 = terapkanWaktu(list, 11_000);
     expect(t1.map((x) => x.status)).toEqual(["expired", "holding"]);
     expect(antrean(t1, "tindakan", 11_000).map((x) => x.code)).toEqual(["A", "B"]);
@@ -97,7 +114,8 @@ describe("tab antrean (brief §3)", () => {
 });
 
 describe("DB-N3 panel kuota", () => {
-  const m = (id: number, available: number, is_active = true) => ({ ...menus()[0], id, available, is_active }) as MerchantMenu;
+  const m = (id: number, available: number, is_active = true) =>
+    ({ ...menus()[0], id, available, is_active }) as MerchantMenu;
   it("stok: habis 0, menipis <= 3, aman > 3", () => {
     expect([0, 1, 3, 4].map((a) => stokMenu(m(1, a)))).toEqual(["habis", "menipis", "menipis", "aman"]);
   });
@@ -133,7 +151,10 @@ describe("D5 satukanPesanan", () => {
 
 describe("D3 batasSejak", () => {
   it("updated_at terbesar - 5 dtk", () => {
-    const l = [o({ code: "A", updated_at: "2026-11-01T04:00:10Z" }), o({ code: "B", updated_at: "2026-11-01T04:00:20Z" })];
+    const l = [
+      o({ code: "A", updated_at: "2026-11-01T04:00:10Z" }),
+      o({ code: "B", updated_at: "2026-11-01T04:00:20Z" }),
+    ];
     expect(batasSejak(l, 0)).toBe("2026-11-01T04:00:15.000Z");
   });
   it("kosong -> cadangan - 60 dtk", () => {
@@ -143,7 +164,10 @@ describe("D3 batasSejak", () => {
 
 describe("D8 selisihJam", () => {
   it("hold_until - seconds_left - diterima dari holding pertama", () => {
-    const l = [o({ code: "X", status: "confirmed", hold_until: null, seconds_left: null }), o({ code: "A", status: "holding", hold_until: "2026-11-01T04:05:00Z", seconds_left: 300 })];
+    const l = [
+      o({ code: "X", status: "confirmed", hold_until: null, seconds_left: null }),
+      o({ code: "A", status: "holding", hold_until: "2026-11-01T04:05:00Z", seconds_left: 300 }),
+    ];
     expect(selisihJam(l, Date.parse("2026-11-01T03:59:58Z"))).toBe(2000);
   });
   it("holding dengan seconds_left 0 diabaikan (sudah habis, tak bisa menakar jam)", () => {
@@ -159,17 +183,82 @@ describe("D8 selisihJam", () => {
 
 describe("D2 ringkasHariIni", () => {
   const SEKARANG = Date.parse("2026-11-01T03:00:00Z"); // 1 Nov 2026 10:00 WIB
-  const item = (menu_id: number, menu_name: string, qty: number) => ({ menu_id, menu_name, qty, unit_price: 10000, options: [], line_total: qty * 10000 });
+  const item = (menu_id: number, menu_name: string, qty: number) => ({
+    menu_id,
+    menu_name,
+    qty,
+    unit_price: 10000,
+    options: [],
+    line_total: qty * 10000,
+  });
   const hariIni = "2026-11-01T01:00:00Z";
   const list = [
-    o({ code: "S1", status: "completed", subtotal: 28000, total: 30000, created_at: hariIni, confirmed_at: "2026-11-01T01:00:00Z", ready_at: "2026-11-01T01:12:00Z", completed_at: "2026-11-01T01:20:00Z", items: [item(1, "Nasi Ayam", 2)] }),
-    o({ code: "S2", status: "completed", subtotal: 48000, total: 50000, created_at: "2026-10-31T16:00:00Z", confirmed_at: "2026-10-31T16:10:00Z", ready_at: "2026-10-31T16:20:00Z", completed_at: "2026-10-31T16:30:00Z", items: [item(2, "Soto", 9)] }),
-    o({ code: "R1", status: "ready", subtotal: 18000, total: 20000, created_at: hariIni, confirmed_at: "2026-11-01T02:00:00Z", ready_at: "2026-11-01T02:18:00Z", completed_at: null, items: [item(1, "Nasi Ayam", 1), item(3, "Es Teh", 2)] }),
-    o({ code: "H1", status: "holding", total: 10000, created_at: hariIni, confirmed_at: null, ready_at: null, completed_at: null, items: [item(3, "Es Teh", 5)] }),
-    o({ code: "C1", status: "cancelled", total: 10000, created_at: hariIni, confirmed_at: null, ready_at: null, completed_at: null, items: [item(3, "Es Teh", 5)] }),
-    o({ code: "K1", status: "confirmed", total: 10000, created_at: hariIni, confirmed_at: hariIni, ready_at: null, completed_at: null, items: [item(3, "Es Teh", 1)] }),
+    o({
+      code: "S1",
+      status: "completed",
+      subtotal: 28000,
+      total: 30000,
+      created_at: hariIni,
+      confirmed_at: "2026-11-01T01:00:00Z",
+      ready_at: "2026-11-01T01:12:00Z",
+      completed_at: "2026-11-01T01:20:00Z",
+      items: [item(1, "Nasi Ayam", 2)],
+    }),
+    o({
+      code: "S2",
+      status: "completed",
+      subtotal: 48000,
+      total: 50000,
+      created_at: "2026-10-31T16:00:00Z",
+      confirmed_at: "2026-10-31T16:10:00Z",
+      ready_at: "2026-10-31T16:20:00Z",
+      completed_at: "2026-10-31T16:30:00Z",
+      items: [item(2, "Soto", 9)],
+    }),
+    o({
+      code: "R1",
+      status: "ready",
+      subtotal: 18000,
+      total: 20000,
+      created_at: hariIni,
+      confirmed_at: "2026-11-01T02:00:00Z",
+      ready_at: "2026-11-01T02:18:00Z",
+      completed_at: null,
+      items: [item(1, "Nasi Ayam", 1), item(3, "Es Teh", 2)],
+    }),
+    o({
+      code: "H1",
+      status: "holding",
+      total: 10000,
+      created_at: hariIni,
+      confirmed_at: null,
+      ready_at: null,
+      completed_at: null,
+      items: [item(3, "Es Teh", 5)],
+    }),
+    o({
+      code: "C1",
+      status: "cancelled",
+      total: 10000,
+      created_at: hariIni,
+      confirmed_at: null,
+      ready_at: null,
+      completed_at: null,
+      items: [item(3, "Es Teh", 5)],
+    }),
+    o({
+      code: "K1",
+      status: "confirmed",
+      total: 10000,
+      created_at: hariIni,
+      confirmed_at: hariIni,
+      ready_at: null,
+      completed_at: null,
+      items: [item(3, "Es Teh", 1)],
+    }),
   ];
-  const m = (id: number, quota_today: number, sold_today: number, held_today: number, is_active = true) => ({ ...menus()[0], id, quota_today, sold_today, held_today, is_active }) as MerchantMenu;
+  const m = (id: number, quota_today: number, sold_today: number, held_today: number, is_active = true) =>
+    ({ ...menus()[0], id, quota_today, sold_today, held_today, is_active }) as MerchantMenu;
   const daftar = [m(1, 20, 5, 2), m(2, 10, 3, 0), m(3, 50, 40, 0, false)];
 
   it("D10 omzet = jumlah subtotal (bukan total) pesanan completed hari ini", () => {
@@ -183,7 +272,13 @@ describe("D2 ringkasHariIni", () => {
   });
   it("rata-rata siap 12 & 18 menit -> 15; tanpa ready_at -> null", () => {
     expect(ringkasHariIni(list, daftar, SEKARANG).rataSiapMenit).toBe(15);
-    expect(ringkasHariIni(list.filter((x) => !x.ready_at || x.code === "S2"), daftar, SEKARANG).rataSiapMenit).toBeNull();
+    expect(
+      ringkasHariIni(
+        list.filter((x) => !x.ready_at || x.code === "S2"),
+        daftar,
+        SEKARANG,
+      ).rataSiapMenit,
+    ).toBeNull();
   });
   it("terlaris menjumlah qty lintas pesanan, abaikan holding/cancelled; kosong -> null", () => {
     expect(ringkasHariIni(list, daftar, SEKARANG).terlaris).toEqual({ name: "Nasi Ayam", portions: 3 });
@@ -191,7 +286,9 @@ describe("D2 ringkasHariIni", () => {
   });
   it("ready -> completed menaikkan omzet sebesar subtotal", () => {
     const sebelum = ringkasHariIni(list, daftar, SEKARANG).omzet;
-    const sesudah = list.map((x) => (x.code === "R1" ? { ...x, status: "completed" as const, completed_at: "2026-11-01T02:30:00Z" } : x));
+    const sesudah = list.map((x) =>
+      x.code === "R1" ? { ...x, status: "completed" as const, completed_at: "2026-11-01T02:30:00Z" } : x,
+    );
     expect(ringkasHariIni(sesudah, daftar, SEKARANG).omzet).toBe(sebelum + 18000);
   });
 });

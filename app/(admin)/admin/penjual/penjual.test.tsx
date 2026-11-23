@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
 vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
-vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
+  adminFetch: (...a: unknown[]) => adminFetch(...a),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn() }),
   usePathname: () => "/admin/penjual",
@@ -33,7 +36,11 @@ describe("halaman verifikasi & penjual", () => {
   });
   it("daftar: requireAdmin + filter URL diteruskan + halaman dibatasi", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: [], meta: { page: 1, limit: 20, total: 0 } });
-    render(await PenjualPage({ searchParams: Promise.resolve({ q: "siti", status: "pending", open: "1", page: "abc", x: "y" }) }));
+    render(
+      await PenjualPage({
+        searchParams: Promise.resolve({ q: "siti", status: "pending", open: "1", page: "abc", x: "y" }),
+      }),
+    );
     expect(requireAdmin).toHaveBeenCalledTimes(1);
     expect(adminFetch).toHaveBeenCalledWith("/merchants?q=siti&status=pending&open=1&page=1&limit=20");
   });

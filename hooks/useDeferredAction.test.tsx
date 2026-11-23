@@ -28,7 +28,9 @@ describe("DB-A2 / Review Focus 2: aksi ditunda tepat sekali", () => {
     const { run, result, unmount } = pasang();
     act(() => result.current.schedule("A", "confirm"));
     let batal = false;
-    act(() => { batal = result.current.undo("A"); });
+    act(() => {
+      batal = result.current.undo("A");
+    });
     expect(batal).toBe(true);
     expect(result.current.undo("A")).toBe(false);
     act(() => vi.advanceTimersByTime(10_000));
@@ -46,7 +48,9 @@ describe("DB-A2 / Review Focus 2: aksi ditunda tepat sekali", () => {
   it("pagehide (tutup/pindah tab) -> dijalankan sekali; unmount sesudahnya tidak dobel", () => {
     const { run, result, unmount } = pasang();
     act(() => result.current.schedule("A", "confirm"));
-    act(() => { window.dispatchEvent(new Event("pagehide")); });
+    act(() => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
     expect(run).toHaveBeenCalledTimes(1);
     act(() => vi.advanceTimersByTime(10_000));
     unmount();

@@ -10,7 +10,9 @@ export function useDeferredAction<A>(run: (key: string, arg: A) => void, delayMs
   const [pending, setPending] = useState<Record<string, A>>({});
   const antre = useRef(new Map<string, { arg: A; t: ReturnType<typeof setTimeout> }>());
   const runRef = useRef(run);
-  useEffect(() => { runRef.current = run; });
+  useEffect(() => {
+    runRef.current = run;
+  });
 
   const lepas = useCallback((key: string) => {
     const p = antre.current.get(key);
@@ -25,16 +27,22 @@ export function useDeferredAction<A>(run: (key: string, arg: A) => void, delayMs
     return p;
   }, []);
 
-  const jalankan = useCallback((key: string) => {
-    const p = lepas(key);
-    if (p) runRef.current(key, p.arg);
-  }, [lepas]);
+  const jalankan = useCallback(
+    (key: string) => {
+      const p = lepas(key);
+      if (p) runRef.current(key, p.arg);
+    },
+    [lepas],
+  );
 
-  const schedule = useCallback((key: string, arg: A) => {
-    jalankan(key);
-    antre.current.set(key, { arg, t: setTimeout(() => jalankan(key), delayMs) });
-    setPending((p) => ({ ...p, [key]: arg }));
-  }, [delayMs, jalankan]);
+  const schedule = useCallback(
+    (key: string, arg: A) => {
+      jalankan(key);
+      antre.current.set(key, { arg, t: setTimeout(() => jalankan(key), delayMs) });
+      setPending((p) => ({ ...p, [key]: arg }));
+    },
+    [delayMs, jalankan],
+  );
 
   /** `true` bila aksi masih tertunda dan berhasil dibatalkan. */
   const undo = useCallback((key: string) => !!lepas(key), [lepas]);

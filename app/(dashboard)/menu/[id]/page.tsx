@@ -17,7 +17,12 @@ export default async function UbahMenuPage({ params }: { params: Promise<{ id: s
   return (
     <PageHeader title="Ubah menu">
       {hilang ? (
-        <EmptyState icon={SearchX} title="Menu tidak ditemukan" body="Menu ini tidak ada atau sudah dihapus." action={<LinkButton href="/menu">Kembali ke daftar menu</LinkButton>} />
+        <EmptyState
+          icon={SearchX}
+          title="Menu tidak ditemukan"
+          body="Menu ini tidak ada atau sudah dihapus."
+          action={<LinkButton href="/menu">Kembali ke daftar menu</LinkButton>}
+        />
       ) : "error" in menu || "error" in kategori ? (
         <GagalMuat judul="Formulir menu belum bisa dimuat" isi="Data menu gagal dimuat. Coba lagi." />
       ) : (

@@ -2,8 +2,15 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { KpiRow } from "./KpiRow";
 
-const kpi = (label: string) => within(screen.getByRole("region", { name: "Ringkasan hari ini" })).getByText(label).nextElementSibling;
-const R = { omzet: 125_000, kapasitas: { terpakai: 30, total: 120 }, perluTindakan: 4, rataSiapMenit: 12, terlaris: null };
+const kpi = (label: string) =>
+  within(screen.getByRole("region", { name: "Ringkasan hari ini" })).getByText(label).nextElementSibling;
+const R = {
+  omzet: 125_000,
+  kapasitas: { terpakai: 30, total: 120 },
+  perluTindakan: 4,
+  rataSiapMenit: 12,
+  terlaris: null,
+};
 
 describe("KpiRow (M-04, D2)", () => {
   it("angka dari ringkasan; tanpa teks vs kemarin", () => {

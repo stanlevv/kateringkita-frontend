@@ -5,7 +5,8 @@ const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 import { MuatUlangBerkala } from "./MuatUlangBerkala";
 
-const tampak = (v: DocumentVisibilityState) => Object.defineProperty(document, "visibilityState", { value: v, configurable: true });
+const tampak = (v: DocumentVisibilityState) =>
+  Object.defineProperty(document, "visibilityState", { value: v, configurable: true });
 
 beforeEach(() => {
   vi.useFakeTimers();

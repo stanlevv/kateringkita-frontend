@@ -11,11 +11,26 @@ import { Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import type { MerchantOrder } from "@/types/order";
-import { cekTemplate, contohDariPesanan, MAKS_TEMPLATE, PLACEHOLDER, renderTemplate, TEMPLATE_BAWAAN } from "@/lib/wa-template";
+import {
+  cekTemplate,
+  contohDariPesanan,
+  MAKS_TEMPLATE,
+  PLACEHOLDER,
+  renderTemplate,
+  TEMPLATE_BAWAAN,
+} from "@/lib/wa-template";
 import { ChatPreview } from "./ChatPreview";
 
 /** M-11, WA-*: `template` null = memakai templat bawaan. `order` = pesanan contoh untuk pratinjau. */
-export function TemplateEditor({ namaToko, template, order }: { namaToko: string; template: string | null; order: MerchantOrder | null }) {
+export function TemplateEditor({
+  namaToko,
+  template,
+  order,
+}: {
+  namaToko: string;
+  template: string | null;
+  order: MerchantOrder | null;
+}) {
   const [awal, setAwal] = useState(template ?? TEMPLATE_BAWAAN);
   const [teks, setTeks] = useState(awal);
   const [menyimpan, setMenyimpan] = useState(false);
@@ -60,11 +75,20 @@ export function TemplateEditor({ namaToko, template, order }: { namaToko: string
         <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-4 sm:p-6">
           <div>
             <h2 className="text-lg font-semibold text-ink">Kata kunci</h2>
-            <p className="text-sm text-ink-muted">Klik untuk menyisipkan di posisi kursor. Kata kunci diganti data pesanan saat pesan dikirim.</p>
+            <p className="text-sm text-ink-muted">
+              Klik untuk menyisipkan di posisi kursor. Kata kunci diganti data pesanan saat pesan dikirim.
+            </p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {PLACEHOLDER.map((p) => (
                 <li key={p.kode}>
-                  <button type="button" onClick={() => sisip(p.kode)} className={cx("flex min-h-11 w-full flex-col items-start justify-center rounded-md border border-line-strong bg-surface px-3 py-1 text-left hover:bg-subtle", fokus)}>
+                  <button
+                    type="button"
+                    onClick={() => sisip(p.kode)}
+                    className={cx(
+                      "flex min-h-11 w-full flex-col items-start justify-center rounded-md border border-line-strong bg-surface px-3 py-1 text-left hover:bg-subtle",
+                      fokus,
+                    )}
+                  >
                     <span className="font-mono text-sm font-semibold text-ink">{p.kode}</span>
                     <span className="text-sm text-ink-muted">{p.deskripsi}</span>
                   </button>
@@ -72,15 +96,41 @@ export function TemplateEditor({ namaToko, template, order }: { namaToko: string
               ))}
             </ul>
           </div>
-          <Field label="Isi templat" id="wa-template" help={`${teks.length.toLocaleString("id-ID")}/${MAKS_TEMPLATE.toLocaleString("id-ID")} karakter`} error={galat ?? undefined}>
-            <Textarea ref={area} value={teks} onChange={(e) => setTeks(e.target.value)} rows={12} className="font-mono" />
+          <Field
+            label="Isi templat"
+            id="wa-template"
+            help={`${teks.length.toLocaleString("id-ID")}/${MAKS_TEMPLATE.toLocaleString("id-ID")} karakter`}
+            error={galat ?? undefined}
+          >
+            <Textarea
+              ref={area}
+              value={teks}
+              onChange={(e) => setTeks(e.target.value)}
+              rows={12}
+              className="font-mono"
+            />
           </Field>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button variant="secondary" onClick={() => setTanyaBawaan(true)}>Kembalikan ke bawaan</Button>
+            <Button variant="secondary" onClick={() => setTanyaBawaan(true)}>
+              Kembalikan ke bawaan
+            </Button>
             {dirty && (
               <div className="flex flex-wrap items-center gap-3">
-                {galat && <p id="wa-simpan-info" className="text-sm text-danger">Perbaiki isi templat dulu sebelum menyimpan.</p>}
-                <Button loading={menyimpan} loadingText="Menyimpan…" aria-disabled={galat ? true : undefined} aria-describedby={galat ? "wa-simpan-info" : undefined} className={galat ? "opacity-50" : undefined} onClick={() => void simpan()}>Simpan templat</Button>
+                {galat && (
+                  <p id="wa-simpan-info" className="text-sm text-danger">
+                    Perbaiki isi templat dulu sebelum menyimpan.
+                  </p>
+                )}
+                <Button
+                  loading={menyimpan}
+                  loadingText="Menyimpan…"
+                  aria-disabled={galat ? true : undefined}
+                  aria-describedby={galat ? "wa-simpan-info" : undefined}
+                  className={galat ? "opacity-50" : undefined}
+                  onClick={() => void simpan()}
+                >
+                  Simpan templat
+                </Button>
               </div>
             )}
           </div>
@@ -93,8 +143,28 @@ export function TemplateEditor({ namaToko, template, order }: { namaToko: string
         />
       </div>
 
-      <ConfirmDialog open={tanyaBawaan} onClose={() => setTanyaBawaan(false)} title="Kembalikan ke bawaan?" body="Isi templat diganti dengan templat bawaan. Perubahan baru tersimpan setelah Simpan templat ditekan." confirmLabel="Kembalikan" tone="primary" onConfirm={() => { setTeks(TEMPLATE_BAWAAN); setTanyaBawaan(false); }} />
-      <ConfirmDialog open={guard.open} onClose={guard.cancel} title="Buang perubahan?" body="Perubahan pada templat ini belum disimpan." confirmLabel="Buang perubahan" cancelLabel="Tetap di sini" tone="danger" onConfirm={guard.confirm} />
+      <ConfirmDialog
+        open={tanyaBawaan}
+        onClose={() => setTanyaBawaan(false)}
+        title="Kembalikan ke bawaan?"
+        body="Isi templat diganti dengan templat bawaan. Perubahan baru tersimpan setelah Simpan templat ditekan."
+        confirmLabel="Kembalikan"
+        tone="primary"
+        onConfirm={() => {
+          setTeks(TEMPLATE_BAWAAN);
+          setTanyaBawaan(false);
+        }}
+      />
+      <ConfirmDialog
+        open={guard.open}
+        onClose={guard.cancel}
+        title="Buang perubahan?"
+        body="Perubahan pada templat ini belum disimpan."
+        confirmLabel="Buang perubahan"
+        cancelLabel="Tetap di sini"
+        tone="danger"
+        onConfirm={guard.confirm}
+      />
     </>
   );
 }

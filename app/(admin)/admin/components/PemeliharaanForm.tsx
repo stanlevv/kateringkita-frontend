@@ -32,22 +32,48 @@ export function PemeliharaanForm({ nilai }: { nilai: Pemeliharaan }) {
   }
 
   return (
-    <section aria-label="Mode pemeliharaan" className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 lg:col-span-2">
+    <section
+      aria-label="Mode pemeliharaan"
+      className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 lg:col-span-2"
+    >
       <h2 className="text-lg font-semibold text-ink">Mode pemeliharaan</h2>
-      <p className="text-ink-muted">Saat aktif, penjual dan pembeli tidak bisa memakai KateringKita dan melihat pesan di bawah. Panel admin dan pembayaran yang sedang berjalan tetap diproses.</p>
+      <p className="text-ink-muted">
+        Saat aktif, penjual dan pembeli tidak bisa memakai KateringKita dan melihat pesan di bawah. Panel admin dan
+        pembayaran yang sedang berjalan tetap diproses.
+      </p>
       {nilai.aktif && <Banner tone="warning">Mode pemeliharaan sedang aktif.</Banner>}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="sm:flex-1">
-          <Field label="Pesan untuk pengguna" id="pemeliharaan-pesan" help="Opsional, maksimal 200 karakter. Kosongkan untuk memakai pesan bawaan." error={galat}>
-            <Input value={pesan} maxLength={200} onChange={(e) => { setGalat(undefined); setPesan(e.target.value); }} />
+          <Field
+            label="Pesan untuk pengguna"
+            id="pemeliharaan-pesan"
+            help="Opsional, maksimal 200 karakter. Kosongkan untuk memakai pesan bawaan."
+            error={galat}
+          >
+            <Input
+              value={pesan}
+              maxLength={200}
+              onChange={(e) => {
+                setGalat(undefined);
+                setPesan(e.target.value);
+              }}
+            />
           </Field>
         </div>
-        {nilai.aktif
-          ? <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => simpan(true)} disabled={menyimpan}>Simpan pesan</Button>
-              <Button onClick={() => simpan(false)} loading={menyimpan} loadingText="Menyimpan…">Matikan pemeliharaan</Button>
-            </div>
-          : <Button variant="danger" onClick={() => setKonfirmasi(true)}>Nyalakan pemeliharaan</Button>}
+        {nilai.aktif ? (
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => simpan(true)} disabled={menyimpan}>
+              Simpan pesan
+            </Button>
+            <Button onClick={() => simpan(false)} loading={menyimpan} loadingText="Menyimpan…">
+              Matikan pemeliharaan
+            </Button>
+          </div>
+        ) : (
+          <Button variant="danger" onClick={() => setKonfirmasi(true)}>
+            Nyalakan pemeliharaan
+          </Button>
+        )}
       </div>
       <ConfirmDialog
         open={konfirmasi}

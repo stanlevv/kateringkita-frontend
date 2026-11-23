@@ -33,8 +33,11 @@ describe("nextStatus", () => {
     expect(nextStatus(o({ payment_method: "qris" }), "confirm")).toEqual({ error: "CONFLICT" });
   });
   it("F26 VA/online belum lunas: konfirmasi ditolak (lunas diterima otomatis oleh Midtrans)", () => {
-    for (const payment_method of ["va", "online"] as const) expect(nextStatus(o({ payment_method }), "confirm")).toEqual({ error: "CONFLICT" });
-    expect(nextStatus(o({ payment_method: "online", payment_status: "paid" }), "confirm")).toMatchObject({ status: "confirmed" });
+    for (const payment_method of ["va", "online"] as const)
+      expect(nextStatus(o({ payment_method }), "confirm")).toEqual({ error: "CONFLICT" });
+    expect(nextStatus(o({ payment_method: "online", payment_status: "paid" }), "confirm")).toMatchObject({
+      status: "confirmed",
+    });
   });
   it("rantai masak", () => {
     expect(nextStatus(o({ status: "confirmed" }), "cook")).toMatchObject({ status: "cooking" });

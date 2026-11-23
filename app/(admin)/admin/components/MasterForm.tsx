@@ -11,7 +11,17 @@ import { cekMaster, type TAB_MASTER } from "@/services/adminMasterService";
 import type { ItemMaster } from "@/types/admin";
 
 /** A-01…A-03 — isi dialog tambah/ubah data master. `item` ada = mode ubah. */
-export function MasterForm({ tab, item, onSaved, onClose }: { tab: (typeof TAB_MASTER)[number]; item: ItemMaster | null; onSaved: () => void; onClose: () => void }) {
+export function MasterForm({
+  tab,
+  item,
+  onSaved,
+  onClose,
+}: {
+  tab: (typeof TAB_MASTER)[number];
+  item: ItemMaster | null;
+  onSaved: () => void;
+  onClose: () => void;
+}) {
   const kolom = tab.kolom;
   const [name, setName] = useState(item?.name ?? "");
   const [extra, setExtra] = useState((kolom && item?.[kolom]) || "");
@@ -31,8 +41,13 @@ export function MasterForm({ tab, item, onSaved, onClose }: { tab: (typeof TAB_M
     const r = await panggil(() => simpanMaster(tab.kind, item?.id ?? null, input));
     setMenyimpan(false);
     if ("error" in r) {
-      if (r.error.code === "CONFLICT") { setServer({ name: r.error.message }); setDicoba(true); }
-      else if (r.error.fields) { setServer(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]]))); setDicoba(true); }
+      if (r.error.code === "CONFLICT") {
+        setServer({ name: r.error.message });
+        setDicoba(true);
+      } else if (r.error.fields) {
+        setServer(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
+        setDicoba(true);
+      }
       toast({ tone: "danger", message: r.error.message }); // 409 nama kembar: pesan backend apa adanya
       return;
     }
@@ -43,16 +58,40 @@ export function MasterForm({ tab, item, onSaved, onClose }: { tab: (typeof TAB_M
   return (
     <form onSubmit={kirim} noValidate className="flex flex-col gap-4">
       <Field label="Nama" id="mf-name" required error={galat("name")}>
-        <Input value={name} maxLength={tab.nameMax} onChange={(e) => { setServer({}); setName(e.target.value); }} autoFocus />
+        <Input
+          value={name}
+          maxLength={tab.nameMax}
+          onChange={(e) => {
+            setServer({});
+            setName(e.target.value);
+          }}
+          autoFocus
+        />
       </Field>
       {kolom && (
-        <Field label={tab.kolomLabel!} id={`mf-${kolom}`} help={kolom === "icon" ? "Nama ikon, boleh dikosongkan." : "Boleh dikosongkan."} error={galat(kolom)}>
-          <Input value={extra} maxLength={tab.kolomMax} onChange={(e) => { setServer({}); setExtra(e.target.value); }} />
+        <Field
+          label={tab.kolomLabel!}
+          id={`mf-${kolom}`}
+          help={kolom === "icon" ? "Nama ikon, boleh dikosongkan." : "Boleh dikosongkan."}
+          error={galat(kolom)}
+        >
+          <Input
+            value={extra}
+            maxLength={tab.kolomMax}
+            onChange={(e) => {
+              setServer({});
+              setExtra(e.target.value);
+            }}
+          />
         </Field>
       )}
       <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">Simpan</Button>
+        <Button variant="secondary" onClick={onClose}>
+          Batal
+        </Button>
+        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">
+          Simpan
+        </Button>
       </div>
     </form>
   );

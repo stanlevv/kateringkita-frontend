@@ -1,7 +1,13 @@
 // F26 pencairan dana: bentuk sama dengan respons backend (GET /merchant/payouts, /admin/payouts*, /admin/refunds).
 export type BankPencairan = { code: string; name: string };
 
-export type RekeningPencairan = { bank: string; bank_name: string; account_number: string; account_name: string; updated_at: string };
+export type RekeningPencairan = {
+  bank: string;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  updated_at: string;
+};
 
 export type Pencairan = {
   id: number;
@@ -27,9 +33,16 @@ export type PencairanSaya = {
 };
 
 // as_of dikirim balik sebagai `until` saat mencatat pencairan
-export type SaldoPenjual = { merchant_id: number; business_name: string; account: RekeningPencairan | null; amount: number; orders: number;
+export type SaldoPenjual = {
+  merchant_id: number;
+  business_name: string;
+  account: RekeningPencairan | null;
+  amount: number;
+  orders: number;
   /** AUD-25: total voucher platform di pesanan saldo ini; opsional selama backend lama belum mengirimnya */
-  platform_discount?: number; since: string };
+  platform_discount?: number;
+  since: string;
+};
 export type DaftarSaldo = { as_of: string; rows: SaldoPenjual[] };
 
 export type RiwayatPencairan = { data: Pencairan[]; meta: { page: number; limit: number; total: number } };

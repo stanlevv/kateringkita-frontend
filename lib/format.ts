@@ -19,7 +19,12 @@ export function formatRupiah(n: number): string {
 
 /** "11.42" dalam WIB. */
 export function formatJam(iso: string): string {
-  const p = new Intl.DateTimeFormat("id-ID", { timeZone: ZONA, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso));
+  const p = new Intl.DateTimeFormat("id-ID", {
+    timeZone: ZONA,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(iso));
   const g = (t: string) => p.find((x) => x.type === t)?.value ?? "";
   return `${g("hour")}.${g("minute")}`;
 }

@@ -2,21 +2,42 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const jar = { value: undefined as string | undefined };
 vi.mock("next/headers", () => ({
-  cookies: async () => ({ get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined) }),
+  cookies: async () => ({
+    get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined),
+  }),
 }));
 const requireMerchant = vi.fn(async () => ({}));
 vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
+  merchantFetch: (...a: unknown[]) => merchantFetch(...a),
+}));
 import { saveProfile } from "./profile";
 
-const ok = { business_name: "Dapur Baru", logo_url: null, description: "", address: "Jl. A", wa_number: "081234567890", service_mode: "daily", open_time: "07:00", close_time: "16:00", hold_minutes: 5, daily_revenue_target: 0, pickup_point_ids: [1] };
+const ok = {
+  business_name: "Dapur Baru",
+  logo_url: null,
+  description: "",
+  address: "Jl. A",
+  wa_number: "081234567890",
+  service_mode: "daily",
+  open_time: "07:00",
+  close_time: "16:00",
+  hold_minutes: 5,
+  daily_revenue_target: 0,
+  pickup_point_ids: [1],
+};
 const kirim = () => JSON.parse(merchantFetch.mock.calls[0][1].body);
 beforeEach(() => {
   merchantFetch.mockReset();
   merchantFetch.mockResolvedValue({ ok: true, status: 200, data: { business_name: "Dari Server" } });
 });
-afterEach(() => { vi.unstubAllEnvs(); jar.value = undefined; requireMerchant.mockClear(); });
+afterEach(() => {
+  vi.unstubAllEnvs();
+  jar.value = undefined;
+  requireMerchant.mockClear();
+});
 
 describe("saveProfile (M-10, M-11)", () => {
   it("meneruskan logo_url ke backend (F04 D15); qris_image_url tidak dikirim lagi (F26)", async () => {
@@ -25,8 +46,14 @@ describe("saveProfile (M-10, M-11)", () => {
     expect("qris_image_url" in kirim()).toBe(false);
   });
   it("galat backend fields.logo_url diteruskan", async () => {
-    merchantFetch.mockResolvedValue({ ok: false, status: 400, error: { code: "VALIDATION_ERROR", message: "x", fields: { logo_url: ["Foto tidak valid. Unggah ulang foto."] } } });
-    expect(await saveProfile(ok)).toMatchObject({ error: { fields: { logo_url: ["Foto tidak valid. Unggah ulang foto."] } } });
+    merchantFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      error: { code: "VALIDATION_ERROR", message: "x", fields: { logo_url: ["Foto tidak valid. Unggah ulang foto."] } },
+    });
+    expect(await saveProfile(ok)).toMatchObject({
+      error: { fields: { logo_url: ["Foto tidak valid. Unggah ulang foto."] } },
+    });
   });
   it("memanggil requireMerchant lebih dulu", async () => {
     await saveProfile(ok);
@@ -40,7 +67,13 @@ describe("saveProfile (M-10, M-11)", () => {
     expect(r).toEqual({ data: { business_name: "Dari Server" } });
   });
   it("hanya field yang boleh diubah; kunci lain diabaikan; teks dirapikan", async () => {
-    await saveProfile({ ...ok, description: "  halo  ", is_open: false, merchant_type: { id: 9, name: "x" }, extra: "x" });
+    await saveProfile({
+      ...ok,
+      description: "  halo  ",
+      is_open: false,
+      merchant_type: { id: 9, name: "x" },
+      extra: "x",
+    });
     const body = kirim();
     expect(body).toMatchObject({ description: "halo", business_name: "Dapur Baru" });
     for (const k of ["is_open", "merchant_type", "extra"]) expect(k in body).toBe(false);
@@ -61,7 +94,11 @@ describe("saveProfile (M-10, M-11)", () => {
     expect(merchantFetch).not.toHaveBeenCalled();
   });
   it("galat field dari server diteruskan apa adanya", async () => {
-    const error = { code: "VALIDATION_ERROR", message: "Periksa isian.", fields: { pickup_point_ids: ["Titik temu tidak tersedia."] } };
+    const error = {
+      code: "VALIDATION_ERROR",
+      message: "Periksa isian.",
+      fields: { pickup_point_ids: ["Titik temu tidak tersedia."] },
+    };
     merchantFetch.mockResolvedValue({ ok: false, status: 400, error });
     expect(await saveProfile(ok)).toEqual({ error });
   });

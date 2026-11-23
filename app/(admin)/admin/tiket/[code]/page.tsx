@@ -17,17 +17,32 @@ export default async function TiketDetailPage({ params }: { params: Promise<{ co
   if (!kodeTiketValid(code)) notFound();
   const res = await adminFetch<DetailTiket>(`/tickets/${encodeURIComponent(code)}`);
   if (res.status === 404) notFound();
-  const kembali = <LinkButton href="/admin/tiket" variant="secondary">Semua tiket</LinkButton>;
+  const kembali = (
+    <LinkButton href="/admin/tiket" variant="secondary">
+      Semua tiket
+    </LinkButton>
+  );
   if (!res.ok || !res.data) {
     return (
       <PageHeader title={`Tiket ${code}`} actions={kembali}>
-        <GagalMuat judul="Tiket belum bisa dimuat" isi="Terjadi kesalahan saat mengambil tiket. Periksa koneksi lalu coba lagi." />
+        <GagalMuat
+          judul="Tiket belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil tiket. Periksa koneksi lalu coba lagi."
+        />
       </PageHeader>
     );
   }
   const t = res.data;
   return (
-    <PageHeader title={t.subject} actions={<>{t.status !== "closed" && <TutupTiket code={t.code} />}{kembali}</>}>
+    <PageHeader
+      title={t.subject}
+      actions={
+        <>
+          {t.status !== "closed" && <TutupTiket code={t.code} />}
+          {kembali}
+        </>
+      }
+    >
       {/* balasan pembeli muncul sendiri selama tiket belum ditutup */}
       {t.status !== "closed" && <MuatUlangBerkala />}
       <TiketDetail t={t} />

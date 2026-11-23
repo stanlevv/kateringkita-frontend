@@ -16,8 +16,14 @@ describe("M-04, M-11 ChatWaLink", () => {
 describe("galatAksi CONFLICT", () => {
   it("memakai pesan dari server, fallback ke teks tetap", async () => {
     const { galatAksi } = await import("./galatAksi");
-    expect(galatAksi("CONFLICT", "confirm", "Batas waktu pesanan sudah habis.")).toMatchObject({ jenis: "toast", message: "Batas waktu pesanan sudah habis.", muatUlang: true });
+    expect(galatAksi("CONFLICT", "confirm", "Batas waktu pesanan sudah habis.")).toMatchObject({
+      jenis: "toast",
+      message: "Batas waktu pesanan sudah habis.",
+      muatUlang: true,
+    });
     expect(galatAksi("CONFLICT", "confirm")).toMatchObject({ message: "Pesanan sudah berubah status" });
-    expect(galatAksi("INTERNAL_ERROR", "confirm", "Rahasia server")).toMatchObject({ message: "Gagal mengonfirmasi. Coba lagi." });
+    expect(galatAksi("INTERNAL_ERROR", "confirm", "Rahasia server")).toMatchObject({
+      message: "Gagal mengonfirmasi. Coba lagi.",
+    });
   });
 });

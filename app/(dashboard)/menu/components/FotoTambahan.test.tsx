@@ -9,12 +9,15 @@ import { FotoTambahan } from "./FotoTambahan";
 const U = ["https://foto.test/a.jpg", "https://foto.test/b.jpg", "https://foto.test/c.jpg"];
 const berkas = () => new File([new Uint8Array(10)], "f.png", { type: "image/png" });
 
-beforeEach(() => { unggahFoto.mockReset(); });
+beforeEach(() => {
+  unggahFoto.mockReset();
+});
 
 describe("FotoTambahan", () => {
   it("unggah menambah URL di akhir; busy dilaporkan selama unggah", async () => {
     unggahFoto.mockResolvedValue({ data: { public_url: "https://foto.test/baru.jpg" } });
-    const onChange = vi.fn(), onBusy = vi.fn();
+    const onChange = vi.fn(),
+      onBusy = vi.fn();
     render(<FotoTambahan urls={U.slice(0, 1)} onChange={onChange} onBusy={onBusy} />);
     fireEvent.change(document.querySelector("input[type=file]") as HTMLInputElement, { target: { files: [berkas()] } });
     await waitFor(() => expect(onChange).toHaveBeenCalledWith([U[0], "https://foto.test/baru.jpg"]));
@@ -33,7 +36,9 @@ describe("FotoTambahan", () => {
   });
 
   it("sudah 4 foto → tombol tambah hilang; galat unggah ditampilkan", async () => {
-    const { rerender } = render(<FotoTambahan urls={[...U, "https://foto.test/d.jpg"]} onChange={vi.fn()} onBusy={vi.fn()} />);
+    const { rerender } = render(
+      <FotoTambahan urls={[...U, "https://foto.test/d.jpg"]} onChange={vi.fn()} onBusy={vi.fn()} />,
+    );
     expect(document.querySelector("input[type=file]")).toBeNull();
     unggahFoto.mockResolvedValue({ error: { code: "X", message: "Foto gagal diunggah. Coba lagi" } });
     rerender(<FotoTambahan urls={[]} onChange={vi.fn()} onBusy={vi.fn()} />);

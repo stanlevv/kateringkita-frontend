@@ -76,7 +76,11 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
         </div>
         <Switch checked={aktif} onChange={sakelar} label="Terima pesanan dari meja" />
       </div>
-      {!aktif && <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink-muted">Selama sakelar mati, semua QR meja menampilkan pesan tidak aktif.</p>}
+      {!aktif && (
+        <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink-muted">
+          Selama sakelar mati, semua QR meja menampilkan pesan tidak aktif.
+        </p>
+      )}
 
       {mejaAwal === null ? (
         <p className="text-sm text-danger">Daftar meja gagal dimuat. Muat ulang halaman.</p>
@@ -84,15 +88,30 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
         <>
           <form onSubmit={tambah} noValidate className="flex flex-wrap items-end gap-3">
             <div className="min-w-48 flex-1">
-              <Field label="Nama meja" id="meja-label" help="Contoh: 1, 2, Teras A. Tiap meja mendapat QR sendiri." error={galat}>
+              <Field
+                label="Nama meja"
+                id="meja-label"
+                help="Contoh: 1, 2, Teras A. Tiap meja mendapat QR sendiri."
+                error={galat}
+              >
                 <Input value={label} maxLength={30} onChange={(e) => setLabel(e.target.value)} />
               </Field>
             </div>
-            <Button type="submit" loading={sibuk} loadingText="Menambah…" disabled={!label.trim()}>Tambah meja</Button>
+            <Button type="submit" loading={sibuk} loadingText="Menambah…" disabled={!label.trim()}>
+              Tambah meja
+            </Button>
             {meja.length > 0 && (
-              <a href="/cetak-qr" target="_blank" rel="noopener"
-                className={cx("inline-flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle", fokus)}>
-                <Printer aria-hidden className="size-4" />Cetak semua QR
+              <a
+                href="/cetak-qr"
+                target="_blank"
+                rel="noopener"
+                className={cx(
+                  "inline-flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle",
+                  fokus,
+                )}
+              >
+                <Printer aria-hidden className="size-4" />
+                Cetak semua QR
               </a>
             )}
           </form>
@@ -102,15 +121,30 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {meja.map((m) => (
-                <li key={m.id} className={cx("flex flex-col items-center gap-3 rounded-lg border border-line p-4", !m.is_active && "opacity-60")}>
+                <li
+                  key={m.id}
+                  className={cx(
+                    "flex flex-col items-center gap-3 rounded-lg border border-line p-4",
+                    !m.is_active && "opacity-60",
+                  )}
+                >
                   <QrMeja meja={m} />
                   <p className="font-display text-lg font-semibold text-ink">
-                    Meja {m.label}{!m.is_active && <span className="ml-2 text-sm font-medium text-ink-muted">(nonaktif)</span>}
+                    Meja {m.label}
+                    {!m.is_active && <span className="ml-2 text-sm font-medium text-ink-muted">(nonaktif)</span>}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button variant="secondary" onClick={() => unduh(m)}><Download aria-hidden className="size-4" />Unduh</Button>
-                    <Button variant="secondary" onClick={() => setGanti(m)}><RefreshCw aria-hidden className="size-4" />Ganti QR</Button>
-                    <Button variant="ghost" onClick={() => ubah(m, { is_active: !m.is_active })}>{m.is_active ? "Nonaktifkan" : "Aktifkan"}</Button>
+                    <Button variant="secondary" onClick={() => unduh(m)}>
+                      <Download aria-hidden className="size-4" />
+                      Unduh
+                    </Button>
+                    <Button variant="secondary" onClick={() => setGanti(m)}>
+                      <RefreshCw aria-hidden className="size-4" />
+                      Ganti QR
+                    </Button>
+                    <Button variant="ghost" onClick={() => ubah(m, { is_active: !m.is_active })}>
+                      {m.is_active ? "Nonaktifkan" : "Aktifkan"}
+                    </Button>
                   </div>
                 </li>
               ))}

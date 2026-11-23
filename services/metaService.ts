@@ -5,7 +5,8 @@ import type { Category, PickupPoint, Pemeliharaan } from "@/types/meta";
 import type { DataResult } from "@/types/api";
 
 export async function getCategories(): Promise<DataResult<Category[]>> {
-  if ((await getSkenario()) === "gagal-muat") return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
+  if ((await getSkenario()) === "gagal-muat")
+    return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
   return hasil(await apiFetch<Category[]>("/meta/categories"));
 }
 

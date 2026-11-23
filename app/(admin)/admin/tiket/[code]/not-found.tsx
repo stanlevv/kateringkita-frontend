@@ -7,8 +7,16 @@ import { LinkButton } from "@/app/components/ui/LinkButton";
 export default function TiketTidakDitemukan() {
   return (
     <PageHeader title="Tiket tidak ditemukan">
-      <EmptyState icon={SearchX} title="Tiket tidak ditemukan" body="Tiket ini tidak ada atau kodenya salah. Periksa kodenya atau kembali ke daftar."
-        action={<LinkButton href="/admin/tiket" variant="secondary">Kembali ke daftar tiket</LinkButton>} />
+      <EmptyState
+        icon={SearchX}
+        title="Tiket tidak ditemukan"
+        body="Tiket ini tidak ada atau kodenya salah. Periksa kodenya atau kembali ke daftar."
+        action={
+          <LinkButton href="/admin/tiket" variant="secondary">
+            Kembali ke daftar tiket
+          </LinkButton>
+        }
+      />
     </PageHeader>
   );
 }

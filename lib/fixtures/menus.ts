@@ -1,7 +1,18 @@
 import type { MerchantMenu } from "@/types/menu";
 import { categories } from "./meta";
 
-type Baris = [id: number, name: string, cat: number, unit: string, price: number, hpp: number, kuota: number, terjual: number, ditahan: number, opts?: string[]];
+type Baris = [
+  id: number,
+  name: string,
+  cat: number,
+  unit: string,
+  price: number,
+  hpp: number,
+  kuota: number,
+  terjual: number,
+  ditahan: number,
+  opts?: string[],
+];
 
 const BARIS: Baris[] = [
   [1, "Nasi Ayam Bakar Madu", 1, "1 box", 22000, 14000, 40, 22, 3, ["Sambal pisah", "Tambah telur"]],

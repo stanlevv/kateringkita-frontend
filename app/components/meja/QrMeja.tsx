@@ -15,7 +15,9 @@ export function QrMeja({ meja, ukuran = 144 }: { meja: Meja; ukuran?: number }) 
   useEffect(() => {
     gambarQr(meja.token).then(setSrc, () => setSrc(null));
   }, [meja.token]);
-  return src
-    ? <Image src={src} alt={`QR Meja ${meja.label}`} width={ukuran} height={ukuran} unoptimized />
-    : <div aria-hidden className="animate-pulse rounded-md bg-subtle" style={{ width: ukuran, height: ukuran }} />;
+  return src ? (
+    <Image src={src} alt={`QR Meja ${meja.label}`} width={ukuran} height={ukuran} unoptimized />
+  ) : (
+    <div aria-hidden className="animate-pulse rounded-md bg-subtle" style={{ width: ukuran, height: ukuran }} />
+  );
 }

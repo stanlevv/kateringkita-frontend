@@ -8,7 +8,12 @@ const varian = {
 };
 
 // Tautan bergaya tombol (navigasi, bukan aksi).
-export function LinkButton({ variant = "primary", size = "md", className, ...rest }: ComponentProps<typeof Link> & { variant?: keyof typeof varian; size?: "md" | "lg" }) {
+export function LinkButton({
+  variant = "primary",
+  size = "md",
+  className,
+  ...rest
+}: ComponentProps<typeof Link> & { variant?: keyof typeof varian; size?: "md" | "lg" }) {
   return (
     <Link
       {...rest}

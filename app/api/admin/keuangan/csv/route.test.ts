@@ -10,11 +10,22 @@ import { GET } from "./route";
 
 const hariIni = tanggalWib(new Date().toISOString());
 const minta = (q: string) => GET(new Request(`http://localhost/api/admin/keuangan/csv${q}`));
-const angka = { orders: 2, subtotal: 30000, discount_merchant: 2000, discount_platform: 1000, service_fee: 2000, total: 29000, merchant_net: 28000, platform_net: 1000 };
+const angka = {
+  orders: 2,
+  subtotal: 30000,
+  discount_merchant: 2000,
+  discount_platform: 1000,
+  service_fee: 2000,
+  total: 29000,
+  merchant_net: 28000,
+  platform_net: 1000,
+};
 
 beforeEach(() => {
   getSession.mockResolvedValue({ user: { role: "admin" }, merchant: null });
-  getRekapKeuangan.mockResolvedValue({ data: { rows: [{ merchant_id: 1, business_name: "=Dapur, Siti", ...angka }], totals: angka } });
+  getRekapKeuangan.mockResolvedValue({
+    data: { rows: [{ merchant_id: 1, business_name: "=Dapur, Siti", ...angka }], totals: angka },
+  });
 });
 
 describe("F20 CSV keuangan", () => {
@@ -43,15 +54,26 @@ describe("F20 CSV keuangan", () => {
 
 // AUD-48: navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
 describe("XS-Leak", () => {
-  it.each(["cross-site", "same-site", "none"])("sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca", async (asal) => {
-    getSession.mockClear();
-    const res = await GET(new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": asal } }));
-    expect(res.status).toBe(401);
-    expect(await res.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
-    expect(getSession).not.toHaveBeenCalled();
-  });
+  it.each(["cross-site", "same-site", "none"])(
+    "sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca",
+    async (asal) => {
+      getSession.mockClear();
+      const res = await GET(
+        new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, {
+          headers: { "sec-fetch-site": asal },
+        }),
+      );
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
+      expect(getSession).not.toHaveBeenCalled();
+    },
+  );
   it("same-origin tetap mengunduh", async () => {
-    const res = await GET(new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": "same-origin" } }));
+    const res = await GET(
+      new Request(`http://localhost/api/admin/keuangan/csv?dari=${hariIni}&sampai=${hariIni}`, {
+        headers: { "sec-fetch-site": "same-origin" },
+      }),
+    );
     expect(res.status).toBe(200);
   });
 });

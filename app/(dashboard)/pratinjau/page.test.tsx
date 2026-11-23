@@ -17,7 +17,9 @@ afterEach(() => {
 describe("/pratinjau", () => {
   it("production -> notFound() sebelum requireMerchant (Review Focus 1)", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    await expect(PratinjauPage()).rejects.toMatchObject({ digest: expect.stringContaining("NEXT_HTTP_ERROR_FALLBACK;404") });
+    await expect(PratinjauPage()).rejects.toMatchObject({
+      digest: expect.stringContaining("NEXT_HTTP_ERROR_FALLBACK;404"),
+    });
     expect(requireMerchant).not.toHaveBeenCalled();
   });
   it("development merender daftar skenario", async () => {

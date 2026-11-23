@@ -14,7 +14,10 @@ import type { Pemeliharaan } from "@/types/meta";
 export default async function PromoPlatformPage() {
   const { user } = await requireAdmin();
   const bolehSetelan = user.admin_level === "super"; // Fase 1: ubah biaya & kontak CS khusus super
-  const [promos, biaya] = await Promise.all([adminFetch<Promo[]>("/promos"), adminFetch<{ service_fee: number; cs_whatsapp: string | null; maintenance: Pemeliharaan }>("/settings")]);
+  const [promos, biaya] = await Promise.all([
+    adminFetch<Promo[]>("/promos"),
+    adminFetch<{ service_fee: number; cs_whatsapp: string | null; maintenance: Pemeliharaan }>("/settings"),
+  ]);
   return (
     <PageHeader title="Promo & biaya" description="Promo yang berlaku di semua toko dan biaya layanan per pesanan.">
       <div className="flex flex-col gap-8">
@@ -25,10 +28,18 @@ export default async function PromoPlatformPage() {
             <PemeliharaanForm nilai={biaya.data.maintenance ?? { aktif: false, pesan: null }} />
           </div>
         ) : (
-          <GagalMuat judul="Biaya layanan belum bisa dimuat" isi="Terjadi kesalahan saat mengambil biaya layanan. Periksa koneksi lalu coba lagi." />
+          <GagalMuat
+            judul="Biaya layanan belum bisa dimuat"
+            isi="Terjadi kesalahan saat mengambil biaya layanan. Periksa koneksi lalu coba lagi."
+          />
         )}
-        <PromoList admin promos={promos.ok && promos.data ? promos.data : []} galat={!promos.ok}
-          simpan={simpanPromoPlatform} setAktifAksi={setAktifPromoPlatform} />
+        <PromoList
+          admin
+          promos={promos.ok && promos.data ? promos.data : []}
+          galat={!promos.ok}
+          simpan={simpanPromoPlatform}
+          setAktifAksi={setAktifPromoPlatform}
+        />
       </div>
     </PageHeader>
   );

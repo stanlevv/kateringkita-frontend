@@ -1,6 +1,16 @@
 import type { ReactNode } from "react";
 
-export function PageHeader({ title, description, actions, children }: { title: string; description?: string; actions?: ReactNode; children?: ReactNode }) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  children,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
     <>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">

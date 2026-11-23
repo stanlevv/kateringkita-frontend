@@ -15,10 +15,18 @@ const STATUS = { "": "Semua", active: "Normal", moderated: "Dimoderasi" } as con
 type Jenis = keyof typeof JENIS;
 
 const pil = (aktif: boolean) =>
-  cx("inline-flex min-h-11 items-center rounded-md border px-4 font-medium", fokus, aktif ? "border-primary bg-primary text-surface" : "border-line-strong bg-surface text-ink hover:bg-subtle");
+  cx(
+    "inline-flex min-h-11 items-center rounded-md border px-4 font-medium",
+    fokus,
+    aktif ? "border-primary bg-primary text-surface" : "border-line-strong bg-surface text-ink hover:bg-subtle",
+  );
 
 // F19 — moderasi ulasan & menu. Filter di URL; suspend toko ada di halaman Penjual.
-export default async function ModerasiPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function ModerasiPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   await requireAdmin();
   const sp = await searchParams;
   const jenis: Jenis = sp.jenis === "menu" ? "menu" : "ulasan";
@@ -42,34 +50,67 @@ export default async function ModerasiPage({ searchParams }: { searchParams: Pro
   const meta = res.meta as MetaHalaman | undefined;
 
   return (
-    <PageHeader title="Moderasi" description="Sembunyikan ulasan atau turunkan menu yang melanggar. Untuk menangguhkan toko, buka halaman Penjual.">
+    <PageHeader
+      title="Moderasi"
+      description="Sembunyikan ulasan atau turunkan menu yang melanggar. Untuk menangguhkan toko, buka halaman Penjual."
+    >
       <div className="flex flex-col gap-4">
         <nav aria-label="Jenis moderasi" className="flex flex-wrap gap-2">
           {(Object.keys(JENIS) as Jenis[]).map((j) => (
-            <Link key={j} href={url({ jenis: j, status: "" })} aria-current={j === jenis ? "page" : undefined} className={pil(j === jenis)}>{JENIS[j].label}</Link>
+            <Link
+              key={j}
+              href={url({ jenis: j, status: "" })}
+              aria-current={j === jenis ? "page" : undefined}
+              className={pil(j === jenis)}
+            >
+              {JENIS[j].label}
+            </Link>
           ))}
         </nav>
         <div className="flex flex-wrap items-end gap-3">
           <nav aria-label="Filter status" className="flex flex-wrap gap-2">
             {Object.entries(STATUS).map(([k, label]) => (
-              <Link key={k} href={url({ status: k })} aria-current={k === status ? "true" : undefined} className={pil(k === status)}>{label}</Link>
+              <Link
+                key={k}
+                href={url({ status: k })}
+                aria-current={k === status ? "true" : undefined}
+                className={pil(k === status)}
+              >
+                {label}
+              </Link>
             ))}
           </nav>
           <form action="/admin/moderasi" className="flex gap-2">
             <input type="hidden" name="jenis" value={jenis} />
             {status && <input type="hidden" name="status" value={status} />}
-            <Input type="search" name="q" defaultValue={cari} aria-label={jenis === "ulasan" ? "Cari komentar, menu, atau toko" : "Cari menu atau toko"} placeholder="Cari…" />
+            <Input
+              type="search"
+              name="q"
+              defaultValue={cari}
+              aria-label={jenis === "ulasan" ? "Cari komentar, menu, atau toko" : "Cari menu atau toko"}
+              placeholder="Cari…"
+            />
           </form>
         </div>
         {res.ok && res.data ? (
           <>
-            {jenis === "ulasan"
-              ? <ModerasiTable jenis="ulasan" rows={res.data as UlasanModerasi[]} />
-              : <ModerasiTable jenis="menu" rows={res.data as MenuModerasi[]} />}
-            <Pagination page={page} total={meta?.total ?? res.data.length} limit={LIMIT} hrefFor={(p) => url({ page: p })} />
+            {jenis === "ulasan" ? (
+              <ModerasiTable jenis="ulasan" rows={res.data as UlasanModerasi[]} />
+            ) : (
+              <ModerasiTable jenis="menu" rows={res.data as MenuModerasi[]} />
+            )}
+            <Pagination
+              page={page}
+              total={meta?.total ?? res.data.length}
+              limit={LIMIT}
+              hrefFor={(p) => url({ page: p })}
+            />
           </>
         ) : (
-          <GagalMuat judul="Data moderasi belum bisa dimuat" isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi." />
+          <GagalMuat
+            judul="Data moderasi belum bisa dimuat"
+            isi="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
+          />
         )}
       </div>
     </PageHeader>

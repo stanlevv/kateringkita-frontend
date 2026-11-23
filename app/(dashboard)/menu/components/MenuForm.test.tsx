@@ -15,7 +15,13 @@ import { MenuForm } from "./MenuForm";
 
 const cats = categories();
 const tampil = (p: Partial<React.ComponentProps<typeof MenuForm>> = {}) =>
-  render(<><a href="/dashboard">Beranda</a><Toaster /><MenuForm categories={cats} {...p} /></>);
+  render(
+    <>
+      <a href="/dashboard">Beranda</a>
+      <Toaster />
+      <MenuForm categories={cats} {...p} />
+    </>,
+  );
 const ketik = async (label: string | RegExp, teks: string) => {
   const el = screen.getByLabelText(label);
   await userEvent.clear(el);
@@ -28,10 +34,13 @@ const isiValid = async () => {
   await ketik(/Harga jual/, "15000");
 };
 const berkas = () => new File([new Uint8Array(10)], "f.png", { type: "image/png" });
-const pilihFoto = () => fireEvent.change(document.querySelector("input[type=file]") as HTMLInputElement, { target: { files: [berkas()] } });
+const pilihFoto = () =>
+  fireEvent.change(document.querySelector("input[type=file]") as HTMLInputElement, { target: { files: [berkas()] } });
 
 beforeEach(() => {
-  push.mockReset(); saveMenu.mockReset(); unggahFoto.mockReset();
+  push.mockReset();
+  saveMenu.mockReset();
+  unggahFoto.mockReset();
   unggahFoto.mockResolvedValue({ data: { upload_url: null, public_url: null } });
   URL.createObjectURL = vi.fn(() => "blob:x");
   URL.revokeObjectURL = vi.fn();
@@ -107,12 +116,17 @@ describe("MF-N1 simpan", () => {
     tampil();
     await isiValid();
     await userEvent.click(screen.getByRole("button", { name: "Simpan menu" }));
-    expect(saveMenu).toHaveBeenCalledWith(null, expect.objectContaining({ name: "Nasi Box", price: 15000, hpp: 9000, image_url: null }));
+    expect(saveMenu).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({ name: "Nasi Box", price: 15000, hpp: 9000, image_url: null }),
+    );
     expect((await screen.findAllByText("Menu disimpan")).length).toBeGreaterThan(0);
     expect(push).toHaveBeenCalledWith("/menu");
   });
   it("MF-E4 error validasi server dipetakan ke field + ringkasan", async () => {
-    saveMenu.mockResolvedValue({ error: { code: "VALIDATION_ERROR", message: "x", fields: { name: ["Nama sudah dipakai."] } } });
+    saveMenu.mockResolvedValue({
+      error: { code: "VALIDATION_ERROR", message: "x", fields: { name: ["Nama sudah dipakai."] } },
+    });
     tampil();
     await isiValid();
     await userEvent.click(screen.getByRole("button", { name: "Simpan menu" }));
@@ -163,13 +177,19 @@ describe("HP-N2 prefill", () => {
 describe("MF-E2/E3/A2 foto", () => {
   it("MF-E2 format salah ditolak sebelum unggah", () => {
     tampil();
-    fireEvent.change(document.querySelector("input[type=file]") as HTMLInputElement, { target: { files: [new File(["x"], "a.gif", { type: "image/gif" })] } });
+    fireEvent.change(document.querySelector("input[type=file]") as HTMLInputElement, {
+      target: { files: [new File(["x"], "a.gif", { type: "image/gif" })] },
+    });
     expect(screen.getByText("Format foto harus JPG, PNG, atau WebP.")).toBeInTheDocument();
     expect(unggahFoto).not.toHaveBeenCalled();
   });
   it("MF-A2 progres selama unggah, tombol simpan menunggu", async () => {
     let selesai!: (v: unknown) => void;
-    unggahFoto.mockReturnValue(new Promise((r) => { selesai = r; }));
+    unggahFoto.mockReturnValue(
+      new Promise((r) => {
+        selesai = r;
+      }),
+    );
     tampil();
     pilihFoto();
     expect(await screen.findByText("Mengunggah foto…")).toBeInTheDocument();
@@ -207,7 +227,11 @@ describe("MF-E2/E3/A2 foto", () => {
   });
   it("Hapus foto saat unggah berjalan: respons terlambat tidak menghidupkan foto lagi", async () => {
     let selesai!: (v: unknown) => void;
-    unggahFoto.mockReturnValue(new Promise((r) => { selesai = r; }));
+    unggahFoto.mockReturnValue(
+      new Promise((r) => {
+        selesai = r;
+      }),
+    );
     saveMenu.mockResolvedValue({ data: menus()[0] });
     tampil();
     await isiValid();
@@ -245,21 +269,31 @@ describe("MF-E2/E3/A2 foto", () => {
     expect(saveMenu).toHaveBeenCalledWith(menus()[0].id, expect.objectContaining({ image_url: "https://x/lama.png" }));
   });
   it("pesan galat dari server ditampilkan apa adanya (bukan pesan tetap)", async () => {
-    unggahFoto.mockResolvedValue({ error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
+    unggahFoto.mockResolvedValue({
+      error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
+    });
     tampil();
     pilihFoto();
     expect(await screen.findByText("Unggah foto belum tersedia. Coba lagi nanti.")).toBeInTheDocument();
     expect(screen.queryByText("Foto gagal diunggah. Coba lagi")).toBeNull();
   });
   it("galat server fields.image_url: tampil di bagian foto, ringkasan menaut ke #mf-image_url", async () => {
-    saveMenu.mockResolvedValue({ error: { code: "VALIDATION_ERROR", message: "x", fields: { image_url: ["Foto tidak valid. Unggah ulang foto."] } } });
+    saveMenu.mockResolvedValue({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "x",
+        fields: { image_url: ["Foto tidak valid. Unggah ulang foto."] },
+      },
+    });
     tampil();
     await isiValid();
     await userEvent.click(screen.getByRole("button", { name: "Simpan menu" }));
     const ringkasan = await screen.findByRole("alert", { name: "" });
     expect(ringkasan).toHaveTextContent("Foto: Foto tidak valid. Unggah ulang foto.");
     expect(document.getElementById("mf-image_url")).not.toBeNull();
-    expect(within(screen.getByRole("region", { name: "Foto" })).getByText("Foto tidak valid. Unggah ulang foto.")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Foto" })).getByText("Foto tidak valid. Unggah ulang foto."),
+    ).toBeInTheDocument();
   });
   it("tombol ulang mencoba lagi", async () => {
     unggahFoto.mockResolvedValueOnce({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });

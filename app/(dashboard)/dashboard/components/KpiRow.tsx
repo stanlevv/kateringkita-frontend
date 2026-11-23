@@ -9,9 +9,29 @@ export function KpiRow({ ringkasan: r }: { ringkasan: Ringkasan }) {
   const pakai = total ? Math.min(1, terpakai / total) : 0;
   return (
     <section aria-label="Ringkasan hari ini" className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-      <KpiCard label="Omzet hari ini" icon={Wallet} value={formatRupiah(r.omzet)} hint="dari pesanan selesai hari ini" />
-      <KpiCard label="Kapasitas terpakai" icon={Gauge} value={<>{terpakai}/{total} <span className="text-base font-normal text-ink-muted">porsi</span></>}>
-        <div role="progressbar" aria-label="Kapasitas terpakai" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pakai * 100)} className="mt-2 h-2 overflow-hidden rounded-sm bg-subtle">
+      <KpiCard
+        label="Omzet hari ini"
+        icon={Wallet}
+        value={formatRupiah(r.omzet)}
+        hint="dari pesanan selesai hari ini"
+      />
+      <KpiCard
+        label="Kapasitas terpakai"
+        icon={Gauge}
+        value={
+          <>
+            {terpakai}/{total} <span className="text-base font-normal text-ink-muted">porsi</span>
+          </>
+        }
+      >
+        <div
+          role="progressbar"
+          aria-label="Kapasitas terpakai"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pakai * 100)}
+          className="mt-2 h-2 overflow-hidden rounded-sm bg-subtle"
+        >
           <div className="h-full origin-left bg-primary" style={{ transform: `scaleX(${pakai})` }} />
         </div>
       </KpiCard>

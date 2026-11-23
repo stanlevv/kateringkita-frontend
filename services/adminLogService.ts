@@ -6,7 +6,12 @@ import type { StatusVerifikasi } from "@/types/admin";
 export const LIMIT_LOG = 20;
 
 const MASTER: Record<string, string> = Object.fromEntries(TAB_MASTER.map((t) => [t.kind, t.satuan]));
-const VERBA: Record<string, string> = { create: "Tambah", update: "Ubah", activate: "Aktifkan", deactivate: "Nonaktifkan" };
+const VERBA: Record<string, string> = {
+  create: "Tambah",
+  update: "Ubah",
+  activate: "Aktifkan",
+  deactivate: "Nonaktifkan",
+};
 
 const TETAP: Record<string, string> = {
   "merchant.verify": "Verifikasi penjual",
@@ -31,7 +36,9 @@ const TETAP: Record<string, string> = {
 /** Semua aksi yang dikenal, untuk pilihan filter: [kode, label]. */
 export const AKSI_LOG: [string, string][] = [
   ...Object.entries(TETAP),
-  ...Object.keys(MASTER).flatMap((k) => Object.keys(VERBA).map((v): [string, string] => [`master.${k}.${v}`, labelAksi(`master.${k}.${v}`)])),
+  ...Object.keys(MASTER).flatMap((k) =>
+    Object.keys(VERBA).map((v): [string, string] => [`master.${k}.${v}`, labelAksi(`master.${k}.${v}`)]),
+  ),
 ];
 
 export function labelAksi(action: string): string {
@@ -59,10 +66,22 @@ export function labelTarget(type: string, id: string): string {
 }
 
 const FIELD: Record<string, string> = {
-  verification_status: "Status verifikasi", verified_at: "Diverifikasi pada", verification_note: "Catatan admin",
-  suspended_at: "Ditangguhkan pada", suspended_reason: "Alasan penangguhan", is_open: "Status dapur",
-  name: "Nama", icon: "Ikon", description: "Deskripsi", sort_order: "Urutan", is_active: "Aktif",
-  code: "Kode", value: "Nilai", starts_at: "Mulai", ends_at: "Berakhir", quota: "Kuota",
+  verification_status: "Status verifikasi",
+  verified_at: "Diverifikasi pada",
+  verification_note: "Catatan admin",
+  suspended_at: "Ditangguhkan pada",
+  suspended_reason: "Alasan penangguhan",
+  is_open: "Status dapur",
+  name: "Nama",
+  icon: "Ikon",
+  description: "Deskripsi",
+  sort_order: "Urutan",
+  is_active: "Aktif",
+  code: "Kode",
+  value: "Nilai",
+  starts_at: "Mulai",
+  ends_at: "Berakhir",
+  quota: "Kuota",
 };
 
 const nilai = (field: string, v: unknown): string => {
@@ -70,7 +89,8 @@ const nilai = (field: string, v: unknown): string => {
   if (field === "verification_status") return STATUS_VERIFIKASI[v as StatusVerifikasi]?.label ?? String(v);
   if (field === "is_open") return v && v !== "0" ? "Buka" : "Tutup";
   if (field === "is_active") return v && v !== "0" ? "ya" : "tidak";
-  if (field.endsWith("_at") && typeof v === "string" && !Number.isNaN(Date.parse(v))) return `${formatTanggal(v)}, ${formatJam(v)}`;
+  if (field.endsWith("_at") && typeof v === "string" && !Number.isNaN(Date.parse(v)))
+    return `${formatTanggal(v)}, ${formatJam(v)}`;
   if (typeof v === "boolean") return v ? "ya" : "tidak";
   return typeof v === "object" ? JSON.stringify(v) : String(v);
 };

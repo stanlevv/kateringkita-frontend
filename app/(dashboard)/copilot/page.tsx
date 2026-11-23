@@ -7,7 +7,10 @@ import { requireMerchant } from "@/services/authService";
 export default async function KalkulatorHppPage() {
   await requireMerchant();
   return (
-    <PageHeader title="Kalkulator HPP" description="Hitung modal per porsi dan saran harga jual, lalu tanyakan strategi ke asisten AI.">
+    <PageHeader
+      title="Kalkulator HPP"
+      description="Hitung modal per porsi dan saran harga jual, lalu tanyakan strategi ke asisten AI."
+    >
       <div className="flex flex-col gap-6">
         <HppKalkulator />
         <AsistenPanel />

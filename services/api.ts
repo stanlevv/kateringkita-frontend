@@ -30,16 +30,27 @@ export async function apiFetch<T>(path: string, init: RequestInit & { token?: st
       },
     });
   } catch {
-    return { ok: false, status: 0, error: { code: "NETWORK", message: "Server tidak dapat dihubungi. Coba lagi sesaat lagi." } };
+    return {
+      ok: false,
+      status: 0,
+      error: { code: "NETWORK", message: "Server tidak dapat dihubungi. Coba lagi sesaat lagi." },
+    };
   }
   const body = res.status === 204 ? null : await res.json().catch(() => null);
-  if (res.ok) return { ok: true, status: res.status, data: body?.data as T, ...(body?.meta ? { meta: body.meta } : {}) };
-  return { ok: false, status: res.status, error: body?.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
+  if (res.ok)
+    return { ok: true, status: res.status, data: body?.data as T, ...(body?.meta ? { meta: body.meta } : {}) };
+  return {
+    ok: false,
+    status: res.status,
+    error: body?.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." },
+  };
 }
 
 /** Hasil server action: `{ data }` bila berhasil, selain itu `{ error }` dari backend (atau pesan umum). */
 export function hasil<T>(res: ApiResult<T>): ActionResult<T> {
-  return res.ok && res.data ? { data: res.data } : { error: res.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
+  return res.ok && res.data
+    ? { data: res.data }
+    : { error: res.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
 }
 
 /** Panggilan ke /api/v1/merchant<path> dengan token sesi. Sesi habis (401) -> ke halaman masuk. */

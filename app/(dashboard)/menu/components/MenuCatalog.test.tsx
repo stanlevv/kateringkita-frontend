@@ -22,7 +22,12 @@ import { MenuCatalog } from "./MenuCatalog";
 
 const semua = menus();
 const tampil = (m = semua, galat = false) =>
-  render(<><Toaster /><MenuCatalog menus={m} categories={categories()} galat={galat} /></>);
+  render(
+    <>
+      <Toaster />
+      <MenuCatalog menus={m} categories={categories()} galat={galat} />
+    </>,
+  );
 const kartu = (nama: string) => screen.getByRole("article", { name: nama });
 
 beforeEach(() => {
@@ -67,7 +72,9 @@ describe("MN-N2 filter di URL", () => {
     tampil();
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "es" } });
     expect(replace).not.toHaveBeenCalled();
-    await act(async () => { vi.advanceTimersByTime(300); });
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
     expect(replace).toHaveBeenCalledWith("/menu?q=es", { scroll: false });
     vi.useRealTimers();
   });
@@ -128,8 +135,12 @@ describe("MN-N4 kuota inline", () => {
     vi.useFakeTimers();
     adjustQuota.mockResolvedValue({ data: { ...semua[0], quota_today: 41, available: 16 } });
     tampil();
-    await act(async () => { fireEvent.click(within(kartu("Nasi Ayam Bakar Madu")).getByRole("button", { name: /Tambah Kuota/ })); });
-    await act(async () => { vi.advanceTimersByTime(600); });
+    await act(async () => {
+      fireEvent.click(within(kartu("Nasi Ayam Bakar Madu")).getByRole("button", { name: /Tambah Kuota/ }));
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
     expect(adjustQuota).toHaveBeenCalledWith(1, { delta: 1 });
     vi.useRealTimers();
   });
@@ -140,7 +151,9 @@ describe("MN-N4 kuota inline", () => {
     const input = within(kartu("Nasi Ayam Bakar Madu")).getByRole("spinbutton");
     fireEvent.change(input, { target: { value: "45" } });
     fireEvent.blur(input);
-    await act(async () => { vi.advanceTimersByTime(600); });
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
     expect(adjustQuota).toHaveBeenCalledWith(1, { quota_today: 45 });
     vi.useRealTimers();
   });
@@ -149,10 +162,16 @@ describe("MN-N4 kuota inline", () => {
 describe("MN-N4 baris server disalin utuh", () => {
   it("terjual & ditahan dari server ikut tampil setelah kuota berubah", async () => {
     vi.useFakeTimers();
-    adjustQuota.mockResolvedValue({ data: { ...semua[0], quota_today: 41, available: 3, sold_today: 30, held_today: 8 } });
+    adjustQuota.mockResolvedValue({
+      data: { ...semua[0], quota_today: 41, available: 3, sold_today: 30, held_today: 8 },
+    });
     tampil();
-    await act(async () => { fireEvent.click(within(kartu("Nasi Ayam Bakar Madu")).getByRole("button", { name: /Tambah Kuota/ })); });
-    await act(async () => { vi.advanceTimersByTime(600); });
+    await act(async () => {
+      fireEvent.click(within(kartu("Nasi Ayam Bakar Madu")).getByRole("button", { name: /Tambah Kuota/ }));
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
     expect(within(kartu("Nasi Ayam Bakar Madu")).getByText("Tersedia 3 · Ditahan 8 · Terjual 30")).toBeInTheDocument();
     vi.useRealTimers();
   });
@@ -165,7 +184,9 @@ describe("MN-N2 balapan timer pencarian", () => {
     tampil();
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "zzzx" } });
     fireEvent.click(screen.getByRole("button", { name: "Hapus filter" }));
-    await act(async () => { vi.advanceTimersByTime(500); });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
     expect(replace).toHaveBeenCalledTimes(1);
     expect(replace).toHaveBeenCalledWith("/menu", { scroll: false });
     vi.useRealTimers();
@@ -175,7 +196,9 @@ describe("MN-N2 balapan timer pencarian", () => {
     tampil();
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "es" } });
     fireEvent.change(screen.getByLabelText("Kategori"), { target: { value: "minuman" } });
-    await act(async () => { vi.advanceTimersByTime(500); });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
     expect(replace).toHaveBeenCalledTimes(1);
     expect(replace).toHaveBeenCalledWith("/menu?kategori=minuman&q=es", { scroll: false });
     vi.useRealTimers();
@@ -185,17 +208,31 @@ describe("MN-N2 balapan timer pencarian", () => {
     const { rerender } = tampil();
     expect(screen.getByRole("searchbox")).toHaveValue("es");
     params = new URLSearchParams();
-    rerender(<><Toaster /><MenuCatalog menus={semua} categories={categories()} galat={false} /></>);
+    rerender(
+      <>
+        <Toaster />
+        <MenuCatalog menus={semua} categories={categories()} galat={false} />
+      </>,
+    );
     expect(screen.getByRole("searchbox")).toHaveValue("");
   });
 });
 
 describe("D13 overlay lokal gugur saat data server baru tiba (M-05)", () => {
-  const ui = (m: typeof semua) => <><Toaster /><MenuCatalog menus={m} categories={categories()} galat={false} /></>;
+  const ui = (m: typeof semua) => (
+    <>
+      <Toaster />
+      <MenuCatalog menus={m} categories={categories()} galat={false} />
+    </>
+  );
   it("hasil ubah kuota tampil, lalu menus baru dari server menang", async () => {
-    adjustQuota.mockResolvedValue({ data: { ...semua[0], quota_today: semua[0].quota_today + 1, sold_today: 1, available: 0 } });
+    adjustQuota.mockResolvedValue({
+      data: { ...semua[0], quota_today: semua[0].quota_today + 1, sold_today: 1, available: 0 },
+    });
     const { rerender } = render(ui(semua));
-    await userEvent.click(within(kartu("Nasi Ayam Bakar Madu")).getByRole("button", { name: "Tambah Kuota Nasi Ayam Bakar Madu" }));
+    await userEvent.click(
+      within(kartu("Nasi Ayam Bakar Madu")).getByRole("button", { name: "Tambah Kuota Nasi Ayam Bakar Madu" }),
+    );
     await waitFor(() => expect(within(kartu("Nasi Ayam Bakar Madu")).getByText(/Terjual 1$/)).toBeInTheDocument());
     rerender(ui(semua.map((m) => (m.id === 1 ? { ...m, sold_today: 4 } : m))));
     expect(within(kartu("Nasi Ayam Bakar Madu")).getByText(/Terjual 4$/)).toBeInTheDocument();

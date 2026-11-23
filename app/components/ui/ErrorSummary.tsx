@@ -8,10 +8,17 @@ import { CircleAlert } from "lucide-react";
 export function ErrorSummary({ errors, focusKey }: { errors: { id: string; message: string }[]; focusKey?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const ada = errors.length > 0;
-  useEffect(() => { if (ada) ref.current?.focus(); }, [ada, focusKey]);
+  useEffect(() => {
+    if (ada) ref.current?.focus();
+  }, [ada, focusKey]);
   if (!ada) return null;
   return (
-    <div ref={ref} role="alert" tabIndex={-1} className="rounded-md border border-danger bg-danger-bg p-4 text-danger focus-visible:ring-2 focus-visible:ring-focus">
+    <div
+      ref={ref}
+      role="alert"
+      tabIndex={-1}
+      className="rounded-md border border-danger bg-danger-bg p-4 text-danger focus-visible:ring-2 focus-visible:ring-focus"
+    >
       <h2 className="flex items-center gap-2 font-semibold">
         <CircleAlert aria-hidden className="size-5" />
         Periksa isian berikut
@@ -21,7 +28,10 @@ export function ErrorSummary({ errors, focusKey }: { errors: { id: string; messa
           <li key={e.id}>
             <a
               href={`#${e.id}`}
-              onClick={(ev) => { ev.preventDefault(); document.getElementById(e.id)?.focus(); }}
+              onClick={(ev) => {
+                ev.preventDefault();
+                document.getElementById(e.id)?.focus();
+              }}
               className="inline-flex min-h-11 items-center underline"
             >
               {e.message}

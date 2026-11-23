@@ -16,7 +16,9 @@ describe("MN-N2 saring & hitung tab", () => {
     expect(n.menipis).toBeGreaterThan(0);
   });
   it("q mencari nama tanpa peduli huruf besar", () => {
-    expect(saring(semua, { q: "TEH", kategori: "", status: "semua" }).map((m) => m.name)).toEqual(["Es Teh Manis Jumbo"]);
+    expect(saring(semua, { q: "TEH", kategori: "", status: "semua" }).map((m) => m.name)).toEqual([
+      "Es Teh Manis Jumbo",
+    ]);
   });
   it("kategori memakai slug; digabung dengan status", () => {
     expect(saring(semua, { q: "", kategori: "minuman", status: "semua" })).toHaveLength(3);

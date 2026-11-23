@@ -8,7 +8,11 @@ import type { MetaTiket, TiketRingkas } from "@/types/admin";
 import { TiketTable } from "./components/TiketTable";
 
 // Tiket bantuan pembeli (semua tingkat admin). Tab status, cari, dan halaman di URL; tanpa ?status = Menunggu.
-export default async function TiketPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function TiketPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   await requireAdmin();
   const sp = await searchParams;
   const tab = tabTiket(sp.status);
@@ -27,13 +31,26 @@ export default async function TiketPage({ searchParams }: { searchParams: Promis
   const sekarang = Date.now();
 
   return (
-    <PageHeader title="Tiket bantuan" description="Pertanyaan dan keluhan pembeli dari aplikasi. Balasan Anda dikirim ke pembeli sebagai notifikasi.">
+    <PageHeader
+      title="Tiket bantuan"
+      description="Pertanyaan dan keluhan pembeli dari aplikasi. Balasan Anda dikirim ke pembeli sebagai notifikasi."
+    >
       {res.ok && res.data ? (
         <Suspense>
-          <TiketTable rows={res.data} tab={tab} counts={meta?.counts} page={page} total={meta?.total ?? res.data.length} sekarang={sekarang} />
+          <TiketTable
+            rows={res.data}
+            tab={tab}
+            counts={meta?.counts}
+            page={page}
+            total={meta?.total ?? res.data.length}
+            sekarang={sekarang}
+          />
         </Suspense>
       ) : (
-        <GagalMuat judul="Daftar tiket belum bisa dimuat" isi="Terjadi kesalahan saat mengambil daftar tiket. Periksa koneksi lalu coba lagi." />
+        <GagalMuat
+          judul="Daftar tiket belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil daftar tiket. Periksa koneksi lalu coba lagi."
+        />
       )}
     </PageHeader>
   );

@@ -17,11 +17,17 @@ export default function Loading() {
             <div key={i} className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
               <div className="aspect-[16/9] bg-subtle" />
               <div className="flex flex-col gap-3 p-4">
-                <div><SkeletonTeks lebar="w-40" /><SkeletonTeks ukuran="sm" lebar="w-24" /></div>
+                <div>
+                  <SkeletonTeks lebar="w-40" />
+                  <SkeletonTeks ukuran="sm" lebar="w-24" />
+                </div>
                 <SkeletonTeks lebar="w-48" />
                 <SkeletonTeks ukuran="sm" lebar="w-56" />
                 <Skeleton className="h-11 w-46" />
-                <div className="flex gap-2 pt-1"><Skeleton className="h-11 w-24" /><Skeleton className="h-11 w-32" /></div>
+                <div className="flex gap-2 pt-1">
+                  <Skeleton className="h-11 w-24" />
+                  <Skeleton className="h-11 w-32" />
+                </div>
               </div>
             </div>
           ))}

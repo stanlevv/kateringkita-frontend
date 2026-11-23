@@ -23,9 +23,21 @@ const LEVEL = Object.keys(LABEL_LEVEL) as AdminLevel[];
 
 // AUD-35: setiap aksi akun lewat konfirmasi; "Aktifkan" tanpa konfirmasi bisa dipicu clickjacking dua kali klik
 const KONFIRMASI = {
-  reset: { judul: "Reset kata sandi?", tombol: "Reset sandi", isi: (n: string) => `${n} dikeluarkan dari semua perangkat dan harus masuk dengan kata sandi sementara baru.` },
-  nonaktif: { judul: "Nonaktifkan admin?", tombol: "Nonaktifkan", isi: (n: string) => `${n} tidak bisa masuk lagi dan dikeluarkan dari semua perangkat.` },
-  aktif: { judul: "Aktifkan admin?", tombol: "Ya, aktifkan", isi: (n: string) => `${n} bisa masuk lagi dengan kata sandinya yang lama.` },
+  reset: {
+    judul: "Reset kata sandi?",
+    tombol: "Reset sandi",
+    isi: (n: string) => `${n} dikeluarkan dari semua perangkat dan harus masuk dengan kata sandi sementara baru.`,
+  },
+  nonaktif: {
+    judul: "Nonaktifkan admin?",
+    tombol: "Nonaktifkan",
+    isi: (n: string) => `${n} tidak bisa masuk lagi dan dikeluarkan dari semua perangkat.`,
+  },
+  aktif: {
+    judul: "Aktifkan admin?",
+    tombol: "Ya, aktifkan",
+    isi: (n: string) => `${n} bisa masuk lagi dengan kata sandinya yang lama.`,
+  },
 };
 
 function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => void; onClose: () => void }) {
@@ -46,7 +58,10 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => voi
     }
     onSaved(r.data);
   }
-  const set = (k: keyof typeof v, nilai: string) => { setGalat({}); setV((p) => ({ ...p, [k]: nilai })); };
+  const set = (k: keyof typeof v, nilai: string) => {
+    setGalat({});
+    setV((p) => ({ ...p, [k]: nilai }));
+  };
 
   return (
     <form onSubmit={kirim} noValidate className="flex flex-col gap-4">
@@ -56,14 +71,28 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => voi
       <Field label="Nomor HP" id="fa-phone" required help="Dipakai untuk masuk. Diawali 08." error={galat.phone}>
         <Input inputMode="numeric" value={v.phone} maxLength={13} onChange={(e) => set("phone", e.target.value)} />
       </Field>
-      <Field label="Tingkat" id="fa-admin_level" required help={KETERANGAN_LEVEL[v.admin_level]} error={galat.admin_level}>
+      <Field
+        label="Tingkat"
+        id="fa-admin_level"
+        required
+        help={KETERANGAN_LEVEL[v.admin_level]}
+        error={galat.admin_level}
+      >
         <Select value={v.admin_level} onChange={(e) => set("admin_level", e.target.value)}>
-          {LEVEL.map((l) => <option key={l} value={l}>{LABEL_LEVEL[l]}</option>)}
+          {LEVEL.map((l) => (
+            <option key={l} value={l}>
+              {LABEL_LEVEL[l]}
+            </option>
+          ))}
         </Select>
       </Field>
       <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button type="submit" loading={menyimpan} loadingText="Membuat…">Buat akun</Button>
+        <Button variant="secondary" onClick={onClose}>
+          Batal
+        </Button>
+        <Button type="submit" loading={menyimpan} loadingText="Membuat…">
+          Buat akun
+        </Button>
       </div>
     </form>
   );
@@ -78,14 +107,25 @@ function SandiSementara({ data, onClose }: { data: AdminDenganSandi; onClose: ()
         Kata sandi hanya tampil sekali dan wajib diganti saat pertama masuk.
       </p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-md border border-line bg-subtle p-3 text-sm">
-        <dt className="text-ink-muted">Nomor HP</dt><dd className="font-mono">{data.admin.phone}</dd>
-        <dt className="text-ink-muted">Kata sandi</dt><dd className="select-all font-mono font-semibold">{data.temp_password}</dd>
+        <dt className="text-ink-muted">Nomor HP</dt>
+        <dd className="font-mono">{data.admin.phone}</dd>
+        <dt className="text-ink-muted">Kata sandi</dt>
+        <dd className="select-all font-mono font-semibold">{data.temp_password}</dd>
       </dl>
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" onClick={() => {
-          void navigator.clipboard?.writeText(`Nomor HP: ${data.admin.phone}\nKata sandi: ${data.temp_password}`)
-            .then(() => toast({ tone: "success", message: "Disalin" }), () => toast({ tone: "danger", message: "Gagal menyalin. Salin manual." }));
-        }}>Salin</Button>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            void navigator.clipboard
+              ?.writeText(`Nomor HP: ${data.admin.phone}\nKata sandi: ${data.temp_password}`)
+              .then(
+                () => toast({ tone: "success", message: "Disalin" }),
+                () => toast({ tone: "danger", message: "Gagal menyalin. Salin manual." }),
+              );
+          }}
+        >
+          Salin
+        </Button>
         <Button onClick={onClose}>Selesai</Button>
       </div>
     </div>
@@ -105,44 +145,111 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
     const r = await panggil(fn);
     setSibuk(false);
     setKonfirmasi(null);
-    if ("error" in r) { toast({ tone: "danger", message: r.error.message }); return null; }
+    if ("error" in r) {
+      toast({ tone: "danger", message: r.error.message });
+      return null;
+    }
     toast({ tone: "success", message: pesan });
     router.refresh();
     return r.data;
   }
 
   const kolom: Column<AkunAdmin>[] = [
-    { key: "nama", header: "Admin", wrap: true, cell: (a) => (
-      <div>
-        <span className="font-semibold">{a.full_name}</span>{a.id === sayaId && <span className="text-ink-muted"> (Anda)</span>}
-        <div className="text-sm text-ink-muted">{a.phone}</div>
-      </div>
-    ) },
-    { key: "level", header: "Tingkat", cell: (a) => a.id === sayaId || !a.is_active
-      ? <span>{a.admin_level ? LABEL_LEVEL[a.admin_level] : "-"}</span>
-      : (
-        <Select aria-label={`Tingkat ${a.full_name}`} value={a.admin_level ?? ""} disabled={sibuk}
-          onChange={(e) => void jalankan(() => ubahLevelAdmin(a.id, e.target.value as AdminLevel), "Tingkat diubah")}>
-          {LEVEL.map((l) => <option key={l} value={l}>{LABEL_LEVEL[l]}</option>)}
-        </Select>
-      ) },
-    { key: "status", header: "Status", cell: (a) => !a.is_active
-      ? <Badge tone="neutral" icon={PowerOff}>Nonaktif</Badge>
-      : a.must_change_password ? <Badge tone="warning" icon={KeyRound}>Belum ganti sandi</Badge>
-      : <Badge tone="success" icon={CircleCheck}>Aktif</Badge> },
-    { key: "masuk", header: "Terakhir masuk", cell: (a) => a.last_login_at ? `${formatTanggal(a.last_login_at)} ${formatJam(a.last_login_at)}` : "Belum pernah" },
-    { key: "aksi", header: "Aksi", cell: (a) => a.id === sayaId ? <span className="text-sm text-ink-muted">Ubah di Pengaturan akun</span> : (
-      <div className="flex items-center gap-2">
-        {a.is_active ? (
-          <>
-            <Button variant="secondary" aria-label={`Reset sandi ${a.full_name}`} onClick={() => setKonfirmasi({ a, aksi: "reset" })}>Reset sandi</Button>
-            <Button variant="secondary" aria-label={`Nonaktifkan ${a.full_name}`} onClick={() => setKonfirmasi({ a, aksi: "nonaktif" })}>Nonaktifkan</Button>
-          </>
+    {
+      key: "nama",
+      header: "Admin",
+      wrap: true,
+      cell: (a) => (
+        <div>
+          <span className="font-semibold">{a.full_name}</span>
+          {a.id === sayaId && <span className="text-ink-muted"> (Anda)</span>}
+          <div className="text-sm text-ink-muted">{a.phone}</div>
+        </div>
+      ),
+    },
+    {
+      key: "level",
+      header: "Tingkat",
+      cell: (a) =>
+        a.id === sayaId || !a.is_active ? (
+          <span>{a.admin_level ? LABEL_LEVEL[a.admin_level] : "-"}</span>
         ) : (
-          <Button variant="secondary" aria-label={`Aktifkan ${a.full_name}`} disabled={sibuk} onClick={() => setKonfirmasi({ a, aksi: "aktif" })}>Aktifkan</Button>
-        )}
-      </div>
-    ) },
+          <Select
+            aria-label={`Tingkat ${a.full_name}`}
+            value={a.admin_level ?? ""}
+            disabled={sibuk}
+            onChange={(e) => void jalankan(() => ubahLevelAdmin(a.id, e.target.value as AdminLevel), "Tingkat diubah")}
+          >
+            {LEVEL.map((l) => (
+              <option key={l} value={l}>
+                {LABEL_LEVEL[l]}
+              </option>
+            ))}
+          </Select>
+        ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (a) =>
+        !a.is_active ? (
+          <Badge tone="neutral" icon={PowerOff}>
+            Nonaktif
+          </Badge>
+        ) : a.must_change_password ? (
+          <Badge tone="warning" icon={KeyRound}>
+            Belum ganti sandi
+          </Badge>
+        ) : (
+          <Badge tone="success" icon={CircleCheck}>
+            Aktif
+          </Badge>
+        ),
+    },
+    {
+      key: "masuk",
+      header: "Terakhir masuk",
+      cell: (a) =>
+        a.last_login_at ? `${formatTanggal(a.last_login_at)} ${formatJam(a.last_login_at)}` : "Belum pernah",
+    },
+    {
+      key: "aksi",
+      header: "Aksi",
+      cell: (a) =>
+        a.id === sayaId ? (
+          <span className="text-sm text-ink-muted">Ubah di Pengaturan akun</span>
+        ) : (
+          <div className="flex items-center gap-2">
+            {a.is_active ? (
+              <>
+                <Button
+                  variant="secondary"
+                  aria-label={`Reset sandi ${a.full_name}`}
+                  onClick={() => setKonfirmasi({ a, aksi: "reset" })}
+                >
+                  Reset sandi
+                </Button>
+                <Button
+                  variant="secondary"
+                  aria-label={`Nonaktifkan ${a.full_name}`}
+                  onClick={() => setKonfirmasi({ a, aksi: "nonaktif" })}
+                >
+                  Nonaktifkan
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="secondary"
+                aria-label={`Aktifkan ${a.full_name}`}
+                disabled={sibuk}
+                onClick={() => setKonfirmasi({ a, aksi: "aktif" })}
+              >
+                Aktifkan
+              </Button>
+            )}
+          </div>
+        ),
+    },
   ];
 
   const tambah = <Button onClick={() => setForm(true)}>Tambah admin</Button>;
@@ -150,7 +257,12 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
   return (
     <div className="flex flex-col gap-4">
       {rows.length === 0 ? (
-        <EmptyState icon={UserCog} title="Belum ada admin" body="Tambahkan admin agar panel bisa dikelola bersama." action={tambah} />
+        <EmptyState
+          icon={UserCog}
+          title="Belum ada admin"
+          body="Tambahkan admin agar panel bisa dikelola bersama."
+          action={tambah}
+        />
       ) : (
         <>
           <div>{tambah}</div>
@@ -158,12 +270,23 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
         </>
       )}
       <Dialog open={form} onClose={() => setForm(false)} title="Tambah admin">
-        <FormAdmin onClose={() => setForm(false)} onSaved={(r) => { setForm(false); setSandi(r); router.refresh(); }} />
+        <FormAdmin
+          onClose={() => setForm(false)}
+          onSaved={(r) => {
+            setForm(false);
+            setSandi(r);
+            router.refresh();
+          }}
+        />
       </Dialog>
       <Dialog open={!!sandi} onClose={() => setSandi(null)} title="Akun admin siap">
         {sandi && <SandiSementara data={sandi} onClose={() => setSandi(null)} />}
       </Dialog>
-      <ConfirmDialog open={!!k} onClose={() => setKonfirmasi(null)} tone={k?.aksi === "aktif" ? "primary" : "danger"} busy={sibuk}
+      <ConfirmDialog
+        open={!!k}
+        onClose={() => setKonfirmasi(null)}
+        tone={k?.aksi === "aktif" ? "primary" : "danger"}
+        busy={sibuk}
         title={KONFIRMASI[k?.aksi ?? "nonaktif"].judul}
         body={KONFIRMASI[k?.aksi ?? "nonaktif"].isi(k?.a.full_name ?? "")}
         confirmLabel={KONFIRMASI[k?.aksi ?? "nonaktif"].tombol}
@@ -172,7 +295,8 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
           if (k.aksi === "nonaktif") void jalankan(() => setAktifAdmin(k.a.id, false), "Dinonaktifkan");
           else if (k.aksi === "aktif") void jalankan(() => setAktifAdmin(k.a.id, true), "Diaktifkan");
           else void jalankan(() => resetSandiAdmin(k.a.id), "Kata sandi direset").then((d) => d && setSandi(d));
-        }} />
+        }}
+      />
     </div>
   );
 }

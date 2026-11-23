@@ -28,8 +28,18 @@ import { OptionsEditor, type BarisOpsi } from "./OptionsEditor";
 const MB = 1024 * 1024;
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const LABEL: Record<string, string> = {
-  image_url: "Foto", gallery: "Foto tambahan", name: "Nama menu", category_id: "Kategori", description: "Deskripsi", unit_label: "Satuan", price: "Harga jual", hpp: "HPP",
-  daily_quota: "Kuota harian", prep_minutes: "Estimasi siap", min_order_qty: "Minimum pesan", preorder_days: "Hari pre-order",
+  image_url: "Foto",
+  gallery: "Foto tambahan",
+  name: "Nama menu",
+  category_id: "Kategori",
+  description: "Deskripsi",
+  unit_label: "Satuan",
+  price: "Harga jual",
+  hpp: "HPP",
+  daily_quota: "Kuota harian",
+  prep_minutes: "Estimasi siap",
+  min_order_qty: "Minimum pesan",
+  preorder_days: "Hari pre-order",
 };
 const labelKey = (k: string) => {
   const m = /^options\.(\d+)\./.exec(k);
@@ -37,8 +47,18 @@ const labelKey = (k: string) => {
 };
 
 type Isian = {
-  name: string; category_id: string; description: string; unit_label: string; price: string; hpp: string; daily_quota: string;
-  prep_minutes: string; is_preorder: boolean; preorder_days: string; min_order_qty: string; options: BarisOpsi[];
+  name: string;
+  category_id: string;
+  description: string;
+  unit_label: string;
+  price: string;
+  hpp: string;
+  daily_quota: string;
+  prep_minutes: string;
+  is_preorder: boolean;
+  preorder_days: string;
+  min_order_qty: string;
+  options: BarisOpsi[];
 };
 type Foto = { file: File; preview: string; status: "mengunggah" | "gagal" | "selesai"; pesan?: string };
 
@@ -70,7 +90,15 @@ function Bagian({ judul, children }: { judul: string; children: ReactNode }) {
 }
 
 /** M-07, MF-*: form tambah/ubah menu. `menu` ada = mode ubah. */
-export function MenuForm({ categories, menu, prefill }: { categories: Category[]; menu?: MerchantMenu; prefill?: { hpp?: number; price?: number } }) {
+export function MenuForm({
+  categories,
+  menu,
+  prefill,
+}: {
+  categories: Category[];
+  menu?: MerchantMenu;
+  prefill?: { hpp?: number; price?: number };
+}) {
   const router = useRouter();
   const [awal] = useState(() => kunci(awalDari(menu, prefill)));
   const [v, setV] = useState<Isian>(() => awalDari(menu, prefill));
@@ -87,29 +115,60 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
   const [tersimpan, setTersimpan] = useState(false);
   const unggahKe = useRef(0); // token unggahan terbaru; respons lama diabaikan
   const fotoRef = useRef(foto);
-  useEffect(() => { fotoRef.current = foto; });
-  useEffect(() => () => { if (fotoRef.current) URL.revokeObjectURL(fotoRef.current.preview); }, []);
+  useEffect(() => {
+    fotoRef.current = foto;
+  });
+  useEffect(
+    () => () => {
+      if (fotoRef.current) URL.revokeObjectURL(fotoRef.current.preview);
+    },
+    [],
+  );
 
-  const dirty = kunci(v) !== awal || (foto !== null && foto.status !== "gagal") || imageUrl !== (menu?.image_url ?? null)
-    || JSON.stringify(gallery) !== JSON.stringify(menu?.gallery ?? []);
+  const dirty =
+    kunci(v) !== awal ||
+    (foto !== null && foto.status !== "gagal") ||
+    imageUrl !== (menu?.image_url ?? null) ||
+    JSON.stringify(gallery) !== JSON.stringify(menu?.gallery ?? []);
   const guard = useUnsavedGuard(dirty && !tersimpan);
 
-  const set = <K extends keyof Isian>(k: K, nilai: Isian[K]) => { setServer({}); setV((p) => ({ ...p, [k]: nilai })); };
+  const set = <K extends keyof Isian>(k: K, nilai: Isian[K]) => {
+    setServer({});
+    setV((p) => ({ ...p, [k]: nilai }));
+  };
   const sentuh = (k: string) => setTersentuh((p) => new Set(p).add(k));
   const input = {
-    name: v.name, category_id: num(v.category_id), description: v.description, image_url: imageUrl, gallery, unit_label: v.unit_label,
-    price: num(v.price), hpp: num(v.hpp), daily_quota: num(v.daily_quota), prep_minutes: num(v.prep_minutes),
-    is_preorder: v.is_preorder, preorder_days: v.is_preorder ? num(v.preorder_days) : 0, min_order_qty: num(v.min_order_qty),
+    name: v.name,
+    category_id: num(v.category_id),
+    description: v.description,
+    image_url: imageUrl,
+    gallery,
+    unit_label: v.unit_label,
+    price: num(v.price),
+    hpp: num(v.hpp),
+    daily_quota: num(v.daily_quota),
+    prep_minutes: num(v.prep_minutes),
+    is_preorder: v.is_preorder,
+    preorder_days: v.is_preorder ? num(v.preorder_days) : 0,
+    min_order_qty: num(v.min_order_qty),
     options: v.options.map((o) => ({ name: o.name, extra_price: num(o.extra_price) })),
   };
   const semua = cekField(menuFormSchema, input);
   const galatSemua = dicoba ? { ...server, ...semua } : semua;
   const galat = (k: string) => (dicoba || tersentuh.has(k) ? galatSemua[k] : undefined);
-  const galatOpsi = dicoba ? galatSemua : Object.fromEntries(Object.entries(galatSemua).filter(([k]) => k.startsWith("options.")));
-  const ringkasan = dicoba ? Object.entries(galatSemua).map(([k, m]) => ({ id: `mf-${k.replace(/\./g, "-")}`, message: `${labelKey(k)}: ${m}` })) : [];
+  const galatOpsi = dicoba
+    ? galatSemua
+    : Object.fromEntries(Object.entries(galatSemua).filter(([k]) => k.startsWith("options.")));
+  const ringkasan = dicoba
+    ? Object.entries(galatSemua).map(([k, m]) => ({
+        id: `mf-${k.replace(/\./g, "-")}`,
+        message: `${labelKey(k)}: ${m}`,
+      }))
+    : [];
   const blur = (k: string) => () => sentuh(k);
 
-  const price = num(v.price), hpp = num(v.hpp);
+  const price = num(v.price),
+    hpp = num(v.hpp);
   const hitungOk = Number.isFinite(price) && Number.isFinite(hpp) && price > 0;
   const margin = hitungOk ? marginPersen({ price, hpp }) : null;
   const namaKategori = categories.find((c) => String(c.id) === v.category_id)?.name ?? "";
@@ -151,7 +210,8 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
     const r = await panggil(() => saveMenu(menu?.id ?? null, input));
     if ("error" in r) {
       setMenyimpan(false); // sukses: tetap "Menyimpan…" sampai halaman berpindah
-      if (r.error.fields) { // MF-E4
+      if (r.error.fields) {
+        // MF-E4
         setServer(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
         setDicoba(true);
         setFokusKey((n) => n + 1);
@@ -175,63 +235,172 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
 
           <Bagian judul="Info dasar">
             <Field label="Nama menu" id="mf-name" required error={galat("name")}>
-              <Input value={v.name} maxLength={80} onChange={(e) => set("name", e.target.value)} onBlur={blur("name")} />
+              <Input
+                value={v.name}
+                maxLength={80}
+                onChange={(e) => set("name", e.target.value)}
+                onBlur={blur("name")}
+              />
             </Field>
             <Field label="Kategori" id="mf-category_id" required error={galat("category_id")}>
-              <Select value={v.category_id} onChange={(e) => set("category_id", e.target.value)} onBlur={blur("category_id")}>
+              <Select
+                value={v.category_id}
+                onChange={(e) => set("category_id", e.target.value)}
+                onBlur={blur("category_id")}
+              >
                 <option value="">Pilih kategori</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </Select>
             </Field>
-            <Field label="Deskripsi" id="mf-description" help={`Sebut bahan, rasa, dan porsi (mis. pedas, tanpa daging). Dipakai pencarian dan rekomendasi AI pembeli; 160 karakter pertama paling berpengaruh. ${v.description.length}/500 karakter`} error={galat("description")}>
-              <Textarea value={v.description} onChange={(e) => set("description", e.target.value)} onBlur={blur("description")} />
+            <Field
+              label="Deskripsi"
+              id="mf-description"
+              help={`Sebut bahan, rasa, dan porsi (mis. pedas, tanpa daging). Dipakai pencarian dan rekomendasi AI pembeli; 160 karakter pertama paling berpengaruh. ${v.description.length}/500 karakter`}
+              error={galat("description")}
+            >
+              <Textarea
+                value={v.description}
+                onChange={(e) => set("description", e.target.value)}
+                onBlur={blur("description")}
+              />
             </Field>
-            <Field label="Satuan" id="mf-unit_label" required help="Contoh: porsi, box, isi 5" error={galat("unit_label")}>
-              <Input value={v.unit_label} maxLength={30} onChange={(e) => set("unit_label", e.target.value)} onBlur={blur("unit_label")} />
+            <Field
+              label="Satuan"
+              id="mf-unit_label"
+              required
+              help="Contoh: porsi, box, isi 5"
+              error={galat("unit_label")}
+            >
+              <Input
+                value={v.unit_label}
+                maxLength={30}
+                onChange={(e) => set("unit_label", e.target.value)}
+                onBlur={blur("unit_label")}
+              />
             </Field>
           </Bagian>
 
           <Bagian judul="Foto">
             {tampilFoto && (
               <div className="relative aspect-[16/9] w-full max-w-sm overflow-hidden rounded-md bg-subtle">
-                <Image src={tampilFoto} alt="Pratinjau foto menu" fill unoptimized sizes="384px" className="object-cover" />
+                <Image
+                  src={tampilFoto}
+                  alt="Pratinjau foto menu"
+                  fill
+                  unoptimized
+                  sizes="384px"
+                  className="object-cover"
+                />
               </div>
             )}
             {foto?.status === "mengunggah" && (
               <p role="status" className="flex items-center gap-2 text-sm text-ink-muted">
-                <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />Mengunggah foto…
+                <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
+                Mengunggah foto…
               </p>
             )}
             {foto?.status === "gagal" && (
-              <div role="alert" className="flex flex-wrap items-center gap-3 rounded-md border border-danger bg-danger-bg p-3 text-danger">
-                <p className="flex items-center gap-2"><TriangleAlert aria-hidden className="size-5" />{foto.pesan ?? "Foto gagal diunggah. Coba lagi"}</p>
-                <Button variant="secondary" onClick={() => void unggah(foto.file, foto.preview)}>Coba unggah lagi</Button>
+              <div
+                role="alert"
+                className="flex flex-wrap items-center gap-3 rounded-md border border-danger bg-danger-bg p-3 text-danger"
+              >
+                <p className="flex items-center gap-2">
+                  <TriangleAlert aria-hidden className="size-5" />
+                  {foto.pesan ?? "Foto gagal diunggah. Coba lagi"}
+                </p>
+                <Button variant="secondary" onClick={() => void unggah(foto.file, foto.preview)}>
+                  Coba unggah lagi
+                </Button>
               </div>
             )}
-            {galat("image_url") && <p className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{galat("image_url")}</p>}
-            {fotoGalat && <p role="alert" className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{fotoGalat}</p>}
+            {galat("image_url") && (
+              <p className="flex items-center gap-2 text-sm text-danger">
+                <TriangleAlert aria-hidden className="size-4" />
+                {galat("image_url")}
+              </p>
+            )}
+            {fotoGalat && (
+              <p role="alert" className="flex items-center gap-2 text-sm text-danger">
+                <TriangleAlert aria-hidden className="size-4" />
+                {fotoGalat}
+              </p>
+            )}
             {/* foto HP besar diperkecil di lib/unggah.ts sebelum diunggah (batas backend 5 MB) */}
-            <FileDrop id="mf-image_url" maxBytes={20 * MB} onFile={pilihFoto} onError={setFotoGalat} label={tampilFoto ? "Ganti foto" : "Pilih foto"} />
-            {tampilFoto && <div><Button variant="ghost" onClick={hapusFoto}><X aria-hidden className="size-4" />Hapus foto</Button></div>}
+            <FileDrop
+              id="mf-image_url"
+              maxBytes={20 * MB}
+              onFile={pilihFoto}
+              onError={setFotoGalat}
+              label={tampilFoto ? "Ganti foto" : "Pilih foto"}
+            />
+            {tampilFoto && (
+              <div>
+                <Button variant="ghost" onClick={hapusFoto}>
+                  <X aria-hidden className="size-4" />
+                  Hapus foto
+                </Button>
+              </div>
+            )}
             <p className="mt-2 text-sm font-medium text-ink">Foto tambahan</p>
-            <FotoTambahan urls={gallery} onChange={(l) => { setServer({}); setGallery(l); }} onBusy={setGaleriSibuk} error={galat("gallery")} />
+            <FotoTambahan
+              urls={gallery}
+              onChange={(l) => {
+                setServer({});
+                setGallery(l);
+              }}
+              onBusy={setGaleriSibuk}
+              error={galat("gallery")}
+            />
           </Bagian>
 
           <Bagian judul="Harga">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="HPP (Rp)" id="mf-hpp" required help="Modal per porsi. Tidak terlihat pembeli." error={galat("hpp")}>
-                <Input type="number" inputMode="numeric" min={0} step={1} value={v.hpp} onChange={(e) => set("hpp", e.target.value)} onBlur={blur("hpp")} />
+              <Field
+                label="HPP (Rp)"
+                id="mf-hpp"
+                required
+                help="Modal per porsi. Tidak terlihat pembeli."
+                error={galat("hpp")}
+              >
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={v.hpp}
+                  onChange={(e) => set("hpp", e.target.value)}
+                  onBlur={blur("hpp")}
+                />
               </Field>
               <Field label="Harga jual (Rp)" id="mf-price" required error={galat("price")}>
-                <Input type="number" inputMode="numeric" min={1000} step={1} value={v.price} onChange={(e) => set("price", e.target.value)} onBlur={blur("price")} />
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1000}
+                  step={1}
+                  value={v.price}
+                  onChange={(e) => set("price", e.target.value)}
+                  onBlur={blur("price")}
+                />
               </Field>
             </div>
             {margin !== null && price > hpp && (
               <div className="flex flex-col gap-1">
-                <p className="text-ink">Laba per porsi <span className="font-mono font-semibold">{formatRupiah(price - hpp)}</span> · Margin {margin}%</p>
+                <p className="text-ink">
+                  Laba per porsi <span className="font-mono font-semibold">{formatRupiah(price - hpp)}</span> · Margin{" "}
+                  {margin}%
+                </p>
                 {margin < 10 && (
-                  <p role="status" className="flex items-center gap-2 rounded-md bg-warning-bg p-2 text-sm text-warning">
-                    <TriangleAlert aria-hidden className="size-4" />Margin tipis. Pertimbangkan menaikkan harga jual.
+                  <p
+                    role="status"
+                    className="flex items-center gap-2 rounded-md bg-warning-bg p-2 text-sm text-warning"
+                  >
+                    <TriangleAlert aria-hidden className="size-4" />
+                    Margin tipis. Pertimbangkan menaikkan harga jual.
                   </p>
                 )}
               </div>
@@ -241,13 +410,37 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
           <Bagian judul="Stok & waktu">
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="Kuota harian" id="mf-daily_quota" required error={galat("daily_quota")}>
-                <Input type="number" inputMode="numeric" min={0} step={1} value={v.daily_quota} onChange={(e) => set("daily_quota", e.target.value)} onBlur={blur("daily_quota")} />
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={v.daily_quota}
+                  onChange={(e) => set("daily_quota", e.target.value)}
+                  onBlur={blur("daily_quota")}
+                />
               </Field>
               <Field label="Estimasi siap (menit)" id="mf-prep_minutes" required error={galat("prep_minutes")}>
-                <Input type="number" inputMode="numeric" min={1} step={1} value={v.prep_minutes} onChange={(e) => set("prep_minutes", e.target.value)} onBlur={blur("prep_minutes")} />
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  value={v.prep_minutes}
+                  onChange={(e) => set("prep_minutes", e.target.value)}
+                  onBlur={blur("prep_minutes")}
+                />
               </Field>
               <Field label="Minimum pesan" id="mf-min_order_qty" required error={galat("min_order_qty")}>
-                <Input type="number" inputMode="numeric" min={1} step={1} value={v.min_order_qty} onChange={(e) => set("min_order_qty", e.target.value)} onBlur={blur("min_order_qty")} />
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  value={v.min_order_qty}
+                  onChange={(e) => set("min_order_qty", e.target.value)}
+                  onBlur={blur("min_order_qty")}
+                />
               </Field>
             </div>
           </Bagian>
@@ -259,29 +452,70 @@ export function MenuForm({ categories, menu, prefill }: { categories: Category[]
             </div>
             {v.is_preorder && (
               <div className="max-w-xs">
-                <Field label="Pesan H-… (hari sebelumnya)" id="mf-preorder_days" required help="1 sampai 7 hari" error={galat("preorder_days")}>
-                  <Input type="number" inputMode="numeric" min={1} max={7} step={1} value={v.preorder_days} onChange={(e) => set("preorder_days", e.target.value)} onBlur={blur("preorder_days")} />
+                <Field
+                  label="Pesan H-… (hari sebelumnya)"
+                  id="mf-preorder_days"
+                  required
+                  help="1 sampai 7 hari"
+                  error={galat("preorder_days")}
+                >
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={7}
+                    step={1}
+                    value={v.preorder_days}
+                    onChange={(e) => set("preorder_days", e.target.value)}
+                    onBlur={blur("preorder_days")}
+                  />
                 </Field>
               </div>
             )}
           </Bagian>
 
           <Bagian judul="Opsi tambahan">
-            <OptionsEditor rows={v.options} errors={galatOpsi} semua={dicoba} onChange={(rows) => set("options", rows)} />
+            <OptionsEditor
+              rows={v.options}
+              errors={galatOpsi}
+              semua={dicoba}
+              onChange={(rows) => set("options", rows)}
+            />
           </Bagian>
 
           <div className="flex justify-end">
-            <Button type="submit" size="lg" loading={menyimpan} loadingText="Menyimpan…" disabled={uploading}>Simpan menu</Button>
+            <Button type="submit" size="lg" loading={menyimpan} loadingText="Menyimpan…" disabled={uploading}>
+              Simpan menu
+            </Button>
           </div>
         </form>
 
         <aside className="sticky top-6 hidden xl:block">
           <p className="mb-2 text-sm font-medium text-ink-muted">Pratinjau untuk pembeli</p>
-          <MenuPreview name={v.name} price={Number.isFinite(price) ? price : null} unit={v.unit_label} category={namaKategori} photo={tampilFoto} options={input.options.map((o) => ({ name: o.name, extra_price: Number.isFinite(o.extra_price) ? o.extra_price : 0 }))} />
+          <MenuPreview
+            name={v.name}
+            price={Number.isFinite(price) ? price : null}
+            unit={v.unit_label}
+            category={namaKategori}
+            photo={tampilFoto}
+            options={input.options.map((o) => ({
+              name: o.name,
+              extra_price: Number.isFinite(o.extra_price) ? o.extra_price : 0,
+            }))}
+          />
         </aside>
       </div>
 
-      <ConfirmDialog open={guard.open} onClose={guard.cancel} title="Buang perubahan?" body="Perubahan pada menu ini belum disimpan." confirmLabel="Buang perubahan" cancelLabel="Tetap di sini" tone="danger" onConfirm={guard.confirm} />
+      <ConfirmDialog
+        open={guard.open}
+        onClose={guard.cancel}
+        title="Buang perubahan?"
+        body="Perubahan pada menu ini belum disimpan."
+        confirmLabel="Buang perubahan"
+        cancelLabel="Tetap di sini"
+        tone="danger"
+        onConfirm={guard.confirm}
+      />
     </>
   );
 }

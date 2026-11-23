@@ -40,11 +40,27 @@ export function BalasTiket({ code }: { code: string }) {
 
   return (
     <form onSubmit={kirim} noValidate className="flex flex-col gap-3 border-t border-line pt-4">
-      <Field label="Balasan untuk pembeli" id={`balas-${code}`} required help={`${teks.length}/${BATAS_BALASAN}`} error={galat}>
-        <Textarea value={teks} maxLength={BATAS_BALASAN} rows={4} onChange={(e) => { setTeks(e.target.value); setGalat(undefined); }} />
+      <Field
+        label="Balasan untuk pembeli"
+        id={`balas-${code}`}
+        required
+        help={`${teks.length}/${BATAS_BALASAN}`}
+        error={galat}
+      >
+        <Textarea
+          value={teks}
+          maxLength={BATAS_BALASAN}
+          rows={4}
+          onChange={(e) => {
+            setTeks(e.target.value);
+            setGalat(undefined);
+          }}
+        />
       </Field>
       <div className="flex justify-end">
-        <Button type="submit" disabled={!teks.trim()} loading={sibuk} loadingText="Mengirim…">Kirim balasan</Button>
+        <Button type="submit" disabled={!teks.trim()} loading={sibuk} loadingText="Mengirim…">
+          Kirim balasan
+        </Button>
       </div>
     </form>
   );

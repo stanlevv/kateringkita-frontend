@@ -31,16 +31,31 @@ export function CsContactForm({ nilai }: { nilai: string }) {
   }
 
   return (
-    <form onSubmit={kirim} noValidate aria-label="Kontak CS" className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4">
+    <form
+      onSubmit={kirim}
+      noValidate
+      aria-label="Kontak CS"
+      className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4"
+    >
       <h2 className="text-lg font-semibold text-ink">Kontak CS</h2>
       <p className="text-ink-muted">Nomor WhatsApp layanan pelanggan yang tampil di aplikasi pembeli.</p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="sm:w-64">
           <Field label="Nomor WhatsApp" id="cs-wa" help="Diawali 08. Kosongkan untuk menyembunyikan." error={galat}>
-            <Input type="tel" inputMode="numeric" value={teks} onChange={(e) => { setGalat(undefined); setTeks(e.target.value); }} />
+            <Input
+              type="tel"
+              inputMode="numeric"
+              value={teks}
+              onChange={(e) => {
+                setGalat(undefined);
+                setTeks(e.target.value);
+              }}
+            />
           </Field>
         </div>
-        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">Simpan</Button>
+        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">
+          Simpan
+        </Button>
       </div>
     </form>
   );

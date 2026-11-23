@@ -27,7 +27,13 @@ function IsiAsisten({ o }: { o: KeluaranAsisten }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="whitespace-pre-wrap">{o.jawaban}</p>
-      {o.poin.length > 0 && <ul className="list-disc space-y-1 pl-5">{o.poin.map((p, i) => <li key={i}>{p}</li>)}</ul>}
+      {o.poin.length > 0 && (
+        <ul className="list-disc space-y-1 pl-5">
+          {o.poin.map((p, i) => (
+            <li key={i}>{p}</li>
+          ))}
+        </ul>
+      )}
       {o.asumsi && <p className="text-sm text-ink-muted">Asumsi: {o.asumsi}</p>}
     </div>
   );
@@ -84,12 +90,17 @@ export function KartuHasilAi({ h, bolehUbah }: { h: HasilAi; bolehUbah: boolean 
     <article className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="info" icon={Sparkles}>{LABEL_FITUR[h.fitur]}</Badge>
+          <Badge tone="info" icon={Sparkles}>
+            {LABEL_FITUR[h.fitur]}
+          </Badge>
           <span className="text-sm text-ink-muted">
-            {[h.user?.name, h.merchant?.business_name].filter(Boolean).join(" · ") || "Pengguna dihapus"} · {waktu(h.created_at)}
+            {[h.user?.name, h.merchant?.business_name].filter(Boolean).join(" · ") || "Pengguna dihapus"} ·{" "}
+            {waktu(h.created_at)}
           </span>
         </div>
-        <Badge tone={st.tone} icon={st.icon}>{st.label}</Badge>
+        <Badge tone={st.tone} icon={st.icon}>
+          {st.label}
+        </Badge>
       </header>
       <div>
         <p className="text-sm font-semibold text-ink-muted">Masukan (data pribadi disamarkan)</p>
@@ -97,7 +108,11 @@ export function KartuHasilAi({ h, bolehUbah }: { h: HasilAi; bolehUbah: boolean 
       </div>
       <div>
         <p className="text-sm font-semibold text-ink-muted">Keluaran AI (lolos validasi skema)</p>
-        {h.fitur === "asisten" ? <IsiAsisten o={h.output as KeluaranAsisten} /> : <IsiRekomendasi o={h.output as KeluaranRekomendasi} />}
+        {h.fitur === "asisten" ? (
+          <IsiAsisten o={h.output as KeluaranAsisten} />
+        ) : (
+          <IsiRekomendasi o={h.output as KeluaranRekomendasi} />
+        )}
       </div>
       {h.verified_by && h.verified_at && (
         <p className="text-sm text-ink-muted">
@@ -108,11 +123,28 @@ export function KartuHasilAi({ h, bolehUbah }: { h: HasilAi; bolehUbah: boolean 
       {bolehUbah ? (
         <div className="flex flex-col gap-2 border-t border-line pt-3">
           <Field label="Catatan verifikasi (wajib bila ditolak)" id={`catatan-ai-${h.id}`} error={galat}>
-            <Textarea rows={2} maxLength={300} value={catatan} onChange={(e) => { setCatatan(e.target.value); setGalat(undefined); }} />
+            <Textarea
+              rows={2}
+              maxLength={300}
+              value={catatan}
+              onChange={(e) => {
+                setCatatan(e.target.value);
+                setGalat(undefined);
+              }}
+            />
           </Field>
           <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="secondary" loading={sibuk === "ditolak"} disabled={sibuk !== null} onClick={() => putuskan("ditolak")}>Tolak</Button>
-            <Button loading={sibuk === "disetujui"} disabled={sibuk !== null} onClick={() => putuskan("disetujui")}>Setujui</Button>
+            <Button
+              variant="secondary"
+              loading={sibuk === "ditolak"}
+              disabled={sibuk !== null}
+              onClick={() => putuskan("ditolak")}
+            >
+              Tolak
+            </Button>
+            <Button loading={sibuk === "disetujui"} disabled={sibuk !== null} onClick={() => putuskan("disetujui")}>
+              Setujui
+            </Button>
           </div>
         </div>
       ) : (

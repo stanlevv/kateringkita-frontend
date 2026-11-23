@@ -6,15 +6,24 @@ const refresh = vi.fn();
 const setAktifAdmin = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, replace: vi.fn(), push: vi.fn() }) }));
 vi.mock("@/app/actions/admin/akun", () => ({
-  buatAdmin: vi.fn(), resetSandiAdmin: vi.fn(), ubahLevelAdmin: vi.fn(),
+  buatAdmin: vi.fn(),
+  resetSandiAdmin: vi.fn(),
+  ubahLevelAdmin: vi.fn(),
   setAktifAdmin: (...a: unknown[]) => setAktifAdmin(...a),
 }));
 import type { AkunAdmin } from "@/types/admin";
 import { AdminTable } from "./AdminTable";
 
 const nonaktif: AkunAdmin = {
-  id: 5, full_name: "Rina", phone: "081211112222", email: null, admin_level: "ops", is_active: false,
-  must_change_password: false, created_at: "2026-11-01T03:00:00.000Z", last_login_at: null,
+  id: 5,
+  full_name: "Rina",
+  phone: "081211112222",
+  email: null,
+  admin_level: "ops",
+  is_active: false,
+  must_change_password: false,
+  created_at: "2026-11-01T03:00:00.000Z",
+  last_login_at: null,
 };
 
 beforeEach(() => {

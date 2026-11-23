@@ -5,9 +5,15 @@ const lokasi = vi.hoisted(() => ({ path: "/admin/log" }));
 vi.mock("next/navigation", () => ({ usePathname: () => lokasi.path }));
 import { NavList } from "./NavList";
 
-const aktif = () => screen.getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page").map((a) => a.textContent);
+const aktif = () =>
+  screen
+    .getAllByRole("link")
+    .filter((a) => a.getAttribute("aria-current") === "page")
+    .map((a) => a.textContent);
 
-beforeEach(() => { lokasi.path = "/admin/log"; });
+beforeEach(() => {
+  lokasi.path = "/admin/log";
+});
 
 describe("NavList admin", () => {
   it("di /admin/log hanya Log yang aktif; Ringkasan hanya cocok persis", () => {

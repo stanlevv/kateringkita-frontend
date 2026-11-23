@@ -18,10 +18,19 @@ describe("label log", () => {
     ]);
   });
   it("label Indonesia untuk field dan nilai; field tak dikenal memakai nama asli", () => {
-    expect(daftarPerubahan(
-      { verification_status: "pending", is_open: 1, is_active: 0, suspended_reason: null, verified_at: null, zzz: 1 },
-      { verification_status: "suspended", is_open: 0, is_active: 1, suspended_reason: "Menu palsu", verified_at: "2026-10-31T03:00:00.000Z", zzz: 2 },
-    )).toEqual([
+    expect(
+      daftarPerubahan(
+        { verification_status: "pending", is_open: 1, is_active: 0, suspended_reason: null, verified_at: null, zzz: 1 },
+        {
+          verification_status: "suspended",
+          is_open: 0,
+          is_active: 1,
+          suspended_reason: "Menu palsu",
+          verified_at: "2026-10-31T03:00:00.000Z",
+          zzz: 2,
+        },
+      ),
+    ).toEqual([
       { field: "Status verifikasi", lama: "Menunggu", baru: "Ditangguhkan" },
       { field: "Status dapur", lama: "Buka", baru: "Tutup" },
       { field: "Aktif", lama: "tidak", baru: "ya" },
@@ -29,7 +38,10 @@ describe("label log", () => {
       { field: "Diverifikasi pada", lama: "—", baru: expect.stringMatching(/31 Okt 2026/) },
       { field: "zzz", lama: "1", baru: "2" },
     ]);
-    expect(daftarPerubahan({ sort_order: 1, name: "A" }, { sort_order: 2, name: "B" }).map((p) => p.field)).toEqual(["Urutan", "Nama"]);
+    expect(daftarPerubahan({ sort_order: 1, name: "A" }, { sort_order: 2, name: "B" }).map((p) => p.field)).toEqual([
+      "Urutan",
+      "Nama",
+    ]);
   });
   it("tanpa before (buat): lama '—'; null dan objek bersarang", () => {
     expect(daftarPerubahan(null, { nama: "Soto", x: null })).toEqual([{ field: "nama", lama: "—", baru: "Soto" }]);

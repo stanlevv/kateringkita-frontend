@@ -10,8 +10,15 @@ export default async function KelolaAdminPage() {
   const { user } = await requireAdmin("super");
   const res = await adminFetch<AkunAdmin[]>("/admins");
   return (
-    <PageHeader title="Kelola admin" description="Tambah admin, atur tingkat akses, nonaktifkan, atau reset kata sandi. Semua perubahan tercatat di Log.">
-      {res.ok && res.data ? <AdminTable rows={res.data} sayaId={Number(user.id)} /> : <GagalMuat judul="Daftar admin belum bisa dimuat" isi={res.error?.message ?? "Coba muat ulang halaman."} />}
+    <PageHeader
+      title="Kelola admin"
+      description="Tambah admin, atur tingkat akses, nonaktifkan, atau reset kata sandi. Semua perubahan tercatat di Log."
+    >
+      {res.ok && res.data ? (
+        <AdminTable rows={res.data} sayaId={Number(user.id)} />
+      ) : (
+        <GagalMuat judul="Daftar admin belum bisa dimuat" isi={res.error?.message ?? "Coba muat ulang halaman."} />
+      )}
     </PageHeader>
   );
 }

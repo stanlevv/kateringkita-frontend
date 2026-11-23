@@ -10,7 +10,11 @@ const store = { isOpen: true, buka: "07:00", tutup: "16:00" };
 
 describe("SH-N1 sidebar", () => {
   it("4 grup dan 11 tautan (termasuk Banner, Notifikasi); tautan aktif aria-current", () => {
-    render(<StoreStatusProvider store={store}><Sidebar store={store} badge={2} /></StoreStatusProvider>);
+    render(
+      <StoreStatusProvider store={store}>
+        <Sidebar store={store} badge={2} />
+      </StoreStatusProvider>,
+    );
     const nav = screen.getByRole("navigation", { name: "Menu utama" });
     expect(within(nav).getAllByRole("heading", { level: 2 })).toHaveLength(4);
     expect(within(nav).getAllByRole("link")).toHaveLength(11);
@@ -19,14 +23,26 @@ describe("SH-N1 sidebar", () => {
     expect(within(nav).getByRole("link", { name: /Pesanan/ })).not.toHaveAttribute("aria-current");
   });
   it("badge perlu tindakan di Dashboard", () => {
-    render(<StoreStatusProvider store={store}><Sidebar store={store} badge={2} /></StoreStatusProvider>);
+    render(
+      <StoreStatusProvider store={store}>
+        <Sidebar store={store} badge={2} />
+      </StoreStatusProvider>,
+    );
     expect(screen.getByText("2 perlu tindakan")).toBeInTheDocument();
   });
   it("badge notifikasi belum dibaca di Notifikasi; 0 → tanpa badge", () => {
-    const { unmount } = render(<StoreStatusProvider store={store}><Sidebar store={store} badge={0} notif={3} /></StoreStatusProvider>);
+    const { unmount } = render(
+      <StoreStatusProvider store={store}>
+        <Sidebar store={store} badge={0} notif={3} />
+      </StoreStatusProvider>,
+    );
     expect(screen.getByRole("link", { name: /Notifikasi/ })).toHaveTextContent("3 belum dibaca");
     unmount();
-    render(<StoreStatusProvider store={store}><Sidebar store={store} badge={0} notif={0} /></StoreStatusProvider>);
+    render(
+      <StoreStatusProvider store={store}>
+        <Sidebar store={store} badge={0} notif={0} />
+      </StoreStatusProvider>,
+    );
     expect(screen.queryByText(/belum dibaca/)).not.toBeInTheDocument();
   });
 });
@@ -38,13 +54,17 @@ describe("Sidebar -> NavList (batas server/klien)", () => {
       const ditemukan: Record<string, unknown>[] = [];
       const jelajah = (n: unknown): void => {
         if (!n || typeof n !== "object") return;
-        const { type, props } = n as { type?: { name?: string }; props?: { children?: unknown } & Record<string, unknown> };
+        const { type, props } = n as {
+          type?: { name?: string };
+          props?: { children?: unknown } & Record<string, unknown>;
+        };
         if (type?.name === "NavList" && props) ditemukan.push(props);
         [props?.children].flat().forEach(jelajah);
       };
       jelajah(el);
       expect(ditemukan).toHaveLength(1);
-      for (const nilai of Object.values(ditemukan[0])) expect(["string", "number", "boolean", "undefined"]).toContain(typeof nilai);
+      for (const nilai of Object.values(ditemukan[0]))
+        expect(["string", "number", "boolean", "undefined"]).toContain(typeof nilai);
     }
   });
 });

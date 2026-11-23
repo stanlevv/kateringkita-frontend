@@ -12,11 +12,13 @@ const SEMUA: AksiPenjual[] = [...DENGAN_ALASAN, "verify", "reactivate", "close-t
 // A-05 — transisi status penjual (K1). Alasan 1–500 karakter wajib untuk minta perbaikan & tangguhkan.
 export async function aksiPenjual(id: number, aksi: AksiPenjual, alasan?: string): Promise<ActionResult<null>> {
   await requireAdmin();
-  if (!Number.isInteger(id) || id <= 0 || !SEMUA.includes(aksi)) return galat("VALIDATION_ERROR", "Data penjual tidak valid.");
+  if (!Number.isInteger(id) || id <= 0 || !SEMUA.includes(aksi))
+    return galat("VALIDATION_ERROR", "Data penjual tidak valid.");
   let body: string | undefined;
   if (DENGAN_ALASAN.includes(aksi)) {
     const reason = typeof alasan === "string" ? alasan.trim() : "";
-    if (reason.length < 1 || reason.length > 500) return galatField({ reason: "Alasan wajib diisi, maksimal 500 karakter." }, "Periksa kembali alasan.");
+    if (reason.length < 1 || reason.length > 500)
+      return galatField({ reason: "Alasan wajib diisi, maksimal 500 karakter." }, "Periksa kembali alasan.");
     body = JSON.stringify({ reason });
   }
   const res = await adminFetch<null>(`/merchants/${id}/${aksi}`, { method: "POST", body });

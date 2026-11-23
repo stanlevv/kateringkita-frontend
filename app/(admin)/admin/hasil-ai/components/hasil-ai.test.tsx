@@ -4,23 +4,47 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
 const verifikasiHasilAi = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push: vi.fn() }), usePathname: () => "/admin/hasil-ai", useSearchParams: () => new URLSearchParams() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh, push: vi.fn() }),
+  usePathname: () => "/admin/hasil-ai",
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock("@/app/actions/admin/hasilAi", () => ({ verifikasiHasilAi: (...a: unknown[]) => verifikasiHasilAi(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { HasilAi } from "@/types/hasil-ai";
 import { KartuHasilAi } from "./KartuHasilAi";
 
 const ASISTEN: HasilAi = {
-  id: 5, fitur: "asisten", input_text: "Harga risol untuk [nama]?", status: "menunggu", catatan: null,
+  id: 5,
+  fitur: "asisten",
+  input_text: "Harga risol untuk [nama]?",
+  status: "menunggu",
+  catatan: null,
   output: { jawaban: "Naikkan ke Rp 6.000.", poin: ["HPP Rp 2.500"], asumsi: "Harga bahan stabil" },
-  created_at: "2026-11-16T05:00:00.000Z", verified_at: null, verified_by: null,
-  user: { id: 2, name: "Siti" }, merchant: { id: 1, business_name: "Dapur Siti" },
+  created_at: "2026-11-16T05:00:00.000Z",
+  verified_at: null,
+  verified_by: null,
+  user: { id: 2, name: "Siti" },
+  merchant: { id: 1, business_name: "Dapur Siti" },
 };
 const REKOMENDASI: HasilAi = {
-  id: 6, fitur: "rekomendasi", input_text: "nasi goreng 2 porsi", status: "ditolak", catatan: "Melebihi anggaran",
-  output: { summary: "Paket hemat.", total: 30000, items: [{ menu_id: 1, menu: "Nasi Goreng Spesial", toko: "Dapur Siti", qty: 2, subtotal: 30000, reason: "Kenyang" }] },
-  created_at: "2026-11-16T05:00:00.000Z", verified_at: "2026-11-16T06:00:00.000Z", verified_by: { id: 9, name: "Admin Ops" },
-  user: { id: 3, name: "Budi" }, merchant: null,
+  id: 6,
+  fitur: "rekomendasi",
+  input_text: "nasi goreng 2 porsi",
+  status: "ditolak",
+  catatan: "Melebihi anggaran",
+  output: {
+    summary: "Paket hemat.",
+    total: 30000,
+    items: [
+      { menu_id: 1, menu: "Nasi Goreng Spesial", toko: "Dapur Siti", qty: 2, subtotal: 30000, reason: "Kenyang" },
+    ],
+  },
+  created_at: "2026-11-16T05:00:00.000Z",
+  verified_at: "2026-11-16T06:00:00.000Z",
+  verified_by: { id: 9, name: "Admin Ops" },
+  user: { id: 3, name: "Budi" },
+  merchant: null,
 };
 
 beforeEach(() => {
@@ -63,7 +87,12 @@ describe("KartuHasilAi", () => {
 
 describe("verifikasi", () => {
   it("setujui: aksi dipanggil, toast, data dimuat ulang", async () => {
-    render(<><Toaster /><KartuHasilAi h={ASISTEN} bolehUbah /></>);
+    render(
+      <>
+        <Toaster />
+        <KartuHasilAi h={ASISTEN} bolehUbah />
+      </>,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Setujui" }));
     expect(verifikasiHasilAi).toHaveBeenCalledWith(5, "disetujui", "");
     expect(await screen.findByText("Hasil AI disetujui.")).toBeInTheDocument();
@@ -71,7 +100,12 @@ describe("verifikasi", () => {
   });
 
   it("tolak tanpa alasan: galat di kolom catatan, aksi tidak dipanggil; dengan alasan terkirim", async () => {
-    render(<><Toaster /><KartuHasilAi h={ASISTEN} bolehUbah /></>);
+    render(
+      <>
+        <Toaster />
+        <KartuHasilAi h={ASISTEN} bolehUbah />
+      </>,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Tolak" }));
     expect(screen.getByText("Tulis alasan penolakan (3–300 karakter).")).toBeInTheDocument();
     expect(verifikasiHasilAi).not.toHaveBeenCalled();
@@ -83,7 +117,12 @@ describe("verifikasi", () => {
 
   it("galat server tampil sebagai toast, tanpa muat ulang", async () => {
     verifikasiHasilAi.mockResolvedValue({ error: { code: "NOT_FOUND", message: "Hasil AI tidak ditemukan." } });
-    render(<><Toaster /><KartuHasilAi h={ASISTEN} bolehUbah /></>);
+    render(
+      <>
+        <Toaster />
+        <KartuHasilAi h={ASISTEN} bolehUbah />
+      </>,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Setujui" }));
     expect(await screen.findByText("Hasil AI tidak ditemukan.")).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();

@@ -29,7 +29,10 @@ describe("ringkasUlasan (UL-N1)", () => {
 describe("ringkasPerMenu (UL-N2)", () => {
   it("menu tanpa ulasan tetap tampil dengan jumlah 0", () => {
     const rs = reviews();
-    const hasil = ringkasPerMenu(rs, menus().map((m) => ({ id: m.id, name: m.name })));
+    const hasil = ringkasPerMenu(
+      rs,
+      menus().map((m) => ({ id: m.id, name: m.name })),
+    );
     expect(hasil.reduce((a, m) => a + m.jumlah, 0)).toBe(rs.length);
     expect(hasil.length).toBe(menus().length);
   });

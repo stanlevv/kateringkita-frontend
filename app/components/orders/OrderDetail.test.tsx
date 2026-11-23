@@ -13,7 +13,13 @@ import { OrderDetail } from "./OrderDetail";
 
 const semua = orders();
 const cari = (code: string) => semua.find((o) => o.code.endsWith(code))!;
-const tampil = (code: string, aksi = true) => render(<><Toaster /><OrderDetail order={cari(code)} aksi={aksi} /></>);
+const tampil = (code: string, aksi = true) =>
+  render(
+    <>
+      <Toaster />
+      <OrderDetail order={cari(code)} aksi={aksi} />
+    </>,
+  );
 
 beforeEach(() => {
   orderAction.mockReset();
@@ -26,7 +32,12 @@ describe("sinkron dengan server & tampilan", () => {
     const lama = cari("C5RW");
     const { rerender } = render(<OrderDetail order={lama} />);
     expect(screen.getByRole("button", { name: "Mulai masak" })).toBeInTheDocument();
-    const baru = { ...lama, status: "cooking" as const, cooking_at: new Date().toISOString(), updated_at: new Date(Date.parse(lama.updated_at) + 60000).toISOString() };
+    const baru = {
+      ...lama,
+      status: "cooking" as const,
+      cooking_at: new Date().toISOString(),
+      updated_at: new Date(Date.parse(lama.updated_at) + 60000).toISOString(),
+    };
     rerender(<OrderDetail order={baru} />);
     expect(screen.getByRole("button", { name: "Siap diambil" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Mulai masak" })).not.toBeInTheDocument();
@@ -68,7 +79,12 @@ describe("PS-N2 rincian", () => {
     const masak = { ...cari("E2HV"), table: { id: 1, label: "5" } };
     const { rerender } = render(<OrderDetail order={masak} />);
     expect(screen.getByRole("button", { name: "Siap diantar" })).toBeInTheDocument();
-    const siap = { ...masak, status: "ready" as const, ready_at: new Date().toISOString(), updated_at: new Date(Date.parse(masak.updated_at) + 60000).toISOString() };
+    const siap = {
+      ...masak,
+      status: "ready" as const,
+      ready_at: new Date().toISOString(),
+      updated_at: new Date(Date.parse(masak.updated_at) + 60000).toISOString(),
+    };
     rerender(<OrderDetail order={siap} />);
     const t = screen.getByRole("list", { name: "Riwayat status" });
     expect(within(t).getByText("Siap diantar")).toBeInTheDocument();
@@ -115,15 +131,27 @@ describe("aksi di detail (sama dengan kartu)", () => {
   it("setelah sukses tombol tetap terkunci sampai status pada prop berubah", async () => {
     orderAction.mockResolvedValue({ data: {} });
     const lama = cari("C5RW");
-    const { rerender } = render(<><Toaster /><OrderDetail order={lama} /></>);
+    const { rerender } = render(
+      <>
+        <Toaster />
+        <OrderDetail order={lama} />
+      </>,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Mulai masak" }));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(screen.getByRole("button", { name: /Memulai masak/ })).toBeDisabled();
-    rerender(<><Toaster /><OrderDetail order={{ ...lama, status: "cooking" }} /></>);
+    rerender(
+      <>
+        <Toaster />
+        <OrderDetail order={{ ...lama, status: "cooking" }} />
+      </>,
+    );
     expect(screen.getByRole("button", { name: "Siap diambil" })).toBeEnabled();
   });
   it("Tolak lewat dialog alasan", async () => {
-    orderAction.mockResolvedValue({ data: { ...cari("C5RW"), status: "cancelled", cancelled_by: "merchant", cancel_reason: "Stok habis" } });
+    orderAction.mockResolvedValue({
+      data: { ...cari("C5RW"), status: "cancelled", cancelled_by: "merchant", cancel_reason: "Stok habis" },
+    });
     tampil("C5RW");
     await userEvent.click(screen.getByRole("button", { name: "Tolak" }));
     const dlg = screen.getByRole("dialog");
@@ -138,7 +166,9 @@ describe("aksi di detail (sama dengan kartu)", () => {
   it("pesanan selesai/dibatalkan: tanpa tombol aksi", () => {
     for (const kode of ["J5SD", "N2VH"]) {
       const { unmount } = tampil(kode);
-      expect(screen.queryByRole("button", { name: /Konfirmasi|Mulai masak|Siap diambil|Selesai|Tolak/ })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Konfirmasi|Mulai masak|Siap diambil|Selesai|Tolak/ }),
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole("link", { name: /Chat WA/ })).not.toBeInTheDocument();
       unmount();
     }

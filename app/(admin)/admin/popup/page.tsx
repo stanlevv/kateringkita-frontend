@@ -15,11 +15,17 @@ export default async function PopupPage() {
   // eslint-disable-next-line react-hooks/purity -- daftar voucher yang belum berakhir saat halaman dimuat
   const vouchers = promos.ok && promos.data ? pilihanVoucher(promos.data, Date.now()) : [];
   return (
-    <PageHeader title="Pop-up" description="Pop-up promo saat aplikasi pembeli dibuka. Tampil sekali sehari dan berhenti setelah vouchernya diklaim.">
+    <PageHeader
+      title="Pop-up"
+      description="Pop-up promo saat aplikasi pembeli dibuka. Tampil sekali sehari dan berhenti setelah vouchernya diklaim."
+    >
       {popups.ok && popups.data ? (
         <DaftarPopup popups={popups.data} vouchers={vouchers} bolehUbah={session.user.admin_level !== "support"} />
       ) : (
-        <GagalMuat judul="Pop-up belum bisa dimuat" isi="Terjadi kesalahan saat mengambil pop-up. Periksa koneksi lalu coba lagi." />
+        <GagalMuat
+          judul="Pop-up belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil pop-up. Periksa koneksi lalu coba lagi."
+        />
       )}
     </PageHeader>
   );

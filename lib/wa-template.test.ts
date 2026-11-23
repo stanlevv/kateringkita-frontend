@@ -1,12 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { orders } from "./fixtures/orders";
-import { contohDariPesanan, findUnknownPlaceholders, PLACEHOLDER, renderTemplate, TEMPLATE_BAWAAN } from "./wa-template";
+import {
+  contohDariPesanan,
+  findUnknownPlaceholders,
+  PLACEHOLDER,
+  renderTemplate,
+  TEMPLATE_BAWAAN,
+} from "./wa-template";
 
 const contoh = contohDariPesanan(orders()[0]);
 
 describe("wa-template (M-11)", () => {
   it("WA-N1 daftar placeholder lengkap dengan keterangan", () => {
-    expect(PLACEHOLDER.map((p) => p.kode)).toEqual(["{kode}", "{nama}", "{menu}", "{total}", "{titik_temu}", "{waktu_ambil}", "{metode_bayar}"]);
+    expect(PLACEHOLDER.map((p) => p.kode)).toEqual([
+      "{kode}",
+      "{nama}",
+      "{menu}",
+      "{total}",
+      "{titik_temu}",
+      "{waktu_ambil}",
+      "{metode_bayar}",
+    ]);
     expect(PLACEHOLDER.every((p) => p.deskripsi.length > 0)).toBe(true);
   });
   it("WA-N2 renderTemplate mengisi placeholder", () => {

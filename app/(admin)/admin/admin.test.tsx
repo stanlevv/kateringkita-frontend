@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
 vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
-vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
+  adminFetch: (...a: unknown[]) => adminFetch(...a),
+}));
 vi.mock("next/navigation", () => ({
   usePathname: () => "/admin",
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
@@ -25,7 +28,10 @@ const ringkasan = {
 };
 
 beforeEach(() => {
-  requireAdmin.mockReset().mockResolvedValue({ user: { full_name: "Dina", admin_level: "super", must_change_password: false }, merchant: null });
+  requireAdmin.mockReset().mockResolvedValue({
+    user: { full_name: "Dina", admin_level: "super", must_change_password: false },
+    merchant: null,
+  });
   adminFetch.mockReset();
 });
 
@@ -34,7 +40,9 @@ describe("shell admin", () => {
     render(await AdminLayout({ children: <p>isi</p> }));
     expect(requireAdmin).toHaveBeenCalledTimes(1);
     const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
-    const tautan = within(nav).getAllByRole("link").map((a) => [a.textContent, a.getAttribute("href")]);
+    const tautan = within(nav)
+      .getAllByRole("link")
+      .map((a) => [a.textContent, a.getAttribute("href")]);
     expect(tautan).toEqual([
       ["Ringkasan", "/admin"],
       ["Verifikasi", "/admin/verifikasi"],
@@ -62,26 +70,41 @@ describe("shell admin", () => {
   });
 
   it("tingkat ops: menu khusus super (keuangan, AI, kelola admin, server) disembunyikan", async () => {
-    requireAdmin.mockResolvedValue({ user: { full_name: "Ops", admin_level: "ops", must_change_password: false }, merchant: null });
+    requireAdmin.mockResolvedValue({
+      user: { full_name: "Ops", admin_level: "ops", must_change_password: false },
+      merchant: null,
+    });
     render(await AdminLayout({ children: <p>isi</p> }));
     const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
-    const href = within(nav).getAllByRole("link").map((a) => a.getAttribute("href"));
+    const href = within(nav)
+      .getAllByRole("link")
+      .map((a) => a.getAttribute("href"));
     expect(href).toContain("/admin/moderasi");
     expect(href).toContain("/admin/tiket");
-    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"]) expect(href).not.toContain(h);
+    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"])
+      expect(href).not.toContain(h);
   });
 
   it("tingkat support: menu Tiket ada (pekerjaan utama support); menu khusus super tetap disembunyikan", async () => {
-    requireAdmin.mockResolvedValue({ user: { full_name: "Sari", admin_level: "support", must_change_password: false }, merchant: null });
+    requireAdmin.mockResolvedValue({
+      user: { full_name: "Sari", admin_level: "support", must_change_password: false },
+      merchant: null,
+    });
     render(await AdminLayout({ children: <p>isi</p> }));
     const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
     expect(within(nav).getByRole("link", { name: "Tiket" })).toHaveAttribute("href", "/admin/tiket");
-    const href = within(nav).getAllByRole("link").map((a) => a.getAttribute("href"));
-    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"]) expect(href).not.toContain(h);
+    const href = within(nav)
+      .getAllByRole("link")
+      .map((a) => a.getAttribute("href"));
+    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"])
+      expect(href).not.toContain(h);
   });
 
   it("sandi sementara: isi halaman diganti formulir ganti sandi", async () => {
-    requireAdmin.mockResolvedValue({ user: { full_name: "Baru", admin_level: "ops", must_change_password: true }, merchant: null });
+    requireAdmin.mockResolvedValue({
+      user: { full_name: "Baru", admin_level: "ops", must_change_password: true },
+      merchant: null,
+    });
     render(await AdminLayout({ children: <p>isi</p> }));
     expect(screen.queryByText("isi")).toBeNull();
     expect(screen.getByRole("heading", { name: "Ganti kata sandi sementara" })).toBeInTheDocument();
@@ -105,12 +128,36 @@ describe("halaman ringkasan", () => {
 });
 
 describe("halaman log", () => {
-  const baris = { id: 1, admin_user_id: 1, admin_name: "Dina", action: "promo.update", target_type: "promo", target_id: "3", reason: null, before: { value: 1 }, after: { value: 2 }, created_at: "2026-10-31T03:00:00.000Z" };
+  const baris = {
+    id: 1,
+    admin_user_id: 1,
+    admin_name: "Dina",
+    action: "promo.update",
+    target_type: "promo",
+    target_id: "3",
+    reason: null,
+    before: { value: 1 },
+    after: { value: 2 },
+    created_at: "2026-10-31T03:00:00.000Z",
+  };
   it("requireAdmin + filter URL diteruskan ke backend + berisi", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: [baris], meta: { page: 2, limit: 20, total: 21 } });
-    render(await LogPage({ searchParams: Promise.resolve({ action: "promo.update", target_type: "promo", from: "2026-10-01", to: "2026-10-31", page: "2", sampah: "x" }) }));
+    render(
+      await LogPage({
+        searchParams: Promise.resolve({
+          action: "promo.update",
+          target_type: "promo",
+          from: "2026-10-01",
+          to: "2026-10-31",
+          page: "2",
+          sampah: "x",
+        }),
+      }),
+    );
     expect(requireAdmin).toHaveBeenCalledTimes(1);
-    expect(adminFetch).toHaveBeenCalledWith("/audit-logs?action=promo.update&target_type=promo&from=2026-10-01&to=2026-10-31&page=2&limit=20");
+    expect(adminFetch).toHaveBeenCalledWith(
+      "/audit-logs?action=promo.update&target_type=promo&from=2026-10-01&to=2026-10-31&page=2&limit=20",
+    );
     expect(screen.getByRole("cell", { name: "Ubah promo" })).toBeInTheDocument();
     expect(screen.getByText("Nilai: 1 → 2")).toBeInTheDocument();
   });

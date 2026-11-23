@@ -20,7 +20,10 @@ describe("HppKalkulator (HP-N1, HP-N2, HP-E1)", () => {
     await ketik(/Target margin/, "40");
     expect(screen.getByTestId("hpp")).toHaveTextContent("Rp 7.000");
     expect(screen.getByTestId("harga")).toHaveTextContent("Rp 12.000");
-    expect(screen.getByRole("link", { name: "Pakai untuk menu" })).toHaveAttribute("href", "/menu/baru?hpp=7000&price=12000");
+    expect(screen.getByRole("link", { name: "Pakai untuk menu" })).toHaveAttribute(
+      "href",
+      "/menu/baru?hpp=7000&price=12000",
+    );
   });
 
   it("HP-E1 margin 95 dan biaya 0 -> error per field, tanpa hasil", async () => {

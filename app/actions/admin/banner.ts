@@ -25,13 +25,23 @@ export async function tinjauBannerAdmin(id: number, t: Tinjau): Promise<ActionRe
   await requireAdmin("super", "ops");
   if (!idOk(id)) return galat("VALIDATION_ERROR", "Banner tidak valid.");
   const catatan = t.catatan?.trim();
-  if (t.status === "ditolak" && (!catatan || catatan.length < 3 || catatan.length > 300)) return galatField({ catatan: ALASAN }, "Periksa kembali alasan.");
+  if (t.status === "ditolak" && (!catatan || catatan.length < 3 || catatan.length > 300))
+    return galatField({ catatan: ALASAN }, "Periksa kembali alasan.");
   const body = JSON.stringify({ ...t, ...(catatan ? { catatan } : {}) });
   return hasil(await adminFetch<Banner>(`/banners/${id}`, { method: "PATCH", body }));
 }
 
 /** URL unggah bertanda tangan untuk gambar banner / pop-up platform (POST /admin/uploads). */
-export async function mintaUnggahAdmin(berkas: { purpose: string; content_type: string; size: number }): Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>> {
+export async function mintaUnggahAdmin(berkas: {
+  purpose: string;
+  content_type: string;
+  size: number;
+}): Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>> {
   await requireAdmin("super", "ops");
-  return hasil(await adminFetch<{ upload_url: string; public_url: string; expires_at: string }>("/uploads", { method: "POST", body: JSON.stringify(berkas) }));
+  return hasil(
+    await adminFetch<{ upload_url: string; public_url: string; expires_at: string }>("/uploads", {
+      method: "POST",
+      body: JSON.stringify(berkas),
+    }),
+  );
 }

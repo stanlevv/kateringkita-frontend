@@ -22,7 +22,17 @@ type Props = {
   onConfirm: (reason?: string) => void;
 };
 
-function Isi({ onClose, body, confirmLabel, cancelLabel = "Batal", tone, reasons, requireReason, busy, onConfirm }: Omit<Props, "open" | "title">) {
+function Isi({
+  onClose,
+  body,
+  confirmLabel,
+  cancelLabel = "Batal",
+  tone,
+  reasons,
+  requireReason,
+  busy,
+  onConfirm,
+}: Omit<Props, "open" | "title">) {
   const [pilih, setPilih] = useState<string | null>(null);
   const [teks, setTeks] = useState("");
   const lainnya = pilih === LAINNYA;
@@ -37,7 +47,14 @@ function Isi({ onClose, body, confirmLabel, cancelLabel = "Batal", tone, reasons
           <legend className="mb-1 text-sm font-medium">Alasan</legend>
           {[...reasons, LAINNYA].map((r) => (
             <label key={r} className="flex min-h-11 cursor-pointer items-center gap-3">
-              <input type="radio" name="alasan" value={r} checked={pilih === r} onChange={() => setPilih(r)} className="size-5 accent-primary" />
+              <input
+                type="radio"
+                name="alasan"
+                value={r}
+                checked={pilih === r}
+                onChange={() => setPilih(r)}
+                className="size-5 accent-primary"
+              />
               {r}
             </label>
           ))}
@@ -49,8 +66,12 @@ function Isi({ onClose, body, confirmLabel, cancelLabel = "Batal", tone, reasons
         </Field>
       )}
       <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" onClick={onClose}>{cancelLabel}</Button>
-        <Button variant={tone} disabled={kurang || busy} onClick={() => onConfirm(alasan)} className="sm:ml-4">{confirmLabel}</Button>
+        <Button variant="secondary" onClick={onClose}>
+          {cancelLabel}
+        </Button>
+        <Button variant={tone} disabled={kurang || busy} onClick={() => onConfirm(alasan)} className="sm:ml-4">
+          {confirmLabel}
+        </Button>
       </div>
     </>
   );

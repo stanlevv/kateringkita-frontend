@@ -12,7 +12,12 @@ export default function Loading() {
             <div key={i} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4">
               <SkeletonTeks ukuran="lg" lebar="w-36" />
               <SkeletonTeks lebar="w-56" />
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end"><div className="sm:w-64"><SkeletonIsian /></div><Skeleton className="h-11 w-24" /></div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="sm:w-64">
+                  <SkeletonIsian />
+                </div>
+                <Skeleton className="h-11 w-24" />
+              </div>
             </div>
           ))}
         </div>

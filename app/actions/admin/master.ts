@@ -18,13 +18,20 @@ export async function simpanMaster(kind: string, id: number | null, input: unkno
   const masalah = cekMaster(kind, input);
   if (Object.keys(masalah).length > 0) return galatField(masalah, "Periksa kembali isian.");
   const body = JSON.stringify(bersihkanMaster(kind, input as IsianMaster));
-  return hasil(await adminFetch<ItemMaster>(id === null ? `/master/${kind}` : `/master/${kind}/${id}`, { method: id === null ? "POST" : "PATCH", body }));
+  return hasil(
+    await adminFetch<ItemMaster>(id === null ? `/master/${kind}` : `/master/${kind}/${id}`, {
+      method: id === null ? "POST" : "PATCH",
+      body,
+    }),
+  );
 }
 
 export async function setAktifMaster(kind: string, id: number, aktif: boolean): Promise<ActionResult<ItemMaster>> {
   await requireAdmin();
   if (!tabDariKind(kind) || !idOk(id) || typeof aktif !== "boolean") return tidakValid();
-  return hasil(await adminFetch<ItemMaster>(`/master/${kind}/${id}/${aktif ? "activate" : "deactivate"}`, { method: "POST" }));
+  return hasil(
+    await adminFetch<ItemMaster>(`/master/${kind}/${id}/${aktif ? "activate" : "deactivate"}`, { method: "POST" }),
+  );
 }
 
 type Urutan = { id: number; sort_order: number };
@@ -33,8 +40,20 @@ type Urutan = { id: number; sort_order: number };
 export async function tukarUrutan(kind: string, a: Urutan, b: Urutan): Promise<ActionResult<null>> {
   await requireAdmin();
   const t = tabDariKind(kind);
-  if (!t?.urut || !a || !b || !idOk(a.id) || !idOk(b.id) || a.id === b.id || !urutOk(a.sort_order) || !urutOk(b.sort_order) || a.sort_order === b.sort_order) return tidakValid();
-  const patch = (id: number, sort_order: number) => adminFetch<null>(`/master/${kind}/${id}`, { method: "PATCH", body: JSON.stringify({ sort_order }) });
+  if (
+    !t?.urut ||
+    !a ||
+    !b ||
+    !idOk(a.id) ||
+    !idOk(b.id) ||
+    a.id === b.id ||
+    !urutOk(a.sort_order) ||
+    !urutOk(b.sort_order) ||
+    a.sort_order === b.sort_order
+  )
+    return tidakValid();
+  const patch = (id: number, sort_order: number) =>
+    adminFetch<null>(`/master/${kind}/${id}`, { method: "PATCH", body: JSON.stringify({ sort_order }) });
   const r1 = await patch(a.id, b.sort_order);
   if (!r1.ok) return hasil(r1);
   const r2 = await patch(b.id, a.sort_order);

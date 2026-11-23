@@ -19,8 +19,12 @@ export default defineConfig({
       timeout: 120_000,
       reuseExistingServer: false,
       env: {
-        PORT: String(PORT_API), DATABASE_URL: URL_DB, JWT_SECRET: JWT_SECRET_UJI,
-        CORS_ORIGIN: web, NODE_ENV: "development", TZ: "Asia/Jakarta",
+        PORT: String(PORT_API),
+        DATABASE_URL: URL_DB,
+        JWT_SECRET: JWT_SECRET_UJI,
+        CORS_ORIGIN: web,
+        NODE_ENV: "development",
+        TZ: "Asia/Jakarta",
       },
     },
     {

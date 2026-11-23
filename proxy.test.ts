@@ -27,7 +27,18 @@ describe("G-10 proxy", () => {
     expect(config.matcher).toContain("/admin/:path*");
   });
   it("matcher mencakup semua rute dashboard", () => {
-    for (const r of ["dashboard", "menu", "pesanan", "laporan", "promo", "ulasan", "pengaturan", "template-wa", "copilot", "pratinjau"]) {
+    for (const r of [
+      "dashboard",
+      "menu",
+      "pesanan",
+      "laporan",
+      "promo",
+      "ulasan",
+      "pengaturan",
+      "template-wa",
+      "copilot",
+      "pratinjau",
+    ]) {
       expect(config.matcher).toContain(`/${r}/:path*`);
     }
   });

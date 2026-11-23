@@ -20,12 +20,24 @@ import type { MerchantOrder } from "@/types/order";
 const detail = (o: MerchantOrder) => `/pesanan/${encodeURIComponent(o.code)}`;
 
 const KOLOM: Column<MerchantOrder>[] = [
-  { key: "kode", header: "Kode", cell: (o) => <Link href={detail(o)} className="font-mono font-semibold text-primary underline-offset-2 hover:underline">{o.code}</Link> },
+  {
+    key: "kode",
+    header: "Kode",
+    cell: (o) => (
+      <Link href={detail(o)} className="font-mono font-semibold text-primary underline-offset-2 hover:underline">
+        {o.code}
+      </Link>
+    ),
+  },
   { key: "waktu", header: "Waktu", cell: (o) => <span className="font-mono">{formatJam(o.created_at)}</span> },
   { key: "pemesan", header: "Pemesan", cell: (o) => o.customer_name },
   { key: "item", header: "Item", cell: (o) => <span className="block max-w-64 truncate">{ringkasItem(o)}</span> },
   { key: "total", header: "Total", align: "right", cell: (o) => formatRupiah(o.total) },
-  { key: "bayar", header: "Pembayaran", cell: (o) => <PaymentBadge method={o.payment_method} status={o.payment_status} /> },
+  {
+    key: "bayar",
+    header: "Pembayaran",
+    cell: (o) => <PaymentBadge method={o.payment_method} status={o.payment_status} />,
+  },
   { key: "status", header: "Status", cell: (o) => <StatusBadge order={o} /> },
 ];
 
@@ -49,7 +61,13 @@ export function OrderTable({ rows, total, galat }: { rows: MerchantOrder[]; tota
     ke({ q: String(new FormData(e.currentTarget).get("q") ?? "").trim() });
   }
 
-  if (galat) return <GagalMuat judul="Pesanan belum bisa dimuat" isi="Terjadi kesalahan saat mengambil daftar pesanan. Periksa koneksi lalu coba lagi." />;
+  if (galat)
+    return (
+      <GagalMuat
+        judul="Pesanan belum bisa dimuat"
+        isi="Terjadi kesalahan saat mengambil daftar pesanan. Periksa koneksi lalu coba lagi."
+      />
+    );
 
   const tersaring = !!status || !!q || tanggal !== hariIni;
 
@@ -57,38 +75,78 @@ export function OrderTable({ rows, total, galat }: { rows: MerchantOrder[]; tota
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-end">
         <form role="search" onSubmit={cari} className="relative flex-1">
-          <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-ink-muted" />
-          <Input key={q} name="q" type="search" aria-label="Cari kode atau nama" placeholder="Cari kode atau nama pemesan" defaultValue={q} className="pl-10"
-            onChange={(e) => { if (e.target.value === "" && q) ke({ q: "" }); }} />
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-ink-muted"
+          />
+          <Input
+            key={q}
+            name="q"
+            type="search"
+            aria-label="Cari kode atau nama"
+            placeholder="Cari kode atau nama pemesan"
+            defaultValue={q}
+            className="pl-10"
+            onChange={(e) => {
+              if (e.target.value === "" && q) ke({ q: "" });
+            }}
+          />
         </form>
-        <label className="flex flex-col gap-1 text-sm text-ink-muted">Tanggal
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          Tanggal
           <Input type="date" value={tanggal} onChange={(e) => ke({ tanggal: e.target.value })} className="md:w-44" />
         </label>
-        <label className="flex flex-col gap-1 text-sm text-ink-muted">Status
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          Status
           <Select value={status ?? ""} onChange={(e) => ke({ status: e.target.value })} className="md:w-48">
             <option value="">Semua</option>
-            {STATUS_FILTER.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            {STATUS_FILTER.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
           </Select>
         </label>
       </div>
 
       {total === 0 ? (
         tersaring ? (
-          <EmptyState icon={SearchX} title="Pesanan tidak ditemukan" body="Tidak ada pesanan yang cocok dengan filter ini."
-            action={<Button variant="secondary" onClick={() => router.replace(path, { scroll: false })}>Hapus filter</Button>} />
+          <EmptyState
+            icon={SearchX}
+            title="Pesanan tidak ditemukan"
+            body="Tidak ada pesanan yang cocok dengan filter ini."
+            action={
+              <Button variant="secondary" onClick={() => router.replace(path, { scroll: false })}>
+                Hapus filter
+              </Button>
+            }
+          />
         ) : (
-          <EmptyState icon={Inbox} title="Belum ada pesanan hari ini" body="Pesanan baru akan muncul di sini begitu pembeli memesan." />
+          <EmptyState
+            icon={Inbox}
+            title="Belum ada pesanan hari ini"
+            body="Pesanan baru akan muncul di sini begitu pembeli memesan."
+          />
         )
       ) : (
         <>
           {/* Tabel mulai 1024 px (tujuh kolom tidak muat di tablet); di bawahnya kartu bertumpuk dengan data yang sama, tanpa geser mendatar. */}
           <div className="hidden lg:block">
-            <DataTable caption="Daftar pesanan" columns={KOLOM} rows={rows} rowKey={(o) => o.code} onRowClick={(o) => router.push(detail(o))} />
+            <DataTable
+              caption="Daftar pesanan"
+              columns={KOLOM}
+              rows={rows}
+              rowKey={(o) => o.code}
+              onRowClick={(o) => router.push(detail(o))}
+            />
           </div>
           <ul className="flex flex-col gap-3 lg:hidden">
             {rows.map((o) => (
               <li key={o.code}>
-                <Link href={detail(o)} className="flex min-h-11 flex-col gap-2 rounded-lg border border-line bg-surface p-4 focus-visible:ring-2 focus-visible:ring-focus">
+                <Link
+                  href={detail(o)}
+                  className="flex min-h-11 flex-col gap-2 rounded-lg border border-line bg-surface p-4 focus-visible:ring-2 focus-visible:ring-focus"
+                >
                   <span className="flex items-center justify-between gap-2">
                     <span className="font-mono font-semibold text-ink">{o.code}</span>
                     <span className="font-mono text-sm text-ink-muted">{formatJam(o.created_at)}</span>
@@ -104,7 +162,12 @@ export function OrderTable({ rows, total, galat }: { rows: MerchantOrder[]; tota
               </li>
             ))}
           </ul>
-          <Pagination page={halaman} total={total} limit={LIMIT_PESANAN} hrefFor={(p) => url({ page: p > 1 ? String(p) : "" })} />
+          <Pagination
+            page={halaman}
+            total={total}
+            limit={LIMIT_PESANAN}
+            hrefFor={(p) => url({ page: p > 1 ? String(p) : "" })}
+          />
         </>
       )}
     </div>

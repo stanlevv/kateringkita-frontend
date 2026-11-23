@@ -16,7 +16,8 @@ import type { MerchantOrder } from "@/types/order";
 import { OrderTable } from "./OrderTable";
 
 const semua = orders();
-const tampil = (list: MerchantOrder[] = semua, galat = false, total = list.length) => render(<OrderTable rows={list} total={total} galat={galat} />);
+const tampil = (list: MerchantOrder[] = semua, galat = false, total = list.length) =>
+  render(<OrderTable rows={list} total={total} galat={galat} />);
 const tabel = () => screen.getByRole("table");
 const terakhirUrl = () => String(replace.mock.calls.at(-1)?.[0]);
 
@@ -29,7 +30,8 @@ beforeEach(() => {
 describe("PS-N1 tabel", () => {
   it("kolom dan baris dari server; item ringkas", () => {
     tampil();
-    for (const h of ["Kode", "Waktu", "Pemesan", "Item", "Total", "Pembayaran", "Status"]) expect(within(tabel()).getByRole("columnheader", { name: h })).toBeInTheDocument();
+    for (const h of ["Kode", "Waktu", "Pemesan", "Item", "Total", "Pembayaran", "Status"])
+      expect(within(tabel()).getByRole("columnheader", { name: h })).toBeInTheDocument();
     expect(within(tabel()).getByText("2× Nasi Ayam Bakar Madu, +1 lainnya")).toBeInTheDocument();
     expect(within(tabel()).getAllByRole("row")).toHaveLength(semua.length + 1);
   });
@@ -70,7 +72,11 @@ describe("PS-N1/N3 filter dan halaman di URL", () => {
     expect(terakhirUrl()).toBe("/pesanan?status=holding");
   });
   it("paginasi 20 per halaman dengan tautan ?page=; tabel tidak menyaring sendiri", () => {
-    const halaman = Array.from({ length: 20 }, (_, i) => ({ ...semua[9], code: `KK-X-${i}`, created_at: new Date(Date.now() - i * 1000).toISOString() }));
+    const halaman = Array.from({ length: 20 }, (_, i) => ({
+      ...semua[9],
+      code: `KK-X-${i}`,
+      created_at: new Date(Date.now() - i * 1000).toISOString(),
+    }));
     params = new URLSearchParams("page=2&q=tidakcocok");
     tampil(halaman, false, 45);
     expect(within(tabel()).getAllByRole("row")).toHaveLength(21);

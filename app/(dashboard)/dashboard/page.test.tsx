@@ -4,7 +4,11 @@ vi.mock("@/services/api", async (orig) => ({
   merchantFetch: async (path: string) => ({
     ok: true,
     status: 200,
-    data: path.startsWith("/orders") ? (await import("@/lib/fixtures/orders")).orders() : path === "/menus" ? (await import("@/lib/fixtures/menus")).menus() : (await import("@/lib/fixtures/profile")).profile(),
+    data: path.startsWith("/orders")
+      ? (await import("@/lib/fixtures/orders")).orders()
+      : path === "/menus"
+        ? (await import("@/lib/fixtures/menus")).menus()
+        : (await import("@/lib/fixtures/profile")).profile(),
   }),
   apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }),
 }));
@@ -16,7 +20,9 @@ const getSkenario = vi.fn();
 const refresh = vi.fn();
 const setStoreOpen = vi.fn();
 vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
-vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: null }) }));
+vi.mock("@/services/authService", () => ({
+  requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: null }),
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }), usePathname: () => "/dashboard" }));
 vi.mock("@/app/actions/store", () => ({ setStoreOpen: (...a: unknown[]) => setStoreOpen(...a) }));
 vi.mock("@/app/actions/orders", () => ({ orderAction: vi.fn() }));
@@ -34,10 +40,16 @@ async function tampil(skenario: string | null) {
   const p = await getProfile();
   const store = "data" in p ? { isOpen: p.data.is_open, buka: p.data.open_time, tutup: p.data.close_time } : null;
   const ui = await DashboardPage();
-  return render(<StoreStatusProvider store={store}><Toaster />{ui}</StoreStatusProvider>);
+  return render(
+    <StoreStatusProvider store={store}>
+      <Toaster />
+      {ui}
+    </StoreStatusProvider>,
+  );
 }
 
-const kpi = (label: string) => within(screen.getByRole("region", { name: "Ringkasan hari ini" })).getByText(label).nextElementSibling;
+const kpi = (label: string) =>
+  within(screen.getByRole("region", { name: "Ringkasan hari ini" })).getByText(label).nextElementSibling;
 
 beforeEach(() => {
   // 1 Nov 2026 12.00 WIB: semua waktu fixture (relatif terhadap sekarang) jatuh di hari yang sama.
@@ -45,7 +57,11 @@ beforeEach(() => {
   refresh.mockReset();
   setStoreOpen.mockReset();
   document.title = "Dashboard · KateringKita";
-  try { localStorage.clear(); } catch { /* abaikan */ }
+  try {
+    localStorage.clear();
+  } catch {
+    /* abaikan */
+  }
 });
 afterEach(() => {
   vi.restoreAllMocks();
@@ -62,7 +78,9 @@ describe("Dashboard berisi (brief §3)", () => {
   it("D2: KPI dihitung dari antrean & kuota nyata, bukan data contoh", async () => {
     await tampil(null);
     const hari = tanggalWib(new Date().toISOString());
-    const omzet = fixOrders().filter((o) => o.status === "completed" && tanggalWib(o.completed_at!) === hari).reduce((a, o) => a + o.total, 0);
+    const omzet = fixOrders()
+      .filter((o) => o.status === "completed" && tanggalWib(o.completed_at!) === hari)
+      .reduce((a, o) => a + o.total, 0);
     expect(omzet).toBeGreaterThan(0);
     expect(kpi("Omzet hari ini")).toHaveTextContent(formatRupiah(omzet));
     const aktif = fixMenus().filter((m) => m.is_active);
@@ -70,7 +88,11 @@ describe("Dashboard berisi (brief §3)", () => {
     expect(kpi("Kapasitas terpakai")).toHaveTextContent(`${terpakai}/${aktif.reduce((a, m) => a + m.quota_today, 0)}`);
     expect(kpi("Rata-rata siap")).toHaveTextContent("24 menit");
     expect(screen.queryByText(/vs kemarin/)).toBeNull();
-    expect(within(screen.getByRole("region", { name: "Menu terlaris hari ini" })).queryByText("Belum ada penjualan hari ini.")).toBeNull();
+    expect(
+      within(screen.getByRole("region", { name: "Menu terlaris hari ini" })).queryByText(
+        "Belum ada penjualan hari ini.",
+      ),
+    ).toBeNull();
   });
   it("tanpa teks teknis", async () => {
     const { container } = await tampil(null);
@@ -119,10 +141,21 @@ describe("state brief §6 per skenario", () => {
   it("DB-A5 penjual-baru -> Siapkan toko dengan centang otomatis", async () => {
     await tampil("penjual-baru");
     const kartu = screen.getByRole("region", { name: "Siapkan toko" });
-    expect(within(kartu).getByRole("link", { name: /Lengkapi pengaturan/ })).toHaveAttribute("href", "/pengaturan?lengkapi=titik-temu");
+    expect(within(kartu).getByRole("link", { name: /Lengkapi pengaturan/ })).toHaveAttribute(
+      "href",
+      "/pengaturan?lengkapi=titik-temu",
+    );
     expect(within(kartu).getByRole("link", { name: /Tambah menu pertama/ })).toHaveAttribute("href", "/menu/baru");
-    expect(within(kartu).getByText(/Buka dapur/).closest("li")).toHaveAttribute("data-selesai", "true");
-    expect(within(kartu).getByText(/Lengkapi pengaturan/).closest("li")).toHaveAttribute("data-selesai", "false");
+    expect(
+      within(kartu)
+        .getByText(/Buka dapur/)
+        .closest("li"),
+    ).toHaveAttribute("data-selesai", "true");
+    expect(
+      within(kartu)
+        .getByText(/Lengkapi pengaturan/)
+        .closest("li"),
+    ).toHaveAttribute("data-selesai", "false");
   });
   it("DB-A3 pesanan-baru -> kartu disorot di atas + judul tab (jendela tidak difokus) sampai difokus", async () => {
     vi.spyOn(document, "hasFocus").mockReturnValue(false);
@@ -131,7 +164,9 @@ describe("state brief §6 per skenario", () => {
     const kartu = screen.getByText("KK-20261031-S6ZA").closest("article");
     expect(kartu).toHaveAttribute("data-baru", "true");
     expect(document.title).toBe("(1) Pesanan baru · KateringKita");
-    act(() => { window.dispatchEvent(new Event("focus")); });
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
     expect(document.title).toBe("Dashboard · KateringKita");
   });
   it("DB-A3 jendela sedang difokus -> sorot tanpa mengubah judul tab", async () => {
@@ -143,7 +178,9 @@ describe("state brief §6 per skenario", () => {
   it("DB-E5 offline -> banner Koneksi terputus, aksi tetap ada", async () => {
     await tampil(null);
     vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
-    act(() => { window.dispatchEvent(new Event("offline")); });
+    act(() => {
+      window.dispatchEvent(new Event("offline"));
+    });
     expect(screen.getByText(/Koneksi terputus — data terakhir \d\d\.\d\d\. Mencoba lagi…/)).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Konfirmasi" })[0]).toBeEnabled();
   });

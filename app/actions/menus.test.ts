@@ -2,23 +2,49 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const jar = { value: undefined as string | undefined };
 vi.mock("next/headers", () => ({
-  cookies: async () => ({ get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined) }),
+  cookies: async () => ({
+    get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined),
+  }),
 }));
 
 const requireMerchant = vi.fn(async () => ({}));
 vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), merchantFetch: (...a: unknown[]) => merchantFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
+  merchantFetch: (...a: unknown[]) => merchantFetch(...a),
+}));
 import { adjustQuota, requestUpload, saveMenu, setMenuActive } from "./menus";
 
-const ok = { name: "Nasi Box", category_id: 1, description: "", image_url: null, unit_label: "porsi", price: 15000, hpp: 9000, daily_quota: 20, prep_minutes: 15, is_preorder: false, preorder_days: 0, min_order_qty: 1, options: [] };
-const set = (v?: string) => { vi.stubEnv("NODE_ENV", "development"); jar.value = v; };
+const ok = {
+  name: "Nasi Box",
+  category_id: 1,
+  description: "",
+  image_url: null,
+  unit_label: "porsi",
+  price: 15000,
+  hpp: 9000,
+  daily_quota: 20,
+  prep_minutes: 15,
+  is_preorder: false,
+  preorder_days: 0,
+  min_order_qty: 1,
+  options: [],
+};
+const set = (v?: string) => {
+  vi.stubEnv("NODE_ENV", "development");
+  jar.value = v;
+};
 const body = (i = 0) => JSON.parse(merchantFetch.mock.calls[i][1].body);
 beforeEach(() => {
   merchantFetch.mockReset();
   merchantFetch.mockResolvedValue({ ok: true, status: 200, data: { id: 5, name: "Dari Server" } });
 });
-afterEach(() => { vi.unstubAllEnvs(); jar.value = undefined; requireMerchant.mockClear(); });
+afterEach(() => {
+  vi.unstubAllEnvs();
+  jar.value = undefined;
+  requireMerchant.mockClear();
+});
 
 describe("saveMenu (M-07, FE-02, FE-03)", () => {
   it("MF-E4 input tidak valid -> VALIDATION_ERROR lokal, server tidak dipanggil", async () => {
@@ -50,9 +76,19 @@ describe("saveMenu (M-07, FE-02, FE-03)", () => {
     expect(merchantFetch.mock.calls[0][1].method).toBe("PATCH");
   });
   it("galat backend diteruskan: 400 fields.price (FE-03) dan 404", async () => {
-    merchantFetch.mockResolvedValue({ ok: false, status: 400, error: { code: "VALIDATION_ERROR", message: "x", fields: { price: ["Dari server"] } } });
-    expect(await saveMenu(5, ok)).toEqual({ error: { code: "VALIDATION_ERROR", message: "x", fields: { price: ["Dari server"] } } });
-    merchantFetch.mockResolvedValue({ ok: false, status: 404, error: { code: "NOT_FOUND", message: "Menu tidak ditemukan." } });
+    merchantFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      error: { code: "VALIDATION_ERROR", message: "x", fields: { price: ["Dari server"] } },
+    });
+    expect(await saveMenu(5, ok)).toEqual({
+      error: { code: "VALIDATION_ERROR", message: "x", fields: { price: ["Dari server"] } },
+    });
+    merchantFetch.mockResolvedValue({
+      ok: false,
+      status: 404,
+      error: { code: "NOT_FOUND", message: "Menu tidak ditemukan." },
+    });
     const r = await saveMenu(999, ok);
     expect("error" in r && r.error.code).toBe("NOT_FOUND");
   });
@@ -78,8 +114,14 @@ describe("adjustQuota (M-05, FE-03)", () => {
     expect(body(1)).toEqual({ delta: -1 });
   });
   it("409 backend diteruskan dengan pesan backend", async () => {
-    merchantFetch.mockResolvedValue({ ok: false, status: 409, error: { code: "CONFLICT", message: "Kuota tidak bisa di bawah porsi yang sudah dipesan (4)." } });
-    expect(await adjustQuota(3, { delta: -9 })).toEqual({ error: { code: "CONFLICT", message: "Kuota tidak bisa di bawah porsi yang sudah dipesan (4)." } });
+    merchantFetch.mockResolvedValue({
+      ok: false,
+      status: 409,
+      error: { code: "CONFLICT", message: "Kuota tidak bisa di bawah porsi yang sudah dipesan (4)." },
+    });
+    expect(await adjustQuota(3, { delta: -9 })).toEqual({
+      error: { code: "CONFLICT", message: "Kuota tidak bisa di bawah porsi yang sudah dipesan (4)." },
+    });
   });
   it("bentuk tak valid -> lokal, server tidak dipanggil", async () => {
     for (const x of [null, {}, { delta: "1" }]) {
@@ -132,7 +174,11 @@ describe("setMenuActive (M-07)", () => {
 describe("requestUpload (M-07, M-10, FE-08)", () => {
   const berkas = { purpose: "menu" as const, content_type: "image/png", size: 10 };
   it("POST /uploads dengan body apa adanya; data backend diteruskan", async () => {
-    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: { upload_url: "u", public_url: "p", expires_at: "e" } });
+    merchantFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      data: { upload_url: "u", public_url: "p", expires_at: "e" },
+    });
     expect(await requestUpload(berkas)).toEqual({ data: { upload_url: "u", public_url: "p", expires_at: "e" } });
     expect(merchantFetch.mock.calls[0][0]).toBe("/uploads");
     expect(merchantFetch.mock.calls[0][1].method).toBe("POST");
@@ -140,8 +186,14 @@ describe("requestUpload (M-07, M-10, FE-08)", () => {
     expect(requireMerchant).toHaveBeenCalled();
   });
   it("503 backend -> pesan backend", async () => {
-    merchantFetch.mockResolvedValue({ ok: false, status: 503, error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
-    expect(await requestUpload(berkas)).toEqual({ error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
+    merchantFetch.mockResolvedValue({
+      ok: false,
+      status: 503,
+      error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
+    });
+    expect(await requestUpload(berkas)).toEqual({
+      error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
+    });
   });
   it("gagal-aksi -> error tanpa memanggil server (MF-E3)", async () => {
     set("gagal-aksi");

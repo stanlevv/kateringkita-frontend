@@ -9,9 +9,17 @@ import { tabHasilAi } from "@/lib/hasil-ai";
 import { DaftarHasilAi } from "./DaftarHasilAi";
 
 const H: HasilAi = {
-  id: 5, fitur: "asisten", input_text: "Harga risol?", status: "menunggu", catatan: null,
-  output: { jawaban: "Rp 6.000", poin: [], asumsi: "" }, created_at: "2026-11-16T05:00:00.000Z",
-  verified_at: null, verified_by: null, user: { id: 2, name: "Siti" }, merchant: { id: 1, business_name: "Dapur Siti" },
+  id: 5,
+  fitur: "asisten",
+  input_text: "Harga risol?",
+  status: "menunggu",
+  catatan: null,
+  output: { jawaban: "Rp 6.000", poin: [], asumsi: "" },
+  created_at: "2026-11-16T05:00:00.000Z",
+  verified_at: null,
+  verified_by: null,
+  user: { id: 2, name: "Siti" },
+  merchant: { id: 1, business_name: "Dapur Siti" },
 };
 
 beforeEach(() => push.mockReset());

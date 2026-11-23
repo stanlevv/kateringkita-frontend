@@ -7,9 +7,16 @@ const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/auth", () => ({ registerMerchant: (...a: unknown[]) => registerMerchant(...a) }));
 
-const types = [{ id: 1, name: "Katering Harian" }, { id: 2, name: "Katering Acara" }];
+const types = [
+  { id: 1, name: "Katering Harian" },
+  { id: 2, name: "Katering Acara" },
+];
 const isi = (label: RegExp, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
-const klik = async (name: string) => { await act(async () => { fireEvent.click(screen.getByRole("button", { name })); }); };
+const klik = async (name: string) => {
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name }));
+  });
+};
 
 async function langkah1(phone = "081234567890") {
   isi(/Nama lengkap/, "Budi Santoso");
@@ -24,7 +31,10 @@ async function langkah2() {
   isi(/Alamat/, "Jl. Kampus 1");
 }
 
-beforeEach(() => { registerMerchant.mockReset(); refresh.mockReset(); });
+beforeEach(() => {
+  registerMerchant.mockReset();
+  refresh.mockReset();
+});
 
 describe("register", () => {
   it("stepper terlihat", () => {
@@ -48,7 +58,11 @@ describe("register", () => {
   });
 
   it("RG-E2 409 dengan fields.phone -> kembali ke langkah 1 + tautan Masuk", async () => {
-    registerMerchant.mockResolvedValue({ code: "CONFLICT", error: "x", fields: { phone: ["Nomor WA sudah terdaftar."] } });
+    registerMerchant.mockResolvedValue({
+      code: "CONFLICT",
+      error: "x",
+      fields: { phone: ["Nomor WA sudah terdaftar."] },
+    });
     render(<RegisterForm types={types} typesFailed={false} />);
     await langkah1();
     await langkah2();

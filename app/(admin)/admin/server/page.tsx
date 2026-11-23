@@ -13,18 +13,32 @@ import { FilterLogServer } from "./components/FilterLogServer";
 import { GrafikPerJam } from "./components/GrafikPerJam";
 
 const lama = (s: number) => {
-  const h = Math.floor(s / 86400), j = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+  const h = Math.floor(s / 86400),
+    j = Math.floor((s % 86400) / 3600),
+    m = Math.floor((s % 3600) / 60);
   return [h && `${h} hr`, j && `${j} j`, `${m} mnt`].filter(Boolean).join(" ");
 };
 
 function Level({ l }: { l: LogServer["level"] }) {
-  return l === "error"
-    ? <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger"><CircleX aria-hidden className="size-3.5" />Error</span>
-    : <span className="inline-flex items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning"><Clock aria-hidden className="size-3.5" />Lambat</span>;
+  return l === "error" ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
+      <CircleX aria-hidden className="size-3.5" />
+      Error
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
+      <Clock aria-hidden className="size-3.5" />
+      Lambat
+    </span>
+  );
 }
 
 // F23: kondisi server, masalah per jam, dan log error 5xx & request lambat (30 hari)
-export default async function ServerPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function ServerPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   await requireAdmin("super");
   const sp = await searchParams;
   const q = new URLSearchParams();
@@ -48,38 +62,69 @@ export default async function ServerPage({ searchParams }: { searchParams: Promi
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <KpiCard label="Error 5xx · 24 jam" value={st.data.ringkas_24j.error} icon={CircleX} />
               <KpiCard label="Lambat > 2 dtk · 24 jam" value={st.data.ringkas_24j.lambat} icon={Clock} />
-              <KpiCard label="Database" value={st.data.db.ok ? `${st.data.db.latency_ms} ms` : "Gangguan"} icon={Database}
-                hint={st.data.db.migrasi_terakhir ? `Migrasi terakhir: ${st.data.db.migrasi_terakhir}` : undefined} />
-              <KpiCard label="Uptime server" value={lama(st.data.uptime_s)} icon={Server} hint={`Memori ${st.data.memori_mb} MB · Node ${st.data.node}`} />
+              <KpiCard
+                label="Database"
+                value={st.data.db.ok ? `${st.data.db.latency_ms} ms` : "Gangguan"}
+                icon={Database}
+                hint={st.data.db.migrasi_terakhir ? `Migrasi terakhir: ${st.data.db.migrasi_terakhir}` : undefined}
+              />
+              <KpiCard
+                label="Uptime server"
+                value={lama(st.data.uptime_s)}
+                icon={Server}
+                hint={`Memori ${st.data.memori_mb} MB · Node ${st.data.node}`}
+              />
             </div>
             <GrafikPerJam data={st.data.per_jam} />
           </>
         )}
 
         <section aria-labelledby="judul-log" className="flex flex-col gap-4">
-          <h2 id="judul-log" className="font-display text-lg font-semibold">Log</h2>
-          <Suspense><FilterLogServer /></Suspense>
+          <h2 id="judul-log" className="font-display text-lg font-semibold">
+            Log
+          </h2>
+          <Suspense>
+            <FilterLogServer />
+          </Suspense>
           {!log.ok || !log.data ? (
             <GagalMuat judul="Log belum bisa dimuat" isi="Terjadi kesalahan saat mengambil log. Coba lagi." />
           ) : log.data.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-line-strong p-6 text-center text-ink-muted">Tidak ada log yang cocok.</p>
+            <p className="rounded-lg border border-dashed border-line-strong p-6 text-center text-ink-muted">
+              Tidak ada log yang cocok.
+            </p>
           ) : (
             <>
               <div className="overflow-x-auto rounded-lg border border-line bg-surface">
                 <table className="w-full min-w-[56rem] text-left text-sm">
                   <thead className="bg-subtle text-ink-muted">
-                    <tr>{["Waktu (WIB)", "Jenis", "Status", "Request", "Durasi", "Pesan", "Request ID"].map((h) => <th key={h} scope="col" className="px-3 py-2 font-medium">{h}</th>)}</tr>
+                    <tr>
+                      {["Waktu (WIB)", "Jenis", "Status", "Request", "Durasi", "Pesan", "Request ID"].map((h) => (
+                        <th key={h} scope="col" className="px-3 py-2 font-medium">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
                   </thead>
                   <tbody>
                     {log.data.map((r) => (
                       <tr key={r.id} className="border-t border-line align-top">
-                        <td className="whitespace-nowrap px-3 py-2">{formatTanggal(r.created_at)}, {formatJam(r.created_at)}</td>
-                        <td className="px-3 py-2"><Level l={r.level} /></td>
-                        <td className={cx("px-3 py-2 font-mono font-semibold", r.status >= 500 && "text-danger")}>{r.status}</td>
-                        <td className="px-3 py-2 font-mono"><span className="text-ink-muted">{r.method}</span> {r.path}</td>
+                        <td className="whitespace-nowrap px-3 py-2">
+                          {formatTanggal(r.created_at)}, {formatJam(r.created_at)}
+                        </td>
+                        <td className="px-3 py-2">
+                          <Level l={r.level} />
+                        </td>
+                        <td className={cx("px-3 py-2 font-mono font-semibold", r.status >= 500 && "text-danger")}>
+                          {r.status}
+                        </td>
+                        <td className="px-3 py-2 font-mono">
+                          <span className="text-ink-muted">{r.method}</span> {r.path}
+                        </td>
                         <td className="whitespace-nowrap px-3 py-2 font-mono">{r.duration_ms} ms</td>
                         <td className="max-w-72 min-w-48 px-3 py-2 break-words">{r.message ?? "-"}</td>
-                        <td className="min-w-52 px-3 py-2 font-mono text-xs break-all text-ink-muted">{r.request_id ?? "-"}</td>
+                        <td className="min-w-52 px-3 py-2 font-mono text-xs break-all text-ink-muted">
+                          {r.request_id ?? "-"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

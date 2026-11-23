@@ -26,22 +26,54 @@ const KOLOM: Column<AuditLog>[] = [
       if (p.length === 0) return "—";
       return (
         <ul>
-          {p.map((x) => <li key={x.field}>{`${x.field}: ${x.lama} → ${x.baru}`}</li>)}
+          {p.map((x) => (
+            <li key={x.field}>{`${x.field}: ${x.lama} → ${x.baru}`}</li>
+          ))}
         </ul>
       );
     },
   },
 ];
 
-export function AuditTable({ rows, page, total, filtered }: { rows: AuditLog[]; page: number; total: number; filtered: boolean }) {
+export function AuditTable({
+  rows,
+  page,
+  total,
+  filtered,
+}: {
+  rows: AuditLog[];
+  page: number;
+  total: number;
+  filtered: boolean;
+}) {
   const path = usePathname();
   const params = useSearchParams();
   if (rows.length === 0) {
     if (page > 1) {
-      return <EmptyState icon={SearchX} title="Halaman tidak ditemukan" body="Halaman ini melebihi jumlah data yang ada." action={<LinkButton href={urlDengan(path, params.toString(), { page: "" })} variant="secondary">Kembali ke halaman 1</LinkButton>} />;
+      return (
+        <EmptyState
+          icon={SearchX}
+          title="Halaman tidak ditemukan"
+          body="Halaman ini melebihi jumlah data yang ada."
+          action={
+            <LinkButton href={urlDengan(path, params.toString(), { page: "" })} variant="secondary">
+              Kembali ke halaman 1
+            </LinkButton>
+          }
+        />
+      );
     }
     return filtered ? (
-      <EmptyState icon={SearchX} title="Tidak ada aksi yang cocok" body="Coba ubah atau hapus filter." action={<LinkButton href={path} variant="secondary">Hapus filter</LinkButton>} />
+      <EmptyState
+        icon={SearchX}
+        title="Tidak ada aksi yang cocok"
+        body="Coba ubah atau hapus filter."
+        action={
+          <LinkButton href={path} variant="secondary">
+            Hapus filter
+          </LinkButton>
+        }
+      />
     ) : (
       <EmptyState icon={ScrollText} title="Belum ada aksi admin" body="Setiap aksi admin akan tercatat di sini." />
     );
@@ -49,7 +81,12 @@ export function AuditTable({ rows, page, total, filtered }: { rows: AuditLog[]; 
   return (
     <div className="flex flex-col gap-4">
       <DataTable caption="Log aksi admin" columns={KOLOM} rows={rows} rowKey={(l) => String(l.id)} />
-      <Pagination page={page} total={total} limit={LIMIT_LOG} hrefFor={(p) => urlDengan(path, params.toString(), { page: String(p) }, ["1"])} />
+      <Pagination
+        page={page}
+        total={total}
+        limit={LIMIT_LOG}
+        hrefFor={(p) => urlDengan(path, params.toString(), { page: String(p) }, ["1"])}
+      />
     </div>
   );
 }

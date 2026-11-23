@@ -11,7 +11,11 @@ import { DataTable } from "./DataTable";
 
 describe("Button (G-3)", () => {
   it("loading -> disabled, aria-busy, teks loadingText", () => {
-    render(<Button loading loadingText="Menyimpan…">Simpan</Button>);
+    render(
+      <Button loading loadingText="Menyimpan…">
+        Simpan
+      </Button>,
+    );
     const b = screen.getByRole("button", { name: "Menyimpan…" });
     expect(b).toBeDisabled();
     expect(b).toHaveAttribute("aria-busy", "true");
@@ -20,7 +24,11 @@ describe("Button (G-3)", () => {
 
 describe("Field (G-2)", () => {
   it("error -> input aria-invalid dan aria-describedby menunjuk teks error", () => {
-    render(<Field label="Nama" error="Nama wajib diisi" help="Bantuan"><Input /></Field>);
+    render(
+      <Field label="Nama" error="Nama wajib diisi" help="Bantuan">
+        <Input />
+      </Field>,
+    );
     const input = screen.getByLabelText("Nama");
     expect(input).toHaveAttribute("aria-invalid", "true");
     const ids = input.getAttribute("aria-describedby")!.split(" ");
@@ -29,7 +37,11 @@ describe("Field (G-2)", () => {
     expect(teks).toContain("Bantuan");
   });
   it("tanpa error -> tidak aria-invalid", () => {
-    render(<Field label="Nama"><Input /></Field>);
+    render(
+      <Field label="Nama">
+        <Input />
+      </Field>,
+    );
     expect(screen.getByLabelText("Nama")).not.toHaveAttribute("aria-invalid");
   });
 });
@@ -55,19 +67,39 @@ describe("ErrorSummary (G-2)", () => {
     expect(screen.getByRole("link", { name: "Nama wajib diisi" })).toHaveAttribute("href", "#nama");
   });
   it("judul berupa heading dan tautan memindahkan fokus ke field", () => {
-    render(<><ErrorSummary errors={[{ id: "nama", message: "Nama wajib diisi" }]} /><input id="nama" /></>);
+    render(
+      <>
+        <ErrorSummary errors={[{ id: "nama", message: "Nama wajib diisi" }]} />
+        <input id="nama" />
+      </>,
+    );
     expect(screen.getByRole("heading", { name: "Periksa isian berikut" })).toBeInTheDocument();
     screen.getByRole("link", { name: "Nama wajib diisi" }).click();
     expect(document.getElementById("nama")).toHaveFocus();
   });
   it("render ulang dengan array errors baru tidak merebut fokus; focusKey baru memfokuskan", () => {
     const e = () => [{ id: "nama", message: "Nama wajib diisi" }];
-    const { rerender } = render(<><ErrorSummary errors={e()} focusKey={1} /><input aria-label="x" /></>);
+    const { rerender } = render(
+      <>
+        <ErrorSummary errors={e()} focusKey={1} />
+        <input aria-label="x" />
+      </>,
+    );
     const x = screen.getByLabelText("x");
     x.focus();
-    rerender(<><ErrorSummary errors={e()} focusKey={1} /><input aria-label="x" /></>);
+    rerender(
+      <>
+        <ErrorSummary errors={e()} focusKey={1} />
+        <input aria-label="x" />
+      </>,
+    );
     expect(x).toHaveFocus();
-    rerender(<><ErrorSummary errors={e()} focusKey={2} /><input aria-label="x" /></>);
+    rerender(
+      <>
+        <ErrorSummary errors={e()} focusKey={2} />
+        <input aria-label="x" />
+      </>,
+    );
     expect(screen.getByRole("alert")).toHaveFocus();
   });
   it("tanpa error -> tidak render", () => {
@@ -98,7 +130,10 @@ describe("DataTable", () => {
         caption="Transaksi"
         rowKey={(r: { id: string; total: number }) => r.id}
         rows={[{ id: "a", total: 5000 }]}
-        columns={[{ key: "id", header: "Kode", cell: (r) => r.id }, { key: "total", header: "Total", align: "right", cell: (r) => r.total }]}
+        columns={[
+          { key: "id", header: "Kode", cell: (r) => r.id },
+          { key: "total", header: "Total", align: "right", cell: (r) => r.total },
+        ]}
         onRowClick={onRowClick}
       />,
     );
@@ -115,7 +150,10 @@ describe("DataTable", () => {
         caption="Pesanan"
         rowKey={(r: { id: string }) => r.id}
         rows={[{ id: "a" }]}
-        columns={[{ key: "id", header: "Kode", cell: (r) => r.id }, { key: "aksi", header: "Aksi", cell: () => <button onClick={onBtn}>Hapus</button> }]}
+        columns={[
+          { key: "id", header: "Kode", cell: (r) => r.id },
+          { key: "aksi", header: "Aksi", cell: () => <button onClick={onBtn}>Hapus</button> },
+        ]}
         onRowClick={onRowClick}
       />,
     );

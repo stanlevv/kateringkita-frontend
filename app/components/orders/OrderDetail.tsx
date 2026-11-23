@@ -60,16 +60,34 @@ function Aksi({ order }: { order: MerchantOrder }) {
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
       {v.hint && <p className="self-center text-ink-muted">{v.hint}</p>}
       {v.primary && (
-        <Button loading={kirim === v.primary} loadingText={teksAksi[v.primary].proses} disabled={!!kirim} onClick={() => void jalankan(v.primary!)}>
+        <Button
+          loading={kirim === v.primary}
+          loadingText={teksAksi[v.primary].proses}
+          disabled={!!kirim}
+          onClick={() => void jalankan(v.primary!)}
+        >
           {v.primaryLabel}
         </Button>
       )}
       {v.secondary.includes("reject") && <TombolTolak disabled={!!kirim} onClick={() => setTolak(true)} />}
       {v.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
-      <RejectDialog order={tolak ? order : null} onClose={() => setTolak(false)} onConfirm={(r) => { setTolak(false); void jalankan("reject", r); }} />
-      <StokDialog code={stok ? order.code : null} onClose={() => setStok(false)}
-        onTolak={() => { setStok(false); setTolak(true); }}
-        onTambah={() => router.push(`/menu?q=${encodeURIComponent(order.items[0]?.menu_name ?? "")}`)} />
+      <RejectDialog
+        order={tolak ? order : null}
+        onClose={() => setTolak(false)}
+        onConfirm={(r) => {
+          setTolak(false);
+          void jalankan("reject", r);
+        }}
+      />
+      <StokDialog
+        code={stok ? order.code : null}
+        onClose={() => setStok(false)}
+        onTolak={() => {
+          setStok(false);
+          setTolak(true);
+        }}
+        onTambah={() => router.push(`/menu?q=${encodeURIComponent(order.items[0]?.menu_name ?? "")}`)}
+      />
     </div>
   );
 }
@@ -79,14 +97,26 @@ export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; a
   const hariPesan = tanggalWib(o.created_at);
   return (
     <div className="flex flex-col gap-6 text-sm text-ink">
-      <div className="flex flex-wrap items-center gap-2"><StatusBadge order={o} /><PaymentBadge method={o.payment_method} status={o.payment_status} /></div>
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusBadge order={o} />
+        <PaymentBadge method={o.payment_method} status={o.payment_status} />
+      </div>
 
       <Bagian judul="Pemesan">
-        <p><span className="font-semibold">{o.customer_name}</span>{o.customer_phone && ` · ${formatTelepon(o.customer_phone)}`}</p>
-        <p className="inline-flex items-center gap-1 text-ink-muted"><MapPin aria-hidden className="size-4" />{o.table ? `Meja ${o.table.label} · makan di tempat` : `Titik ambil: ${o.pickup_point?.name}`}</p>
+        <p>
+          <span className="font-semibold">{o.customer_name}</span>
+          {o.customer_phone && ` · ${formatTelepon(o.customer_phone)}`}
+        </p>
+        <p className="inline-flex items-center gap-1 text-ink-muted">
+          <MapPin aria-hidden className="size-4" />
+          {o.table ? `Meja ${o.table.label} · makan di tempat` : `Titik ambil: ${o.pickup_point?.name}`}
+        </p>
         {!o.table && (
           <p className="text-ink-muted">
-            Waktu ambil: {o.pickup_at ? `${tanggalWib(o.pickup_at) === hariPesan ? "" : `${formatTanggal(o.pickup_at)} `}${formatJam(o.pickup_at)}` : "Secepatnya"}
+            Waktu ambil:{" "}
+            {o.pickup_at
+              ? `${tanggalWib(o.pickup_at) === hariPesan ? "" : `${formatTanggal(o.pickup_at)} `}${formatJam(o.pickup_at)}`
+              : "Secepatnya"}
           </p>
         )}
         {o.note && <p className="rounded-md bg-subtle px-3 py-2">“{o.note}”</p>}
@@ -98,7 +128,11 @@ export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; a
             <li key={`${i.menu_id}-${i.options.map((x) => x.id).join()}`} className="flex justify-between gap-3">
               <span>
                 <span className="font-mono">{i.qty}×</span> {i.menu_name}
-                {i.options.map((x) => <span key={x.id} className="block text-ink-muted">+{x.name} ({formatRupiah(x.extra_price)})</span>)}
+                {i.options.map((x) => (
+                  <span key={x.id} className="block text-ink-muted">
+                    +{x.name} ({formatRupiah(x.extra_price)})
+                  </span>
+                ))}
               </span>
               <span className="font-mono">{formatRupiah(i.line_total)}</span>
             </li>
@@ -112,7 +146,9 @@ export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; a
         </dl>
       </Bagian>
 
-      <Bagian judul="Riwayat status"><StatusTimeline order={o} /></Bagian>
+      <Bagian judul="Riwayat status">
+        <StatusTimeline order={o} />
+      </Bagian>
 
       {aksi && <Aksi key={o.status} order={o} />}
     </div>

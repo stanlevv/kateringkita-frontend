@@ -9,7 +9,9 @@ export default function Loading() {
         <SkeletonIsian label="w-20" />
         <SkeletonIsian label="w-12" />
         <SkeletonIsian label="w-10" tinggi="h-24" />
-        <div><Skeleton className="h-11 w-40" /></div>
+        <div>
+          <Skeleton className="h-11 w-40" />
+        </div>
       </div>
     </RangkaHalaman>
   );

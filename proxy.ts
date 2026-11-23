@@ -21,7 +21,16 @@ export function proxy(req: NextRequest) {
 export const config = {
   // Literal agar dapat dianalisis saat build.
   matcher: [
-    "/dashboard/:path*", "/menu/:path*", "/pesanan/:path*", "/laporan/:path*", "/promo/:path*", "/ulasan/:path*",
-    "/pengaturan/:path*", "/template-wa/:path*", "/copilot/:path*", "/pratinjau/:path*", "/admin/:path*",
+    "/dashboard/:path*",
+    "/menu/:path*",
+    "/pesanan/:path*",
+    "/laporan/:path*",
+    "/promo/:path*",
+    "/ulasan/:path*",
+    "/pengaturan/:path*",
+    "/template-wa/:path*",
+    "/copilot/:path*",
+    "/pratinjau/:path*",
+    "/admin/:path*",
   ],
 };

@@ -16,10 +16,19 @@ export async function simpanBannerToko(id: number | null, input: IsianBanner): P
   const masalah = cekBanner(input);
   if (Object.keys(masalah).length) return galatField(masalah, "Periksa kembali isian banner.");
   const body = JSON.stringify({
-    title: input.title.trim(), image_url: input.image_url, target: input.target, promo_id: input.promo_id,
-    starts_at: input.starts_at, ends_at: input.ends_at,
+    title: input.title.trim(),
+    image_url: input.image_url,
+    target: input.target,
+    promo_id: input.promo_id,
+    starts_at: input.starts_at,
+    ends_at: input.ends_at,
   });
-  return hasil(await merchantFetch<Banner>(id === null ? "/banners" : `/banners/${id}`, { method: id === null ? "POST" : "PATCH", body }));
+  return hasil(
+    await merchantFetch<Banner>(id === null ? "/banners" : `/banners/${id}`, {
+      method: id === null ? "POST" : "PATCH",
+      body,
+    }),
+  );
 }
 
 export async function hapusBannerToko(id: number): Promise<ActionResult<{ id: number }>> {

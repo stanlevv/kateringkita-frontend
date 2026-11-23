@@ -49,12 +49,32 @@ export function DashboardLive({ data, galat }: { data: DataDashboard | null; gal
   const [terakhir, setTerakhir] = useState(data);
   if (data && data !== terakhir) setTerakhir(data);
   const tampil = data ?? terakhir;
-  if (!tampil) return <PageHeader title="Dashboard"><GagalMuat /></PageHeader>;
+  if (!tampil)
+    return (
+      <PageHeader title="Dashboard">
+        <GagalMuat />
+      </PageHeader>
+    );
   return <Isi {...tampil} galat={galat} />;
 }
 
-function Isi({ orders: awalOrders, menus: awalMenus, adaTitikTemu, dimuat, galat }: DataDashboard & { galat: boolean }) {
-  const { orders, menus, terakhir, putus: terputus, selisih, terima, terimaMenu, segarkan } = useLangsung({ orders: awalOrders, menus: awalMenus, dimuat });
+function Isi({
+  orders: awalOrders,
+  menus: awalMenus,
+  adaTitikTemu,
+  dimuat,
+  galat,
+}: DataDashboard & { galat: boolean }) {
+  const {
+    orders,
+    menus,
+    terakhir,
+    putus: terputus,
+    selisih,
+    terima,
+    terimaMenu,
+    segarkan,
+  } = useLangsung({ orders: awalOrders, menus: awalMenus, dimuat });
   const { isOpen, buka, tutup } = useStoreStatus();
   const { ubah: ubahDapur, pending: membuka } = useUbahStatusDapur();
   const [sekarang, setSekarang] = useState(dimuat);
@@ -86,7 +106,11 @@ function Isi({ orders: awalOrders, menus: awalMenus, adaTitikTemu, dimuat, galat
     tindakanLalu.current = tindakan;
     router.refresh();
   }, [tindakan, router]);
-  const tablet = useSyncExternalStore(langganTablet, () => adaMedia() && window.matchMedia(TABLET).matches, () => false);
+  const tablet = useSyncExternalStore(
+    langganTablet,
+    () => adaMedia() && window.matchMedia(TABLET).matches,
+    () => false,
+  );
 
   const efektif = terapkanWaktu(terapkanOptimis(orders, optimis), kini);
   const ringkasan = ringkasHariIni(efektif, menus, kini);
@@ -94,18 +118,38 @@ function Isi({ orders: awalOrders, menus: awalMenus, adaTitikTemu, dimuat, galat
   function fokusKuota(menuId?: number) {
     // Setelah tab Kuota (tablet) dirender.
     requestAnimationFrame(() => {
-      const el = (menuId && document.querySelector<HTMLElement>(`#kuota-${menuId} input`)) || document.getElementById("panel-kuota");
+      const el =
+        (menuId && document.querySelector<HTMLElement>(`#kuota-${menuId} input`)) ||
+        document.getElementById("panel-kuota");
       el?.focus();
     });
   }
 
   const panel = (
     <>
-      <QuotaPanel menus={menus} sekarang={lokal} terakhir={terakhir} onBerubah={(m) => { terimaMenu(m); segarkan(); }} />
+      <QuotaPanel
+        menus={menus}
+        sekarang={lokal}
+        terakhir={terakhir}
+        onBerubah={(m) => {
+          terimaMenu(m);
+          segarkan();
+        }}
+      />
       <section aria-labelledby="judul-terlaris" className="rounded-lg border border-line bg-surface p-4">
-        <h2 id="judul-terlaris" className="flex items-center gap-2 text-lg font-semibold text-ink"><Trophy aria-hidden className="size-5 text-primary" />Menu terlaris hari ini</h2>
+        <h2 id="judul-terlaris" className="flex items-center gap-2 text-lg font-semibold text-ink">
+          <Trophy aria-hidden className="size-5 text-primary" />
+          Menu terlaris hari ini
+        </h2>
         <p className="mt-2 text-ink">
-          {ringkasan.terlaris ? <><span className="font-medium">{ringkasan.terlaris.name}</span> <span className="text-ink-muted">· {ringkasan.terlaris.portions} porsi</span></> : <span className="text-ink-muted">Belum ada penjualan hari ini.</span>}
+          {ringkasan.terlaris ? (
+            <>
+              <span className="font-medium">{ringkasan.terlaris.name}</span>{" "}
+              <span className="text-ink-muted">· {ringkasan.terlaris.portions} porsi</span>
+            </>
+          ) : (
+            <span className="text-ink-muted">Belum ada penjualan hari ini.</span>
+          )}
         </p>
       </section>
     </>
@@ -115,29 +159,75 @@ function Isi({ orders: awalOrders, menus: awalMenus, adaTitikTemu, dimuat, galat
     <PageHeader
       title="Dashboard"
       description="Antrean pesanan dan kuota hari ini"
-      actions={<IconButton icon={suara ? Volume2 : VolumeX} label="Suara notifikasi" aria-pressed={suara} onClick={() => setSuara(!suara)} />}
+      actions={
+        <IconButton
+          icon={suara ? Volume2 : VolumeX}
+          label="Suara notifikasi"
+          aria-pressed={suara}
+          onClick={() => setSuara(!suara)}
+        />
+      }
     >
       <div className="flex flex-col gap-4">
-        <p className="sr-only" aria-live="polite">{umumkan}</p>
+        <p className="sr-only" aria-live="polite">
+          {umumkan}
+        </p>
         {putus && <SyncBanner terakhir={terakhir} />}
         {!isOpen && (
-          <Banner tone="warning" action={<Button loading={membuka} onClick={() => ubahDapur(true)}>Buka sekarang</Button>}>
+          <Banner
+            tone="warning"
+            action={
+              <Button loading={membuka} onClick={() => ubahDapur(true)}>
+                Buka sekarang
+              </Button>
+            }
+          >
             Dapur tutup — pembeli tidak bisa memesan
           </Banner>
         )}
         {diLuarJamBuka(kini, buka, tutup) && (
-          <Banner tone="info" action={<Link href="/pengaturan" className={`inline-flex min-h-11 items-center font-medium underline underline-offset-4 ${fokus}`}>Ubah jam buka</Link>}>
+          <Banner
+            tone="info"
+            action={
+              <Link
+                href="/pengaturan"
+                className={`inline-flex min-h-11 items-center font-medium underline underline-offset-4 ${fokus}`}
+              >
+                Ubah jam buka
+              </Link>
+            }
+          >
             {`Di luar jam buka (${labelJamBuka(buka, tutup)}) — pembeli belum bisa memesan sampai ${buka.replace(":", ".")}`}
           </Banner>
         )}
         {(!adaTitikTemu || menus.length === 0) && (
-          <SetupChecklist adaTitikTemu={adaTitikTemu} adaMenu={menus.length > 0} dapurBuka={isOpen} membuka={membuka} onBukaDapur={() => ubahDapur(true)} />
+          <SetupChecklist
+            adaTitikTemu={adaTitikTemu}
+            adaMenu={menus.length > 0}
+            dapurBuka={isOpen}
+            membuka={membuka}
+            onBukaDapur={() => ubahDapur(true)}
+          />
         )}
         <KpiRow ringkasan={ringkasan} />
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-          <OrderQueue orders={efektif} menus={menus} sekarang={kini} baru={baru} optimis={optimis}
-            onOptimis={(c, v) => setOptimis((o) => ganti(o, c, v))} onFokusKuota={fokusKuota} onTerima={terima} onSegarkan={segarkan} kuota={tablet ? <div className="flex flex-col gap-4">{panel}</div> : undefined} />
-          {!tablet && <aside aria-label="Kuota dan menu terlaris" className="flex flex-col gap-4">{panel}</aside>}
+          <OrderQueue
+            orders={efektif}
+            menus={menus}
+            sekarang={kini}
+            baru={baru}
+            optimis={optimis}
+            onOptimis={(c, v) => setOptimis((o) => ganti(o, c, v))}
+            onFokusKuota={fokusKuota}
+            onTerima={terima}
+            onSegarkan={segarkan}
+            kuota={tablet ? <div className="flex flex-col gap-4">{panel}</div> : undefined}
+          />
+          {!tablet && (
+            <aside aria-label="Kuota dan menu terlaris" className="flex flex-col gap-4">
+              {panel}
+            </aside>
+          )}
         </div>
       </div>
     </PageHeader>

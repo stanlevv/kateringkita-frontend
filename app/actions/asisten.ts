@@ -11,6 +11,9 @@ export async function tanyaAsisten(question: string): Promise<ActionResult<Jawab
   await requireMerchant();
   if (typeof question !== "string") return galat("VALIDATION_ERROR", "Pertanyaan tidak valid.");
   const q = question.trim();
-  if (q.length < 1 || q.length > 500) return galatField({ question: "Pertanyaan 1–500 karakter." }, "Pertanyaan 1–500 karakter.");
-  return hasil(await merchantFetch<JawabanAsisten>("/assistant", { method: "POST", body: JSON.stringify({ question: q }) }));
+  if (q.length < 1 || q.length > 500)
+    return galatField({ question: "Pertanyaan 1–500 karakter." }, "Pertanyaan 1–500 karakter.");
+  return hasil(
+    await merchantFetch<JawabanAsisten>("/assistant", { method: "POST", body: JSON.stringify({ question: q }) }),
+  );
 }

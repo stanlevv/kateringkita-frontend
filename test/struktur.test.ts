@@ -100,7 +100,8 @@ describe("struktur: komponen bersama di app/components/", () => {
 
   it("tidak ada impor ke jalur lama", () => {
     const lama = (p: string) =>
-      /^@\/components\/(ui|shell|landing|promo)(\/|$)/.test(p) || /^@\/components\/dashboard\/(GagalMuat|StatusToko)$/.test(p);
+      /^@\/components\/(ui|shell|landing|promo)(\/|$)/.test(p) ||
+      /^@\/components\/dashboard\/(GagalMuat|StatusToko)$/.test(p);
     const pelanggar = semuaBerkas()
       .filter((b) => relatif(b) !== "test/struktur.test.ts")
       .filter((b) => imporDari(b).some(lama))
@@ -124,7 +125,11 @@ describe("struktur: komponen khusus halaman di app/(grup)/<halaman>/components/"
   });
 
   it("penjaga menemukan folder components halaman (bukan lolos kosong)", () => {
-    expect(semuaBerkas().map(relatif).filter((b) => POLA.test(b)).length).toBeGreaterThan(50);
+    expect(
+      semuaBerkas()
+        .map(relatif)
+        .filter((b) => POLA.test(b)).length,
+    ).toBeGreaterThan(50);
   });
 
   it("berkas di components/ halaman hanya diimpor dari folder halaman pemiliknya", () => {
@@ -148,13 +153,21 @@ describe("struktur: Route Handler di app/api/", () => {
   it("route.ts dan route.test.ts hanya di bawah app/api/; ketiga handler ada", () => {
     const route = berkas().filter((b) => /(^|\/)route(\.test)?\.tsx?$/.test(b));
     expect(route.filter((b) => !b.startsWith("app/api/"))).toEqual([]);
-    for (const r of ["app/api/dashboard/sinkron/route.ts", "app/api/laporan/csv/route.ts", "app/api/pesanan/[code]/wa/route.ts"]) {
+    for (const r of [
+      "app/api/dashboard/sinkron/route.ts",
+      "app/api/laporan/csv/route.ts",
+      "app/api/pesanan/[code]/wa/route.ts",
+    ]) {
       expect(route).toContain(r);
     }
   });
 
   it('tidak ada alamat lama "/dashboard/sinkron", "/laporan/csv", `/pesanan/${…}/wa` di kode', () => {
-    const lama = [/(?<!\/api)\/dashboard\/sinkron/, /(?<!\/api)\/laporan\/csv/, /(?<!\/api)\/pesanan\/(?:\$\{[^}]*\}|[^/\s"'`]+)\/wa\b/];
+    const lama = [
+      /(?<!\/api)\/dashboard\/sinkron/,
+      /(?<!\/api)\/laporan\/csv/,
+      /(?<!\/api)\/pesanan\/(?:\$\{[^}]*\}|[^/\s"'`]+)\/wa\b/,
+    ];
     const pelanggar = berkas()
       .filter((b) => b !== "test/struktur.test.ts")
       .filter((b) => lama.some((p) => p.test(readFileSync(join(AKAR, b), "utf8"))));

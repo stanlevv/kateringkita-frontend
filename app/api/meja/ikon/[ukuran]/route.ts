@@ -6,12 +6,23 @@ import { ImageResponse } from "next/og";
 export async function GET(_req: Request, { params }: { params: Promise<{ ukuran: string }> }) {
   const n = (await params).ukuran === "512" ? 512 : 192;
   return new ImageResponse(
-    createElement("div", {
-      style: {
-        width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
-        background: "linear-gradient(135deg, #FF6B35, #FF8243)", color: "#262017", fontSize: n * 0.5, fontWeight: 800,
+    createElement(
+      "div",
+      {
+        style: {
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #FF6B35, #FF8243)",
+          color: "#262017",
+          fontSize: n * 0.5,
+          fontWeight: 800,
+        },
       },
-    }, "K"),
+      "K",
+    ),
     { width: n, height: n, headers: { "Cache-Control": "public, max-age=604800, immutable" } },
   );
 }

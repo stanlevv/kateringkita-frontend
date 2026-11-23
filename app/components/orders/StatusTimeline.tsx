@@ -15,12 +15,27 @@ const OLEH = { merchant: "penjual", customer: "pembeli", system: "sistem" } as c
 
 /** PS-N2/PS-A1: tahap yang sudah dilalui dari cap waktu; dibatalkan/kadaluarsa menutup dengan pelaku + alasan. */
 export function StatusTimeline({ order: o }: { order: MerchantOrder }) {
-  const langkah = TAHAP.filter(([k]) => o[k]).map(([k, label]) => ({ label: label ?? labelTahapSiap(o), waktu: o[k] as string, detail: null as string | null, buruk: false }));
+  const langkah = TAHAP.filter(([k]) => o[k]).map(([k, label]) => ({
+    label: label ?? labelTahapSiap(o),
+    waktu: o[k] as string,
+    detail: null as string | null,
+    buruk: false,
+  }));
   if (o.status === "cancelled" || o.status === "expired") {
     langkah.push({
-      label: o.cancelled_by ? `Dibatalkan oleh ${OLEH[o.cancelled_by]}` : o.status === "expired" ? "Kadaluarsa" : "Dibatalkan",
+      label: o.cancelled_by
+        ? `Dibatalkan oleh ${OLEH[o.cancelled_by]}`
+        : o.status === "expired"
+          ? "Kadaluarsa"
+          : "Dibatalkan",
       waktu: o.cancelled_at ?? o.updated_at,
-      detail: [o.status === "expired" && o.cancelled_by ? "Kadaluarsa" : null, o.cancel_reason && `Alasan: ${o.cancel_reason}`].filter(Boolean).join(" · ") || null,
+      detail:
+        [
+          o.status === "expired" && o.cancelled_by ? "Kadaluarsa" : null,
+          o.cancel_reason && `Alasan: ${o.cancel_reason}`,
+        ]
+          .filter(Boolean)
+          .join(" · ") || null,
       buruk: true,
     });
   }
@@ -33,7 +48,9 @@ export function StatusTimeline({ order: o }: { order: MerchantOrder }) {
             <Ikon aria-hidden className={cx("mt-0.5 size-5 shrink-0", l.buruk ? "text-danger" : "text-success")} />
             <div className="flex flex-col">
               <span className={cx("font-medium", l.buruk ? "text-danger" : "text-ink")}>{l.label}</span>
-              <span className="font-mono text-sm text-ink-muted">{formatTanggal(l.waktu)} {formatJam(l.waktu)}</span>
+              <span className="font-mono text-sm text-ink-muted">
+                {formatTanggal(l.waktu)} {formatJam(l.waktu)}
+              </span>
               {l.detail && <span className="text-sm text-ink">{l.detail}</span>}
             </div>
           </li>

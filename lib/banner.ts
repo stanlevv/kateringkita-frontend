@@ -13,10 +13,17 @@ export function statusBanner(b: Banner, now: number): { label: string; tone: Nad
 }
 
 /** Banner yang memakai jatah 1 banner aktif per toko. */
-export const bannerAktif = (b: Banner, now: number) => (b.status === "menunggu" || b.status === "disetujui") && Date.parse(b.ends_at) > now;
+export const bannerAktif = (b: Banner, now: number) =>
+  (b.status === "menunggu" || b.status === "disetujui") && Date.parse(b.ends_at) > now;
 
 export type IsianBanner = {
-  title: string; image_url: string; target: string; promo_id: number | null; starts_at: string; ends_at: string; sort_order?: number;
+  title: string;
+  image_url: string;
+  target: string;
+  promo_id: number | null;
+  starts_at: string;
+  ends_at: string;
+  sort_order?: number;
 };
 
 export function cekBanner(v: IsianBanner): Record<string, string> {

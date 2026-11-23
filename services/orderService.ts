@@ -26,7 +26,9 @@ export async function getOrders(f: FilterDaftar = {}): Promise<DataResult<{ rows
   if (f.page) p.set("page", String(f.page));
   p.set("limit", String(LIMIT_PESANAN));
   const res = await merchantFetch<MerchantOrder[]>(`/orders?${p}`);
-  return res.ok && res.data ? { data: { rows: res.data, total: total(res.meta) } } : hasil(res) as { error: ApiError };
+  return res.ok && res.data
+    ? { data: { rows: res.data, total: total(res.meta) } }
+    : (hasil(res) as { error: ApiError });
 }
 
 /** Antrean dashboard: semua yang masih aktif + semua pesanan hari ini, kode sama sekali (D16). */
@@ -55,7 +57,9 @@ export async function getPerubahan(sejak: string): Promise<DataResult<MerchantOr
   const unik = new Map<string, MerchantOrder>();
   let batas = sejak;
   for (let putaran = 0; putaran < 5; putaran++) {
-    const res = await merchantFetch<MerchantOrder[]>(`/orders?${new URLSearchParams({ updated_since: batas, limit: "100" })}`);
+    const res = await merchantFetch<MerchantOrder[]>(
+      `/orders?${new URLSearchParams({ updated_since: batas, limit: "100" })}`,
+    );
     if (!res.ok || !res.data) return hasil(res) as { error: ApiError };
     for (const o of res.data) unik.set(o.code, o);
     const terbesar = res.data.reduce((a, o) => (Date.parse(o.updated_at) > Date.parse(a) ? o.updated_at : a), batas);

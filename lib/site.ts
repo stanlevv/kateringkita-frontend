@@ -7,6 +7,16 @@ export const SITE_DESCRIPTION =
 
 // Rute di balik login (sama dengan matcher proxy.ts); tidak perlu dirayapi mesin pencari.
 export const PRIVATE_PATHS = [
-  "/dashboard", "/menu", "/pesanan", "/laporan", "/promo", "/ulasan",
-  "/pengaturan", "/template-wa", "/copilot", "/pratinjau", "/admin", "/api/",
+  "/dashboard",
+  "/menu",
+  "/pesanan",
+  "/laporan",
+  "/promo",
+  "/ulasan",
+  "/pengaturan",
+  "/template-wa",
+  "/copilot",
+  "/pratinjau",
+  "/admin",
+  "/api/",
 ];

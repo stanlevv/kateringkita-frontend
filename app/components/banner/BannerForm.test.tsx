@@ -37,8 +37,12 @@ describe("BannerForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Ajukan banner" }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(simpan).toHaveBeenCalledWith(null, {
-      title: "Diskon pembukaan", image_url: "https://foto.test/merchants/1/banner/a.webp", target: "promo", promo_id: 5,
-      starts_at: "2026-11-20T00:00:00.000Z", ends_at: "2026-11-27T00:00:00.000Z",
+      title: "Diskon pembukaan",
+      image_url: "https://foto.test/merchants/1/banner/a.webp",
+      target: "promo",
+      promo_id: 5,
+      starts_at: "2026-11-20T00:00:00.000Z",
+      ends_at: "2026-11-27T00:00:00.000Z",
     });
   });
 
@@ -56,12 +60,29 @@ describe("BannerForm", () => {
   it("admin: tujuan voucher / tanpa tujuan, urutan; unggah lewat aksi admin", async () => {
     const mintaAdmin = vi.fn();
     simpan.mockResolvedValue({ data: { id: 9 } });
-    render(<BannerForm mode="admin" vouchers={VOUCHER} simpan={simpan} onSaved={onSaved} onClose={() => {}} mintaUnggah={mintaAdmin} />);
-    expect(Array.from((screen.getByLabelText(/Tujuan/) as HTMLSelectElement).options).map((o) => o.value)).toEqual(["none", "promo"]);
+    render(
+      <BannerForm
+        mode="admin"
+        vouchers={VOUCHER}
+        simpan={simpan}
+        onSaved={onSaved}
+        onClose={() => {}}
+        mintaUnggah={mintaAdmin}
+      />,
+    );
+    expect(Array.from((screen.getByLabelText(/Tujuan/) as HTMLSelectElement).options).map((o) => o.value)).toEqual([
+      "none",
+      "promo",
+    ]);
     await isi();
     expect(unggahFoto).toHaveBeenCalledWith(expect.any(File), "banner", mintaAdmin);
     fireEvent.change(screen.getByLabelText(/Urutan/), { target: { value: "2" } });
     await userEvent.click(screen.getByRole("button", { name: "Simpan banner" }));
-    await waitFor(() => expect(simpan).toHaveBeenCalledWith(null, expect.objectContaining({ target: "none", promo_id: null, sort_order: 2 })));
+    await waitFor(() =>
+      expect(simpan).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({ target: "none", promo_id: null, sort_order: 2 }),
+      ),
+    );
   });
 });

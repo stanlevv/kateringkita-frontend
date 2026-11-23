@@ -35,7 +35,9 @@ describe("QuotaPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: /Tambah/ }));
     expect(screen.getByRole("spinbutton")).toHaveValue(41);
     expect(adjustQuota).not.toHaveBeenCalled();
-    await act(async () => { vi.advanceTimersByTime(600); });
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
     expect(adjustQuota).toHaveBeenCalledExactlyOnceWith(1, { delta: 1 });
     expect(onBerubah).toHaveBeenLastCalledWith(hasil);
   });
@@ -49,7 +51,9 @@ describe("QuotaPanel", () => {
     fireEvent.change(input, { target: { value: "45" } });
     fireEvent.blur(input);
     expect(input).toHaveValue(45);
-    await act(async () => { vi.advanceTimersByTime(600); });
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
     expect(adjustQuota).toHaveBeenCalledExactlyOnceWith(1, { quota_today: 45 });
     expect(onBerubah).toHaveBeenLastCalledWith(hasil);
   });
@@ -60,7 +64,9 @@ describe("QuotaPanel", () => {
     const ui = (list: MerchantMenu[]) => <QuotaPanel menus={list} sekarang={0} terakhir={0} onBerubah={vi.fn()} />;
     const { rerender } = render(ui([ayam]));
     fireEvent.click(screen.getByRole("button", { name: /Tambah/ }));
-    await act(async () => { vi.advanceTimersByTime(600); });
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
     expect(adjustQuota).toHaveBeenCalledOnce();
     expect(screen.getByRole("spinbutton")).toHaveValue(41); // refresh belum tiba
     rerender(ui([hasil])); // data server baru
@@ -70,13 +76,24 @@ describe("QuotaPanel", () => {
   });
   it("DB-E4 server menolak -> angka kembali + toast", async () => {
     vi.useFakeTimers();
-    adjustQuota.mockResolvedValue({ error: { code: "CONFLICT", message: "Kuota tidak bisa di bawah porsi yang sudah dipesan (25)." } });
+    adjustQuota.mockResolvedValue({
+      error: { code: "CONFLICT", message: "Kuota tidak bisa di bawah porsi yang sudah dipesan (25)." },
+    });
     const onBerubah = vi.fn();
-    render(<><Toaster /><QuotaPanel menus={[ayam]} sekarang={0} terakhir={0} onBerubah={onBerubah} /></>);
+    render(
+      <>
+        <Toaster />
+        <QuotaPanel menus={[ayam]} sekarang={0} terakhir={0} onBerubah={onBerubah} />
+      </>,
+    );
     fireEvent.click(screen.getByRole("button", { name: /Tambah/ }));
-    await act(async () => { vi.advanceTimersByTime(600); });
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
     expect(screen.getByRole("spinbutton")).toHaveValue(40);
-    expect(within(screen.getByRole("region", { name: "Pemberitahuan" })).getByText(/porsi yang sudah dipesan/)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Pemberitahuan" })).getByText(/porsi yang sudah dipesan/),
+    ).toBeInTheDocument();
     expect(onBerubah).not.toHaveBeenCalled();
   });
   it("kosong -> EmptyState kuota", () => {

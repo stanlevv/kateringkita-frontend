@@ -20,9 +20,22 @@ const TOMBOL: Record<AksiPenjual, { label: string; variant: "primary" | "seconda
   reactivate: { label: "Aktifkan lagi", variant: "primary", sukses: "Penjual diaktifkan lagi." },
   "close-today": { label: "Tutup hari ini", variant: "secondary", sukses: "Dapur ditutup untuk hari ini." },
 };
-const JUDUL_ALASAN: Partial<Record<AksiPenjual, string>> = { "request-fix": "Minta penjual memperbaiki", suspend: "Tangguhkan penjual" };
+const JUDUL_ALASAN: Partial<Record<AksiPenjual, string>> = {
+  "request-fix": "Minta penjual memperbaiki",
+  suspend: "Tangguhkan penjual",
+};
 
-function FormAlasan({ aksi, sibuk, onClose, onKirim }: { aksi: AksiPenjual; sibuk: boolean; onClose: () => void; onKirim: (alasan: string) => void }) {
+function FormAlasan({
+  aksi,
+  sibuk,
+  onClose,
+  onKirim,
+}: {
+  aksi: AksiPenjual;
+  sibuk: boolean;
+  onClose: () => void;
+  onKirim: (alasan: string) => void;
+}) {
   const [teks, setTeks] = useState("");
   return (
     <>
@@ -30,8 +43,16 @@ function FormAlasan({ aksi, sibuk, onClose, onKirim }: { aksi: AksiPenjual; sibu
         <Textarea autoFocus value={teks} maxLength={500} onChange={(e) => setTeks(e.target.value)} />
       </Field>
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button variant={TOMBOL[aksi].variant === "danger" ? "danger" : "primary"} disabled={!teks.trim() || sibuk} onClick={() => onKirim(teks.trim())}>{TOMBOL[aksi].label}</Button>
+        <Button variant="secondary" onClick={onClose}>
+          Batal
+        </Button>
+        <Button
+          variant={TOMBOL[aksi].variant === "danger" ? "danger" : "primary"}
+          disabled={!teks.trim() || sibuk}
+          onClick={() => onKirim(teks.trim())}
+        >
+          {TOMBOL[aksi].label}
+        </Button>
       </div>
     </>
   );
@@ -51,8 +72,14 @@ export function AdminActionDialog({ id, status, lengkap }: { id: number; status:
     setSibuk(false);
     if ("error" in r) {
       const konflik = r.error.code === "CONFLICT";
-      toast({ tone: "danger", message: konflik ? "Status penjual sudah berubah. Data dimuat ulang." : r.error.message });
-      if (konflik) { setDialog(null); router.refresh(); }
+      toast({
+        tone: "danger",
+        message: konflik ? "Status penjual sudah berubah. Data dimuat ulang." : r.error.message,
+      });
+      if (konflik) {
+        setDialog(null);
+        router.refresh();
+      }
       return;
     }
     setDialog(null);
@@ -66,24 +93,52 @@ export function AdminActionDialog({ id, status, lengkap }: { id: number; status:
   return (
     <div className="flex flex-wrap gap-2">
       {AKSI_BOLEH[status].map((a) => (
-        <Button key={a} variant={TOMBOL[a].variant} disabled={sibuk} onClick={() => klik(a)}>{TOMBOL[a].label}</Button>
+        <Button key={a} variant={TOMBOL[a].variant} disabled={sibuk} onClick={() => klik(a)}>
+          {TOMBOL[a].label}
+        </Button>
       ))}
-      <Dialog open={dialog === "request-fix" || dialog === "suspend"} onClose={() => setDialog(null)} title={JUDUL_ALASAN[dialog ?? "suspend"] ?? ""}>
-        {(dialog === "request-fix" || dialog === "suspend") && <FormAlasan aksi={dialog} sibuk={sibuk} onClose={() => setDialog(null)} onKirim={(al) => kirim(dialog, al)} />}
+      <Dialog
+        open={dialog === "request-fix" || dialog === "suspend"}
+        onClose={() => setDialog(null)}
+        title={JUDUL_ALASAN[dialog ?? "suspend"] ?? ""}
+      >
+        {(dialog === "request-fix" || dialog === "suspend") && (
+          <FormAlasan aksi={dialog} sibuk={sibuk} onClose={() => setDialog(null)} onKirim={(al) => kirim(dialog, al)} />
+        )}
       </Dialog>
       <ConfirmDialog
-        open={dialog === "verify"} onClose={() => setDialog(null)} title="Verifikasi penjual" tone="primary"
-        confirmLabel={lengkap ? "Ya, verifikasi" : "Tetap verifikasi"} busy={sibuk}
-        body={lengkap ? "Checklist lengkap. Verifikasi toko ini? Toko akan tampil untuk pembeli." : "Checklist belum lengkap. Tetap verifikasi?"}
+        open={dialog === "verify"}
+        onClose={() => setDialog(null)}
+        title="Verifikasi penjual"
+        tone="primary"
+        confirmLabel={lengkap ? "Ya, verifikasi" : "Tetap verifikasi"}
+        busy={sibuk}
+        body={
+          lengkap
+            ? "Checklist lengkap. Verifikasi toko ini? Toko akan tampil untuk pembeli."
+            : "Checklist belum lengkap. Tetap verifikasi?"
+        }
         onConfirm={() => kirim("verify")}
       />
       <ConfirmDialog
-        open={dialog === "reactivate"} onClose={() => setDialog(null)} title="Aktifkan lagi toko" tone="primary" confirmLabel="Aktifkan lagi" busy={sibuk}
-        body="Aktifkan lagi toko ini? Toko akan terlihat oleh pembeli." onConfirm={() => kirim("reactivate")}
+        open={dialog === "reactivate"}
+        onClose={() => setDialog(null)}
+        title="Aktifkan lagi toko"
+        tone="primary"
+        confirmLabel="Aktifkan lagi"
+        busy={sibuk}
+        body="Aktifkan lagi toko ini? Toko akan terlihat oleh pembeli."
+        onConfirm={() => kirim("reactivate")}
       />
       <ConfirmDialog
-        open={dialog === "close-today"} onClose={() => setDialog(null)} title="Tutup dapur hari ini" tone="primary" confirmLabel="Tutup hari ini" busy={sibuk}
-        body="Dapur penjual akan ditutup. Penjual bisa membukanya lagi sendiri." onConfirm={() => kirim("close-today")}
+        open={dialog === "close-today"}
+        onClose={() => setDialog(null)}
+        title="Tutup dapur hari ini"
+        tone="primary"
+        confirmLabel="Tutup hari ini"
+        busy={sibuk}
+        body="Dapur penjual akan ditutup. Penjual bisa membukanya lagi sendiri."
+        onConfirm={() => kirim("close-today")}
       />
     </div>
   );

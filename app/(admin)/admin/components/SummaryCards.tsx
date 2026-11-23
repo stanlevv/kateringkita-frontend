@@ -42,7 +42,9 @@ export function SummaryCards({ data }: { data: Ringkasan }) {
                 const v = statusView[tampil];
                 return (
                   <li key={key} className="flex items-center justify-between gap-3">
-                    <Badge tone={v.tone} icon={v.icon}>{v.label}</Badge>
+                    <Badge tone={v.tone} icon={v.icon}>
+                      {v.label}
+                    </Badge>
                     <span className="font-mono text-lg font-semibold text-ink">{data.orders_today[key]}</span>
                   </li>
                 );
@@ -51,8 +53,18 @@ export function SummaryCards({ data }: { data: Ringkasan }) {
           </Card>
         </section>
         <div className="flex flex-col gap-4">
-          <KpiCard icon={Banknote} label="Omzet hari ini" value={formatRupiah(data.revenue_today)} hint="Pesanan selesai dari semua toko" />
-          <KpiCard icon={Timer} label="Pesanan tertahan" value={data.holding_expiring_soon} hint="Segera kedaluwarsa, kurang dari 1 menit lagi" />
+          <KpiCard
+            icon={Banknote}
+            label="Omzet hari ini"
+            value={formatRupiah(data.revenue_today)}
+            hint="Pesanan selesai dari semua toko"
+          />
+          <KpiCard
+            icon={Timer}
+            label="Pesanan tertahan"
+            value={data.holding_expiring_soon}
+            hint="Segera kedaluwarsa, kurang dari 1 menit lagi"
+          />
         </div>
       </div>
 
@@ -73,8 +85,12 @@ export function SummaryCards({ data }: { data: Ringkasan }) {
         <Card>
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-ink">Aksi admin terakhir</h2>
-            <Link href="/admin/log" className={`inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-sm font-medium text-primary ${fokus}`}>
-              Lihat semua log<ChevronRight aria-hidden className="size-4" />
+            <Link
+              href="/admin/log"
+              className={`inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-sm font-medium text-primary ${fokus}`}
+            >
+              Lihat semua log
+              <ChevronRight aria-hidden className="size-4" />
             </Link>
           </div>
           {data.recent_logs.length === 0 ? (
@@ -85,7 +101,9 @@ export function SummaryCards({ data }: { data: Ringkasan }) {
                 <li key={l.id} className="py-2">
                   <p className="font-medium text-ink">{labelAksi(l.action)}</p>
                   <p className="text-sm text-ink-muted">{labelTarget(l.target_type, l.target_id)}</p>
-                  <p className="text-sm text-ink-muted">{l.admin_name} · {formatTanggal(l.created_at)}, {formatJam(l.created_at)} WIB</p>
+                  <p className="text-sm text-ink-muted">
+                    {l.admin_name} · {formatTanggal(l.created_at)}, {formatJam(l.created_at)} WIB
+                  </p>
                 </li>
               ))}
             </ul>

@@ -12,9 +12,16 @@ vi.mock("@/app/actions/auth", () => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 const isi = (label: RegExp, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
-const klik = async (name: string) => act(async () => { fireEvent.click(screen.getByRole("button", { name })); });
+const klik = async (name: string) =>
+  act(async () => {
+    fireEvent.click(screen.getByRole("button", { name }));
+  });
 
-beforeEach(() => { mintaKodeReset.mockReset(); resetKataSandi.mockReset(); push.mockReset(); });
+beforeEach(() => {
+  mintaKodeReset.mockReset();
+  resetKataSandi.mockReset();
+  push.mockReset();
+});
 
 describe("F11 lupa sandi", () => {
   it("email salah format -> galat, action tidak dipanggil", async () => {
@@ -45,7 +52,11 @@ describe("F11 lupa sandi", () => {
 
   it("kode salah dari API -> galat di field kode, tetap di langkah kode", async () => {
     mintaKodeReset.mockResolvedValue({ ok: true });
-    resetKataSandi.mockResolvedValue({ error: "Data tidak valid.", code: "VALIDATION_ERROR", fields: { code: ["Kode salah atau sudah kedaluwarsa."] } });
+    resetKataSandi.mockResolvedValue({
+      error: "Data tidak valid.",
+      code: "VALIDATION_ERROR",
+      fields: { code: ["Kode salah atau sudah kedaluwarsa."] },
+    });
     render(<LupaSandiForm />);
     isi(/^Email/, "siti@mail.com");
     await klik("Kirim kode");

@@ -11,7 +11,18 @@ import { GET } from "./route";
 const hariIni = tanggalWib(new Date().toISOString());
 const minta = (q: string) => GET(new Request(`http://localhost/api/laporan/csv${q}`));
 
-const baris = { code: "KK-20261031-AB2C", created_at: "2026-10-30T10:00:00.000Z", completed_at: "2026-10-31T04:42:00.000Z", customer_name: "Rafli", payment_method: "cod", menu_name: "Nasi Ayam", qty: 2, total: 44000, hpp_total: 28000, status: "completed" };
+const baris = {
+  code: "KK-20261031-AB2C",
+  created_at: "2026-10-30T10:00:00.000Z",
+  completed_at: "2026-10-31T04:42:00.000Z",
+  customer_name: "Rafli",
+  payment_method: "cod",
+  menu_name: "Nasi Ayam",
+  qty: 2,
+  total: 44000,
+  hpp_total: 28000,
+  status: "completed",
+};
 beforeEach(() => {
   getSession.mockResolvedValue({ user: { role: "merchant" }, merchant: {} });
   getTransactions.mockResolvedValue({ data: [baris] });
@@ -45,7 +56,9 @@ describe("LP-N4 rute CSV", () => {
     expect((await minta("")).status).toBe(400);
   });
   it("backend sesi gagal -> 503 dengan pesan Indonesia", async () => {
-    getSession.mockImplementation(async () => { throw new Error("boom"); });
+    getSession.mockImplementation(async () => {
+      throw new Error("boom");
+    });
     const res = await minta(`?dari=${hariIni}&sampai=${hariIni}`);
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ message: "Server tidak dapat dihubungi. Coba lagi sesaat lagi." });
@@ -60,15 +73,26 @@ describe("LP-N4 rute CSV", () => {
 
 // AUD-48: navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
 describe("XS-Leak", () => {
-  it.each(["cross-site", "same-site", "none"])("sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca", async (asal) => {
-    getSession.mockClear();
-    const res = await GET(new Request(`http://localhost/api/laporan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": asal } }));
-    expect(res.status).toBe(401);
-    expect(await res.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
-    expect(getSession).not.toHaveBeenCalled();
-  });
+  it.each(["cross-site", "same-site", "none"])(
+    "sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca",
+    async (asal) => {
+      getSession.mockClear();
+      const res = await GET(
+        new Request(`http://localhost/api/laporan/csv?dari=${hariIni}&sampai=${hariIni}`, {
+          headers: { "sec-fetch-site": asal },
+        }),
+      );
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
+      expect(getSession).not.toHaveBeenCalled();
+    },
+  );
   it("same-origin tetap mengunduh", async () => {
-    const res = await GET(new Request(`http://localhost/api/laporan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": "same-origin" } }));
+    const res = await GET(
+      new Request(`http://localhost/api/laporan/csv?dari=${hariIni}&sampai=${hariIni}`, {
+        headers: { "sec-fetch-site": "same-origin" },
+      }),
+    );
     expect(res.status).toBe(200);
   });
 });

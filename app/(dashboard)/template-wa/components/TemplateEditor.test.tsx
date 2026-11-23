@@ -12,11 +12,20 @@ import { TemplateEditor } from "./TemplateEditor";
 
 const pesanan = orders()[0];
 const tampil = (awal: string | null = "Halo {nama}, pesanan {kode}", order: typeof pesanan | null = pesanan) =>
-  render(<><a href="/dashboard">Beranda</a><Toaster /><TemplateEditor namaToko="Dapur Diego" template={awal} order={order} /></>);
+  render(
+    <>
+      <a href="/dashboard">Beranda</a>
+      <Toaster />
+      <TemplateEditor namaToko="Dapur Diego" template={awal} order={order} />
+    </>,
+  );
 const editor = () => screen.getByLabelText(/Isi templat/) as HTMLTextAreaElement;
 const simpan = () => screen.queryByRole("button", { name: "Simpan templat" });
 
-beforeEach(() => { saveProfile.mockReset(); saveProfile.mockResolvedValue({ data: {} }); });
+beforeEach(() => {
+  saveProfile.mockReset();
+  saveProfile.mockResolvedValue({ data: {} });
+});
 
 describe("WA-N1 chip placeholder", () => {
   it("menyisipkan di posisi kursor dan kursor tetap setelah sisipan", async () => {
@@ -106,7 +115,9 @@ describe("WA-N3 simpan & G-5", () => {
     expect(simpan()).not.toBeInTheDocument();
   });
   it("gagal simpan -> toast galat, tetap berubah", async () => {
-    saveProfile.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Pengaturan belum tersimpan. Coba lagi." } });
+    saveProfile.mockResolvedValue({
+      error: { code: "INTERNAL_ERROR", message: "Pengaturan belum tersimpan. Coba lagi." },
+    });
     tampil("Halo");
     await userEvent.type(editor(), "!");
     await userEvent.click(simpan()!);

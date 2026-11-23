@@ -5,7 +5,8 @@ import type { MerchantOrder } from "@/types/order";
 import { RejectDialog } from "./RejectDialog";
 
 const dasar = orders()[0]; // holding tunai, titik temu
-const tampil = (p: Partial<MerchantOrder>) => render(<RejectDialog order={{ ...dasar, ...p }} onClose={vi.fn()} onConfirm={vi.fn()} />);
+const tampil = (p: Partial<MerchantOrder>) =>
+  render(<RejectDialog order={{ ...dasar, ...p }} onClose={vi.fn()} onConfirm={vi.fn()} />);
 
 describe("RejectDialog (DB-A1, F26)", () => {
   it("tunai: tanpa peringatan dana; alasan titik temu tersedia", () => {

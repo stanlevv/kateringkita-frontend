@@ -14,11 +14,17 @@ export default async function BannerPage() {
   // eslint-disable-next-line react-hooks/purity -- daftar voucher yang belum berakhir saat halaman dimuat
   const vouchers = "data" in promos ? pilihanVoucher(promos.data, Date.now()) : [];
   return (
-    <PageHeader title="Banner" description="Pasang banner tokomu di beranda aplikasi pembeli. Tampil setelah disetujui admin.">
+    <PageHeader
+      title="Banner"
+      description="Pasang banner tokomu di beranda aplikasi pembeli. Tampil setelah disetujui admin."
+    >
       {banners.ok && banners.data ? (
         <BannerToko banners={banners.data} vouchers={vouchers} />
       ) : (
-        <GagalMuat judul="Banner belum bisa dimuat" isi="Terjadi kesalahan saat mengambil banner. Periksa koneksi lalu coba lagi." />
+        <GagalMuat
+          judul="Banner belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil banner. Periksa koneksi lalu coba lagi."
+        />
       )}
     </PageHeader>
   );

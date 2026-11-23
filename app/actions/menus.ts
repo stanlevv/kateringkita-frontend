@@ -11,7 +11,10 @@ import type { MerchantMenu } from "@/types/menu";
 const idMenu = (id: unknown) => typeof id === "number" && Number.isInteger(id) && id > 0;
 const tidakAda = () => galat("NOT_FOUND", "Menu tidak ditemukan.");
 
-export async function adjustQuota(menuId: number, ubah: { delta: number } | { quota_today: number }): Promise<ActionResult<MerchantMenu>> {
+export async function adjustQuota(
+  menuId: number,
+  ubah: { delta: number } | { quota_today: number },
+): Promise<ActionResult<MerchantMenu>> {
   await requireMerchant();
   const o = (typeof ubah === "object" && ubah !== null ? ubah : {}) as Record<string, unknown>;
   if (!idMenu(menuId) || !(typeof o.delta === "number" || typeof o.quota_today === "number")) {
@@ -20,7 +23,9 @@ export async function adjustQuota(menuId: number, ubah: { delta: number } | { qu
   const s = await getSkenario();
   if (s === "gagal-aksi") return galat("INTERNAL_ERROR", "Kuota belum tersimpan. Coba lagi.");
   if (s === "konflik") return galat("CONFLICT", "Kuota sudah diubah di tempat lain. Muat ulang lalu coba lagi.");
-  return hasil(await merchantFetch<MerchantMenu>(`/menus/${menuId}/quota`, { method: "PATCH", body: JSON.stringify(ubah) }));
+  return hasil(
+    await merchantFetch<MerchantMenu>(`/menus/${menuId}/quota`, { method: "PATCH", body: JSON.stringify(ubah) }),
+  );
 }
 
 export async function setMenuActive(menuId: number, isActive: boolean): Promise<ActionResult<MerchantMenu>> {
@@ -28,7 +33,12 @@ export async function setMenuActive(menuId: number, isActive: boolean): Promise<
   if (!idMenu(menuId)) return tidakAda();
   const s = await getSkenario();
   if (s === "gagal-aksi") return galat("INTERNAL_ERROR", "Menu belum diubah. Coba lagi.");
-  return hasil(await merchantFetch<MerchantMenu>(`/menus/${menuId}`, { method: "PATCH", body: JSON.stringify({ is_active: isActive }) }));
+  return hasil(
+    await merchantFetch<MerchantMenu>(`/menus/${menuId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: isActive }),
+    }),
+  );
 }
 
 export async function saveMenu(id: number | null, input: unknown): Promise<ActionResult<MerchantMenu>> {
@@ -44,11 +54,22 @@ export async function saveMenu(id: number | null, input: unknown): Promise<Actio
     return { error: { code: "VALIDATION_ERROR", message: "Periksa kembali isian menu.", fields } };
   }
   const path = id === null ? "/menus" : `/menus/${id}`;
-  return hasil(await merchantFetch<MerchantMenu>(path, { method: id === null ? "POST" : "PATCH", body: JSON.stringify(r.data) }));
+  return hasil(
+    await merchantFetch<MerchantMenu>(path, { method: id === null ? "POST" : "PATCH", body: JSON.stringify(r.data) }),
+  );
 }
 
-export async function requestUpload(berkas: { purpose: "menu" | "logo" | "banner" | "cover"; content_type: string; size: number }): Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>> {
+export async function requestUpload(berkas: {
+  purpose: "menu" | "logo" | "banner" | "cover";
+  content_type: string;
+  size: number;
+}): Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>> {
   await requireMerchant();
   if ((await getSkenario()) === "gagal-aksi") return galat("INTERNAL_ERROR", "Foto gagal diunggah. Coba lagi");
-  return hasil(await merchantFetch<{ upload_url: string; public_url: string; expires_at: string }>("/uploads", { method: "POST", body: JSON.stringify(berkas) }));
+  return hasil(
+    await merchantFetch<{ upload_url: string; public_url: string; expires_at: string }>("/uploads", {
+      method: "POST",
+      body: JSON.stringify(berkas),
+    }),
+  );
 }

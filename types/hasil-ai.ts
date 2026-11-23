@@ -3,7 +3,14 @@ export type StatusHasilAi = "menunggu" | "disetujui" | "ditolak";
 export type FiturHasilAi = "asisten" | "rekomendasi";
 
 export type KeluaranAsisten = { jawaban: string; poin: string[]; asumsi: string };
-export type ItemRekomendasi = { menu_id: number; menu: string; toko: string; qty: number; subtotal: number; reason: string | null };
+export type ItemRekomendasi = {
+  menu_id: number;
+  menu: string;
+  toko: string;
+  qty: number;
+  subtotal: number;
+  reason: string | null;
+};
 export type KeluaranRekomendasi = { summary: string; total: number; items: ItemRekomendasi[] };
 
 type Orang = { id: number; name: string };

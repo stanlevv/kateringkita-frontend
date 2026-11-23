@@ -10,7 +10,10 @@ export default function Loading() {
     >
       <div className="flex flex-col gap-10">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3"><SkeletonTeks ukuran="lg" lebar="w-28" /><SkeletonPil jumlah={2} /></div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <SkeletonTeks ukuran="lg" lebar="w-28" />
+            <SkeletonPil jumlah={2} />
+          </div>
           <SkeletonTabel baris={4} kolom={4} />
         </div>
         <SkeletonKartu baris={3} tombol={1} />

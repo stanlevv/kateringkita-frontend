@@ -19,13 +19,16 @@ beforeEach(() => {
 });
 
 describe("D3 GET /api/dashboard/sinkron (M-04)", () => {
-  it.each(["", "?sejak=kemarin", "?sejak=2026-11-01T03:00:00"])("sejak tidak valid (%s) -> 400 tanpa fetch", async (q) => {
-    const res = await minta(q);
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: { code: "VALIDATION_ERROR", message: "Data tidak valid." } });
-    expect(getPerubahan).not.toHaveBeenCalled();
-    expect(getMenus).not.toHaveBeenCalled();
-  });
+  it.each(["", "?sejak=kemarin", "?sejak=2026-11-01T03:00:00"])(
+    "sejak tidak valid (%s) -> 400 tanpa fetch",
+    async (q) => {
+      const res = await minta(q);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: { code: "VALIDATION_ERROR", message: "Data tidak valid." } });
+      expect(getPerubahan).not.toHaveBeenCalled();
+      expect(getMenus).not.toHaveBeenCalled();
+    },
+  );
   it("sukses -> 200 { data: { orders, menus } } + no-store", async () => {
     const res = await minta(`?sejak=${encodeURIComponent(SEJAK)}`);
     expect(res.status).toBe(200);

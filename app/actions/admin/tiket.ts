@@ -14,7 +14,8 @@ export async function balasTiket(code: string, body: string): Promise<ActionResu
   await requireAdmin();
   if (!kodeTiketValid(code)) return galat("VALIDATION_ERROR", "Tiket tidak valid.");
   const isi = typeof body === "string" ? body.trim() : "";
-  if (isi.length < 1 || isi.length > BATAS_BALASAN) return galatField({ body: `Pesan 1–${BATAS_BALASAN} karakter.` }, "Periksa kembali balasan.");
+  if (isi.length < 1 || isi.length > BATAS_BALASAN)
+    return galatField({ body: `Pesan 1–${BATAS_BALASAN} karakter.` }, "Periksa kembali balasan.");
   const res = await adminFetch<null>(jalur(code, "messages"), { method: "POST", body: JSON.stringify({ body: isi }) });
   return res.ok ? { data: null } : hasil(res);
 }

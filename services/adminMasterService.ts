@@ -1,9 +1,39 @@
 import type { KindMaster } from "@/types/admin";
 
 // A-01…A-03 — tab di URL, batas panjang (cermin be/src/admin/master.ts), dan validasi bersama form & server action.
-export const TAB_MASTER: { id: string; kind: KindMaster; label: string; satuan: string; kolom?: "icon" | "description"; kolomLabel?: string; kolomMax?: number; nameMax: number; urut: boolean }[] = [
-  { id: "kategori", kind: "categories", label: "Kategori", satuan: "kategori", kolom: "icon", kolomLabel: "Ikon", kolomMax: 40, nameMax: 60, urut: true },
-  { id: "titik-temu", kind: "pickup-points", label: "Titik temu", satuan: "titik temu", kolom: "description", kolomLabel: "Deskripsi", kolomMax: 255, nameMax: 120, urut: false },
+export const TAB_MASTER: {
+  id: string;
+  kind: KindMaster;
+  label: string;
+  satuan: string;
+  kolom?: "icon" | "description";
+  kolomLabel?: string;
+  kolomMax?: number;
+  nameMax: number;
+  urut: boolean;
+}[] = [
+  {
+    id: "kategori",
+    kind: "categories",
+    label: "Kategori",
+    satuan: "kategori",
+    kolom: "icon",
+    kolomLabel: "Ikon",
+    kolomMax: 40,
+    nameMax: 60,
+    urut: true,
+  },
+  {
+    id: "titik-temu",
+    kind: "pickup-points",
+    label: "Titik temu",
+    satuan: "titik temu",
+    kolom: "description",
+    kolomLabel: "Deskripsi",
+    kolomMax: 255,
+    nameMax: 120,
+    urut: false,
+  },
   { id: "jenis-usaha", kind: "merchant-types", label: "Jenis usaha", satuan: "jenis usaha", nameMax: 100, urut: true },
 ];
 

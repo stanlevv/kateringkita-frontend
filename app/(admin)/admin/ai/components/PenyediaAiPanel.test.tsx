@@ -17,13 +17,33 @@ vi.mock("@/app/actions/admin/ai", () => ({
 import { PenyediaAiPanel } from "./PenyediaAiPanel";
 
 const p = (o: Partial<PenyediaAi>): PenyediaAi => ({
-  id: 1, provider: "groq", provider_name: "Groq", label: "Groq gratis", model: "llama-3.3-70b-versatile", key_hint: "ABCD", priority: 1,
-  is_active: true, last_ok_at: null, last_error: null, last_error_at: null, cooldown_until: null, ...o,
+  id: 1,
+  provider: "groq",
+  provider_name: "Groq",
+  label: "Groq gratis",
+  model: "llama-3.3-70b-versatile",
+  key_hint: "ABCD",
+  priority: 1,
+  is_active: true,
+  last_ok_at: null,
+  last_error: null,
+  last_error_at: null,
+  cooldown_until: null,
+  ...o,
 });
 const data: DaftarAi = {
   providers: [
     p({}),
-    p({ id: 2, provider: "openrouter", provider_name: "OpenRouter", label: "OR", priority: 2, cooldown_until: new Date(Date.now() + 600_000).toISOString(), last_error: "Kuota/batas pemakaian habis (429).", last_error_at: new Date().toISOString() }),
+    p({
+      id: 2,
+      provider: "openrouter",
+      provider_name: "OpenRouter",
+      label: "OR",
+      priority: 2,
+      cooldown_until: new Date(Date.now() + 600_000).toISOString(),
+      last_error: "Kuota/batas pemakaian habis (429).",
+      last_error_at: new Date().toISOString(),
+    }),
     p({ id: 3, label: "Cadangan mati", priority: 3, is_active: false }),
   ],
   env_gemini: null,
@@ -49,12 +69,21 @@ describe("halaman admin AI", () => {
     tambahPenyediaAi.mockResolvedValue({ data: p({ id: 9 }) });
     render(<PenyediaAiPanel data={data} />);
 
-    await u.click(within(within(screen.getByRole("list", { name: "Urutan penyedia" })).getAllByRole("listitem")[0]).getByRole("button", { name: "Ubah" }));
+    await u.click(
+      within(within(screen.getByRole("list", { name: "Urutan penyedia" })).getAllByRole("listitem")[0]).getByRole(
+        "button",
+        { name: "Ubah" },
+      ),
+    );
     const ubah = screen.getByRole("dialog", { name: "Ubah Groq gratis" });
     await u.clear(within(ubah).getByLabelText(/Prioritas/));
     await u.type(within(ubah).getByLabelText(/Prioritas/), "5");
     await u.click(within(ubah).getByRole("button", { name: "Simpan perubahan" }));
-    expect(ubahPenyediaAi).toHaveBeenCalledWith(1, { label: "Groq gratis", model: "llama-3.3-70b-versatile", priority: 5 });
+    expect(ubahPenyediaAi).toHaveBeenCalledWith(1, {
+      label: "Groq gratis",
+      model: "llama-3.3-70b-versatile",
+      priority: 5,
+    });
     expect(refresh).toHaveBeenCalled();
 
     await u.click(screen.getByRole("button", { name: "Tambah penyedia" }));
@@ -63,7 +92,12 @@ describe("halaman admin AI", () => {
     await u.type(within(tambah).getByLabelText(/API key/), "gsk_kunci_1234567890");
     await u.click(within(tambah).getByRole("button", { name: "Tambah penyedia" }));
     expect(tambahPenyediaAi).toHaveBeenCalledWith({
-      label: "Groq", model: "llama-3.3-70b-versatile", priority: 100, api_key: "gsk_kunci_1234567890", provider: "groq", is_active: true,
+      label: "Groq",
+      model: "llama-3.3-70b-versatile",
+      priority: 100,
+      api_key: "gsk_kunci_1234567890",
+      provider: "groq",
+      is_active: true,
     });
   });
 });

@@ -53,10 +53,14 @@ describe("Stepper (Review Focus 3)", () => {
     const plus = screen.getByRole("button", { name: /tambah/i });
     fireEvent.pointerDown(plus);
     expect(screen.getByRole("spinbutton")).toHaveValue(11);
-    act(() => { vi.advanceTimersByTime(400 + 80 * 3); });
+    act(() => {
+      vi.advanceTimersByTime(400 + 80 * 3);
+    });
     expect(screen.getByRole("spinbutton")).toHaveValue(14);
     fireEvent.pointerUp(plus);
-    act(() => { vi.advanceTimersByTime(500); });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
     expect(screen.getByRole("spinbutton")).toHaveValue(14);
     vi.useRealTimers();
   });
@@ -72,7 +76,9 @@ describe("Stepper (Review Focus 3)", () => {
     const plus = screen.getByRole("button", { name: /tambah/i });
     fireEvent.pointerDown(plus, { button: 2 });
     fireEvent.pointerDown(plus, { button: 1 });
-    act(() => { vi.advanceTimersByTime(1000); });
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
     expect(screen.getByRole("spinbutton")).toHaveValue(10);
     vi.useRealTimers();
   });

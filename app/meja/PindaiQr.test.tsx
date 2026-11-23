@@ -13,10 +13,13 @@ const getUserMedia = vi.fn();
 let hasilDeteksi: { rawValue: string }[][] = [];
 
 beforeEach(() => {
-  vi.stubGlobal("BarcodeDetector", class {
-    static getSupportedFormats = async () => ["qr_code"];
-    detect = async () => hasilDeteksi.shift() ?? [];
-  });
+  vi.stubGlobal(
+    "BarcodeDetector",
+    class {
+      static getSupportedFormats = async () => ["qr_code"];
+      detect = async () => hasilDeteksi.shift() ?? [];
+    },
+  );
   Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia } });
   getUserMedia.mockResolvedValue({ getTracks: () => [{ stop }] });
   vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
@@ -34,7 +37,11 @@ afterEach(() => {
 describe("pindai QR meja dengan kamera", () => {
   it("minta izin kamera belakang, abaikan QR lain, buka menu meja saat QR meja terbaca, lalu matikan kamera", async () => {
     const u = userEvent.setup();
-    hasilDeteksi = [[], [{ rawValue: "https://contoh.com/promo" }], [{ rawValue: `https://ketringkita.edufin.app/meja/${T}` }]];
+    hasilDeteksi = [
+      [],
+      [{ rawValue: "https://contoh.com/promo" }],
+      [{ rawValue: `https://ketringkita.edufin.app/meja/${T}` }],
+    ];
     render(<PindaiQr />);
     await u.click(screen.getByRole("button", { name: "Scan QR meja" }));
 

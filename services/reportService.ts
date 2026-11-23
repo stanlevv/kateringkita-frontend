@@ -27,4 +27,6 @@ export const getHourly = ({ date }: { date: string }) =>
   laporan<HourlyPoint[]>([], async () => hasil(await merchantFetch<HourlyPoint[]>(`/reports/hourly?${qs({ date })}`)));
 
 export const getTransactions = ({ from, to }: RentangLaporan) =>
-  laporan<Transaction[]>([], async () => hasil(await merchantFetch<Transaction[]>(`/reports/transactions?${qs({ from, to })}`)));
+  laporan<Transaction[]>([], async () =>
+    hasil(await merchantFetch<Transaction[]>(`/reports/transactions?${qs({ from, to })}`)),
+  );

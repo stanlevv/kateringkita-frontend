@@ -9,7 +9,11 @@ export default function Loading() {
         {[0, 1, 2, 3, 4].map((i) => (
           <li key={i} className="flex gap-3 p-4">
             <Skeleton className="size-5 shrink-0 rounded-full" />
-            <div className="flex flex-1 flex-col gap-2"><SkeletonTeks lebar="w-48" /><SkeletonTeks ukuran="sm" lebar="w-full" /><SkeletonTeks ukuran="sm" lebar="w-24" /></div>
+            <div className="flex flex-1 flex-col gap-2">
+              <SkeletonTeks lebar="w-48" />
+              <SkeletonTeks ukuran="sm" lebar="w-full" />
+              <SkeletonTeks ukuran="sm" lebar="w-24" />
+            </div>
           </li>
         ))}
       </ul>

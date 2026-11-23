@@ -14,17 +14,35 @@ const LIMIT = 20;
 const IKON = { moderation: ImageOff, info: Megaphone } as const;
 
 /** Daftar notifikasi; yang belum dibaca ditandai titik. Saat dibuka semua ditandai dibaca, lalu badge sidebar disegarkan. */
-export function DaftarNotifikasi({ rows, total, page, unread }: { rows: Notifikasi[]; total: number; page: number; unread: number }) {
+export function DaftarNotifikasi({
+  rows,
+  total,
+  page,
+  unread,
+}: {
+  rows: Notifikasi[];
+  total: number;
+  page: number;
+  unread: number;
+}) {
   const router = useRouter();
   const sudah = useRef(false);
   useEffect(() => {
     if (unread === 0 || sudah.current) return;
     sudah.current = true;
-    void tandaiSemuaDibaca().then((r) => { if ("data" in r) router.refresh(); });
+    void tandaiSemuaDibaca().then((r) => {
+      if ("data" in r) router.refresh();
+    });
   }, [unread, router]);
 
   if (rows.length === 0) {
-    return <EmptyState icon={Bell} title="Belum ada notifikasi" body="Pengumuman admin dan kabar tentang menu kamu akan muncul di sini." />;
+    return (
+      <EmptyState
+        icon={Bell}
+        title="Belum ada notifikasi"
+        body="Pengumuman admin dan kabar tentang menu kamu akan muncul di sini."
+      />
+    );
   }
   return (
     <div className="flex flex-col gap-4">
@@ -34,20 +52,36 @@ export function DaftarNotifikasi({ rows, total, page, unread }: { rows: Notifika
           const baru = n.read_at === null;
           return (
             <li key={n.id} className={cx("flex gap-3 p-4", baru && "bg-primary-soft/40")}>
-              <Ikon aria-hidden className={cx("mt-0.5 size-5 shrink-0", n.type === "moderation" ? "text-danger" : "text-ink-muted")} />
+              <Ikon
+                aria-hidden
+                className={cx("mt-0.5 size-5 shrink-0", n.type === "moderation" ? "text-danger" : "text-ink-muted")}
+              />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className="flex items-center gap-2 font-semibold text-ink">
-                  {baru && <span className="size-2 shrink-0 rounded-full bg-accent"><span className="sr-only">Belum dibaca: </span></span>}
+                  {baru && (
+                    <span className="size-2 shrink-0 rounded-full bg-accent">
+                      <span className="sr-only">Belum dibaca: </span>
+                    </span>
+                  )}
                   {n.title}
                 </p>
                 <p className="whitespace-pre-wrap break-words text-sm text-ink">{n.body}</p>
-                <p className="text-xs text-ink-muted">{formatTanggal(n.created_at)} · {formatJam(n.created_at)} WIB</p>
+                <p className="text-xs text-ink-muted">
+                  {formatTanggal(n.created_at)} · {formatJam(n.created_at)} WIB
+                </p>
               </div>
             </li>
           );
         })}
       </ul>
-      {total > LIMIT && <Pagination page={page} total={total} limit={LIMIT} hrefFor={(p) => (p > 1 ? `/notifikasi?page=${p}` : "/notifikasi")} />}
+      {total > LIMIT && (
+        <Pagination
+          page={page}
+          total={total}
+          limit={LIMIT}
+          hrefFor={(p) => (p > 1 ? `/notifikasi?page=${p}` : "/notifikasi")}
+        />
+      )}
     </div>
   );
 }

@@ -8,15 +8,35 @@ import { PageHeader } from "./PageHeader";
  * Kerangka baru muncul setelah 150 ms (animate-muncul) supaya perpindahan yang cepat tidak berkedip; `aksi` ikut tertunda.
  * Judul/deskripsi harus sama persis dengan halamannya (dijaga test/rangka.test.ts).
  */
-export function RangkaHalaman({ judul, deskripsi, aksi, children }: { judul?: string; deskripsi?: string; aksi?: ReactNode; children: ReactNode }) {
+export function RangkaHalaman({
+  judul,
+  deskripsi,
+  aksi,
+  children,
+}: {
+  judul?: string;
+  deskripsi?: string;
+  aksi?: ReactNode;
+  children: ReactNode;
+}) {
   const status = (isi: ReactNode) => (
-    <div role="status" aria-label={`Memuat ${judul ?? "halaman"}`} className="animate-muncul motion-reduce:animate-none">
+    <div
+      role="status"
+      aria-label={`Memuat ${judul ?? "halaman"}`}
+      className="animate-muncul motion-reduce:animate-none"
+    >
       {isi}
     </div>
   );
   if (judul) {
-    const tunda = aksi && <div className="flex animate-muncul items-center gap-2 motion-reduce:animate-none">{aksi}</div>;
-    return <PageHeader title={judul} description={deskripsi} actions={tunda}>{status(children)}</PageHeader>;
+    const tunda = aksi && (
+      <div className="flex animate-muncul items-center gap-2 motion-reduce:animate-none">{aksi}</div>
+    );
+    return (
+      <PageHeader title={judul} description={deskripsi} actions={tunda}>
+        {status(children)}
+      </PageHeader>
+    );
   }
   return status(
     <>

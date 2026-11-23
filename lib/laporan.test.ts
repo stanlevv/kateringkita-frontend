@@ -30,13 +30,25 @@ describe("LP-N1 parseRentang", () => {
     expect(parseRentang(undefined, undefined, HARI_INI)).toEqual({ dari: HARI_INI, sampai: HARI_INI, galat: null });
   });
   it("sah dipakai apa adanya", () => {
-    expect(parseRentang("2026-10-25", "2026-10-31", HARI_INI)).toEqual({ dari: "2026-10-25", sampai: "2026-10-31", galat: null });
+    expect(parseRentang("2026-10-25", "2026-10-31", HARI_INI)).toEqual({
+      dari: "2026-10-25",
+      sampai: "2026-10-31",
+      galat: null,
+    });
   });
   it("tidak sah -> hari ini + pesan galat (LP-E1)", () => {
-    expect(parseRentang("2026-10-31", "2026-10-01", HARI_INI)).toEqual({ dari: HARI_INI, sampai: HARI_INI, galat: "Tanggal akhir harus setelah tanggal awal." });
+    expect(parseRentang("2026-10-31", "2026-10-01", HARI_INI)).toEqual({
+      dari: HARI_INI,
+      sampai: HARI_INI,
+      galat: "Tanggal akhir harus setelah tanggal awal.",
+    });
   });
   it("hanya satu parameter -> hari ini + galat", () => {
-    expect(parseRentang("2026-10-25", undefined, HARI_INI)).toEqual({ dari: HARI_INI, sampai: HARI_INI, galat: "Lengkapi tanggal awal dan akhir." });
+    expect(parseRentang("2026-10-25", undefined, HARI_INI)).toEqual({
+      dari: HARI_INI,
+      sampai: HARI_INI,
+      galat: "Lengkapi tanggal awal dan akhir.",
+    });
     expect(parseRentang(undefined, "2026-10-25", HARI_INI).galat).toBe("Lengkapi tanggal awal dan akhir.");
   });
   it("jumlahHari inklusif", () => {
@@ -66,7 +78,9 @@ describe("LP-N4 buatCsv", () => {
     expect(b).toBe("KK-20261031-AB2C,2026-10-31 11:42,Nasi Ayam,2,44000,28000,16000,cod");
   });
   it("kolom waktu dari completed_at (WIB), bukan created_at", () => {
-    expect(buatCsv([trx({ created_at: "2026-10-29T01:00:00.000Z", completed_at: "2026-10-31T17:30:00.000Z" })])).toContain(",2026-11-01 00:30,");
+    expect(
+      buatCsv([trx({ created_at: "2026-10-29T01:00:00.000Z", completed_at: "2026-10-31T17:30:00.000Z" })]),
+    ).toContain(",2026-11-01 00:30,");
   });
   it("kutip, koma, dan baris baru di-escape", () => {
     const csv = buatCsv([trx({ menu_name: 'Nasi "Spesial", pedas\nlevel 3' })]);

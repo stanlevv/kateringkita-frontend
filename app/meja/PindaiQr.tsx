@@ -52,7 +52,10 @@ export function PindaiQr() {
     setGalat(null);
     setInfo(null);
     try {
-      arus.current = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      arus.current = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
     } catch (e) {
       return setGalat(pesanGalat(e));
     }
@@ -101,7 +104,11 @@ export function PindaiQr() {
   }
 
   if (!didukung) {
-    return <p className="text-sm text-ink-muted">Buka aplikasi kamera HP dan arahkan ke QR di meja; menu akan terbuka sendiri.</p>;
+    return (
+      <p className="text-sm text-ink-muted">
+        Buka aplikasi kamera HP dan arahkan ke QR di meja; menu akan terbuka sendiri.
+      </p>
+    );
   }
 
   return (
@@ -112,13 +119,25 @@ export function PindaiQr() {
             <video ref={video} muted playsInline aria-label="Tampilan kamera" className="size-full object-cover" />
             <span aria-hidden className="pointer-events-none absolute inset-8 rounded-xl border-4 border-surface/80" />
           </div>
-          <p aria-live="polite" className="text-sm text-ink-muted">{info ?? "Arahkan kamera ke QR di meja."}</p>
-          <Button variant="secondary" onClick={tutup}><X aria-hidden className="size-4" />Tutup kamera</Button>
+          <p aria-live="polite" className="text-sm text-ink-muted">
+            {info ?? "Arahkan kamera ke QR di meja."}
+          </p>
+          <Button variant="secondary" onClick={tutup}>
+            <X aria-hidden className="size-4" />
+            Tutup kamera
+          </Button>
         </>
       ) : (
-        <Button size="lg" onClick={() => void mulai()}><Camera aria-hidden className="size-5" />Scan QR meja</Button>
+        <Button size="lg" onClick={() => void mulai()}>
+          <Camera aria-hidden className="size-5" />
+          Scan QR meja
+        </Button>
       )}
-      {galat && <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">{galat}</p>}
+      {galat && (
+        <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-sm text-danger">
+          {galat}
+        </p>
+      )}
     </div>
   );
 }

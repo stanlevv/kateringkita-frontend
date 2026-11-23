@@ -28,9 +28,17 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
       <Suspense>
         <LogFilters />
         {res.ok && res.data ? (
-          <AuditTable rows={res.data} page={page} total={meta?.total ?? res.data.length} filtered={FILTER.some((k) => sp[k])} />
+          <AuditTable
+            rows={res.data}
+            page={page}
+            total={meta?.total ?? res.data.length}
+            filtered={FILTER.some((k) => sp[k])}
+          />
         ) : (
-          <GagalMuat judul="Log belum bisa dimuat" isi="Terjadi kesalahan saat mengambil log. Periksa koneksi lalu coba lagi." />
+          <GagalMuat
+            judul="Log belum bisa dimuat"
+            isi="Terjadi kesalahan saat mengambil log. Periksa koneksi lalu coba lagi."
+          />
         )}
       </Suspense>
     </PageHeader>

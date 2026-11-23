@@ -57,8 +57,14 @@ export function antrean(orders: MerchantOrder[], tab: TabAntrean, sekarang: numb
   switch (tab) {
     case "tindakan": {
       // DB-A4: kadaluarsa barusan tetap terlihat 3 dtk. Brief §6: pesanan baru di atas, sisanya paling cepat habis dulu.
-      const tahan = orders.filter((o) => o.status === "holding" || (o.status === "expired" && o.hold_until && sekarang - ms(o.hold_until) < KADALUARSA_TAMPIL_MS));
-      const baru = tahan.filter((o) => o.status === "holding" && sekarang - ms(o.created_at) < BARU_MS).sort(naik((o) => -ms(o.created_at)));
+      const tahan = orders.filter(
+        (o) =>
+          o.status === "holding" ||
+          (o.status === "expired" && o.hold_until && sekarang - ms(o.hold_until) < KADALUARSA_TAMPIL_MS),
+      );
+      const baru = tahan
+        .filter((o) => o.status === "holding" && sekarang - ms(o.created_at) < BARU_MS)
+        .sort(naik((o) => -ms(o.created_at)));
       const lain = tahan.filter((o) => !baru.includes(o)).sort(naik((o) => ms(o.hold_until)));
       return [...baru, ...lain, ...by("confirmed").sort(naik((o) => ms(o.confirmed_at)))];
     }
@@ -77,7 +83,8 @@ export function jumlahTab(orders: MerchantOrder[]): Record<TabAntrean, number> {
 }
 
 export type Stok = "habis" | "menipis" | "aman";
-export const stokMenu = (m: Pick<MerchantMenu, "available">): Stok => (m.available <= 0 ? "habis" : m.available <= 3 ? "menipis" : "aman");
+export const stokMenu = (m: Pick<MerchantMenu, "available">): Stok =>
+  m.available <= 0 ? "habis" : m.available <= 3 ? "menipis" : "aman";
 
 const PERINGKAT: Record<Stok, number> = { habis: 0, menipis: 1, aman: 2 };
 /** Brief §5: Habis -> Menipis (<= 3) -> Aman; hanya menu aktif. */
@@ -93,7 +100,12 @@ export function satukanPesanan(lama: MerchantOrder[], masuk: MerchantOrder[]): M
   let berubah = false;
   for (const o of masuk) {
     const ada = peta.get(o.code);
-    if (ada && (Date.parse(o.updated_at) < Date.parse(ada.updated_at) || (o.updated_at === ada.updated_at && o.status === ada.status))) continue;
+    if (
+      ada &&
+      (Date.parse(o.updated_at) < Date.parse(ada.updated_at) ||
+        (o.updated_at === ada.updated_at && o.status === ada.status))
+    )
+      continue;
     peta.set(o.code, o);
     berubah = true;
   }
@@ -126,11 +138,18 @@ const DIBAYAR_ALUR = new Set<MerchantOrder["status"]>(["confirmed", "cooking", "
 export function ringkasHariIni(orders: MerchantOrder[], menus: MerchantMenu[], sekarang: number): Ringkasan {
   const hari = geserWib(sekarang).toISOString().slice(0, 10);
   const hariIni = (iso: string | null) => !!iso && tanggalWib(iso) === hari;
-  const omzet = orders.filter((o) => o.status === "completed" && hariIni(o.completed_at)).reduce((a, o) => a + o.subtotal, 0); // D10: sama dengan revenue laporan (tanpa biaya layanan)
+  const omzet = orders
+    .filter((o) => o.status === "completed" && hariIni(o.completed_at))
+    .reduce((a, o) => a + o.subtotal, 0); // D10: sama dengan revenue laporan (tanpa biaya layanan)
   const aktif = menus.filter((m) => m.is_active);
-  const kapasitas = { terpakai: aktif.reduce((a, m) => a + m.sold_today + m.held_today, 0), total: aktif.reduce((a, m) => a + m.quota_today, 0) };
+  const kapasitas = {
+    terpakai: aktif.reduce((a, m) => a + m.sold_today + m.held_today, 0),
+    total: aktif.reduce((a, m) => a + m.quota_today, 0),
+  };
   const siap = orders.filter((o) => hariIni(o.ready_at) && o.confirmed_at);
-  const rataSiapMenit = siap.length ? Math.round(siap.reduce((a, o) => a + ms(o.ready_at) - ms(o.confirmed_at), 0) / siap.length / 60_000) : null;
+  const rataSiapMenit = siap.length
+    ? Math.round(siap.reduce((a, o) => a + ms(o.ready_at) - ms(o.confirmed_at), 0) / siap.length / 60_000)
+    : null;
   const porsi = new Map<number, { name: string; portions: number }>();
   for (const o of orders) {
     if (!DIBAYAR_ALUR.has(o.status) || !hariIni(o.created_at)) continue;
@@ -139,6 +158,9 @@ export function ringkasHariIni(orders: MerchantOrder[], menus: MerchantMenu[], s
       porsi.set(it.menu_id, { ...p, portions: p.portions + it.qty });
     }
   }
-  const terlaris = [...porsi.values()].reduce<Ringkasan["terlaris"]>((a, p) => (!a || p.portions > a.portions ? p : a), null);
+  const terlaris = [...porsi.values()].reduce<Ringkasan["terlaris"]>(
+    (a, p) => (!a || p.portions > a.portions ? p : a),
+    null,
+  );
   return { omzet, kapasitas, perluTindakan: perluTindakan(orders), rataSiapMenit, terlaris };
 }

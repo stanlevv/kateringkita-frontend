@@ -5,7 +5,8 @@ import { getPerubahan } from "@/services/orderService";
 import { requireMerchant } from "@/services/authService";
 
 const SEJAK = z.iso.datetime({ offset: true });
-const json = (body: unknown, status: number) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
+const json = (body: unknown, status: number) =>
+  NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 // M-04, D3: penyegaran antrean bertahap dashboard; token dari cookie sesi, bukan server action (tak mengantre di depan aksi).
 export async function GET(req: NextRequest) {

@@ -11,7 +11,10 @@ export async function tambahPenyediaAi(input: IsianAi): Promise<ActionResult<Pen
   return hasil(await adminFetch<PenyediaAi>("/ai-providers", { method: "POST", body: JSON.stringify(input) }));
 }
 
-export async function ubahPenyediaAi(id: number, input: Partial<Omit<IsianAi, "provider">>): Promise<ActionResult<PenyediaAi>> {
+export async function ubahPenyediaAi(
+  id: number,
+  input: Partial<Omit<IsianAi, "provider">>,
+): Promise<ActionResult<PenyediaAi>> {
   await requireAdmin();
   return hasil(await adminFetch<PenyediaAi>(`/ai-providers/${id}`, { method: "PATCH", body: JSON.stringify(input) }));
 }
@@ -19,7 +22,9 @@ export async function ubahPenyediaAi(id: number, input: Partial<Omit<IsianAi, "p
 export async function hapusPenyediaAi(id: number): Promise<ActionResult<true>> {
   await requireAdmin();
   const r = await adminFetch<null>(`/ai-providers/${id}`, { method: "DELETE" });
-  return r.ok ? { data: true } : { error: r.error ?? { code: "UNKNOWN", message: "Penyedia belum terhapus. Coba lagi." } };
+  return r.ok
+    ? { data: true }
+    : { error: r.error ?? { code: "UNKNOWN", message: "Penyedia belum terhapus. Coba lagi." } };
 }
 
 export async function ujiPenyediaAi(id: number): Promise<ActionResult<HasilUjiAi>> {

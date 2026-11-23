@@ -4,12 +4,28 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ConfirmDialog } from "./ConfirmDialog";
 
-function Uji({ onConfirm = vi.fn(), ...p }: { onConfirm?: (r?: string) => void; requireReason?: boolean; reasons?: string[] }) {
+function Uji({
+  onConfirm = vi.fn(),
+  ...p
+}: {
+  onConfirm?: (r?: string) => void;
+  requireReason?: boolean;
+  reasons?: string[];
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button onClick={() => setOpen(true)}>Tolak</button>
-      <ConfirmDialog open={open} onClose={() => setOpen(false)} title="Tolak pesanan?" body="Pembeli akan diberi tahu." confirmLabel="Ya, tolak" tone="danger" onConfirm={onConfirm} {...p} />
+      <ConfirmDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Tolak pesanan?"
+        body="Pembeli akan diberi tahu."
+        confirmLabel="Ya, tolak"
+        tone="danger"
+        onConfirm={onConfirm}
+        {...p}
+      />
     </>
   );
 }

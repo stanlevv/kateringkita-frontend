@@ -12,7 +12,9 @@ beforeEach(() => {
   requestUpload.mockReset();
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
-  requestUpload.mockResolvedValue({ data: { upload_url: "https://r2.test/put?sig=1", public_url: "https://cdn.test/a.png", expires_at: "x" } });
+  requestUpload.mockResolvedValue({
+    data: { upload_url: "https://r2.test/put?sig=1", public_url: "https://cdn.test/a.png", expires_at: "x" },
+  });
   fetchMock.mockResolvedValue({ ok: true, status: 200 });
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -37,8 +39,12 @@ describe("unggahFoto (M-07, M-10, FE-08)", () => {
     expect(await unggahFoto(berkas, "menu")).toEqual(GAGAL);
   });
   it("requestUpload gagal -> galatnya diteruskan, PUT tidak dipanggil", async () => {
-    requestUpload.mockResolvedValue({ error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
-    expect(await unggahFoto(berkas, "logo")).toEqual({ error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." } });
+    requestUpload.mockResolvedValue({
+      error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
+    });
+    expect(await unggahFoto(berkas, "logo")).toEqual({
+      error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
+    });
     expect(fetchMock).not.toHaveBeenCalled();
   });
   it("requestUpload melempar -> galat jaringan, tidak melempar", async () => {
@@ -53,7 +59,11 @@ describe("unggahFoto memperkecil foto sebelum unggah", () => {
   const MB = 1024 * 1024;
   const fotoHp = () => new File([new Uint8Array(8 * MB)], "IMG_0001.jpg", { type: "image/jpeg" });
   const ctx = { fillStyle: "", fillRect: vi.fn(), drawImage: vi.fn() };
-  const asli = { buat: URL.createObjectURL, hapus: URL.revokeObjectURL, decode: Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "decode") };
+  const asli = {
+    buat: URL.createObjectURL,
+    hapus: URL.revokeObjectURL,
+    decode: Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "decode"),
+  };
   let ukuranAsli = { w: 4000, h: 3000 };
   let webp = true; // false = browser tanpa penyandi WebP (Safari) memberi PNG
   let decode: () => Promise<void>;
@@ -68,7 +78,11 @@ describe("unggahFoto memperkecil foto sebelum unggah", () => {
     ctx.drawImage.mockReset();
     URL.createObjectURL = vi.fn(() => "blob:foto");
     URL.revokeObjectURL = vi.fn();
-    Object.defineProperty(HTMLImageElement.prototype, "decode", { configurable: true, writable: true, value: () => decode() });
+    Object.defineProperty(HTMLImageElement.prototype, "decode", {
+      configurable: true,
+      writable: true,
+      value: () => decode(),
+    });
     vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockImplementation(() => ukuranAsli.w);
     vi.spyOn(HTMLImageElement.prototype, "naturalHeight", "get").mockImplementation(() => ukuranAsli.h);
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => ctx as never);
@@ -118,7 +132,9 @@ describe("unggahFoto memperkecil foto sebelum unggah", () => {
 
   it("browser gagal membaca foto -> berkas asli; asli > 5 MB -> pesan ukuran tanpa minta URL", async () => {
     decode = () => Promise.reject(new Error("EncodingError"));
-    expect(await unggahFoto(fotoHp(), "menu")).toEqual({ error: { code: "VALIDATION_ERROR", message: "Ukuran foto maksimal 5 MB." } });
+    expect(await unggahFoto(fotoHp(), "menu")).toEqual({
+      error: { code: "VALIDATION_ERROR", message: "Ukuran foto maksimal 5 MB." },
+    });
     expect(requestUpload).not.toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:foto");
     await unggahFoto(berkas, "logo");

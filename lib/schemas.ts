@@ -23,7 +23,10 @@ export const ownerSchema = z
   .object({
     full_name: wajib("Nama lengkap wajib diisi.", 150),
     phone: nomorWa,
-    email: z.string().trim().refine((v) => v === "" || z.email().safeParse(v).success, "Format email tidak valid."),
+    email: z
+      .string()
+      .trim()
+      .refine((v) => v === "" || z.email().safeParse(v).success, "Format email tidak valid."),
     password: kataSandiBaru,
     confirm: z.string(),
   })
@@ -46,7 +49,10 @@ export const resetSandiSchema = z
 
 // --- Menu (M-07): aturan sama dengan API.md POST /merchant/menus ---
 const angka = (label: string, min: number, maks?: number) => {
-  const a = z.number({ error: `${label} wajib diisi.` }).int(`${label} harus bilangan bulat.`).min(min, `${label} minimal ${min.toLocaleString("id-ID")}.`);
+  const a = z
+    .number({ error: `${label} wajib diisi.` })
+    .int(`${label} harus bilangan bulat.`)
+    .min(min, `${label} minimal ${min.toLocaleString("id-ID")}.`);
   return maks === undefined ? a : a.max(maks, `${label} maksimal ${maks.toLocaleString("id-ID")}.`);
 };
 
@@ -64,7 +70,9 @@ const menuFormObject = z.object({
   is_preorder: z.boolean(),
   preorder_days: z.number({ error: "Hari pre-order wajib diisi." }).int("Hari pre-order harus bilangan bulat."),
   min_order_qty: angka("Minimum pesan", 1, 1000),
-  options: z.array(z.object({ name: wajib("Nama opsi wajib diisi.", 60), extra_price: angka("Tambahan harga", 0, 1_000_000) })).max(20, "Maksimal 20 opsi."),
+  options: z
+    .array(z.object({ name: wajib("Nama opsi wajib diisi.", 60), extra_price: angka("Tambahan harga", 0, 1_000_000) }))
+    .max(20, "Maksimal 20 opsi."),
 });
 
 export const menuFormSchema = menuFormObject.check(lintasField());
@@ -74,12 +82,19 @@ export const menuFormSchema = menuFormObject.check(lintasField());
 function lintasField() {
   const c = z.superRefine((d: z.infer<typeof menuFormObject>, ctx) => {
     if (typeof d !== "object" || d === null) return; // input server action bisa apa saja; galat tipe sudah dilaporkan
-    if (Number.isFinite(d.price) && Number.isFinite(d.hpp) && d.price <= d.hpp) ctx.addIssue({ code: "custom", path: ["price"], message: `Harga jual harus lebih besar dari HPP (${formatRupiah(d.hpp)}).` });
-    if (d.is_preorder && !(d.preorder_days >= 1 && d.preorder_days <= 7)) ctx.addIssue({ code: "custom", path: ["preorder_days"], message: "Hari pre-order harus 1 sampai 7." });
+    if (Number.isFinite(d.price) && Number.isFinite(d.hpp) && d.price <= d.hpp)
+      ctx.addIssue({
+        code: "custom",
+        path: ["price"],
+        message: `Harga jual harus lebih besar dari HPP (${formatRupiah(d.hpp)}).`,
+      });
+    if (d.is_preorder && !(d.preorder_days >= 1 && d.preorder_days <= 7))
+      ctx.addIssue({ code: "custom", path: ["preorder_days"], message: "Hari pre-order harus 1 sampai 7." });
     const lihat = new Set<string>();
     (Array.isArray(d.options) ? d.options : []).forEach((o, i) => {
       const k = typeof o?.name === "string" ? o.name.trim().toLowerCase() : "";
-      if (k && lihat.has(k)) ctx.addIssue({ code: "custom", path: ["options", i, "name"], message: "Nama opsi sama dengan opsi lain." });
+      if (k && lihat.has(k))
+        ctx.addIssue({ code: "custom", path: ["options", i, "name"], message: "Nama opsi sama dengan opsi lain." });
       lihat.add(k);
     });
   });
@@ -112,20 +127,28 @@ const profilForm = {
   pickup_point_ids: z.array(z.number().int()).min(1, "Pilih minimal satu titik temu."),
 };
 const profilPenuh = z.object(profilForm);
-const profilSebagian = z.object({
-  ...profilForm,
-  wa_template: z.string().superRefine((t, ctx) => {
-    const e = cekTemplate(t);
-    if (e) ctx.addIssue({ code: "custom", message: e });
-  }),
-}).partial();
+const profilSebagian = z
+  .object({
+    ...profilForm,
+    wa_template: z.string().superRefine((t, ctx) => {
+      const e = cekTemplate(t);
+      if (e) ctx.addIssue({ code: "custom", message: e });
+    }),
+  })
+  .partial();
 
 /** Satu pintu validasi untuk form (penuh) dan server action (penuh atau sebagian, mis. hanya wa_template). */
 export function cekProfil(nilai: unknown, penuh = true): Record<string, string> {
   const out = cekField(penuh ? profilPenuh : profilSebagian, nilai);
   // Aturan antar-jam dicek terpisah agar tetap muncul walau field lain salah.
   const d = nilai as { open_time?: unknown; close_time?: unknown } | null;
-  if (typeof d?.open_time === "string" && typeof d.close_time === "string" && !out.close_time && !out.open_time && d.close_time <= d.open_time) {
+  if (
+    typeof d?.open_time === "string" &&
+    typeof d.close_time === "string" &&
+    !out.close_time &&
+    !out.open_time &&
+    d.close_time <= d.open_time
+  ) {
     out.close_time = "Jam tutup harus setelah jam buka.";
   }
   return out;
@@ -141,12 +164,20 @@ export const changePasswordSchema = z
     current_password: z.string().min(1, "Kata sandi lama wajib diisi.").max(72, "Kata sandi maksimal 72 karakter."),
     new_password: kataSandiBaru,
   })
-  .refine((d) => d.current_password !== d.new_password, { path: ["new_password"], message: "Kata sandi baru harus berbeda dari kata sandi lama." });
+  .refine((d) => d.current_password !== d.new_password, {
+    path: ["new_password"],
+    message: "Kata sandi baru harus berbeda dari kata sandi lama.",
+  });
 
 // --- Promo (M-13): aturan sama dengan API.md POST/PATCH /merchant/promos ---
-const waktu = (pesan: string) => z.string({ error: pesan }).refine((s) => s !== "" && !Number.isNaN(Date.parse(s)), pesan);
+const waktu = (pesan: string) =>
+  z.string({ error: pesan }).refine((s) => s !== "" && !Number.isNaN(Date.parse(s)), pesan);
 const promoForm = z.object({
-  code: z.string({ error: "Kode wajib diisi." }).trim().toUpperCase().regex(/^[A-Z0-9]{3,30}$/, "Kode 3–30 huruf besar atau angka."),
+  code: z
+    .string({ error: "Kode wajib diisi." })
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9]{3,30}$/, "Kode 3–30 huruf besar atau angka."),
   description: z.string().trim().max(255, "Maksimal 255 karakter."),
   type: z.enum(["percent", "fixed", "free_service_fee"], { error: "Pilih jenis promo." }),
   value: z.number({ error: "Nilai wajib diisi." }).int("Nilai harus bilangan bulat."),
@@ -168,8 +199,10 @@ export function cekPromo(nilai: unknown, terpakai = 0): Record<string, string> {
     if (d.value < 1) out.value = "Nilai minimal 1.";
     else if (d.type === "percent" && d.value > 100) out.value = "Persen maksimal 100.";
   }
-  if (typeof d.quota === "number" && !out.quota && d.quota < terpakai) out.quota = `Kuota tidak boleh di bawah yang sudah terpakai (${terpakai}).`;
-  if (!out.starts_at && !out.ends_at && Date.parse(String(d.ends_at)) <= Date.parse(String(d.starts_at))) out.ends_at = "Waktu selesai harus setelah waktu mulai.";
+  if (typeof d.quota === "number" && !out.quota && d.quota < terpakai)
+    out.quota = `Kuota tidak boleh di bawah yang sudah terpakai (${terpakai}).`;
+  if (!out.starts_at && !out.ends_at && Date.parse(String(d.ends_at)) <= Date.parse(String(d.starts_at)))
+    out.ends_at = "Waktu selesai harus setelah waktu mulai.";
   return out;
 }
 

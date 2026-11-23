@@ -6,7 +6,8 @@ export default async function PratinjauPage() {
   if (process.env.NODE_ENV === "production") notFound();
   await requireMerchant();
   const aktif = await getSkenario();
-  const link = "block min-h-11 rounded-md border border-line bg-surface p-4 hover:bg-subtle focus-visible:ring-2 focus-visible:ring-info";
+  const link =
+    "block min-h-11 rounded-md border border-line bg-surface p-4 hover:bg-subtle focus-visible:ring-2 focus-visible:ring-info";
 
   return (
     <div className="mx-auto max-w-3xl p-6">

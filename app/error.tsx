@@ -13,7 +13,10 @@ export default function Error({ retry }: { error: Error & { digest?: string }; r
       <p className="max-w-sm text-ink-muted">Halaman ini belum bisa ditampilkan. Coba lagi dalam beberapa saat.</p>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row">
         <Button onClick={() => retry()}>Coba lagi</Button>
-        <Link href="/dashboard" className="inline-flex min-h-11 items-center justify-center rounded-md border border-line-strong bg-surface px-4 font-medium hover:bg-subtle focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2">
+        <Link
+          href="/dashboard"
+          className="inline-flex min-h-11 items-center justify-center rounded-md border border-line-strong bg-surface px-4 font-medium hover:bg-subtle focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+        >
           Ke Dashboard
         </Link>
       </div>

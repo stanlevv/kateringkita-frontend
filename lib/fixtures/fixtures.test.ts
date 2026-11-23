@@ -37,9 +37,7 @@ const orderSchema = z
     status: z.enum(["holding", "confirmed", "cooking", "ready", "completed", "cancelled", "expired"]),
     payment_method: z.enum(["cod", "va", "online"]),
     payment_status: z.enum(["unpaid", "pending", "paid", "failed", "refunded"]),
-    items: z
-      .array(z.object({ qty: z.number().int().positive(), unit_price: rupiah, line_total: rupiah }))
-      .min(1),
+    items: z.array(z.object({ qty: z.number().int().positive(), unit_price: rupiah, line_total: rupiah })).min(1),
     subtotal: rupiah,
     discount: rupiah,
     service_fee: rupiah,
@@ -106,7 +104,8 @@ describe("fixtures", () => {
     const os = orders();
     expect(os.length).toBeGreaterThanOrEqual(15);
     const st = new Set(os.map((o) => o.status));
-    for (const s of ["holding", "confirmed", "cooking", "ready", "completed", "cancelled", "expired"]) expect(st.has(s as never), s).toBe(true);
+    for (const s of ["holding", "confirmed", "cooking", "ready", "completed", "cancelled", "expired"])
+      expect(st.has(s as never), s).toBe(true);
     expect(new Set(os.map((o) => o.payment_method)).size).toBe(3);
     os.forEach((o) => {
       const r = orderSchema.safeParse(o);

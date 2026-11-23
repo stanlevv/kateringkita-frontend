@@ -17,8 +17,18 @@ import { promos } from "@/lib/fixtures/promos";
 import { PromoList } from "./PromoList";
 
 const semua = promos();
-const tampil = (list = semua, galat = false) => render(<><Toaster /><PromoList promos={list} galat={galat} /></>);
-beforeEach(() => { setPromoActive.mockReset(); deletePromo.mockReset(); savePromo.mockReset(); });
+const tampil = (list = semua, galat = false) =>
+  render(
+    <>
+      <Toaster />
+      <PromoList promos={list} galat={galat} />
+    </>,
+  );
+beforeEach(() => {
+  setPromoActive.mockReset();
+  deletePromo.mockReset();
+  savePromo.mockReset();
+});
 
 describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
   it("PR-N1 kartu: kode, jenis, terpakai, status dengan teks", () => {
@@ -34,7 +44,10 @@ describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
   });
 
   it("voucher disembunyikan dari halaman toko → lencana Tersembunyi", () => {
-    tampil([{ ...semua[0], is_public: false }, { ...semua[1], is_public: true }]);
+    tampil([
+      { ...semua[0], is_public: false },
+      { ...semua[1], is_public: true },
+    ]);
     expect(screen.getAllByText("Tersembunyi")).toHaveLength(1);
   });
 
@@ -53,7 +66,9 @@ describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
   it("PR-N3 hapus hanya bila belum dipakai; yang dipakai diberi saran nonaktifkan", () => {
     tampil();
     expect(screen.queryByRole("button", { name: "Hapus HEMAT10" })).toBeNull();
-    expect(within(screen.getByRole("article", { name: "HEMAT10" })).getByText("Sudah dipakai — nonaktifkan saja")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("article", { name: "HEMAT10" })).getByText("Sudah dipakai — nonaktifkan saja"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Hapus SARAPAN5K" })).toBeInTheDocument();
   });
 
@@ -67,12 +82,18 @@ describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
   });
 
   it("nonaktifkan langsung + toast Batalkan yang mengaktifkan lagi", async () => {
-    setPromoActive.mockImplementation(async (id: number, aktif: boolean) => ({ data: { ...semua.find((p) => p.id === id)!, is_active: aktif } }));
+    setPromoActive.mockImplementation(async (id: number, aktif: boolean) => ({
+      data: { ...semua.find((p) => p.id === id)!, is_active: aktif },
+    }));
     tampil();
     await userEvent.click(screen.getByRole("button", { name: "Nonaktifkan HEMAT10" }));
-    await waitFor(() => expect(within(screen.getByRole("article", { name: "HEMAT10" })).getByText("Nonaktif")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(screen.getByRole("article", { name: "HEMAT10" })).getByText("Nonaktif")).toBeInTheDocument(),
+    );
     await userEvent.click(screen.getByRole("button", { name: "Batalkan" }));
-    await waitFor(() => expect(within(screen.getByRole("article", { name: "HEMAT10" })).getByText("Aktif")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(screen.getByRole("article", { name: "HEMAT10" })).getByText("Aktif")).toBeInTheDocument(),
+    );
     expect(setPromoActive).toHaveBeenLastCalledWith(1, true);
   });
 

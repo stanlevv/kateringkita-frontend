@@ -8,7 +8,10 @@ const replace = vi.fn();
 const refresh = vi.fn();
 let query = "";
 vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
-vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
+vi.mock("@/services/api", async (orig) => ({
+  ...(await orig<typeof import("@/services/api")>()),
+  adminFetch: (...a: unknown[]) => adminFetch(...a),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, refresh, push: vi.fn() }),
   usePathname: () => "/admin/data-master",
@@ -18,13 +21,17 @@ const tukarUrutan = vi.fn();
 const setAktifMaster = vi.fn();
 const simpanMaster = vi.fn();
 vi.mock("@/app/actions/admin/master", () => ({
-  tukarUrutan: (...a: unknown[]) => tukarUrutan(...a), setAktifMaster: (...a: unknown[]) => setAktifMaster(...a), simpanMaster: (...a: unknown[]) => simpanMaster(...a),
+  tukarUrutan: (...a: unknown[]) => tukarUrutan(...a),
+  setAktifMaster: (...a: unknown[]) => setAktifMaster(...a),
+  simpanMaster: (...a: unknown[]) => simpanMaster(...a),
 }));
 const simpanBiayaLayanan = vi.fn();
 const simpanPromoPlatform = vi.fn();
 const setAktifPromoPlatform = vi.fn();
 vi.mock("@/app/actions/admin/promos", () => ({
-  simpanBiayaLayanan: (...a: unknown[]) => simpanBiayaLayanan(...a), simpanPromoPlatform: (...a: unknown[]) => simpanPromoPlatform(...a), setAktifPromoPlatform: (...a: unknown[]) => setAktifPromoPlatform(...a),
+  simpanBiayaLayanan: (...a: unknown[]) => simpanBiayaLayanan(...a),
+  simpanPromoPlatform: (...a: unknown[]) => simpanPromoPlatform(...a),
+  setAktifPromoPlatform: (...a: unknown[]) => setAktifPromoPlatform(...a),
 }));
 vi.mock("@/app/actions/promos", () => ({ savePromo: vi.fn(), setPromoActive: vi.fn(), deletePromo: vi.fn() }));
 import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
@@ -39,10 +46,37 @@ const kat = [
   { id: 2, name: "Kue", icon: null, sort_order: 2, is_active: true },
 ];
 const titik = [{ id: 7, name: "Kantin A", description: "Dekat gerbang", is_active: true }];
-const promo: Promo = { id: 3, code: "PLAT10", description: null, type: "percent", value: 10, max_discount: null, min_subtotal: 0, quota: null, used_count: 0, per_user_limit: 1, starts_at: "2026-11-01T00:00:00.000Z", ends_at: "2027-12-01T00:00:00.000Z", is_active: true, is_public: true };
+const promo: Promo = {
+  id: 3,
+  code: "PLAT10",
+  description: null,
+  type: "percent",
+  value: 10,
+  max_discount: null,
+  min_subtotal: 0,
+  quota: null,
+  used_count: 0,
+  per_user_limit: 1,
+  starts_at: "2026-11-01T00:00:00.000Z",
+  ends_at: "2027-12-01T00:00:00.000Z",
+  is_active: true,
+  is_public: true,
+};
 
 beforeEach(() => {
-  for (const m of [requireAdmin, adminFetch, replace, refresh, tukarUrutan, setAktifMaster, simpanMaster, simpanBiayaLayanan, simpanPromoPlatform, setAktifPromoPlatform]) m.mockReset();
+  for (const m of [
+    requireAdmin,
+    adminFetch,
+    replace,
+    refresh,
+    tukarUrutan,
+    setAktifMaster,
+    simpanMaster,
+    simpanBiayaLayanan,
+    simpanPromoPlatform,
+    setAktifPromoPlatform,
+  ])
+    m.mockReset();
   requireAdmin.mockResolvedValue({ user: { admin_level: "super" } });
   query = "";
 });
@@ -85,7 +119,12 @@ describe("halaman data master", () => {
   it("naik/turun memanggil tukarUrutan dengan nilai tetangga; galat -> toast", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: kat });
     tukarUrutan.mockResolvedValue({ data: null });
-    render(<><Toaster />{await DataMasterPage({ searchParams: Promise.resolve({}) })}</>);
+    render(
+      <>
+        <Toaster />
+        {await DataMasterPage({ searchParams: Promise.resolve({}) })}
+      </>,
+    );
     expect(screen.getByRole("button", { name: "Naikkan Nasi" })).toBeDisabled();
     await userEvent.click(screen.getByRole("button", { name: "Turunkan Nasi" }));
     expect(tukarUrutan).toHaveBeenCalledWith("categories", { id: 1, sort_order: 1 }, { id: 2, sort_order: 2 });
@@ -116,12 +155,21 @@ describe("halaman data master", () => {
   });
   it("nonaktifkan titik temu terakhir -> 409 menampilkan pesan dengan nama toko", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: titik });
-    setAktifMaster.mockResolvedValue({ error: { code: "CONFLICT", message: "Titik temu ini satu-satunya untuk toko: Dapur Ibu, Warung Sari." } });
-    render(<><Toaster />{await DataMasterPage({ searchParams: Promise.resolve({ tab: "titik-temu" }) })}</>);
+    setAktifMaster.mockResolvedValue({
+      error: { code: "CONFLICT", message: "Titik temu ini satu-satunya untuk toko: Dapur Ibu, Warung Sari." },
+    });
+    render(
+      <>
+        <Toaster />
+        {await DataMasterPage({ searchParams: Promise.resolve({ tab: "titik-temu" }) })}
+      </>,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Nonaktifkan Kantin A" }));
     await userEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
     expect(setAktifMaster).toHaveBeenCalledWith("pickup-points", 7, false);
-    expect(await screen.findByText("Titik temu ini satu-satunya untuk toko: Dapur Ibu, Warung Sari.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Titik temu ini satu-satunya untuk toko: Dapur Ibu, Warung Sari."),
+    ).toBeInTheDocument();
   });
   it("form tambah: nama wajib di klien; ubah terisi awal", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: kat });
@@ -139,7 +187,11 @@ describe("halaman data master", () => {
 
 describe("promo platform & biaya layanan", () => {
   it("halaman: requireAdmin, daftar promo, biaya dengan formatRupiah", async () => {
-    adminFetch.mockImplementation(async (p: string) => p === "/promos" ? { ok: true, status: 200, data: [promo] } : { ok: true, status: 200, data: { service_fee: 2000 } });
+    adminFetch.mockImplementation(async (p: string) =>
+      p === "/promos"
+        ? { ok: true, status: 200, data: [promo] }
+        : { ok: true, status: 200, data: { service_fee: 2000 } },
+    );
     render(await PromoPage());
     expect(requireAdmin).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/Rp\s?2\.000/)).toBeInTheDocument();
@@ -147,12 +199,25 @@ describe("promo platform & biaya layanan", () => {
   });
   it("mode admin: Hapus tersembunyi, kode tidak bisa diubah, memakai fungsi simpan admin", async () => {
     simpanPromoPlatform.mockResolvedValue({ data: { ...promo, value: 20 } });
-    render(<PromoList admin promos={[promo]} galat={false} simpan={simpanPromoPlatform} setAktifAksi={setAktifPromoPlatform} />);
+    render(
+      <PromoList
+        admin
+        promos={[promo]}
+        galat={false}
+        simpan={simpanPromoPlatform}
+        setAktifAksi={setAktifPromoPlatform}
+      />,
+    );
     expect(screen.queryByRole("button", { name: /Hapus/ })).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Ubah PLAT10" }));
     expect(screen.getByLabelText(/Kode promo/)).toHaveAttribute("readonly");
     await userEvent.click(screen.getByRole("button", { name: "Simpan promo" }));
-    await waitFor(() => expect(simpanPromoPlatform).toHaveBeenCalledWith(3, expect.objectContaining({ code: "PLAT10", type: "percent", value: 10 })));
+    await waitFor(() =>
+      expect(simpanPromoPlatform).toHaveBeenCalledWith(
+        3,
+        expect.objectContaining({ code: "PLAT10", type: "percent", value: 10 }),
+      ),
+    );
     const input = simpanPromoPlatform.mock.calls[0][1];
     expect(input.starts_at).toMatch(/Z$/);
   });
@@ -172,7 +237,12 @@ describe("promo platform & biaya layanan", () => {
     expect(simpanPromoPlatform).not.toHaveBeenCalled();
   });
   it("biaya: negatif/pecahan ditolak, sama -> Tidak ada perubahan, valid -> simpan", async () => {
-    render(<><Toaster /><ServiceFeeForm nilai={2000} /></>);
+    render(
+      <>
+        <Toaster />
+        <ServiceFeeForm nilai={2000} />
+      </>,
+    );
     const input = screen.getByLabelText(/Biaya baru/);
     await userEvent.clear(input);
     await userEvent.type(input, "-5");

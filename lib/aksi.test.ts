@@ -4,7 +4,9 @@ import { panggil } from "./aksi";
 describe("panggil", () => {
   it("meneruskan hasil aksi apa adanya", async () => {
     expect(await panggil(async () => ({ data: 1 }))).toEqual({ data: 1 });
-    expect(await panggil(async () => ({ error: { code: "X", message: "y" } }))).toEqual({ error: { code: "X", message: "y" } });
+    expect(await panggil(async () => ({ error: { code: "X", message: "y" } }))).toEqual({
+      error: { code: "X", message: "y" },
+    });
   });
 
   it("aksi melempar (jaringan putus) -> galat NETWORK, bukan exception", async () => {

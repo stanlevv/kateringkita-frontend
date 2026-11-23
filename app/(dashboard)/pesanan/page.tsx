@@ -9,7 +9,11 @@ import { requireMerchant } from "@/services/authService";
 const satu = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 // M-04, M-08 — Daftar pesanan (PS-N1, PS-N3, PS-S1). Filter dan halaman di URL, diproses server.
-export default async function PesananPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function PesananPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireMerchant();
   const sp = await searchParams;
   const tanggal = satu(sp.tanggal);
@@ -23,7 +27,11 @@ export default async function PesananPage({ searchParams }: { searchParams: Prom
   return (
     <PageHeader title="Pesanan">
       <Suspense>
-        <OrderTable rows={"data" in orders ? orders.data.rows : []} total={"data" in orders ? orders.data.total : 0} galat={"error" in orders} />
+        <OrderTable
+          rows={"data" in orders ? orders.data.rows : []}
+          total={"data" in orders ? orders.data.total : 0}
+          galat={"error" in orders}
+        />
       </Suspense>
     </PageHeader>
   );

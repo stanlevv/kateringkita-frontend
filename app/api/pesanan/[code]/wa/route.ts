@@ -8,5 +8,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ code: s
   const { code } = await params;
   const res = await merchantFetch<{ url: string }>(`/orders/${encodeURIComponent(code)}/whatsapp`);
   const url = res.ok ? res.data?.url : undefined;
-  redirect(typeof url === "string" && url.startsWith("https://wa.me/") ? url : `/pesanan/${encodeURIComponent(code)}?wa=gagal`);
+  redirect(
+    typeof url === "string" && url.startsWith("https://wa.me/") ? url : `/pesanan/${encodeURIComponent(code)}?wa=gagal`,
+  );
 }

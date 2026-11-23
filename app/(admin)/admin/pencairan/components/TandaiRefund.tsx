@@ -43,19 +43,35 @@ export function TandaiRefund({ refund }: { refund: RefundMenunggu }) {
 
   return (
     <>
-      <Button variant="secondary" onClick={() => setBuka(true)}>Tandai dikembalikan</Button>
+      <Button variant="secondary" onClick={() => setBuka(true)}>
+        Tandai dikembalikan
+      </Button>
       <Dialog open={buka} onClose={() => setBuka(false)} title="Tandai dana dikembalikan">
         <form onSubmit={kirim} noValidate className="flex flex-col gap-4">
           <p className="text-ink">
-            Kembalikan <span className="font-mono font-semibold">{formatRupiah(refund.amount)}</span> ke {refund.customer_name} untuk pesanan{" "}
-            <span className="font-mono">{refund.code}</span> lewat dashboard Midtrans atau transfer, lalu isi nomor referensinya.
+            Kembalikan <span className="font-mono font-semibold">{formatRupiah(refund.amount)}</span> ke{" "}
+            {refund.customer_name} untuk pesanan <span className="font-mono">{refund.code}</span> lewat dashboard
+            Midtrans atau transfer, lalu isi nomor referensinya.
           </p>
           <Field label="Nomor referensi pengembalian" id={`refund-${refund.code}`} required error={galat}>
-            <Input autoFocus autoComplete="off" value={referensi} maxLength={100} onChange={(e) => { setReferensi(e.target.value); setGalat(undefined); }} />
+            <Input
+              autoFocus
+              autoComplete="off"
+              value={referensi}
+              maxLength={100}
+              onChange={(e) => {
+                setReferensi(e.target.value);
+                setGalat(undefined);
+              }}
+            />
           </Field>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button variant="secondary" onClick={() => setBuka(false)}>Batal</Button>
-            <Button type="submit" loading={sibuk} loadingText="Menyimpan…">Tandai dikembalikan</Button>
+            <Button variant="secondary" onClick={() => setBuka(false)}>
+              Batal
+            </Button>
+            <Button type="submit" loading={sibuk} loadingText="Menyimpan…">
+              Tandai dikembalikan
+            </Button>
           </div>
         </form>
       </Dialog>

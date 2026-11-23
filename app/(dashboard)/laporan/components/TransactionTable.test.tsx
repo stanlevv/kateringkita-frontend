@@ -22,7 +22,19 @@ const semua: Transaction[] = Array.from({ length: 25 }, (_, i) => ({
   status: "completed",
 }));
 const tampil = (o: Partial<Parameters<typeof TransactionTable>[0]> = {}) =>
-  render(<><Toaster /><TransactionTable rows={semua.slice(0, 20)} total={semua.length} page={1} dari="2026-10-25" sampai="2026-10-31" {...o} /></>);
+  render(
+    <>
+      <Toaster />
+      <TransactionTable
+        rows={semua.slice(0, 20)}
+        total={semua.length}
+        page={1}
+        dari="2026-10-25"
+        sampai="2026-10-31"
+        {...o}
+      />
+    </>,
+  );
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -30,7 +42,8 @@ describe("LP-N3 buku transaksi", () => {
   it("kolom sesuai spesifikasi dan satu baris per transaksi", () => {
     tampil();
     const t = screen.getByRole("table");
-    for (const h of ["Kode", "Waktu", "Menu", "Qty", "Omzet", "HPP", "Laba", "Metode"]) expect(within(t).getByRole("columnheader", { name: h })).toBeInTheDocument();
+    for (const h of ["Kode", "Waktu", "Menu", "Qty", "Omzet", "HPP", "Laba", "Metode"])
+      expect(within(t).getByRole("columnheader", { name: h })).toBeInTheDocument();
     expect(within(t).getAllByRole("row")).toHaveLength(21);
     expect(within(t).getAllByText(semua[0].code)).toHaveLength(2);
   });
@@ -43,7 +56,10 @@ describe("LP-N3 buku transaksi", () => {
   it("paginasi 20 per halaman lewat URL, laporan tetap di rentang yang sama", () => {
     tampil();
     expect(semua.length).toBeGreaterThan(20);
-    expect(screen.getByRole("link", { name: /Berikutnya/ })).toHaveAttribute("href", "/laporan?dari=2026-10-25&sampai=2026-10-31&page=2");
+    expect(screen.getByRole("link", { name: /Berikutnya/ })).toHaveAttribute(
+      "href",
+      "/laporan?dari=2026-10-25&sampai=2026-10-31&page=2",
+    );
     expect(screen.getByText(`Halaman 1 dari ${Math.ceil(semua.length / 20)}`)).toBeInTheDocument();
   });
   it("LP-S1 tanpa transaksi -> pesan kosong, tombol unduh nonaktif", () => {
@@ -55,7 +71,11 @@ describe("LP-N3 buku transaksi", () => {
 
 describe("LP-N4/E2 unduh CSV", () => {
   it("memanggil rute CSV dengan rentang", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response("kode\r\n", { status: 200, headers: { "content-type": "text/csv; charset=utf-8" } }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response("kode\r\n", { status: 200, headers: { "content-type": "text/csv; charset=utf-8" } }),
+      );
     vi.stubGlobal("fetch", fetchMock);
     URL.createObjectURL = vi.fn(() => "blob:x");
     URL.revokeObjectURL = vi.fn();
@@ -94,22 +114,35 @@ describe("LP-N4/E2 unduh CSV", () => {
     klik.mockRestore();
   });
   it("HTML tanpa tanda redirect tetap ditolak (bukan text/csv)", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("<html/>", { status: 200, headers: { "content-type": "text/html" } })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("<html/>", { status: 200, headers: { "content-type": "text/html" } })),
+    );
     const klik = tanpaUnduhan();
     tampil();
     await userEvent.click(screen.getByRole("button", { name: "Unduh CSV" }));
-    await waitFor(() => expect(screen.getAllByText("Unduhan gagal. Periksa koneksi lalu coba lagi.").length).toBeGreaterThan(0));
+    await waitFor(() =>
+      expect(screen.getAllByText("Unduhan gagal. Periksa koneksi lalu coba lagi.").length).toBeGreaterThan(0),
+    );
     expect(klik).not.toHaveBeenCalled();
     klik.mockRestore();
   });
   it("400 -> pesan dari server", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ message: "Rentang maksimal 92 hari." }, { status: 400 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(Response.json({ message: "Rentang maksimal 92 hari." }, { status: 400 })),
+    );
     tampil();
     await userEvent.click(screen.getByRole("button", { name: "Unduh CSV" }));
     expect(await screen.findByText("Rentang maksimal 92 hari.")).toBeInTheDocument();
   });
   it("401 -> pesan sesi", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." }, { status: 401 })));
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(Response.json({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." }, { status: 401 })),
+    );
     tampil();
     await userEvent.click(screen.getByRole("button", { name: "Unduh CSV" }));
     expect((await screen.findAllByText("Sesi berakhir, silakan masuk lagi.")).length).toBeGreaterThan(0);

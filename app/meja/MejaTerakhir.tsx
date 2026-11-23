@@ -19,5 +19,11 @@ export function MejaTerakhir() {
     if (meja && !pindai) router.replace(`/meja/${meja}`);
   }, [meja, pindai, router]);
   if (meja === undefined || (meja && !pindai)) return null;
-  return <MejaPesan judul="Scan QR di meja" isi="Scan QR yang tertempel di meja untuk melihat menu dan memesan." aksi={<PindaiQr />} />;
+  return (
+    <MejaPesan
+      judul="Scan QR di meja"
+      isi="Scan QR yang tertempel di meja untuk melihat menu dan memesan."
+      aksi={<PindaiQr />}
+    />
+  );
 }

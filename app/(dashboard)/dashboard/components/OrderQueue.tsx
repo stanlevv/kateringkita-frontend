@@ -18,7 +18,12 @@ import { OrderSlipDrawer } from "./OrderSlipDrawer";
 import { RejectDialog } from "@/app/components/orders/RejectDialog";
 import { useDeferredAction } from "@/hooks/useDeferredAction";
 
-const LABEL: Record<TabAntrean, string> = { tindakan: "Perlu tindakan", dimasak: "Dimasak", siap: "Siap diambil", semua: "Semua hari ini" };
+const LABEL: Record<TabAntrean, string> = {
+  tindakan: "Perlu tindakan",
+  dimasak: "Dimasak",
+  siap: "Siap diambil",
+  semua: "Semua hari ini",
+};
 
 type Props = {
   /** Pesanan efektif (data server + perubahan lokal + waktu tahan diterapkan). */
@@ -44,7 +49,17 @@ type Tunda = { aksi: AksiPesanan; order: MerchantOrder };
 
 const KIRIM_LANGSUNG_DETIK = 5; // sisa tahan sependek ini tidak memberi jendela Batalkan
 
-export function OrderQueue({ orders, menus, sekarang, baru, onOptimis, onFokusKuota, onTerima, onSegarkan, kuota }: Props) {
+export function OrderQueue({
+  orders,
+  menus,
+  sekarang,
+  baru,
+  onOptimis,
+  onFokusKuota,
+  onTerima,
+  onSegarkan,
+  kuota,
+}: Props) {
   const [tab, setTab] = useState<string>("tindakan");
   const [tolak, setTolak] = useState<string | null>(null);
   const [slip, setSlip] = useState<string | null>(null);
@@ -96,7 +111,15 @@ export function OrderQueue({ orders, menus, sekarang, baru, onOptimis, onFokusKu
       return;
     }
     schedule(o.code, t);
-    toastAksi.current.set(o.code, toast({ tone: "success", message: pesan, duration: 5000, action: { label: "Batalkan", onClick: () => undo(o.code) && onOptimis(o.code, undefined) } }));
+    toastAksi.current.set(
+      o.code,
+      toast({
+        tone: "success",
+        message: pesan,
+        duration: 5000,
+        action: { label: "Batalkan", onClick: () => undo(o.code) && onOptimis(o.code, undefined) },
+      }),
+    );
   }
 
   async function konfirmasiTolak(reason: string) {
@@ -137,23 +160,55 @@ export function OrderQueue({ orders, menus, sekarang, baru, onOptimis, onFokusKu
         {aktif === "kuota" ? (
           kuota
         ) : kosong ? (
-          <EmptyState icon={Inbox} title="Belum ada pesanan" body="Pastikan status dapur Buka dan menu punya kuota."
-            action={<Button variant="secondary" onClick={() => fokusKuota()}>Atur kuota</Button>} />
+          <EmptyState
+            icon={Inbox}
+            title="Belum ada pesanan"
+            body="Pastikan status dapur Buka dan menu punya kuota."
+            action={
+              <Button variant="secondary" onClick={() => fokusKuota()}>
+                Atur kuota
+              </Button>
+            }
+          />
         ) : daftar.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-line-strong px-4 py-8 text-center text-ink-muted">Tidak ada pesanan di tab ini.</p>
+          <p className="rounded-lg border border-dashed border-line-strong px-4 py-8 text-center text-ink-muted">
+            Tidak ada pesanan di tab ini.
+          </p>
         ) : (
           <div className="grid gap-4 2xl:grid-cols-2">
             {daftar.map((o) => (
-              <OrderCard key={o.code} order={o} sisa={sisaHold(o, sekarang)} sekarang={sekarang} baru={baru.includes(o.code)}
-                pending={pending[o.code]?.aksi ?? kirim[o.code]} onAksi={(a) => aksi(o, a)} onTolak={() => setTolak(o.code)} onSlip={() => setSlip(o.code)} />
+              <OrderCard
+                key={o.code}
+                order={o}
+                sisa={sisaHold(o, sekarang)}
+                sekarang={sekarang}
+                baru={baru.includes(o.code)}
+                pending={pending[o.code]?.aksi ?? kirim[o.code]}
+                onAksi={(a) => aksi(o, a)}
+                onTolak={() => setTolak(o.code)}
+                onSlip={() => setSlip(o.code)}
+              />
             ))}
           </div>
         )}
       </div>
 
-      <RejectDialog order={orders.find((o) => o.code === tolak) ?? null} onClose={() => setTolak(null)} onConfirm={konfirmasiTolak} />
+      <RejectDialog
+        order={orders.find((o) => o.code === tolak) ?? null}
+        onClose={() => setTolak(null)}
+        onConfirm={konfirmasiTolak}
+      />
       <OrderSlipDrawer order={slipOrder} onClose={() => setSlip(null)} />
-      <StokDialog code={stok?.code ?? null} onClose={() => setStok(null)} onTolak={() => { const c = stok!.code; setStok(null); setTolak(c); }} onTambah={tambahKuotaStok} />
+      <StokDialog
+        code={stok?.code ?? null}
+        onClose={() => setStok(null)}
+        onTolak={() => {
+          const c = stok!.code;
+          setStok(null);
+          setTolak(c);
+        }}
+        onTambah={tambahKuotaStok}
+      />
     </section>
   );
 }

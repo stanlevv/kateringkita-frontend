@@ -3,14 +3,7 @@ import { Ban, CheckCircle2, ChefHat, Clock, Hourglass, PackageCheck, ThumbsUp, T
 import type { MerchantOrder } from "@/types/order";
 
 export type TampilanStatus =
-  | "menunggu-konfirmasi"
-  | "menunggu-bayar"
-  | "confirmed"
-  | "cooking"
-  | "ready"
-  | "completed"
-  | "cancelled"
-  | "expired";
+  "menunggu-konfirmasi" | "menunggu-bayar" | "confirmed" | "cooking" | "ready" | "completed" | "cancelled" | "expired";
 export type AksiPesanan = "confirm" | "cook" | "ready" | "complete" | "reject";
 export type AksiLain = "reject" | "chat-wa" | "lihat-slip";
 export type Nada = "warning" | "info" | "success" | "neutral" | "danger";
@@ -28,12 +21,46 @@ export type StatusView = {
 
 // Tabel brief v3 §4 — satu-satunya sumber label/warna/ikon/aksi status pesanan.
 export const statusView: Record<TampilanStatus, StatusView> = {
-  "menunggu-konfirmasi": { label: "Menunggu konfirmasi", tone: "warning", icon: Hourglass, primary: "confirm", primaryLabel: "Konfirmasi", secondary: ["reject", "chat-wa"] },
+  "menunggu-konfirmasi": {
+    label: "Menunggu konfirmasi",
+    tone: "warning",
+    icon: Hourglass,
+    primary: "confirm",
+    primaryLabel: "Konfirmasi",
+    secondary: ["reject", "chat-wa"],
+  },
   // F26: VA/bayar online dikonfirmasi Midtrans; pesanan diterima otomatis begitu lunas, penjual tidak memverifikasi manual
-  "menunggu-bayar": { label: "Menunggu pembayaran", tone: "warning", icon: Clock, hint: "Diterima otomatis setelah lunas", secondary: ["chat-wa"] },
-  confirmed: { label: "Dikonfirmasi", tone: "info", icon: ThumbsUp, primary: "cook", primaryLabel: "Mulai masak", secondary: ["reject", "chat-wa"] },
-  cooking: { label: "Dimasak", tone: "info", icon: ChefHat, primary: "ready", primaryLabel: "Siap diambil", secondary: ["chat-wa"] },
-  ready: { label: "Siap diambil", tone: "success", icon: PackageCheck, primary: "complete", primaryLabel: "Selesai", secondary: ["chat-wa"] },
+  "menunggu-bayar": {
+    label: "Menunggu pembayaran",
+    tone: "warning",
+    icon: Clock,
+    hint: "Diterima otomatis setelah lunas",
+    secondary: ["chat-wa"],
+  },
+  confirmed: {
+    label: "Dikonfirmasi",
+    tone: "info",
+    icon: ThumbsUp,
+    primary: "cook",
+    primaryLabel: "Mulai masak",
+    secondary: ["reject", "chat-wa"],
+  },
+  cooking: {
+    label: "Dimasak",
+    tone: "info",
+    icon: ChefHat,
+    primary: "ready",
+    primaryLabel: "Siap diambil",
+    secondary: ["chat-wa"],
+  },
+  ready: {
+    label: "Siap diambil",
+    tone: "success",
+    icon: PackageCheck,
+    primary: "complete",
+    primaryLabel: "Selesai",
+    secondary: ["chat-wa"],
+  },
   completed: { label: "Selesai", tone: "neutral", icon: CheckCircle2, secondary: ["lihat-slip"] },
   cancelled: { label: "Dibatalkan", tone: "danger", icon: Ban, secondary: ["lihat-slip"] },
   expired: { label: "Kadaluarsa", tone: "danger", icon: TimerOff, secondary: ["lihat-slip"] },
@@ -65,16 +92,24 @@ type PunyaMeja = Partial<Pick<MerchantOrder, "table">>;
 export function statusViewPesanan(o: Kunci & PunyaMeja): StatusView {
   const v = statusView[tampilanStatus(o)];
   if (!o.table) return v;
-  return { ...v, label: v === statusView.ready ? SIAP_MEJA : v.label, primaryLabel: v.primary === "ready" ? SIAP_MEJA : v.primaryLabel };
+  return {
+    ...v,
+    label: v === statusView.ready ? SIAP_MEJA : v.label,
+    primaryLabel: v.primary === "ready" ? SIAP_MEJA : v.primaryLabel,
+  };
 }
 
 /** Akhir toast sukses ("Pesanan KK-… siap diantar"). */
-export const teksSukses = (a: AksiPesanan, o: PunyaMeja) => (a === "ready" && o.table ? "siap diantar" : teksAksi[a].sukses);
+export const teksSukses = (a: AksiPesanan, o: PunyaMeja) =>
+  a === "ready" && o.table ? "siap diantar" : teksAksi[a].sukses;
 
 /** Label tahap "siap" di riwayat status. */
 export const labelTahapSiap = (o: PunyaMeja) => (o.table ? SIAP_MEJA : "Siap diambil");
 
-const DARI: Record<AksiPesanan, { dari: MerchantOrder["status"][]; ke: MerchantOrder["status"]; stamp: keyof MerchantOrder }> = {
+const DARI: Record<
+  AksiPesanan,
+  { dari: MerchantOrder["status"][]; ke: MerchantOrder["status"]; stamp: keyof MerchantOrder }
+> = {
   confirm: { dari: ["holding"], ke: "confirmed", stamp: "confirmed_at" },
   cook: { dari: ["confirmed"], ke: "cooking", stamp: "cooking_at" },
   ready: { dari: ["cooking"], ke: "ready", stamp: "ready_at" },

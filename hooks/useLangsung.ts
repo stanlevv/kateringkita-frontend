@@ -40,11 +40,17 @@ export function useLangsung(awal: Awal) {
   const [terakhir, setTerakhir] = useState(awal.dimuat);
   const [gagal, setGagal] = useState(false);
   const [selisih, setSelisih] = useState(0);
-  const online = useSyncExternalStore(langganOnline, () => navigator.onLine, () => true);
+  const online = useSyncExternalStore(
+    langganOnline,
+    () => navigator.onLine,
+    () => true,
+  );
 
   // Nilai terbaru untuk siklus penyegaran (timer & klik) tanpa memasang ulang efek.
   const terkini = useRef({ orders, dimuat: awal.dimuat });
-  useEffect(() => { terkini.current = { orders, dimuat: awal.dimuat }; });
+  useEffect(() => {
+    terkini.current = { orders, dimuat: awal.dimuat };
+  });
   // Naik setiap kuota disimpan; respons penyegaran yang berangkat sebelumnya tidak menimpa menu (D10).
   const versiMenu = useRef(0);
   const picu = useRef<() => void>(() => {});
@@ -56,7 +62,11 @@ export function useLangsung(awal: Awal) {
     let lagi = false;
     let galatBeruntun = 0;
     const jeda = () =>
-      galatBeruntun ? Math.min(TERLIHAT_MS * 2 ** galatBeruntun, MAKS_MUNDUR_MS) : document.visibilityState === "visible" ? TERLIHAT_MS : TERSEMBUNYI_MS;
+      galatBeruntun
+        ? Math.min(TERLIHAT_MS * 2 ** galatBeruntun, MAKS_MUNDUR_MS)
+        : document.visibilityState === "visible"
+          ? TERLIHAT_MS
+          : TERSEMBUNYI_MS;
 
     // D8: semai selisih jam dari data awal halaman (jam perangkat saat dipasang, ±1 dtk).
     const semai = selisihJam(terkini.current.orders, Date.now());
@@ -78,7 +88,10 @@ export function useLangsung(awal: Awal) {
       ctl.signal.addEventListener("abort", batal);
       const batasWaktu = setTimeout(batal, BATAS_MS);
       try {
-        const res = await fetch(`/api/dashboard/sinkron?sejak=${encodeURIComponent(sejak)}`, { signal: minta.signal, cache: "no-store" });
+        const res = await fetch(`/api/dashboard/sinkron?sejak=${encodeURIComponent(sejak)}`, {
+          signal: minta.signal,
+          cache: "no-store",
+        });
         if (res.redirected) {
           // D7: sesi habis -> muat ulang halaman agar login kembali ke /dashboard, bukan ke rute data ini.
           ctl.abort();

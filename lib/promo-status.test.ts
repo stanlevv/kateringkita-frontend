@@ -4,7 +4,22 @@ import { PROMO_STATUS, promoStatus, teksJenis } from "./promo-status";
 import type { Promo } from "@/types/promo";
 
 const NOW = Date.parse("2026-10-31T00:00:00Z");
-const dasar: Promo = { id: 1, code: "A", description: null, type: "percent", value: 10, max_discount: null, min_subtotal: 0, quota: 10, used_count: 0, per_user_limit: 1, starts_at: "2026-10-01T00:00:00Z", ends_at: "2026-11-30T00:00:00Z", is_active: true, is_public: true };
+const dasar: Promo = {
+  id: 1,
+  code: "A",
+  description: null,
+  type: "percent",
+  value: 10,
+  max_discount: null,
+  min_subtotal: 0,
+  quota: 10,
+  used_count: 0,
+  per_user_limit: 1,
+  starts_at: "2026-10-01T00:00:00Z",
+  ends_at: "2026-11-30T00:00:00Z",
+  is_active: true,
+  is_public: true,
+};
 const st = (p: Partial<Promo>) => promoStatus({ ...dasar, ...p }, NOW);
 
 describe("promoStatus (PR-N1)", () => {
@@ -18,11 +33,21 @@ describe("promoStatus (PR-N1)", () => {
     expect(st({ quota: null, used_count: 999 })).toBe("berjalan");
   });
   it("label dan ikon untuk tiap status", () => {
-    expect(Object.values(PROMO_STATUS).map((s) => s.label)).toEqual(["Nonaktif", "Terjadwal", "Berakhir", "Kuota habis", "Aktif"]);
+    expect(Object.values(PROMO_STATUS).map((s) => s.label)).toEqual([
+      "Nonaktif",
+      "Terjadwal",
+      "Berakhir",
+      "Kuota habis",
+      "Aktif",
+    ]);
     Object.values(PROMO_STATUS).forEach((s) => expect(s.icon).toBeTruthy());
   });
   it("fixtures mencakup empat status", () => {
-    expect(promos().map((p) => promoStatus(p)).sort()).toEqual(["berakhir", "berjalan", "nonaktif", "terjadwal"]);
+    expect(
+      promos()
+        .map((p) => promoStatus(p))
+        .sort(),
+    ).toEqual(["berakhir", "berjalan", "nonaktif", "terjadwal"]);
   });
 });
 

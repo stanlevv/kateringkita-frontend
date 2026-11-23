@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
 import { cx } from "./cx";
 
-export type Column<T> = { key: string; header: string; cell: (row: T) => ReactNode; align?: "left" | "right"; wrap?: boolean };
+export type Column<T> = {
+  key: string;
+  header: string;
+  cell: (row: T) => ReactNode;
+  align?: "left" | "right";
+  wrap?: boolean;
+};
 
 // Klik/tombol dari tautan, tombol, atau isian di dalam sel bukan milik baris.
 function dariKontrol(e: { target: EventTarget; currentTarget: HTMLElement }) {
@@ -9,7 +15,19 @@ function dariKontrol(e: { target: EventTarget; currentTarget: HTMLElement }) {
   return !!k && e.currentTarget.contains(k);
 }
 
-export function DataTable<T>({ columns, rows, rowKey, onRowClick, caption }: { columns: Column<T>[]; rows: T[]; rowKey: (row: T, i: number) => string; onRowClick?: (row: T) => void; caption: string }) {
+export function DataTable<T>({
+  columns,
+  rows,
+  rowKey,
+  onRowClick,
+  caption,
+}: {
+  columns: Column<T>[];
+  rows: T[];
+  rowKey: (row: T, i: number) => string;
+  onRowClick?: (row: T) => void;
+  caption: string;
+}) {
   return (
     <div className="max-w-full overflow-x-auto rounded-lg border border-line">
       <table className="w-full border-collapse text-left text-sm">
@@ -17,7 +35,16 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, caption }: { c
         <thead>
           <tr>
             {columns.map((c) => (
-              <th key={c.key} scope="col" className={cx("sticky top-0 bg-subtle px-4 py-3 font-medium text-ink-muted", c.align === "right" && "text-right")}>{c.header}</th>
+              <th
+                key={c.key}
+                scope="col"
+                className={cx(
+                  "sticky top-0 bg-subtle px-4 py-3 font-medium text-ink-muted",
+                  c.align === "right" && "text-right",
+                )}
+              >
+                {c.header}
+              </th>
             ))}
           </tr>
         </thead>
@@ -26,14 +53,32 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, caption }: { c
             <tr
               key={rowKey(r, i)}
               onClick={onRowClick && ((e) => !dariKontrol(e) && onRowClick(r))}
-              onKeyDown={onRowClick && ((e) => {
-                if ((e.key === "Enter" || e.key === " ") && !dariKontrol(e)) { e.preventDefault(); onRowClick(r); }
-              })}
+              onKeyDown={
+                onRowClick &&
+                ((e) => {
+                  if ((e.key === "Enter" || e.key === " ") && !dariKontrol(e)) {
+                    e.preventDefault();
+                    onRowClick(r);
+                  }
+                })
+              }
               tabIndex={onRowClick ? 0 : undefined}
-              className={cx("border-t border-line", onRowClick && "cursor-pointer hover:bg-subtle focus-visible:ring-2 focus-visible:ring-focus")}
+              className={cx(
+                "border-t border-line",
+                onRowClick && "cursor-pointer hover:bg-subtle focus-visible:ring-2 focus-visible:ring-focus",
+              )}
             >
               {columns.map((c) => (
-                <td key={c.key} className={cx("min-h-11 px-4 py-3 text-ink", c.wrap ? "min-w-56 max-w-md whitespace-normal break-words" : "whitespace-nowrap", c.align === "right" && "text-right font-mono")}>{c.cell(r)}</td>
+                <td
+                  key={c.key}
+                  className={cx(
+                    "min-h-11 px-4 py-3 text-ink",
+                    c.wrap ? "min-w-56 max-w-md whitespace-normal break-words" : "whitespace-nowrap",
+                    c.align === "right" && "text-right font-mono",
+                  )}
+                >
+                  {c.cell(r)}
+                </td>
               ))}
             </tr>
           ))}

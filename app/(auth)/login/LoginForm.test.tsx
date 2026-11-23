@@ -8,7 +8,9 @@ vi.mock("@/app/actions/auth", () => ({ login: (...a: unknown[]) => login(...a) }
 async function kirim(identifier = "081234567890", password = "rahasia123") {
   fireEvent.change(screen.getByLabelText(/Email atau nomor WA/), { target: { value: identifier } });
   fireEvent.change(screen.getByLabelText(/^Kata sandi/), { target: { value: password } });
-  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Masuk" })); });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
+  });
 }
 
 beforeEach(() => login.mockReset());
@@ -17,7 +19,9 @@ afterEach(() => vi.useRealTimers());
 describe("login", () => {
   it("LG-E1 field kosong -> error per field, action tidak dipanggil", async () => {
     render(<LoginForm />);
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Masuk" })); });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
+    });
     expect(screen.getAllByText("Email atau nomor WA wajib diisi.").length).toBeGreaterThan(0);
     expect(login).not.toHaveBeenCalled();
   });
@@ -46,9 +50,13 @@ describe("login", () => {
     await kirim();
     const tombol = screen.getByRole("button", { name: "Coba lagi dalam 60 dtk" });
     expect(tombol).toBeDisabled();
-    act(() => { vi.advanceTimersByTime(1000); });
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
     expect(screen.getByRole("button", { name: "Coba lagi dalam 59 dtk" })).toBeDisabled();
-    act(() => { vi.advanceTimersByTime(59_000); });
+    act(() => {
+      vi.advanceTimersByTime(59_000);
+    });
     expect(screen.getByRole("button", { name: "Masuk" })).toBeEnabled();
     expect(screen.queryByText(/Terlalu banyak percobaan/)).not.toBeInTheDocument();
   });

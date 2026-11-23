@@ -30,9 +30,16 @@ export function TutupTiket({ code }: { code: string }) {
 
   return (
     <>
-      <Button variant="secondary" onClick={() => setBuka(true)}>Tutup tiket</Button>
+      <Button variant="secondary" onClick={() => setBuka(true)}>
+        Tutup tiket
+      </Button>
       <ConfirmDialog
-        open={buka} onClose={() => setBuka(false)} title="Tutup tiket" tone="primary" confirmLabel="Tutup tiket" busy={sibuk}
+        open={buka}
+        onClose={() => setBuka(false)}
+        title="Tutup tiket"
+        tone="primary"
+        confirmLabel="Tutup tiket"
+        busy={sibuk}
         body="Pembeli mendapat notifikasi dan tidak bisa membalas tiket ini lagi. Bila masih perlu bantuan, pembeli membuat tiket baru."
         onConfirm={() => void tutup()}
       />

@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, daftarPembeli, daftarPenjual, masuk, masukLewatForm, pembeliKe, penjualKe, pesan, siapkanToko } from "./bantu";
+import {
+  ADMIN,
+  daftarPembeli,
+  daftarPenjual,
+  masuk,
+  masukLewatForm,
+  pembeliKe,
+  penjualKe,
+  pesan,
+  siapkanToko,
+} from "./bantu";
 
 // M-04, M-05: pesanan masuk ke dashboard tanpa muat ulang, diproses sampai selesai, dan Chat WA mengarah ke wa.me.
 test("pesanan baru muncul sendiri lalu diproses sampai selesai", async ({ page, context }) => {
@@ -17,9 +27,13 @@ test("pesanan baru muncul sendiri lalu diproses sampai selesai", async ({ page, 
 
   // Pembeli checkout; dashboard menyinkronkan tiap 5 dtk, jadi kartu harus muncul tanpa muat ulang.
   // Penanda di window hilang kalau halaman dimuat ulang atau berpindah.
-  await page.evaluate(() => { (window as unknown as { __tanpaMuat: boolean }).__tanpaMuat = true; });
+  await page.evaluate(() => {
+    (window as unknown as { __tanpaMuat: boolean }).__tanpaMuat = true;
+  });
   let sinkron = 0;
-  page.on("response", (r) => { if (new URL(r.url()).pathname === "/api/dashboard/sinkron") sinkron++; });
+  page.on("response", (r) => {
+    if (new URL(r.url()).pathname === "/api/dashboard/sinkron") sinkron++;
+  });
   const kode = await pesan(tokenPembeli, menuId);
   const sebelum = sinkron;
   const kartu = page.getByRole("article", { name: `Pesanan ${kode}` });
@@ -32,10 +46,13 @@ test("pesanan baru muncul sendiri lalu diproses sampai selesai", async ({ page, 
   // Jaring pengaman: permintaan ke luar localhost digagalkan.
   const tujuan: (string | undefined)[] = [];
   const keluar: string[] = [];
-  await context.route((u) => u.hostname !== "localhost", (r) => {
-    keluar.push(r.request().url());
-    return r.abort();
-  });
+  await context.route(
+    (u) => u.hostname !== "localhost",
+    (r) => {
+      keluar.push(r.request().url());
+      return r.abort();
+    },
+  );
   await context.route(`**/api/pesanan/${kode}/wa`, async (r) => {
     const res = await r.fetch({ maxRedirects: 0 });
     tujuan.push(res.headers().location);
@@ -49,18 +66,27 @@ test("pesanan baru muncul sendiri lalu diproses sampai selesai", async ({ page, 
 
   // Aksi ditunda 5 dtk (bisa dibatalkan); tombol berikutnya aktif setelah server menjawab.
   await page.getByRole("tab", { name: /Semua hari ini/ }).click();
-  for (const [aksi, status] of [["Konfirmasi", "Dikonfirmasi"], ["Mulai masak", "Dimasak"], ["Siap diambil", "Siap diambil"]] as const) {
+  for (const [aksi, status] of [
+    ["Konfirmasi", "Dikonfirmasi"],
+    ["Mulai masak", "Dimasak"],
+    ["Siap diambil", "Siap diambil"],
+  ] as const) {
     await kartu.getByRole("button", { name: aksi, exact: true }).click();
     await expect(kartu.getByText(status, { exact: true })).toBeVisible();
     await expect(kartu.locator("[data-aksi-utama]")).toBeEnabled({ timeout: 20_000 });
   }
   // Server Action terakhir terkirim setelah jeda Batalkan 5 dtk; baru sesudahnya muat ulang aman.
-  const terkirim = page.waitForResponse((r) => r.request().method() === "POST" && "next-action" in r.request().headers(), { timeout: 20_000 });
+  const terkirim = page.waitForResponse(
+    (r) => r.request().method() === "POST" && "next-action" in r.request().headers(),
+    { timeout: 20_000 },
+  );
   await kartu.getByRole("button", { name: "Selesai", exact: true }).click();
   await expect(kartu.getByText("Selesai", { exact: true })).toBeVisible();
   await terkirim;
 
   await page.reload();
   await page.getByRole("tab", { name: /Semua hari ini/ }).click();
-  await expect(page.getByRole("article", { name: `Pesanan ${kode}` }).getByText("Selesai", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("article", { name: `Pesanan ${kode}` }).getByText("Selesai", { exact: true }),
+  ).toBeVisible();
 });

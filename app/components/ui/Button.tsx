@@ -17,7 +17,17 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   loadingText?: string;
 };
 
-export function Button({ variant = "primary", size = "md", loading, loadingText, className, children, disabled, type = "button", ...rest }: ButtonProps) {
+export function Button({
+  variant = "primary",
+  size = "md",
+  loading,
+  loadingText,
+  className,
+  children,
+  disabled,
+  type = "button",
+  ...rest
+}: ButtonProps) {
   return (
     <button
       type={type}

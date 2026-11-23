@@ -23,7 +23,13 @@ const pesanGagal: Record<string, string> = {
   NOT_MERCHANT: TEKS_PEMBELI,
 };
 
-type Props = { next?: string; alasan?: "sesi-habis" | "bukan-penjual"; registered?: boolean; reset?: boolean; pemeliharaan?: string };
+type Props = {
+  next?: string;
+  alasan?: "sesi-habis" | "bukan-penjual";
+  registered?: boolean;
+  reset?: boolean;
+  pemeliharaan?: string;
+};
 
 export default function LoginForm({ next, alasan, registered, reset, pemeliharaan }: Props) {
   const [identifier, setIdentifier] = useState("");
@@ -62,7 +68,10 @@ export default function LoginForm({ next, alasan, registered, reset, pemeliharaa
       const res: AuthState | undefined = await login({}, fd); // berhasil -> redirect, hasil kosong
       if (!res) return;
       setGagal(res);
-      if (res.code === "UNAUTHENTICATED") { setPassword(""); document.getElementById(ID_FIELD.password)?.focus(); }
+      if (res.code === "UNAUTHENTICATED") {
+        setPassword("");
+        document.getElementById(ID_FIELD.password)?.focus();
+      }
       if (res.code === "RATE_LIMITED") setSisa(60);
       if (res.code === "VALIDATION_ERROR" && res.fields) {
         setErrors(Object.fromEntries(Object.entries(res.fields).map(([k, v]) => [k, v[0]])));
@@ -71,23 +80,35 @@ export default function LoginForm({ next, alasan, registered, reset, pemeliharaa
     });
   }
 
-  const ringkasan = Object.entries(errors).filter(([, m]) => m).map(([k, message]) => ({ id: ID_FIELD[k as keyof typeof ID_FIELD] ?? k, message }));
-  const pesanGagalTampil = gagal && (gagal.code !== "RATE_LIMITED" || aktif) && (pesanGagal[gagal.code ?? ""] ?? gagal.error ?? "Terjadi kesalahan. Coba lagi.");
-  const konteks = alasan === "bukan-penjual"
-    ? <Banner tone="danger">{TEKS_PEMBELI}</Banner>
-    : alasan === "sesi-habis"
-      ? <Banner tone="warning">Sesi berakhir, silakan masuk lagi</Banner>
-      : registered
-        ? <Banner tone="success">Akun berhasil dibuat. Silakan masuk.</Banner>
-        : reset
-          ? <Banner tone="success">Kata sandi sudah diganti. Silakan masuk.</Banner>
-          : next
-            ? <Banner tone="info">Masuk untuk melanjutkan</Banner>
-            : null;
+  const ringkasan = Object.entries(errors)
+    .filter(([, m]) => m)
+    .map(([k, message]) => ({ id: ID_FIELD[k as keyof typeof ID_FIELD] ?? k, message }));
+  const pesanGagalTampil =
+    gagal &&
+    (gagal.code !== "RATE_LIMITED" || aktif) &&
+    (pesanGagal[gagal.code ?? ""] ?? gagal.error ?? "Terjadi kesalahan. Coba lagi.");
+  const konteks =
+    alasan === "bukan-penjual" ? (
+      <Banner tone="danger">{TEKS_PEMBELI}</Banner>
+    ) : alasan === "sesi-habis" ? (
+      <Banner tone="warning">Sesi berakhir, silakan masuk lagi</Banner>
+    ) : registered ? (
+      <Banner tone="success">Akun berhasil dibuat. Silakan masuk.</Banner>
+    ) : reset ? (
+      <Banner tone="success">Kata sandi sudah diganti. Silakan masuk.</Banner>
+    ) : next ? (
+      <Banner tone="info">Masuk untuk melanjutkan</Banner>
+    ) : null;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
-      <Link href="/" aria-label="KateringKita, ke beranda" className="self-start rounded-md focus-visible:ring-2 focus-visible:ring-focus"><Brand /></Link>
+      <Link
+        href="/"
+        aria-label="KateringKita, ke beranda"
+        className="self-start rounded-md focus-visible:ring-2 focus-visible:ring-focus"
+      >
+        <Brand />
+      </Link>
       <div className="rounded-lg border border-line bg-surface p-6 shadow-sm sm:p-8">
         <h1 className="font-display text-2xl font-bold">Masuk ke dashboard</h1>
         <p className="mt-1 text-ink-muted">Kelola menu, kuota, dan pesanan toko Anda.</p>
@@ -96,11 +117,25 @@ export default function LoginForm({ next, alasan, registered, reset, pemeliharaa
           {pesanGagalTampil ? <Banner tone="danger">{pesanGagalTampil}</Banner> : konteks}
           <ErrorSummary errors={ringkasan} focusKey={kunci} />
           <Field label="Email atau nomor WA" required error={errors.identifier} id={ID_FIELD.identifier}>
-            <Input name="identifier" autoComplete="username" value={identifier} onChange={(e) => setIdentifier(e.target.value)} onBlur={blur("identifier")} />
+            <Input
+              name="identifier"
+              autoComplete="username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              onBlur={blur("identifier")}
+            />
           </Field>
           <div className="relative">
             <Field label="Kata sandi" required error={errors.password} id={ID_FIELD.password}>
-              <Input name="password" type={lihat ? "text" : "password"} autoComplete="current-password" className="pr-12" value={password} onChange={(e) => setPassword(e.target.value)} onBlur={blur("password")} />
+              <Input
+                name="password"
+                type={lihat ? "text" : "password"}
+                autoComplete="current-password"
+                className="pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onBlur={blur("password")}
+              />
             </Field>
             {/* top = tinggi label + jarak, supaya sejajar dengan kotak isian */}
             <IconButton
@@ -111,7 +146,12 @@ export default function LoginForm({ next, alasan, registered, reset, pemeliharaa
               className="absolute right-0 top-[26px]"
             />
           </div>
-          <Link href="/lupa-sandi" className="-mt-2 inline-flex min-h-11 items-center self-end text-sm font-medium text-primary underline">Lupa kata sandi?</Link>
+          <Link
+            href="/lupa-sandi"
+            className="-mt-2 inline-flex min-h-11 items-center self-end text-sm font-medium text-primary underline"
+          >
+            Lupa kata sandi?
+          </Link>
           <Button type="submit" size="lg" loading={pending} loadingText="Memproses…" disabled={aktif}>
             {aktif ? `Coba lagi dalam ${sisa} dtk` : "Masuk"}
           </Button>
@@ -119,7 +159,9 @@ export default function LoginForm({ next, alasan, registered, reset, pemeliharaa
       </div>
       <p className="text-center text-sm text-ink-muted">
         Belum punya akun?{" "}
-        <Link href="/register" className="inline-flex min-h-11 items-center font-medium text-primary underline">Daftar sebagai penjual</Link>
+        <Link href="/register" className="inline-flex min-h-11 items-center font-medium text-primary underline">
+          Daftar sebagai penjual
+        </Link>
       </p>
     </main>
   );

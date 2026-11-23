@@ -12,7 +12,12 @@ const objek = (v: unknown) => (typeof v === "object" && v !== null ? (v as Recor
 export async function saveRekening(input: unknown): Promise<ActionResult<PencairanSaya>> {
   await requireMerchant();
   const { bank, account_number, account_name, password } = objek(input);
-  return hasil(await merchantFetch<PencairanSaya>("/payout-account", { method: "PUT", body: JSON.stringify({ bank, account_number, account_name, password }) }));
+  return hasil(
+    await merchantFetch<PencairanSaya>("/payout-account", {
+      method: "PUT",
+      body: JSON.stringify({ bank, account_number, account_name, password }),
+    }),
+  );
 }
 
 // ---- admin super ----
@@ -21,14 +26,26 @@ export async function saveRekening(input: unknown): Promise<ActionResult<Pencair
 export async function catatPencairan(input: unknown): Promise<ActionResult<Pencairan>> {
   await requireAdmin("super");
   const { merchant_id, amount, until, reference, note, account_updated_at } = objek(input);
-  return hasil(await adminFetch<Pencairan>("/payouts", {
-    method: "POST", body: JSON.stringify({ merchant_id, amount, until, reference, note, account_updated_at }),
-  }));
+  return hasil(
+    await adminFetch<Pencairan>("/payouts", {
+      method: "POST",
+      body: JSON.stringify({ merchant_id, amount, until, reference, note, account_updated_at }),
+    }),
+  );
 }
 
-export async function tandaiRefund(code: string, reference: string): Promise<ActionResult<{ code: string; amount: number; reference: string }>> {
+export async function tandaiRefund(
+  code: string,
+  reference: string,
+): Promise<ActionResult<{ code: string; amount: number; reference: string }>> {
   await requireAdmin("super");
-  return hasil(await adminFetch<{ code: string; amount: number; reference: string }>(`/refunds/${encodeURIComponent(String(code))}`, {
-    method: "POST", body: JSON.stringify({ reference }),
-  }));
+  return hasil(
+    await adminFetch<{ code: string; amount: number; reference: string }>(
+      `/refunds/${encodeURIComponent(String(code))}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reference }),
+      },
+    ),
+  );
 }

@@ -6,19 +6,27 @@ import type { MenuMejaItem } from "@/types/meja";
 export type Baris = { kunci: string; menu: MenuMejaItem; qty: number; opsi: MenuOption[] };
 export type BarisTersimpan = { menu_id: number; qty: number; option_ids: number[] };
 
-export const kunciBaris = (menuId: number, opsiIds: number[]) => `${menuId}:${[...opsiIds].sort((a, b) => a - b).join(",")}`;
-export const hargaSatuan = (b: Pick<Baris, "menu" | "opsi">) => b.menu.price + b.opsi.reduce((s, o) => s + o.extra_price, 0);
+export const kunciBaris = (menuId: number, opsiIds: number[]) =>
+  `${menuId}:${[...opsiIds].sort((a, b) => a - b).join(",")}`;
+export const hargaSatuan = (b: Pick<Baris, "menu" | "opsi">) =>
+  b.menu.price + b.opsi.reduce((s, o) => s + o.extra_price, 0);
 export const totalKeranjang = (baris: Baris[]) => baris.reduce((s, b) => s + hargaSatuan(b) * b.qty, 0);
 export const jumlahItem = (baris: Baris[]) => baris.reduce((s, b) => s + b.qty, 0);
-export const qtyMenu = (baris: Baris[], menuId: number) => baris.filter((b) => b.menu.id === menuId).reduce((s, b) => s + b.qty, 0);
+export const qtyMenu = (baris: Baris[], menuId: number) =>
+  baris.filter((b) => b.menu.id === menuId).reduce((s, b) => s + b.qty, 0);
 
 /** Tambah `qty` porsi; baris baru minimal `min_order_qty`. `null` = melebihi sisa stok. */
 export function tambah(baris: Baris[], menu: MenuMejaItem, opsi: MenuOption[], qty = 1): Baris[] | null {
-  const kunci = kunciBaris(menu.id, opsi.map((o) => o.id));
+  const kunci = kunciBaris(
+    menu.id,
+    opsi.map((o) => o.id),
+  );
   const ada = baris.find((b) => b.kunci === kunci);
   const naik = ada ? qty : Math.max(qty, menu.min_order_qty);
   if (qtyMenu(baris, menu.id) + naik > menu.available) return null;
-  return ada ? baris.map((b) => (b === ada ? { ...b, qty: b.qty + naik } : b)) : [...baris, { kunci, menu, qty: naik, opsi }];
+  return ada
+    ? baris.map((b) => (b === ada ? { ...b, qty: b.qty + naik } : b))
+    : [...baris, { kunci, menu, qty: naik, opsi }];
 }
 
 /** Ubah jumlah baris; di bawah minimum pesan = baris dihapus. `null` = melebihi sisa stok. */

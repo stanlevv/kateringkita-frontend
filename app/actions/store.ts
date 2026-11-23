@@ -10,5 +10,10 @@ export async function setStoreOpen(isOpen: boolean): Promise<ActionResult<{ is_o
   if ((await getSkenario()) === "gagal-aksi") {
     return { error: { code: "INTERNAL_ERROR", message: "Status dapur belum berubah. Coba lagi." } };
   }
-  return hasil(await merchantFetch<{ is_open: boolean }>("/status", { method: "PATCH", body: JSON.stringify({ is_open: isOpen }) }));
+  return hasil(
+    await merchantFetch<{ is_open: boolean }>("/status", {
+      method: "PATCH",
+      body: JSON.stringify({ is_open: isOpen }),
+    }),
+  );
 }

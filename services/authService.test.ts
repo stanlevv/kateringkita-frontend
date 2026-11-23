@@ -1,13 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 
-const redirect = (to: string): never => { throw new Error(`REDIRECT ${to}`); };
-const notFound = (): never => { throw new Error("NOT_FOUND"); };
+const redirect = (to: string): never => {
+  throw new Error(`REDIRECT ${to}`);
+};
+const notFound = (): never => {
+  throw new Error("NOT_FOUND");
+};
 let me: { status: number; ok: boolean; data?: unknown } = { status: 401, ok: false };
 vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to), notFound: () => notFound() }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: "t" }) }) }));
 vi.mock("@/services/api", () => ({ apiFetch: async () => me }));
 
-const sesi = (role: string) => { me = { status: 200, ok: true, data: { user: { role }, merchant: null } }; };
+const sesi = (role: string) => {
+  me = { status: 200, ok: true, data: { user: { role }, merchant: null } };
+};
 
 describe("G-10 requireMerchant", () => {
   it("sesi habis -> alasan=sesi-habis", async () => {

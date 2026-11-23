@@ -1,7 +1,8 @@
 import type { ComponentProps, InputHTMLAttributes, SelectHTMLAttributes } from "react";
 import { cx, fokus } from "./cx";
 
-const dasar = "w-full rounded-md border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-muted aria-[invalid=true]:border-danger disabled:bg-subtle disabled:text-ink-muted";
+const dasar =
+  "w-full rounded-md border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-muted aria-[invalid=true]:border-danger disabled:bg-subtle disabled:text-ink-muted";
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...rest} className={cx(dasar, "min-h-11", fokus, className)} />;

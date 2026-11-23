@@ -9,12 +9,25 @@ export const metadata: Metadata = {
   title: { default: SITE_TITLE, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: ["katering kampus", "aplikasi katering", "pre-order makanan mahasiswa", "kelola pesanan katering", "kuota porsi harian", "dashboard penjual katering"],
+  keywords: [
+    "katering kampus",
+    "aplikasi katering",
+    "pre-order makanan mahasiswa",
+    "kelola pesanan katering",
+    "kuota porsi harian",
+    "dashboard penjual katering",
+  ],
   creator: SITE_NAME,
   publisher: SITE_NAME,
   category: "business",
   formatDetection: { telephone: false, email: false, address: false },
-  openGraph: { type: "website", locale: "id_ID", siteName: SITE_NAME, title: SITE_TITLE, description: SITE_DESCRIPTION },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
   twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION },
 };
 

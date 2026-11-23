@@ -25,31 +25,61 @@ const KODE = "KK-20261031-7QF2";
 const STORE = { isOpen: true, buka: "00:00", tutup: "23:59" };
 const muat = (): DataDashboard => ({ orders: orders(), menus: menus(), adaTitikTemu: true, dimuat: Date.now() });
 const ui = (data: DataDashboard | null, galat = false) => (
-  <StoreStatusProvider store={STORE}><Toaster /><DashboardLive data={data} galat={galat} /></StoreStatusProvider>
+  <StoreStatusProvider store={STORE}>
+    <Toaster />
+    <DashboardLive data={data} galat={galat} />
+  </StoreStatusProvider>
 );
 const kartu = () => within(screen.getByText(KODE).closest("article") as HTMLElement);
 const detik = () => {
-  const [m, s] = (screen.getByText(KODE).closest("article")!.querySelector("[data-timer]")!.textContent ?? "").match(/\d\d:\d\d/)![0].split(":").map(Number);
+  const [m, s] = (screen.getByText(KODE).closest("article")!.querySelector("[data-timer]")!.textContent ?? "")
+    .match(/\d\d:\d\d/)![0]
+    .split(":")
+    .map(Number);
   return m * 60 + s;
 };
 
 const fetchMock = vi.fn();
 const balas = (orders: MerchantOrder[] = [], m: MerchantMenu[] = menus()) =>
-  ({ ok: true, status: 200, redirected: false, url: "", json: async () => ({ data: { orders, menus: m } }) }) as unknown as Response;
-const gagal = () => ({ ok: false, status: 503, redirected: false, url: "", json: async () => ({}) }) as unknown as Response;
+  ({
+    ok: true,
+    status: 200,
+    redirected: false,
+    url: "",
+    json: async () => ({ data: { orders, menus: m } }),
+  }) as unknown as Response;
+const gagal = () =>
+  ({ ok: false, status: 503, redirected: false, url: "", json: async () => ({}) }) as unknown as Response;
 /** Majukan jam (palsu) dan biarkan fetch/aksi yang dipicu selesai. */
-const maju = async (ms: number) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
-const kpi = (label: string) => within(screen.getByRole("region", { name: "Ringkasan hari ini" })).getByText(label).nextElementSibling!;
+const maju = async (ms: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+};
+const kpi = (label: string) =>
+  within(screen.getByRole("region", { name: "Ringkasan hari ini" })).getByText(label).nextElementSibling!;
 const angka = (label: string) => Number(kpi(label).textContent!.replace(/\D/g, ""));
-const lebihBaru = (o: MerchantOrder, p: Partial<MerchantOrder>): MerchantOrder => ({ ...o, ...p, updated_at: new Date(Date.now() + 1000).toISOString() });
+const lebihBaru = (o: MerchantOrder, p: Partial<MerchantOrder>): MerchantOrder => ({
+  ...o,
+  ...p,
+  updated_at: new Date(Date.now() + 1000).toISOString(),
+});
 const audio = vi.fn();
 class AudioPalsu {
   currentTime = 0;
   destination = {};
-  constructor() { audio(); }
-  createOscillator() { return { frequency: {}, connect: (g: unknown) => g, start() {}, stop() {}, onended: null }; }
-  createGain() { return { gain: {}, connect: (d: unknown) => d }; }
-  close() { return Promise.resolve(); }
+  constructor() {
+    audio();
+  }
+  createOscillator() {
+    return { frequency: {}, connect: (g: unknown) => g, start() {}, stop() {}, onended: null };
+  }
+  createGain() {
+    return { gain: {}, connect: (d: unknown) => d };
+  }
+  close() {
+    return Promise.resolve();
+  }
 }
 
 let ue: ReturnType<typeof userEvent.setup>;
@@ -65,7 +95,11 @@ beforeEach(() => {
   vi.stubGlobal("AudioContext", AudioPalsu);
   audio.mockReset();
   document.title = "Dashboard · KateringKita";
-  try { localStorage.clear(); } catch { /* abaikan */ }
+  try {
+    localStorage.clear();
+  } catch {
+    /* abaikan */
+  }
 });
 afterEach(() => {
   act(() => vi.runOnlyPendingTimers());
@@ -74,12 +108,13 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-
 describe("DB-N1 / D10 aksi memakai baris dari respons", () => {
   it("Konfirmasi: optimistis, 5 dtk, 3 argumen; respons langsung tampil, sinkron segera, tanpa router.refresh", async () => {
     const data = muat();
     const asli = data.orders.find((o) => o.code === KODE)!;
-    orderAction.mockImplementation(async () => ({ data: lebihBaru(asli, { status: "confirmed", confirmed_at: new Date().toISOString() }) }));
+    orderAction.mockImplementation(async () => ({
+      data: lebihBaru(asli, { status: "confirmed", confirmed_at: new Date().toISOString() }),
+    }));
     render(ui(data));
     await ue.click(kartu().getByRole("button", { name: "Konfirmasi" }));
     expect(kartu().getByText("Dikonfirmasi")).toBeInTheDocument();
@@ -92,7 +127,9 @@ describe("DB-N1 / D10 aksi memakai baris dari respons", () => {
   it("Tolak: angka Perlu tindakan turun -> router.refresh sekali (badge sidebar)", async () => {
     const data = muat();
     const asli = data.orders.find((o) => o.code === KODE)!;
-    orderAction.mockImplementation(async () => ({ data: lebihBaru(asli, { status: "cancelled", cancelled_by: "merchant", cancel_reason: "Stok habis" }) }));
+    orderAction.mockImplementation(async () => ({
+      data: lebihBaru(asli, { status: "cancelled", cancelled_by: "merchant", cancel_reason: "Stok habis" }),
+    }));
     render(ui(data));
     await ue.click(kartu().getByRole("button", { name: "Tolak" }));
     const dlg = screen.getByRole("dialog", { name: /Tolak pesanan/ });
@@ -113,11 +150,15 @@ describe("DB-N1 / D10 aksi memakai baris dari respons", () => {
   it("Selesai: omzet hari ini naik seketika", async () => {
     const data = muat();
     const siap = data.orders.find((o) => o.status === "ready")!;
-    orderAction.mockImplementation(async () => ({ data: lebihBaru(siap, { status: "completed", completed_at: new Date().toISOString() }) }));
+    orderAction.mockImplementation(async () => ({
+      data: lebihBaru(siap, { status: "completed", completed_at: new Date().toISOString() }),
+    }));
     render(ui(data));
     await ue.click(screen.getByRole("tab", { name: /Siap diambil/ }));
     const sebelum = angka("Omzet hari ini");
-    await ue.click(within(screen.getByText(siap.code).closest("article") as HTMLElement).getByRole("button", { name: "Selesai" }));
+    await ue.click(
+      within(screen.getByText(siap.code).closest("article") as HTMLElement).getByRole("button", { name: "Selesai" }),
+    );
     await maju(5100);
     expect(kpi("Omzet hari ini")).toHaveTextContent(formatRupiah(sebelum + siap.total));
   });
@@ -126,7 +167,15 @@ describe("DB-N1 / D10 aksi memakai baris dari respons", () => {
 describe("DB-A3 pesanan baru dari penyegaran", () => {
   const baru = (code: string): MerchantOrder => {
     const t = Date.now();
-    return { ...orders()[0], code, status: "holding", created_at: new Date(t).toISOString(), updated_at: new Date(t).toISOString(), hold_until: new Date(t + 300_000).toISOString(), seconds_left: 300 };
+    return {
+      ...orders()[0],
+      code,
+      status: "holding",
+      created_at: new Date(t).toISOString(),
+      updated_at: new Date(t).toISOString(),
+      hold_until: new Date(t + 300_000).toISOString(),
+      seconds_left: 300,
+    };
   };
   it("kartu teratas + badge Baru, angka tab naik, diumumkan, berbunyi", async () => {
     render(ui(muat()));
@@ -161,7 +210,9 @@ describe("D2 angka konsisten dengan kartu", () => {
     render(ui(data));
     await ue.click(screen.getByRole("tab", { name: /Siap diambil/ }));
     const sebelum = angka("Omzet hari ini");
-    fetchMock.mockImplementationOnce(async () => balas([lebihBaru(siap, { status: "completed", completed_at: new Date().toISOString() })]));
+    fetchMock.mockImplementationOnce(async () =>
+      balas([lebihBaru(siap, { status: "completed", completed_at: new Date().toISOString() })]),
+    );
     await maju(5000);
     expect(screen.queryByText(siap.code)).toBeNull();
     expect(kpi("Omzet hari ini")).toHaveTextContent(formatRupiah(sebelum + siap.total));
@@ -172,7 +223,9 @@ describe("waktu tahan", () => {
   it("sisa tahan menghitung mundur dari hold_until server", async () => {
     render(ui(muat()));
     const awal = detik();
-    await act(async () => { vi.advanceTimersByTime(10_000); });
+    await act(async () => {
+      vi.advanceTimersByTime(10_000);
+    });
     expect(detik()).toBeLessThanOrEqual(awal - 9);
   });
   it("D8 jam server 200 dtk lebih cepat -> sisa turun 200 dtk; < 60 dtk -> Segera", async () => {
@@ -236,7 +289,12 @@ describe("DB-N3 kuota", () => {
     const simpan = { ...m, quota_today: m.quota_today + 1, available: m.available + 1 };
     adjustQuota.mockImplementation(async () => ({ data: simpan }));
     // server sudah menyimpan: penyegaran berikutnya membawa menu yang sama dengan respons simpan
-    fetchMock.mockImplementation(async () => balas([], data.menus.map((x) => (x.id === m.id ? simpan : x))));
+    fetchMock.mockImplementation(async () =>
+      balas(
+        [],
+        data.menus.map((x) => (x.id === m.id ? simpan : x)),
+      ),
+    );
     render(ui(data));
     await ue.click(screen.getAllByRole("button", { name: `Tambah Kuota ${m.name}` })[0]);
     await maju(600);
@@ -261,8 +319,13 @@ describe("status dapur di luar jam buka", () => {
   it("saklar menyala di luar jam buka: banner menyebut pembeli belum bisa memesan", () => {
     vi.setSystemTime(new Date("2026-10-30T22:30:00Z")); // 05.30 WIB
     render(
-      <StoreStatusProvider store={{ isOpen: true, buka: "07:00", tutup: "16:00" }}><Toaster /><DashboardLive data={muat()} galat={false} /></StoreStatusProvider>,
+      <StoreStatusProvider store={{ isOpen: true, buka: "07:00", tutup: "16:00" }}>
+        <Toaster />
+        <DashboardLive data={muat()} galat={false} />
+      </StoreStatusProvider>,
     );
-    expect(screen.getByText("Di luar jam buka (07.00–16.00) — pembeli belum bisa memesan sampai 07.00")).toBeInTheDocument();
+    expect(
+      screen.getByText("Di luar jam buka (07.00–16.00) — pembeli belum bisa memesan sampai 07.00"),
+    ).toBeInTheDocument();
   });
 });

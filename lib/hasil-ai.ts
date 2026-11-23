@@ -7,4 +7,5 @@ export const TAB_HASIL_AI = [
   { id: "semua", label: "Semua" },
 ] as const;
 export type TabHasilAi = (typeof TAB_HASIL_AI)[number]["id"];
-export const tabHasilAi = (v: unknown): TabHasilAi => (TAB_HASIL_AI.some((t) => t.id === v) ? (v as TabHasilAi) : "menunggu");
+export const tabHasilAi = (v: unknown): TabHasilAi =>
+  TAB_HASIL_AI.some((t) => t.id === v) ? (v as TabHasilAi) : "menunggu";

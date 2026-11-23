@@ -10,4 +10,11 @@ export type Popup = {
   created_at: string;
 };
 
-export type IsianPopup = { title: string; image_url: string; promo_id: number | null; starts_at: string; ends_at: string; is_active: boolean };
+export type IsianPopup = {
+  title: string;
+  image_url: string;
+  promo_id: number | null;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+};

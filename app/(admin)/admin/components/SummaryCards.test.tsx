@@ -9,7 +9,18 @@ const data: Ringkasan = {
   merchants: { pending: 4, needs_fix: 2, verified: 11, suspended: 1, open_now: 6 },
   holding_expiring_soon: 3,
   recent_logs: [
-    { id: 9, admin_user_id: 1, admin_name: "Dina", action: "merchant.verify", target_type: "merchant", target_id: "5", reason: null, before: null, after: null, created_at: "2026-10-31T03:00:00.000Z" },
+    {
+      id: 9,
+      admin_user_id: 1,
+      admin_name: "Dina",
+      action: "merchant.verify",
+      target_type: "merchant",
+      target_id: "5",
+      reason: null,
+      before: null,
+      after: null,
+      created_at: "2026-10-31T03:00:00.000Z",
+    },
   ],
 };
 

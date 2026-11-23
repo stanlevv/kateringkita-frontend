@@ -21,22 +21,52 @@ const region = () => screen.getByRole("region", { name: "Pemberitahuan" });
 const dalam = (code: string) => within(kartuDari(code));
 
 /** Induk tiruan: menyimpan entri optimistis seperti DashboardLive. */
-function Induk({ list, sekarang, onFokusKuota }: { list: MerchantOrder[]; sekarang: number; onFokusKuota: (id?: number) => void }) {
+function Induk({
+  list,
+  sekarang,
+  onFokusKuota,
+}: {
+  list: MerchantOrder[];
+  sekarang: number;
+  onFokusKuota: (id?: number) => void;
+}) {
   const [optimis, setOptimis] = useState<Optimis>({});
   return (
-    <OrderQueue orders={terapkanOptimis(list, optimis)} menus={menus()} sekarang={sekarang} baru={[]} optimis={optimis}
-      onOptimis={(c, v) => setOptimis((o) => ganti(o, c, v))} onFokusKuota={onFokusKuota} onTerima={onTerima} onSegarkan={onSegarkan} />
+    <OrderQueue
+      orders={terapkanOptimis(list, optimis)}
+      menus={menus()}
+      sekarang={sekarang}
+      baru={[]}
+      optimis={optimis}
+      onOptimis={(c, v) => setOptimis((o) => ganti(o, c, v))}
+      onFokusKuota={onFokusKuota}
+      onTerima={onTerima}
+      onSegarkan={onSegarkan}
+    />
   );
 }
 
 let ue: ReturnType<typeof userEvent.setup>;
 const pasang = (list = orders()) => {
   const onFokusKuota = vi.fn();
-  const r = render(<><Toaster /><Induk list={list} sekarang={Date.now()} onFokusKuota={onFokusKuota} /></>);
-  const ganti = (baru: MerchantOrder[]) => r.rerender(<><Toaster /><Induk list={baru} sekarang={Date.now()} onFokusKuota={onFokusKuota} /></>);
+  const r = render(
+    <>
+      <Toaster />
+      <Induk list={list} sekarang={Date.now()} onFokusKuota={onFokusKuota} />
+    </>,
+  );
+  const ganti = (baru: MerchantOrder[]) =>
+    r.rerender(
+      <>
+        <Toaster />
+        <Induk list={baru} sekarang={Date.now()} onFokusKuota={onFokusKuota} />
+      </>,
+    );
   return { onFokusKuota, ...r, list, ganti };
 };
-const terapkan = (code: string, status: MerchantOrder["status"]) => ({ data: { ...orders().find((o) => o.code === code)!, status } });
+const terapkan = (code: string, status: MerchantOrder["status"]) => ({
+  data: { ...orders().find((o) => o.code === code)!, status },
+});
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -93,22 +123,32 @@ describe("DB-A2 aksi optimistis dengan Batalkan 5 dtk (Review Focus 2)", () => {
   it("tunggu 5 dtk -> dipanggil sekali tanpa objek pesanan; baris respons diteruskan + sinkron segera (D10)", async () => {
     pasang();
     await ue.click(dalam(KODE).getByRole("button", { name: "Konfirmasi" }));
-    await act(async () => { vi.advanceTimersByTime(5000); });
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
     expect(orderAction).toHaveBeenCalledTimes(1);
     expect(orderAction.mock.calls[0]).toEqual([KODE, "confirm", undefined]);
     expect(onTerima).toHaveBeenCalledWith(expect.objectContaining({ code: KODE, status: "confirmed" }));
     expect(onSegarkan).toHaveBeenCalledTimes(1);
     expect(dalam(KODE).getByRole("button", { name: "Mulai masak" })).toBeEnabled();
-    await act(async () => { vi.advanceTimersByTime(10_000); });
+    await act(async () => {
+      vi.advanceTimersByTime(10_000);
+    });
     expect(orderAction).toHaveBeenCalledTimes(1);
   });
   it("data server baru (updated_at berubah) menggantikan tampilan optimistis (D14)", async () => {
     const { ganti: render2 } = pasang();
     await ue.click(dalam(KODE).getByRole("button", { name: "Konfirmasi" }));
-    await act(async () => { vi.advanceTimersByTime(5000); });
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
     const asli = orders().find((o) => o.code === KODE)!;
     // server menjawab: tetap menunggu konfirmasi tetapi dengan updated_at baru -> objek server dipakai apa adanya
-    render2(orders().map((o) => (o.code === KODE ? { ...asli, updated_at: new Date(Date.parse(asli.updated_at) + 60_000).toISOString() } : o)));
+    render2(
+      orders().map((o) =>
+        o.code === KODE ? { ...asli, updated_at: new Date(Date.parse(asli.updated_at) + 60_000).toISOString() } : o,
+      ),
+    );
     expect(dalam(KODE).getByText("Menunggu konfirmasi")).toBeInTheDocument();
   });
   it("dilepas sebelum 5 dtk -> dipanggil sekali", async () => {
@@ -134,7 +174,9 @@ describe("galat aksi: kartu kembali ke status semula", () => {
     orderAction.mockResolvedValue(hasil);
     const fn = pasang();
     await ue.click(dalam(KODE).getByRole("button", { name: "Konfirmasi" }));
-    await act(async () => { vi.advanceTimersByTime(5000); });
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
     return fn;
   };
   it("DB-E1 gagal -> toast Gagal mengonfirmasi, kartu kembali", async () => {
@@ -146,7 +188,9 @@ describe("galat aksi: kartu kembali ke status semula", () => {
     orderAction.mockRejectedValue(new Error("Failed to fetch"));
     pasang();
     await ue.click(dalam(KODE).getByRole("button", { name: "Konfirmasi" }));
-    await act(async () => { vi.advanceTimersByTime(5000); });
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
     expect(region()).toHaveTextContent("Gagal mengonfirmasi. Coba lagi.");
     expect(dalam(KODE).getByText("Menunggu konfirmasi")).toBeInTheDocument();
     expect(dalam(KODE).getByRole("button", { name: "Konfirmasi" })).toBeEnabled();

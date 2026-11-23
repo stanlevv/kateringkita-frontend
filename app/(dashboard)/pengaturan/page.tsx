@@ -10,11 +10,24 @@ import { requireMerchant } from "@/services/authService";
 const teks = (v: unknown) => (typeof v === "string" ? v : "");
 
 // M-10, PG-*. `?lengkapi=<bagian>` dari kartu "Siapkan toko" (PG-A2).
-export default async function PengaturanPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function PengaturanPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { user } = await requireMerchant();
-  const [profil, titik, meja, cair, q] = await Promise.all([getProfile(), getPickupPoints(), getTables(), getPencairanSaya(), searchParams]);
+  const [profil, titik, meja, cair, q] = await Promise.all([
+    getProfile(),
+    getPickupPoints(),
+    getTables(),
+    getPencairanSaya(),
+    searchParams,
+  ]);
   return (
-    <PageHeader title="Pengaturan toko" description="Atur profil, jam buka, titik temu, rekening pencairan, pesan dari meja, dan akun.">
+    <PageHeader
+      title="Pengaturan toko"
+      description="Atur profil, jam buka, titik temu, rekening pencairan, pesan dari meja, dan akun."
+    >
       {"error" in profil ? (
         <GagalMuat judul="Pengaturan belum bisa dimuat" isi="Data toko gagal dimuat. Coba lagi." />
       ) : (

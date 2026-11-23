@@ -9,7 +9,8 @@ import { PromoForm } from "./PromoForm";
 
 const onSaved = vi.fn();
 const onClose = vi.fn();
-const tampil = (promo?: Parameters<typeof PromoForm>[0]["promo"]) => render(<PromoForm promo={promo} onSaved={onSaved} onClose={onClose} />);
+const tampil = (promo?: Parameters<typeof PromoForm>[0]["promo"]) =>
+  render(<PromoForm promo={promo} onSaved={onSaved} onClose={onClose} />);
 const ketik = async (label: string | RegExp, teks: string) => {
   const el = screen.getByLabelText(label) as HTMLInputElement;
   if (el.type === "datetime-local") return void fireEvent.change(el, { target: { value: teks } });
@@ -22,7 +23,11 @@ const isiValid = async () => {
   await ketik(/^Nilai/, "10");
 };
 
-beforeEach(() => { savePromo.mockReset(); onSaved.mockReset(); onClose.mockReset(); });
+beforeEach(() => {
+  savePromo.mockReset();
+  onSaved.mockReset();
+  onClose.mockReset();
+});
 
 describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
   it("kode dipaksa huruf besar", async () => {
@@ -56,7 +61,8 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
   });
 
   it("C2: penjual tidak punya opsi gratis biaya layanan; admin tetap punya; promo toko lama jenis itu tetap bisa diubah", () => {
-    const opsi = () => Array.from((screen.getByLabelText(/Jenis promo/) as HTMLSelectElement).options).map((o) => o.value);
+    const opsi = () =>
+      Array.from((screen.getByLabelText(/Jenis promo/) as HTMLSelectElement).options).map((o) => o.value);
     const { unmount } = tampil();
     expect(opsi()).toEqual(["percent", "fixed"]);
     unmount();
@@ -91,11 +97,23 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
     await ketik(/Selesai/, "2026-12-01T07:00");
     await simpan();
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
-    expect(savePromo).toHaveBeenCalledWith(null, expect.objectContaining({ code: "RAMADAN", type: "percent", value: 10, quota: null, starts_at: "2026-11-01T00:00:00.000Z", ends_at: "2026-12-01T00:00:00.000Z" }));
+    expect(savePromo).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({
+        code: "RAMADAN",
+        type: "percent",
+        value: 10,
+        quota: null,
+        starts_at: "2026-11-01T00:00:00.000Z",
+        ends_at: "2026-12-01T00:00:00.000Z",
+      }),
+    );
   });
 
   it("PR-E1 respons 409 -> error di field kode, fokus ke ringkasan, form tetap terisi", async () => {
-    savePromo.mockResolvedValue({ error: { code: "CONFLICT", message: "Kode sudah dipakai.", fields: { code: ["Kode sudah dipakai."] } } });
+    savePromo.mockResolvedValue({
+      error: { code: "CONFLICT", message: "Kode sudah dipakai.", fields: { code: ["Kode sudah dipakai."] } },
+    });
     tampil();
     await isiValid();
     await simpan();
@@ -109,6 +127,8 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
     const p = promos()[0];
     tampil(p);
     expect(screen.getByLabelText(/Kode promo/)).toHaveValue(p.code);
-    expect(screen.getByLabelText(/Mulai/)).toHaveValue(new Date(Date.parse(p.starts_at) + 7 * 3600e3).toISOString().slice(0, 16));
+    expect(screen.getByLabelText(/Mulai/)).toHaveValue(
+      new Date(Date.parse(p.starts_at) + 7 * 3600e3).toISOString().slice(0, 16),
+    );
   });
 });

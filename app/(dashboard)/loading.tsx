@@ -6,7 +6,9 @@ export default function Loading() {
   return (
     <RangkaHalaman>
       <div className="flex flex-col gap-4">
-        {[0, 1, 2].map((i) => <SkeletonKartu key={i} />)}
+        {[0, 1, 2].map((i) => (
+          <SkeletonKartu key={i} />
+        ))}
       </div>
     </RangkaHalaman>
   );

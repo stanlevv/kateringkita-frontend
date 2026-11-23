@@ -14,7 +14,10 @@ export default async function AdminPage() {
       {res.ok && res.data ? (
         <SummaryCards data={res.data} />
       ) : (
-        <GagalMuat judul="Ringkasan belum bisa dimuat" isi="Terjadi kesalahan saat mengambil data platform. Periksa koneksi lalu coba lagi." />
+        <GagalMuat
+          judul="Ringkasan belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil data platform. Periksa koneksi lalu coba lagi."
+        />
       )}
     </PageHeader>
   );

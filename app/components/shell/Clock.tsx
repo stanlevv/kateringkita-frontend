@@ -9,5 +9,9 @@ export function Clock() {
     const h = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(h);
   }, []);
-  return <time suppressHydrationWarning className="whitespace-nowrap text-sm text-ink-muted">{formatHariJam(now)}</time>;
+  return (
+    <time suppressHydrationWarning className="whitespace-nowrap text-sm text-ink-muted">
+      {formatHariJam(now)}
+    </time>
+  );
 }

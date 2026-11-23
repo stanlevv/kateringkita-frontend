@@ -10,7 +10,10 @@ import type { ActionResult } from "@/types/api";
 
 // F02: PUT /me/password (204); backend mencabut sesi lain, sesi ini tetap
 // Semua role (penjual di Pengaturan, admin di Akun saya / ganti sandi sementara)
-export async function changePassword(input: { current_password: string; new_password: string }): Promise<ActionResult<{ ok: true }>> {
+export async function changePassword(input: {
+  current_password: string;
+  new_password: string;
+}): Promise<ActionResult<{ ok: true }>> {
   if (!(await getSession())) redirect("/login?alasan=sesi-habis");
   const s = await getSkenario();
   if (s === "gagal-aksi") return galat("INTERNAL_ERROR", "Kata sandi belum diganti. Coba lagi.");

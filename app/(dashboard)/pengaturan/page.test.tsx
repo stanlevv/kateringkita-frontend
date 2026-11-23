@@ -1,14 +1,28 @@
 // Data penjual dari backend ditiru dengan fixture.
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
-  merchantFetch: async (path: string) => ({ ok: true, status: 200, data: path.startsWith("/orders") ? (await import("@/lib/fixtures/orders")).orders() : path === "/tables" ? [] : path === "/payouts" ? (await import("@/lib/fixtures/pencairan")).pencairanSaya() : (await import("@/lib/fixtures/profile")).profile(), meta: { total: 16 } }),
+  merchantFetch: async (path: string) => ({
+    ok: true,
+    status: 200,
+    data: path.startsWith("/orders")
+      ? (await import("@/lib/fixtures/orders")).orders()
+      : path === "/tables"
+        ? []
+        : path === "/payouts"
+          ? (await import("@/lib/fixtures/pencairan")).pencairanSaya()
+          : (await import("@/lib/fixtures/profile")).profile(),
+    meta: { total: 16 },
+  }),
   apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }),
 }));
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const getSkenario = vi.fn();
-const requireMerchant = vi.fn(async () => ({ user: { full_name: "Diego", phone: "081234567890", email: "d@x.id" }, merchant: null }));
+const requireMerchant = vi.fn(async () => ({
+  user: { full_name: "Diego", phone: "081234567890", email: "d@x.id" },
+  merchant: null,
+}));
 vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
 vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -18,7 +32,10 @@ import PengaturanPage from "./page";
 import TemplateWAPage from "../template-wa/page";
 
 const q = (o: Record<string, string> = {}) => Promise.resolve(o);
-afterEach(() => { getSkenario.mockReset(); requireMerchant.mockClear(); });
+afterEach(() => {
+  getSkenario.mockReset();
+  requireMerchant.mockClear();
+});
 
 describe("halaman /pengaturan (M-10)", () => {
   it("memanggil requireMerchant; satu h1; semua bagian ada", async () => {
@@ -26,7 +43,8 @@ describe("halaman /pengaturan (M-10)", () => {
     render(await PengaturanPage({ searchParams: q() }));
     expect(requireMerchant).toHaveBeenCalled();
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    for (const id of ["profil", "operasional", "titik-temu", "pembayaran", "meja", "akun"]) expect(document.getElementById(id)).toBeInTheDocument();
+    for (const id of ["profil", "operasional", "titik-temu", "pembayaran", "meja", "akun"])
+      expect(document.getElementById(id)).toBeInTheDocument();
   });
   it("gagal-muat -> pesan dan Coba lagi, tanpa form", async () => {
     getSkenario.mockResolvedValue("gagal-muat");

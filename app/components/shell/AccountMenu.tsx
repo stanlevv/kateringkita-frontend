@@ -18,7 +18,9 @@ export function AccountMenu({ nama, toko, admin = false }: { nama: string; toko:
 
   useEffect(() => {
     if (!open) return;
-    const tutup = (e: PointerEvent) => { if (!wadah.current?.contains(e.target as Node)) setOpen(false); };
+    const tutup = (e: PointerEvent) => {
+      if (!wadah.current?.contains(e.target as Node)) setOpen(false);
+    };
     document.addEventListener("pointerdown", tutup);
     return () => document.removeEventListener("pointerdown", tutup);
   }, [open]);
@@ -33,7 +35,9 @@ export function AccountMenu({ nama, toko, admin = false }: { nama: string; toko:
           pemicu.current?.focus();
         }
       }}
-      onBlur={(e) => { if (open && !e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false); }}
+      onBlur={(e) => {
+        if (open && !e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
     >
       <button
         ref={pemicu}
@@ -43,7 +47,12 @@ export function AccountMenu({ nama, toko, admin = false }: { nama: string; toko:
         onClick={() => setOpen(!open)}
         className={cx("flex min-h-11 items-center gap-2 rounded-md px-2 hover:bg-subtle", fokus)}
       >
-        <span aria-hidden className="flex size-8 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{inisial(nama)}</span>
+        <span
+          aria-hidden
+          className="flex size-8 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary"
+        >
+          {inisial(nama)}
+        </span>
         <span className="hidden text-left leading-tight lg:block">
           <span className="block text-sm font-semibold text-ink">{nama}</span>
           <span className="block text-xs text-ink-muted">{toko}</span>
@@ -52,7 +61,10 @@ export function AccountMenu({ nama, toko, admin = false }: { nama: string; toko:
         <ChevronDown aria-hidden className="size-4 text-ink-muted" />
       </button>
       {open && (
-        <div id={panelId} className="absolute right-0 top-full z-30 mt-1 w-56 rounded-md border border-line bg-surface p-1 shadow-lg">
+        <div
+          id={panelId}
+          className="absolute right-0 top-full z-30 mt-1 w-56 rounded-md border border-line bg-surface p-1 shadow-lg"
+        >
           <Link href={admin ? "/admin/akun" : "/pengaturan#akun"} onClick={() => setOpen(false)} className={item}>
             <UserCog aria-hidden className="size-4" />
             Pengaturan akun

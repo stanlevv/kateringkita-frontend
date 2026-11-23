@@ -14,7 +14,8 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
 
 const INFO = { isOpen: true, buka: "07:00", tutup: "16:00" };
 const sw = () => screen.getByRole("switch", { name: /Status dapur/ });
-const tampil = (ui: React.ReactNode, store = INFO) => render(<StoreStatusProvider store={store}>{ui}</StoreStatusProvider>);
+const tampil = (ui: React.ReactNode, store = INFO) =>
+  render(<StoreStatusProvider store={store}>{ui}</StoreStatusProvider>);
 
 beforeEach(() => {
   setStoreOpen.mockReset();
@@ -41,18 +42,33 @@ describe("SH-N3 / SH-E1 status dapur", () => {
   });
   it("SH-E1 aksi gagal -> kembali Buka + toast error, tanpa refresh", async () => {
     setStoreOpen.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Gagal." } });
-    tampil(<><Toaster /><StoreStatusToggle /></>);
+    tampil(
+      <>
+        <Toaster />
+        <StoreStatusToggle />
+      </>,
+    );
     await userEvent.click(sw());
     await userEvent.click(screen.getByRole("button", { name: "Tutup dapur" }));
-    await waitFor(() => expect(screen.getByRole("region", { name: "Pemberitahuan" })).toHaveTextContent("Status dapur belum berubah"));
+    await waitFor(() =>
+      expect(screen.getByRole("region", { name: "Pemberitahuan" })).toHaveTextContent("Status dapur belum berubah"),
+    );
     expect(sw()).toHaveAttribute("aria-checked", "true");
     expect(refresh).not.toHaveBeenCalled();
   });
   it("SH-E1 aksi melempar (jaringan putus) -> kembali Tutup, saklar aktif lagi, toast", async () => {
     setStoreOpen.mockRejectedValue(new Error("Failed to fetch"));
-    tampil(<><Toaster /><StoreStatusToggle /></>, { ...INFO, isOpen: false });
+    tampil(
+      <>
+        <Toaster />
+        <StoreStatusToggle />
+      </>,
+      { ...INFO, isOpen: false },
+    );
     await userEvent.click(sw());
-    await waitFor(() => expect(screen.getByRole("region", { name: "Pemberitahuan" })).toHaveTextContent("Status dapur belum berubah"));
+    await waitFor(() =>
+      expect(screen.getByRole("region", { name: "Pemberitahuan" })).toHaveTextContent("Status dapur belum berubah"),
+    );
     expect(sw()).toHaveAttribute("aria-checked", "false");
     expect(sw()).not.toBeDisabled();
   });
@@ -107,17 +123,28 @@ describe("SH-A2 sinkron sidebar dan drawer", () => {
   });
   it("sidebar dan drawer menampilkan status yang sama", async () => {
     setStoreOpen.mockResolvedValue({ data: { is_open: false } });
-    tampil(<><Sidebar store={INFO} badge={0} /><MobileNav store={INFO} badge={0} /></>);
+    tampil(
+      <>
+        <Sidebar store={INFO} badge={0} />
+        <MobileNav store={INFO} badge={0} />
+      </>,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Buka menu" }));
     const saklar = screen.getAllByRole("switch");
     expect(saklar).toHaveLength(2);
     await userEvent.click(saklar[1]);
     await userEvent.click(screen.getByRole("button", { name: "Tutup dapur" }));
-    await waitFor(() => screen.getAllByRole("switch").forEach((s) => expect(s).toHaveAttribute("aria-checked", "false")));
+    await waitFor(() =>
+      screen.getAllByRole("switch").forEach((s) => expect(s).toHaveAttribute("aria-checked", "false")),
+    );
   });
   it("nilai server yang berubah menyinkronkan ulang", () => {
     const { rerender } = tampil(<StoreStatusToggle />);
-    rerender(<StoreStatusProvider store={{ ...INFO, isOpen: false }}><StoreStatusToggle /></StoreStatusProvider>);
+    rerender(
+      <StoreStatusProvider store={{ ...INFO, isOpen: false }}>
+        <StoreStatusToggle />
+      </StoreStatusProvider>,
+    );
     expect(sw()).toHaveAttribute("aria-checked", "false");
   });
 });

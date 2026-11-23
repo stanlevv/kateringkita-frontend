@@ -11,12 +11,16 @@ export function useUnsavedGuard(dirty: boolean) {
 
   useEffect(() => {
     if (!dirty) return;
-    const sebelum = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    const sebelum = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
     const klik = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = (e.target as Element).closest?.("a[href]") as HTMLAnchorElement | null;
       const href = a?.getAttribute("href");
-      if (!a || !href || href.startsWith("#") || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+      if (!a || !href || href.startsWith("#") || (a.target && a.target !== "_self") || a.hasAttribute("download"))
+        return;
       const url = new URL(a.href, window.location.href);
       if (url.origin !== window.location.origin) return;
       e.preventDefault();
@@ -34,6 +38,10 @@ export function useUnsavedGuard(dirty: boolean) {
   return {
     open: tujuan !== null,
     cancel: () => setTujuan(null),
-    confirm: () => { const t = tujuan; setTujuan(null); if (t) router.push(t); },
+    confirm: () => {
+      const t = tujuan;
+      setTujuan(null);
+      if (t) router.push(t);
+    },
   };
 }

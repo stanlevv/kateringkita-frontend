@@ -33,32 +33,53 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
   return (
     <div className="flex flex-col gap-4">
       {!adaAktif && (
-        <div><Button onClick={() => setForm("baru")}><Plus aria-hidden className="size-4" />Ajukan banner</Button></div>
+        <div>
+          <Button onClick={() => setForm("baru")}>
+            <Plus aria-hidden className="size-4" />
+            Ajukan banner
+          </Button>
+        </div>
       )}
       {banners.length === 0 ? (
-        <EmptyState icon={ImageIcon} title="Belum ada banner" body="Banner tokomu tampil di beranda aplikasi pembeli setelah disetujui admin. Satu banner aktif per toko." />
+        <EmptyState
+          icon={ImageIcon}
+          title="Belum ada banner"
+          body="Banner tokomu tampil di beranda aplikasi pembeli setelah disetujui admin. Satu banner aktif per toko."
+        />
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
           {banners.map((b) => {
             const st = statusBanner(b, now);
             return (
               <li key={b.id}>
-                <article aria-label={b.title} className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-4">
+                <article
+                  aria-label={b.title}
+                  className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-4"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari penyimpanan publik */}
                   <img src={b.image_url} alt="" className="aspect-[2/1] w-full rounded-md object-cover" />
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-ink">{b.title}</p>
-                    <Badge tone={st.tone} icon={st.icon}>{st.label}</Badge>
+                    <Badge tone={st.tone} icon={st.icon}>
+                      {st.label}
+                    </Badge>
                   </div>
                   <p className="text-sm text-ink-muted">
-                    {b.target === "promo" && b.promo ? `Voucher ${b.promo.code}` : "Halaman toko"} · {formatTanggal(b.starts_at)} – {formatTanggal(b.ends_at)}
+                    {b.target === "promo" && b.promo ? `Voucher ${b.promo.code}` : "Halaman toko"} ·{" "}
+                    {formatTanggal(b.starts_at)} – {formatTanggal(b.ends_at)}
                   </p>
-                  {b.status === "ditolak" && b.catatan && <p className="text-sm text-danger">Alasan admin: {b.catatan}</p>}
+                  {b.status === "ditolak" && b.catatan && (
+                    <p className="text-sm text-danger">Alasan admin: {b.catatan}</p>
+                  )}
                   <div className="mt-auto flex flex-wrap gap-2">
                     {(b.status === "ditolak" || b.status === "menunggu") && (
-                      <Button variant="secondary" onClick={() => setForm(b)}>{b.status === "ditolak" ? "Ajukan ulang" : "Ubah"}</Button>
+                      <Button variant="secondary" onClick={() => setForm(b)}>
+                        {b.status === "ditolak" ? "Ajukan ulang" : "Ubah"}
+                      </Button>
                     )}
-                    <Button variant="secondary" onClick={() => void hapus(b)}>Hapus</Button>
+                    <Button variant="secondary" onClick={() => void hapus(b)}>
+                      Hapus
+                    </Button>
                   </div>
                 </article>
               </li>
@@ -66,12 +87,25 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
           })}
         </ul>
       )}
-      <Dialog open={form !== null} onClose={() => setForm(null)} title={form === "baru" ? "Ajukan banner" : "Ubah banner"}
-        className="max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto">
+      <Dialog
+        open={form !== null}
+        onClose={() => setForm(null)}
+        title={form === "baru" ? "Ajukan banner" : "Ubah banner"}
+        className="max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto"
+      >
         {form !== null && (
-          <BannerForm mode="toko" banner={form === "baru" ? null : form} vouchers={vouchers} simpan={simpanBannerToko}
+          <BannerForm
+            mode="toko"
+            banner={form === "baru" ? null : form}
+            vouchers={vouchers}
+            simpan={simpanBannerToko}
             onClose={() => setForm(null)}
-            onSaved={() => { setForm(null); toast({ tone: "success", message: "Banner diajukan. Tunggu persetujuan admin." }); router.refresh(); }} />
+            onSaved={() => {
+              setForm(null);
+              toast({ tone: "success", message: "Banner diajukan. Tunggu persetujuan admin." });
+              router.refresh();
+            }}
+          />
         )}
       </Dialog>
     </div>

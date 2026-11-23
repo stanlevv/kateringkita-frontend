@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { cekField, cekProfil, changePasswordSchema, menuFormSchema } from "./schemas";
 
-const profil = { business_name: "Dapur", description: "", logo_url: null, address: "Jl. A", wa_number: "081234567890", service_mode: "both", open_time: "07:00", close_time: "16:00", hold_minutes: 5, daily_revenue_target: 0, pickup_point_ids: [1] };
+const profil = {
+  business_name: "Dapur",
+  description: "",
+  logo_url: null,
+  address: "Jl. A",
+  wa_number: "081234567890",
+  service_mode: "both",
+  open_time: "07:00",
+  close_time: "16:00",
+  hold_minutes: 5,
+  daily_revenue_target: 0,
+  pickup_point_ids: [1],
+};
 describe("cekProfil (M-10)", () => {
   it("valid lolos", () => expect(cekProfil(profil)).toEqual({}));
   it("PG-E1 tutup <= buka", () => {
@@ -22,7 +34,9 @@ describe("cekProfil (M-10)", () => {
     expect(cekProfil({ ...profil, pickup_point_ids: [] }).pickup_point_ids).toBe("Pilih minimal satu titik temu.");
     expect(cekProfil({ ...profil, wa_number: "6281234567890" }).wa_number).toBeTruthy();
     expect(cekProfil({ ...profil, daily_revenue_target: -1 }).daily_revenue_target).toBeTruthy();
-    expect(cekProfil({ ...profil, daily_revenue_target: 1_000_000_001 }).daily_revenue_target).toBe("Target omzet maksimal 1.000.000.000.");
+    expect(cekProfil({ ...profil, daily_revenue_target: 1_000_000_001 }).daily_revenue_target).toBe(
+      "Target omzet maksimal 1.000.000.000.",
+    );
     expect(cekProfil({ ...profil, daily_revenue_target: 1_000_000_000 }).daily_revenue_target).toBeUndefined();
   });
   it("batas panjang", () => {
@@ -39,17 +53,39 @@ describe("cekProfil (M-10)", () => {
 });
 describe("changePasswordSchema (PG-N2)", () => {
   it("memakai aturan sandi pendaftaran", () => {
-    expect(Object.keys(cekField(changePasswordSchema, { current_password: "x", new_password: "abc" }))).toContain("new_password");
+    expect(Object.keys(cekField(changePasswordSchema, { current_password: "x", new_password: "abc" }))).toContain(
+      "new_password",
+    );
     expect(cekField(changePasswordSchema, { current_password: "x", new_password: "abcd1234" })).toEqual({});
-    expect(cekField(changePasswordSchema, { current_password: "", new_password: "abcd1234" }).current_password).toBeTruthy();
-    expect(cekField(changePasswordSchema, { current_password: "a".repeat(73), new_password: "abcd1234" }).current_password).toBeTruthy();
+    expect(
+      cekField(changePasswordSchema, { current_password: "", new_password: "abcd1234" }).current_password,
+    ).toBeTruthy();
+    expect(
+      cekField(changePasswordSchema, { current_password: "a".repeat(73), new_password: "abcd1234" }).current_password,
+    ).toBeTruthy();
   });
   it("sandi baru harus berbeda dari lama", () => {
-    expect(cekField(changePasswordSchema, { current_password: "abcd1234", new_password: "abcd1234" }).new_password).toBe("Kata sandi baru harus berbeda dari kata sandi lama.");
+    expect(
+      cekField(changePasswordSchema, { current_password: "abcd1234", new_password: "abcd1234" }).new_password,
+    ).toBe("Kata sandi baru harus berbeda dari kata sandi lama.");
   });
 });
 
-const ok = { name: "Nasi Box", category_id: 1, description: "", image_url: null, unit_label: "porsi", price: 15000, hpp: 9000, daily_quota: 20, prep_minutes: 15, is_preorder: false, preorder_days: 0, min_order_qty: 1, options: [] as { name: string; extra_price: number }[] };
+const ok = {
+  name: "Nasi Box",
+  category_id: 1,
+  description: "",
+  image_url: null,
+  unit_label: "porsi",
+  price: 15000,
+  hpp: 9000,
+  daily_quota: 20,
+  prep_minutes: 15,
+  is_preorder: false,
+  preorder_days: 0,
+  min_order_qty: 1,
+  options: [] as { name: string; extra_price: number }[],
+};
 const cek = (o: object) => cekField(menuFormSchema, { ...ok, ...o });
 
 describe("menuFormSchema (M-07)", () => {
@@ -67,7 +103,9 @@ describe("menuFormSchema (M-07)", () => {
     expect(cek({ daily_quota: 10_001 }).daily_quota).toBe("Kuota harian maksimal 10.000.");
     expect(cek({ prep_minutes: 1441 }).prep_minutes).toBe("Estimasi siap maksimal 1.440.");
     expect(cek({ min_order_qty: 1001 }).min_order_qty).toBe("Minimum pesan maksimal 1.000.");
-    expect(cek({ options: [{ name: "A", extra_price: 1_000_001 }] })["options.0.extra_price"]).toBe("Tambahan harga maksimal 1.000.000.");
+    expect(cek({ options: [{ name: "A", extra_price: 1_000_001 }] })["options.0.extra_price"]).toBe(
+      "Tambahan harga maksimal 1.000.000.",
+    );
     const dua1 = Array.from({ length: 21 }, (_, i) => ({ name: `O${i}`, extra_price: 0 }));
     expect(cek({ options: dua1 }).options).toBe("Maksimal 20 opsi.");
   });
@@ -91,7 +129,13 @@ describe("menuFormSchema (M-07)", () => {
     expect(cek({ is_preorder: true, preorder_days: 2 })).toEqual({});
   });
   it("MF-E6 opsi bernama sama (tanpa beda huruf) dan opsi kosong menjadi galat per baris", () => {
-    const e = cek({ options: [{ name: "Pedas", extra_price: 0 }, { name: " pedas ", extra_price: 0 }, { name: "", extra_price: 0 }] });
+    const e = cek({
+      options: [
+        { name: "Pedas", extra_price: 0 },
+        { name: " pedas ", extra_price: 0 },
+        { name: "", extra_price: 0 },
+      ],
+    });
     expect(e["options.1.name"]).toBeTruthy();
     expect(e["options.2.name"]).toBeTruthy();
     expect(e["options.0.name"]).toBeUndefined();

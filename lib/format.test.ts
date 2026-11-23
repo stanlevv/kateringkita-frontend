@@ -1,5 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { formatJam, formatRupiah, formatTanggal, formatTelepon, geserWib, hariIniWib, inputWibKeIso, isoKeInputWib, jamWib, tanggalWib, waktuRelatif } from "./format";
+import {
+  formatJam,
+  formatRupiah,
+  formatTanggal,
+  formatTelepon,
+  geserWib,
+  hariIniWib,
+  inputWibKeIso,
+  isoKeInputWib,
+  jamWib,
+  tanggalWib,
+  waktuRelatif,
+} from "./format";
 
 describe("waktu WIB untuk input datetime-local", () => {
   it("WIB lokal <-> ISO UTC", () => {

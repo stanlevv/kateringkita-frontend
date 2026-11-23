@@ -17,16 +17,22 @@ const cocokStatus: Record<StatusMenu, (m: MerchantMenu) => boolean> = {
 
 const tanpaStatus = (menus: MerchantMenu[], f: Pick<FilterMenu, "q" | "kategori">) => {
   const q = f.q.trim().toLowerCase();
-  return menus.filter((m) => (!q || m.name.toLowerCase().includes(q)) && (!f.kategori || m.category.slug === f.kategori));
+  return menus.filter(
+    (m) => (!q || m.name.toLowerCase().includes(q)) && (!f.kategori || m.category.slug === f.kategori),
+  );
 };
 
 export const saring = (menus: MerchantMenu[], f: FilterMenu) => tanpaStatus(menus, f).filter(cocokStatus[f.status]);
 
 /** Jumlah per tab, mengikuti pencarian dan kategori (bukan tab terpilih). */
 export function hitungTab(menus: MerchantMenu[]): Record<StatusMenu, number> {
-  return Object.fromEntries(STATUS_MENU.map((s) => [s, menus.filter(cocokStatus[s]).length])) as Record<StatusMenu, number>;
+  return Object.fromEntries(STATUS_MENU.map((s) => [s, menus.filter(cocokStatus[s]).length])) as Record<
+    StatusMenu,
+    number
+  >;
 }
 
 export const saringQK = tanpaStatus;
 
-export const marginPersen = ({ price, hpp }: Pick<MerchantMenu, "price" | "hpp">) => (price > 0 ? Math.round(((price - hpp) / price) * 100) : 0);
+export const marginPersen = ({ price, hpp }: Pick<MerchantMenu, "price" | "hpp">) =>
+  price > 0 ? Math.round(((price - hpp) / price) * 100) : 0;

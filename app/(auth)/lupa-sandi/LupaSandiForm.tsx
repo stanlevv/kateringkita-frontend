@@ -27,14 +27,15 @@ export default function LupaSandiForm() {
   const [gagal, setGagal] = useState<string | null>(null);
   const [kunci, setKunci] = useState(0);
   const [pending, start] = useTransition();
-  const ubah = (k: keyof typeof nilai) => (e: { target: { value: string } }) => setNilai((p) => ({ ...p, [k]: e.target.value }));
+  const ubah = (k: keyof typeof nilai) => (e: { target: { value: string } }) =>
+    setNilai((p) => ({ ...p, [k]: e.target.value }));
 
   const tampilkan = (res: AuthState) => {
     if (res.fields) {
       setErrors(Object.fromEntries(Object.entries(res.fields).map(([k, v]) => [k, v[0]])));
       setKunci((k) => k + 1);
     }
-    setGagal(pesanGagal[res.code ?? ""] ?? (res.fields ? null : res.error ?? "Terjadi kesalahan. Coba lagi."));
+    setGagal(pesanGagal[res.code ?? ""] ?? (res.fields ? null : (res.error ?? "Terjadi kesalahan. Coba lagi.")));
   };
 
   function kirim(ev: FormEvent) {
@@ -53,18 +54,32 @@ export default function LupaSandiForm() {
     });
   }
 
-  const ringkasan = Object.entries(errors).filter(([, m]) => m).map(([id, message]) => ({ id, message }));
+  const ringkasan = Object.entries(errors)
+    .filter(([, m]) => m)
+    .map(([id, message]) => ({ id, message }));
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
-      <Link href="/" aria-label="KateringKita, ke beranda" className="self-start rounded-md focus-visible:ring-2 focus-visible:ring-focus"><Brand /></Link>
+      <Link
+        href="/"
+        aria-label="KateringKita, ke beranda"
+        className="self-start rounded-md focus-visible:ring-2 focus-visible:ring-focus"
+      >
+        <Brand />
+      </Link>
       <div className="rounded-lg border border-line bg-surface p-6 shadow-sm sm:p-8">
         <h1 className="font-display text-2xl font-bold">Lupa kata sandi</h1>
         <p className="mt-1 text-ink-muted">
-          {langkah === "email" ? "Masukkan email akun toko. Kami kirim kode 6 angka ke email itu." : `Masukkan kode dari email ${nilai.email.trim()} dan kata sandi baru.`}
+          {langkah === "email"
+            ? "Masukkan email akun toko. Kami kirim kode 6 angka ke email itu."
+            : `Masukkan kode dari email ${nilai.email.trim()} dan kata sandi baru.`}
         </p>
         <form onSubmit={kirim} noValidate className="mt-6 flex flex-col gap-4">
-          {gagal ? <Banner tone="danger">{gagal}</Banner> : langkah === "kode" ? <Banner tone="info">Jika email terdaftar, kode sudah dikirim. Berlaku 10 menit.</Banner> : null}
+          {gagal ? (
+            <Banner tone="danger">{gagal}</Banner>
+          ) : langkah === "kode" ? (
+            <Banner tone="info">Jika email terdaftar, kode sudah dikirim. Berlaku 10 menit.</Banner>
+          ) : null}
           <ErrorSummary errors={ringkasan} focusKey={kunci} />
           {langkah === "email" ? (
             <Field label="Email" required error={errors.email} id="email">
@@ -73,13 +88,32 @@ export default function LupaSandiForm() {
           ) : (
             <>
               <Field label="Kode verifikasi" required error={errors.code} id="code">
-                <Input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={nilai.code} onChange={ubah("code")} />
+                <Input
+                  name="code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={nilai.code}
+                  onChange={ubah("code")}
+                />
               </Field>
               <Field label="Kata sandi baru" required error={errors.password} id="password">
-                <Input name="password" type="password" autoComplete="new-password" value={nilai.password} onChange={ubah("password")} />
+                <Input
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={nilai.password}
+                  onChange={ubah("password")}
+                />
               </Field>
               <Field label="Ulangi kata sandi baru" required error={errors.confirm} id="confirm">
-                <Input name="confirm" type="password" autoComplete="new-password" value={nilai.confirm} onChange={ubah("confirm")} />
+                <Input
+                  name="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  value={nilai.confirm}
+                  onChange={ubah("confirm")}
+                />
               </Field>
             </>
           )}
@@ -87,7 +121,16 @@ export default function LupaSandiForm() {
             {langkah === "email" ? "Kirim kode" : "Simpan kata sandi"}
           </Button>
           {langkah === "kode" && (
-            <Button type="button" variant="secondary" disabled={pending} onClick={() => { setLangkah("email"); setGagal(null); setErrors({}); }}>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={pending}
+              onClick={() => {
+                setLangkah("email");
+                setGagal(null);
+                setErrors({});
+              }}
+            >
               Kirim ulang kode
             </Button>
           )}
@@ -95,7 +138,9 @@ export default function LupaSandiForm() {
       </div>
       <p className="text-center text-sm text-ink-muted">
         Ingat kata sandi?{" "}
-        <Link href="/login" className="inline-flex min-h-11 items-center font-medium text-primary underline">Kembali ke halaman masuk</Link>
+        <Link href="/login" className="inline-flex min-h-11 items-center font-medium text-primary underline">
+          Kembali ke halaman masuk
+        </Link>
       </p>
     </main>
   );

@@ -13,11 +13,22 @@ const angka = (v: string | string[] | undefined, min: number, maks: number) => {
 };
 
 // M-14 — Ulasan (UL-N1…N3, UL-S1). Filter menu, bintang, dan halaman tinggal di URL.
-export default async function UlasanPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function UlasanPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireMerchant();
   const [ulasan, menus, q] = await Promise.all([getReviews(), getMenus(), searchParams]);
   if ("error" in ulasan) {
-    return <PageHeader title="Ulasan"><GagalMuat judul="Ulasan belum bisa dimuat" isi="Terjadi kesalahan saat mengambil ulasan. Periksa koneksi lalu coba lagi." /></PageHeader>;
+    return (
+      <PageHeader title="Ulasan">
+        <GagalMuat
+          judul="Ulasan belum bisa dimuat"
+          isi="Terjadi kesalahan saat mengambil ulasan. Periksa koneksi lalu coba lagi."
+        />
+      </PageHeader>
+    );
   }
   const filter = { menu: angka(q.menu, 1, 999_999_999), bintang: angka(q.bintang, 1, 5) };
   const { rows, total } = saringUlasan(ulasan.data, filter, 1);

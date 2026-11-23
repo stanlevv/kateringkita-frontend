@@ -3,7 +3,11 @@ import { panggil } from "./aksi";
 import type { ActionResult } from "@/types/api";
 
 type Tujuan = "menu" | "logo" | "banner" | "popup" | "cover";
-type MintaUnggah = (b: { purpose: Tujuan; content_type: string; size: number }) => Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>>;
+type MintaUnggah = (b: {
+  purpose: Tujuan;
+  content_type: string;
+  size: number;
+}) => Promise<ActionResult<{ upload_url: string; public_url: string; expires_at: string }>>;
 
 const MAKS_UNGGAH = 5 * 1024 * 1024; // sama dengan uploadSchema backend
 
@@ -18,7 +22,8 @@ const ATURAN: Record<Tujuan, { sisi: number; latar: string | null; cadangan: "im
   cover: { sisi: 1600, latar: "#fff", cadangan: "image/jpeg" },
 };
 
-const keBlob = (c: HTMLCanvasElement, type: string, mutu: number) => new Promise<Blob | null>((r) => c.toBlob(r, type, mutu));
+const keBlob = (c: HTMLCanvasElement, type: string, mutu: number) =>
+  new Promise<Blob | null>((r) => c.toBlob(r, type, mutu));
 
 /**
  * Perkecil dan sandikan ulang foto di browser. Semua <Image> memakai `unoptimized`, jadi pembeli mengunduh berkas ini
@@ -58,17 +63,27 @@ export async function kecilkanFoto(file: File, tujuan: Tujuan): Promise<Blob> {
 }
 
 /** Browser -> penyimpanan: perkecil foto, minta URL bertanda tangan ke server, lalu PUT berkas langsung (FE-08). */
-export async function unggahFoto(file: File, purpose: Tujuan, minta?: MintaUnggah): Promise<ActionResult<{ public_url: string }>> {
+export async function unggahFoto(
+  file: File,
+  purpose: Tujuan,
+  minta?: MintaUnggah,
+): Promise<ActionResult<{ public_url: string }>> {
   const berkas = await kecilkanFoto(file, purpose);
   // Hanya terjadi bila browser gagal memperkecil berkas asli yang besar
   if (berkas.size > MAKS_UNGGAH) return { error: { code: "VALIDATION_ERROR", message: "Ukuran foto maksimal 5 MB." } };
   // penjual: POST /merchant/uploads (menu, logo, banner); admin: POST /admin/uploads (banner, popup) lewat `minta`
-  const r = await panggil(() => (minta ?? (requestUpload as MintaUnggah))({ purpose, content_type: berkas.type, size: berkas.size }));
+  const r = await panggil(() =>
+    (minta ?? (requestUpload as MintaUnggah))({ purpose, content_type: berkas.type, size: berkas.size }),
+  );
   if ("error" in r) return r;
   try {
     // Content-Type dan Content-Length ikut ditandatangani (be/src/upload/r2.ts): berkas tidak boleh diubah ukuran/dikompres
     // antara minta URL dan PUT, kalau tidak penyimpanan menolaknya. Browser mengisi Content-Length dari body.
-    const res = await fetch(r.data.upload_url, { method: "PUT", headers: { "Content-Type": berkas.type }, body: berkas });
+    const res = await fetch(r.data.upload_url, {
+      method: "PUT",
+      headers: { "Content-Type": berkas.type },
+      body: berkas,
+    });
     if (res.ok) return { data: { public_url: r.data.public_url } };
   } catch {
     // jatuh ke galat di bawah

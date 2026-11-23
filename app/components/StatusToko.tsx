@@ -7,15 +7,30 @@ export function StatusToko({ merchant }: { merchant: Record<string, unknown> | n
   const alasan = typeof merchant?.suspended_reason === "string" ? merchant.suspended_reason : null;
   switch (merchant?.verification_status) {
     case "pending":
-      return <Banner tone="info">Toko Anda sedang diperiksa admin. Setelah terverifikasi, toko Anda bisa ditampilkan ke pembeli.</Banner>;
+      return (
+        <Banner tone="info">
+          Toko Anda sedang diperiksa admin. Setelah terverifikasi, toko Anda bisa ditampilkan ke pembeli.
+        </Banner>
+      );
     case "needs_fix":
       return (
-        <Banner tone="warning" action={<Link href="/pengaturan" className="inline-flex min-h-11 items-center font-semibold underline">Lengkapi pengaturan</Link>}>
+        <Banner
+          tone="warning"
+          action={
+            <Link href="/pengaturan" className="inline-flex min-h-11 items-center font-semibold underline">
+              Lengkapi pengaturan
+            </Link>
+          }
+        >
           Admin meminta perbaikan: {note ?? "periksa kembali data toko Anda."}
         </Banner>
       );
     case "suspended":
-      return <Banner tone="danger">Toko Anda ditangguhkan{alasan ? `: ${alasan}` : ". Hubungi admin untuk informasi lebih lanjut."}</Banner>;
+      return (
+        <Banner tone="danger">
+          Toko Anda ditangguhkan{alasan ? `: ${alasan}` : ". Hubungi admin untuk informasi lebih lanjut."}
+        </Banner>
+      );
     default:
       return null;
   }

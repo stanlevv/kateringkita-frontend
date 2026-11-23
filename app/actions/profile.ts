@@ -20,5 +20,10 @@ export async function saveProfile(input: unknown): Promise<ActionResult<Merchant
     return galatField(masalah, "Periksa kembali isian pengaturan.");
   }
 
-  return hasil(await merchantFetch<MerchantProfile>("/profile", { method: "PATCH", body: JSON.stringify(bersihkanProfil(input, penuh)) }));
+  return hasil(
+    await merchantFetch<MerchantProfile>("/profile", {
+      method: "PATCH",
+      body: JSON.stringify(bersihkanProfil(input, penuh)),
+    }),
+  );
 }

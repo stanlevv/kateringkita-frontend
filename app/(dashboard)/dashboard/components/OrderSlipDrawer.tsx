@@ -8,7 +8,11 @@ import { OrderDetail } from "@/app/components/orders/OrderDetail";
 export function OrderSlipDrawer({ order: o, onClose }: { order: MerchantOrder | null; onClose: () => void }) {
   return (
     <Drawer open={!!o} onClose={onClose} title={o ? `Slip ${o.code}` : "Slip"}>
-      {o && <div className="overflow-y-auto"><OrderDetail key={o.code} order={o} aksi={false} /></div>}
+      {o && (
+        <div className="overflow-y-auto">
+          <OrderDetail key={o.code} order={o} aksi={false} />
+        </div>
+      )}
     </Drawer>
   );
 }

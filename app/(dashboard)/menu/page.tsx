@@ -14,7 +14,11 @@ export default async function MenuPage() {
   return (
     <PageHeader title="Menu & Stok" actions={<LinkButton href="/menu/baru">Tambah menu</LinkButton>}>
       <Suspense>
-        <MenuCatalog menus={"data" in menus ? menus.data : []} categories={"data" in kategori ? kategori.data : []} galat={galat} />
+        <MenuCatalog
+          menus={"data" in menus ? menus.data : []}
+          categories={"data" in kategori ? kategori.data : []}
+          galat={galat}
+        />
       </Suspense>
     </PageHeader>
   );

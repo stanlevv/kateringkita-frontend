@@ -2,7 +2,14 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ReportKpis } from "./ReportKpis";
 
-const summary = { target: 3_500_000, revenue: 2_270_000, hpp_total: 1_453_500, profit: 816_500, achievement_pct: 65, orders: 21 };
+const summary = {
+  target: 3_500_000,
+  revenue: 2_270_000,
+  hpp_total: 1_453_500,
+  profit: 816_500,
+  achievement_pct: 65,
+  orders: 21,
+};
 
 describe("LP-N1 KPI (nilai dari API)", () => {
   it("capaian = achievement_pct dari API + bar, target dan pesanan selesai dari summary", () => {

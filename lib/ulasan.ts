@@ -24,20 +24,28 @@ export function ringkasUlasan(rs: Review[]) {
 export function ringkasPerMenu(rs: Review[], menus: { id: number; name: string }[]) {
   const daftar = new Map(menus.map((m) => [m.id, m.name]));
   for (const r of rs) if (!daftar.has(r.menu_id)) daftar.set(r.menu_id, r.menu_name);
-  return [...daftar].map(([id, name]) => {
-    const milik = rs.filter((r) => r.menu_id === id);
-    return { menu_id: id, menu_name: name, rata: rata(milik), jumlah: milik.length };
-  }).sort((a, b) => a.menu_name.localeCompare(b.menu_name, "id"));
+  return [...daftar]
+    .map(([id, name]) => {
+      const milik = rs.filter((r) => r.menu_id === id);
+      return { menu_id: id, menu_name: name, rata: rata(milik), jumlah: milik.length };
+    })
+    .sort((a, b) => a.menu_name.localeCompare(b.menu_name, "id"));
 }
 
 /** UL-N2, UL-N3: terbaru dulu. */
 export function saringUlasan(rs: Review[], f: { menu?: number; bintang?: number }, page: number) {
   const hasil = rs
-    .filter((r) => (f.menu === undefined || r.menu_id === f.menu) && (f.bintang === undefined || r.rating === f.bintang))
+    .filter(
+      (r) => (f.menu === undefined || r.menu_id === f.menu) && (f.bintang === undefined || r.rating === f.bintang),
+    )
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
   return { total: hasil.length, rows: hasil.slice((page - 1) * LIMIT_ULASAN, page * LIMIT_ULASAN) };
 }
 
 export function urlUlasan(f: { menu?: number; bintang?: number; page?: number }): string {
-  return urlDengan("/ulasan", "", { menu: f.menu?.toString(), bintang: f.bintang?.toString(), page: f.page && f.page > 1 ? String(f.page) : null });
+  return urlDengan("/ulasan", "", {
+    menu: f.menu?.toString(),
+    bintang: f.bintang?.toString(),
+    page: f.page && f.page > 1 ? String(f.page) : null,
+  });
 }

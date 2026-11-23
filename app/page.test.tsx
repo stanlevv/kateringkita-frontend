@@ -4,13 +4,24 @@ import Home from "./page";
 
 let down = false;
 const getSession = vi.fn();
-vi.mock("@/services/authService", () => ({ getSession: () => (down ? Promise.reject(new Error("down")) : getSession()) }));
+vi.mock("@/services/authService", () => ({
+  getSession: () => (down ? Promise.reject(new Error("down")) : getSession()),
+}));
 
 // jsdom tidak punya IntersectionObserver/matchMedia; animasi landing cukup dibuat diam.
-vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} });
+vi.stubGlobal(
+  "IntersectionObserver",
+  class {
+    observe() {}
+    disconnect() {}
+  },
+);
 vi.stubGlobal("matchMedia", () => ({ matches: true }));
 
-beforeEach(() => { getSession.mockReset(); down = false; });
+beforeEach(() => {
+  getSession.mockReset();
+  down = false;
+});
 
 describe("landing", () => {
   it("LD-N1/N2 pengunjung: Masuk + Daftar sebagai penjual", async () => {
@@ -45,7 +56,9 @@ describe("landing", () => {
     expect(container.textContent).not.toMatch(/Redis|RAG|Lab|WebSocket/);
     expect(container.textContent).not.toMatch(/gratis/i);
     // tiga ketukan alur pesanan
-    expect(within(container.querySelector<HTMLElement>("#alur")!).getAllByRole("heading", { level: 3 })).toHaveLength(3);
+    expect(within(container.querySelector<HTMLElement>("#alur")!).getAllByRole("heading", { level: 3 })).toHaveLength(
+      3,
+    );
   });
 
   it("SEO: satu h1, JSON-LD FAQPage sama dengan tanya jawab yang tampil", async () => {

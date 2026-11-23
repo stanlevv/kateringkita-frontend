@@ -15,15 +15,41 @@ vi.mock("@/app/actions/meja", () => ({
 import { MenuMejaApp } from "./MenuMejaApp";
 
 const menu = (o: Partial<MenuMeja["menus"][number]>) => ({
-  id: 1, name: "Nasi Ayam", image_url: null, price: 15000, unit_label: "porsi", category: { id: 1, name: "Nasi", slug: "nasi" },
-  available: 20, badge: "available" as const, rating_avg: 0, rating_count: 0, description: "Ayam goreng sambal", min_order_qty: 1, options: [], ...o,
+  id: 1,
+  name: "Nasi Ayam",
+  image_url: null,
+  price: 15000,
+  unit_label: "porsi",
+  category: { id: 1, name: "Nasi", slug: "nasi" },
+  available: 20,
+  badge: "available" as const,
+  rating_avg: 0,
+  rating_count: 0,
+  description: "Ayam goreng sambal",
+  min_order_qty: 1,
+  options: [],
+  ...o,
 });
 const data: MenuMeja = {
   table: { label: "5" },
-  merchant: { slug: "dapur", business_name: "Dapur Siti", description: null, logo_url: null, is_open: true, open_time: "07:00", close_time: "16:00" },
+  merchant: {
+    slug: "dapur",
+    business_name: "Dapur Siti",
+    description: null,
+    logo_url: null,
+    is_open: true,
+    open_time: "07:00",
+    close_time: "16:00",
+  },
   menus: [
     menu({}),
-    menu({ id: 2, name: "Es Teh", price: 5000, category: { id: 2, name: "Minuman", slug: "minuman" }, options: [{ id: 9, name: "Less sugar", extra_price: 0 }] }),
+    menu({
+      id: 2,
+      name: "Es Teh",
+      price: 5000,
+      category: { id: 2, name: "Minuman", slug: "minuman" },
+      options: [{ id: 9, name: "Less sugar", extra_price: 0 }],
+    }),
     menu({ id: 3, name: "Tumis Habis", badge: "sold_out", available: 0 }),
   ],
 };
@@ -31,7 +57,13 @@ const data: MenuMeja = {
 beforeEach(() => {
   localStorage.clear();
   // jsdom belum punya IntersectionObserver
-  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} });
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -71,8 +103,13 @@ describe("menu pesan dari meja", () => {
     await u.click(within(keranjang).getByRole("button", { name: "Pesan & bayar" }));
 
     expect(pesanDariMeja).toHaveBeenCalledWith("t0k3n", {
-      items: [{ menu_id: 1, qty: 2, option_ids: [] }, { menu_id: 2, qty: 1, option_ids: [9] }],
-      customer_name: "Andi", customer_phone: null, note: null,
+      items: [
+        { menu_id: 1, qty: 2, option_ids: [] },
+        { menu_id: 2, qty: 1, option_ids: [9] },
+      ],
+      customer_name: "Andi",
+      customer_phone: null,
+      note: null,
     });
     expect(bayarPesananMeja).toHaveBeenCalledWith("KK-1", "tamu-1", "http://localhost:3000/meja/pesanan/KK-1");
     expect(assign).toHaveBeenCalledWith("https://app.sandbox.midtrans.com/snap/x");
@@ -85,7 +122,11 @@ describe("menu pesan dari meja", () => {
     vi.stubGlobal("location", { ...window.location, origin: "http://localhost:3000", assign });
     pesanDariMeja.mockResolvedValue({ data: { code: "KK-2", guest_token: "tamu-2" } });
     let bayar!: (v: unknown) => void;
-    bayarPesananMeja.mockReturnValue(new Promise((r) => { bayar = r; }));
+    bayarPesananMeja.mockReturnValue(
+      new Promise((r) => {
+        bayar = r;
+      }),
+    );
     render(<MenuMejaApp token="t0k3n" data={data} />);
 
     await u.click(screen.getByRole("button", { name: "Tambah Nasi Ayam" }));
