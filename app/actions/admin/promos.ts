@@ -7,6 +7,7 @@ import { bersihkanPromo, cekPromo } from "@/lib/schemas";
 import { requireAdmin } from "@/services/authService";
 import type { ActionResult } from "@/types/api";
 import type { Promo } from "@/types/promo";
+import type { Pemeliharaan } from "@/types/meta";
 
 const idOk = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
 const argSalah = () => galat("VALIDATION_ERROR", "Data promo tidak valid.");
@@ -45,4 +46,12 @@ export async function simpanKontakCs(wa: string): Promise<ActionResult<{ cs_what
   if (nomor && !/^08\d{8,11}$/.test(nomor)) return galatField({ wa_number: "Nomor WA harus diawali 08 dan 10–13 digit." }, "Periksa nomor WA.");
   const res = await adminFetch<{ cs_whatsapp: string | null }>("/settings/cs-contact", { method: "PUT", body: JSON.stringify({ wa_number: nomor }) });
   return res.ok ? { data: res.data ?? { cs_whatsapp: null } } : hasil(res);
+}
+
+// F27 mode pemeliharaan: penjual & pembeli dapat 503 selama aktif; pesan kosong = pesan bawaan backend.
+export async function simpanPemeliharaan(aktif: boolean, pesan: string): Promise<ActionResult<{ maintenance: Pemeliharaan }>> {
+  await requireAdmin();
+  const teks = typeof pesan === "string" ? pesan.trim() : "";
+  if (teks.length > 200) return galatField({ pesan: "Pesan maksimal 200 karakter." }, "Periksa pesan.");
+  return hasil(await adminFetch<{ maintenance: Pemeliharaan }>("/settings/maintenance", { method: "PUT", body: JSON.stringify({ aktif: aktif === true, pesan: teks }) }));
 }

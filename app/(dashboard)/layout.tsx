@@ -9,12 +9,17 @@ import { getJumlahNotif } from "@/services/notifikasiService";
 import { getJumlahTindakan } from "@/services/orderService";
 import { getProfile } from "@/services/profileService";
 import { requireMerchant } from "@/services/authService";
+import { getPemeliharaan } from "@/services/metaService";
+import { HalamanPemeliharaan } from "@/app/components/Pemeliharaan";
 import { COOKIE_SIDEBAR, modeSidebar } from "@/lib/shell";
 
 export const metadata: Metadata = { title: "Dashboard penjual", robots: { index: false, follow: false } };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, merchant } = await requireMerchant();
+  // F27: API penjual dibalas 503 selama pemeliharaan, jadi shell diganti halaman pemberitahuan
+  const pemeliharaan = await getPemeliharaan();
+  if (pemeliharaan.aktif) return <HalamanPemeliharaan pesan={pemeliharaan.pesan} />;
   // Badge dan status dapur dihitung di layout, jadi hanya segar saat muat penuh atau router.refresh() (polling).
   const [profil, badge, notif, kuki] = await Promise.all([getProfile(), getJumlahTindakan(), getJumlahNotif(), cookies()]);
   const store: StoreInfo | null = "data" in profil ? { isOpen: profil.data.is_open, buka: profil.data.open_time, tutup: profil.data.close_time } : null;

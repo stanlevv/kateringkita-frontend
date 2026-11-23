@@ -4,6 +4,8 @@ vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({ user:
 vi.mock("@/services/profileService", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
 vi.mock("@/services/orderService", () => ({ getJumlahTindakan: async () => 7 }));
 vi.mock("@/services/notifikasiService", () => ({ getJumlahNotif: async () => 4 }));
+let pemeliharaan = { aktif: false, pesan: null as string | null };
+vi.mock("@/services/metaService", () => ({ getPemeliharaan: async () => pemeliharaan }));
 let kuki: string | undefined;
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: (k: string) => (k === "kk-sidebar" && kuki ? { value: kuki } : undefined) }) }));
 import DashboardLayout from "./layout";
@@ -23,5 +25,12 @@ describe("shell dashboard", () => {
     expect(JSON.stringify(await DashboardLayout({ children: null }))).toContain('"mode":"ringkas"');
     kuki = undefined;
     expect(JSON.stringify(await DashboardLayout({ children: null }))).toContain('"mode":"lebar"');
+  });
+  it("F27: mode pemeliharaan aktif -> halaman pemberitahuan berisi pesan admin, tanpa shell", async () => {
+    pemeliharaan = { aktif: true, pesan: "Sampai 14.00 WIB" };
+    const teks = JSON.stringify(await DashboardLayout({ children: null }));
+    pemeliharaan = { aktif: false, pesan: null };
+    expect(teks).toContain("Sampai 14.00 WIB");
+    expect(teks).not.toContain('"badge":7');
   });
 });
