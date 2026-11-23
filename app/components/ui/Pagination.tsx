@@ -1,4 +1,5 @@
-// Komponen Pagination: navigasi "Sebelumnya / Halaman X dari Y / Berikutnya" lewat tautan URL. Dipakai di daftar admin dan penjual.
+// Komponen Pagination: navigasi "Sebelumnya / Halaman X dari Y / Berikutnya" lewat tautan URL. Dipakai di daftar
+// admin dan penjual.
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cx, focusRing } from "./cx";

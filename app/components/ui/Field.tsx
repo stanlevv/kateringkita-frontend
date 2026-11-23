@@ -1,4 +1,5 @@
-// Komponen Field: membungkus satu isian form dengan label, teks bantuan, dan pesan galat yang terhubung untuk aksesibilitas.
+// Komponen Field: membungkus satu isian form dengan label, teks bantuan, dan pesan galat yang terhubung untuk
+// aksesibilitas.
 // Dipakai di semua form.
 import { cloneElement, useId, type ReactElement } from "react";
 import { CircleAlert } from "lucide-react";

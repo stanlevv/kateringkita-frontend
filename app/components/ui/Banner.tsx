@@ -1,4 +1,5 @@
-// Komponen Banner: kotak pesan selebar konten (info, peringatan, galat) dengan aksi opsional. Dipakai di banyak halaman.
+// Komponen Banner: kotak pesan selebar konten (info, peringatan, galat) dengan aksi opsional. Dipakai di banyak
+// halaman.
 import type { ReactNode } from "react";
 import type { Tone } from "@/lib/order-status";
 import { cx } from "./cx";

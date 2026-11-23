@@ -16,7 +16,8 @@ const DEBOUNCE_MS = 500;
 // Perubahan yang belum dikirim: tambah/kurang (`delta`) atau nilai mutlak (`quota_today`, nama field API).
 type PendingMutation = { delta?: number; quota_today?: number };
 
-// Antrean kirim per menu: paling banyak satu permintaan berjalan (`inFlight`), perubahan berikutnya menunggu di `pending`.
+// Antrean kirim per menu: paling banyak satu permintaan berjalan (`inFlight`), perubahan berikutnya menunggu di
+// `pending`.
 type MenuQueue = {
   inFlight: boolean;
   inFlightPayload?: PendingMutation;
@@ -172,7 +173,8 @@ export function useQuota(onMenuSaved: (menu: MerchantMenu) => void, menus: Merch
       // 1. Hentikan timer tiap menu; 2. kirim sekarang bila tidak ada permintaan yang berjalan.
       queueMap.forEach((queue, id) => {
         clearTimeout(queue.timer);
-        // Bila ada permintaan berjalan, permintaan itu sendiri yang mengirim `queue.pending` setelah selesai (langkah 6 di flushMenu).
+        // Bila ada permintaan berjalan, permintaan itu sendiri yang mengirim `queue.pending` setelah selesai (langkah
+        // 6 di flushMenu).
         if (!queue.inFlight && queue.pending) {
           void flushMenuRef.current(id);
         }

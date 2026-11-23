@@ -42,7 +42,8 @@ export function useStoreOpenToggle() {
 /**
  * Saklar status dapur dengan teks Buka/Tutup seperti yang dilihat pembeli. Menutup dapur minta konfirmasi dulu;
  * membuka langsung. Status dibaca dari StoreStatusProvider.
- * @param props.rail hanya saklar kecuali sidebar sedang lebar. Rail = sidebar sempit berisi ikon saja (tablet 768–1279 px). `sb-lebar:` = varian Tailwind yang aktif saat sidebar lebar.
+ * @param props.rail hanya saklar kecuali sidebar sedang lebar. Rail = sidebar sempit berisi ikon saja (tablet
+ * 768–1279 px). `sb-lebar:` = varian Tailwind yang aktif saat sidebar lebar.
  * @returns elemen `div`
  */
 export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {

@@ -1,4 +1,5 @@
-// Komponen IconButton: tombol berisi ikon saja, dengan label untuk pembaca layar dan tooltip. Dipakai Dialog, Toast, shell.
+// Komponen IconButton: tombol berisi ikon saja, dengan label untuk pembaca layar dan tooltip. Dipakai Dialog, Toast,
+// shell.
 import type { ButtonHTMLAttributes } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cx, focusRing } from "./cx";

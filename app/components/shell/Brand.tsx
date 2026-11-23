@@ -25,7 +25,8 @@ export function LogoMark({ className }: { className?: string }) {
 
 /**
  * Logo + tulisan KateringKita.
- * @param props.rail di rail sidebar: tulisan hanya tampil saat sidebar lebar. Rail = sidebar sempit berisi ikon saja (tablet 768–1279 px). `sb-lebar:` = varian Tailwind yang aktif saat sidebar lebar.
+ * @param props.rail di rail sidebar: tulisan hanya tampil saat sidebar lebar. Rail = sidebar sempit berisi ikon saja
+ * (tablet 768–1279 px). `sb-lebar:` = varian Tailwind yang aktif saat sidebar lebar.
  * @returns elemen `div`
  */
 export function Brand({ rail = false }: { rail?: boolean }) {

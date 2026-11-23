@@ -162,7 +162,8 @@ export function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; column
 }
 
 /**
- * Daftar yang tampil sebagai DataTable di ≥ 1024 px dan kartu di bawahnya (OrderTable, MerchantTable, TransactionTable).
+ * Daftar yang tampil sebagai DataTable di ≥ 1024 px dan kartu di bawahnya (OrderTable, MerchantTable,
+ * TransactionTable).
  * @param props.rows jumlah baris
  * @param props.columns jumlah kolom tabel
  * @returns tabel kerangka (layar lebar) dan kartu kerangka (layar sempit)

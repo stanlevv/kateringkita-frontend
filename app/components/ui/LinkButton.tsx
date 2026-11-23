@@ -1,4 +1,5 @@
-// Komponen LinkButton: tautan Next.js yang tampil seperti tombol, untuk navigasi (bukan aksi). Dipakai di banyak halaman.
+// Komponen LinkButton: tautan Next.js yang tampil seperti tombol, untuk navigasi (bukan aksi). Dipakai di banyak
+// halaman.
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { cx, focusRing } from "./cx";

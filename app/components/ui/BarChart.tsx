@@ -1,4 +1,5 @@
-// Komponen BarChart: grafik batang (bertumpuk bila lebih dari satu seri) dengan tooltip dan tabel data untuk aksesibilitas.
+// Komponen BarChart: grafik batang (bertumpuk bila lebih dari satu seri) dengan tooltip dan tabel data untuk
+// aksesibilitas.
 // Dipakai PemakaianAi (token per hari) dan GrafikPerJam (masalah server per jam) di panel admin.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";

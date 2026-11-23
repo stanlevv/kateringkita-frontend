@@ -1,4 +1,5 @@
-// Komponen Stepper: isian angka dengan tombol − dan + (tahan untuk mengulang). Dipakai QuotaRow dan MenuCard untuk kuota.
+// Komponen Stepper: isian angka dengan tombol − dan + (tahan untuk mengulang). Dipakai QuotaRow dan MenuCard untuk
+// kuota.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state atau event.
 "use client";
 
