@@ -13,7 +13,7 @@ import { Field } from "@/app/components/ui/Field";
 import { IconButton } from "@/app/components/ui/IconButton";
 import { Input, Select } from "@/app/components/ui/Input";
 import { LinkButton } from "@/app/components/ui/LinkButton";
-import { businessSchema, cekField, ownerSchema } from "@/lib/schemas";
+import { businessSchema, validateFields, ownerSchema } from "@/lib/schemas";
 
 type Jenis = { id: number; name: string };
 type Nilai = Record<
@@ -60,7 +60,7 @@ export default function RegisterForm({ types, typesFailed }: { types: Jenis[]; t
 
   const skema = langkah === 1 ? ownerSchema : businessSchema;
   const ubah = (k: keyof Nilai) => (e: { target: { value: string } }) => setV((p) => ({ ...p, [k]: e.target.value }));
-  const blur = (k: keyof Nilai) => () => setErrors((p) => ({ ...p, [k]: cekField(skema, v)[k] ?? "" }));
+  const blur = (k: keyof Nilai) => () => setErrors((p) => ({ ...p, [k]: validateFields(skema, v)[k] ?? "" }));
   const field = (k: keyof Nilai) => ({ name: k, value: v[k], onChange: ubah(k), onBlur: blur(k) });
 
   function gagalValidasi(e: Record<string, string>) {
@@ -73,7 +73,7 @@ export default function RegisterForm({ types, typesFailed }: { types: Jenis[]; t
   function lanjut(ev: FormEvent) {
     ev.preventDefault();
     setSudahAda(false);
-    if (!gagalValidasi(cekField(ownerSchema, v))) {
+    if (!gagalValidasi(validateFields(ownerSchema, v))) {
       pindahFokus.current = true;
       setLangkah(2);
     }
@@ -82,7 +82,7 @@ export default function RegisterForm({ types, typesFailed }: { types: Jenis[]; t
   function daftar(ev: FormEvent) {
     ev.preventDefault();
     setUmum("");
-    if (gagalValidasi(cekField(businessSchema, v))) return;
+    if (gagalValidasi(validateFields(businessSchema, v))) return;
     start(async () => {
       const fd = new FormData();
       for (const [k, val] of Object.entries(v)) if (k !== "confirm") fd.set(k, val);

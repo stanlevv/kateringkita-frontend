@@ -1,8 +1,8 @@
-import { selCsv } from "./laporan";
-import type { RekapKeuangan } from "@/types/admin";
+import { csvCell } from "./report";
+import type { FinanceSummary } from "@/types/admin";
 
 // F20: CSV rekap keuangan per toko + baris total (angka rupiah tanpa format, siap dihitung di spreadsheet)
-const KOLOM = [
+const CSV_COLUMNS = [
   "orders",
   "subtotal",
   "discount_merchant",
@@ -13,15 +13,15 @@ const KOLOM = [
   "platform_net",
 ] as const;
 
-export function buatCsvKeuangan(r: RekapKeuangan): string {
-  const baris = [
-    ...r.rows.map((x) => [selCsv(x.business_name), ...KOLOM.map((k) => x[k])]),
-    ["TOTAL", ...KOLOM.map((k) => r.totals[k])],
+export function createFinanceCsv(summary: FinanceSummary): string {
+  const rows = [
+    ...summary.rows.map((row) => [csvCell(row.business_name), ...CSV_COLUMNS.map((column) => row[column])]),
+    ["TOTAL", ...CSV_COLUMNS.map((column) => summary.totals[column])],
   ];
   return (
     [
       "toko,pesanan,subtotal,diskon_toko,diskon_platform,biaya_layanan,total,pendapatan_toko,pendapatan_platform",
-      ...baris.map((b) => b.join(",")),
+      ...rows.map((row) => row.join(",")),
     ].join("\r\n") + "\r\n"
   );
 }

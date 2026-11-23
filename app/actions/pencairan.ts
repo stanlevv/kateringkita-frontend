@@ -1,19 +1,19 @@
 "use server";
 
-import { adminFetch, hasil, merchantFetch } from "@/services/api";
-import { requireAdmin, requireMerchant } from "@/services/authService";
+import { adminFetch, toResult, merchantFetch } from "@/services/api";
+import { requireAdmin, requireMerchant } from "@/services/auth.service";
 import type { ActionResult } from "@/types/api";
-import type { Pencairan, PencairanSaya } from "@/types/pencairan";
+import type { Payout, MyPayouts } from "@/types/payout";
 
 // F26 pencairan dana. Validasi isi (dan cek ulang kata sandi) ada di backend; aksi ini hanya meneruskan field yang dikenal.
 const objek = (v: unknown) => (typeof v === "object" && v !== null ? (v as Record<string, unknown>) : {});
 
 // ---- penjual ----
-export async function saveRekening(input: unknown): Promise<ActionResult<PencairanSaya>> {
+export async function saveRekening(input: unknown): Promise<ActionResult<MyPayouts>> {
   await requireMerchant();
   const { bank, account_number, account_name, password } = objek(input);
-  return hasil(
-    await merchantFetch<PencairanSaya>("/payout-account", {
+  return toResult(
+    await merchantFetch<MyPayouts>("/payout-account", {
       method: "PUT",
       body: JSON.stringify({ bank, account_number, account_name, password }),
     }),
@@ -23,11 +23,11 @@ export async function saveRekening(input: unknown): Promise<ActionResult<Pencair
 // ---- admin super ----
 /** `until` = as_of daftar saldo yang sedang dilihat, `account_updated_at` = versi rekening yang tampil;
  *  saldo atau rekening yang berubah sejak itu ditolak backend (409). */
-export async function catatPencairan(input: unknown): Promise<ActionResult<Pencairan>> {
+export async function catatPencairan(input: unknown): Promise<ActionResult<Payout>> {
   await requireAdmin("super");
   const { merchant_id, amount, until, reference, note, account_updated_at } = objek(input);
-  return hasil(
-    await adminFetch<Pencairan>("/payouts", {
+  return toResult(
+    await adminFetch<Payout>("/payouts", {
       method: "POST",
       body: JSON.stringify({ merchant_id, amount, until, reference, note, account_updated_at }),
     }),
@@ -39,7 +39,7 @@ export async function tandaiRefund(
   reference: string,
 ): Promise<ActionResult<{ code: string; amount: number; reference: string }>> {
   await requireAdmin("super");
-  return hasil(
+  return toResult(
     await adminFetch<{ code: string; amount: number; reference: string }>(
       `/refunds/${encodeURIComponent(String(code))}`,
       {

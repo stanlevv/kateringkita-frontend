@@ -1,65 +1,67 @@
 import { describe, expect, it } from "vitest";
 import { menus } from "./fixtures/menus";
 import { reviews } from "./fixtures/reviews";
-import { LIMIT_ULASAN, ringkasPerMenu, ringkasUlasan, samarkanNama, saringUlasan } from "./ulasan";
+import { LIMIT_REVIEWS, summarizeByMenu, summarizeReviews, maskName, filterReviews } from "./review";
 
 describe("samarkanNama (R-09)", () => {
   it("dua huruf pertama + ***", () => {
-    expect(samarkanNama("Rafli R.")).toBe("Ra***");
-    expect(samarkanNama("  budi ")).toBe("bu***");
-    expect(samarkanNama("Al")).toBe("Al***");
-    expect(samarkanNama("")).toBe("***");
+    expect(maskName("Rafli R.")).toBe("Ra***");
+    expect(maskName("  budi ")).toBe("bu***");
+    expect(maskName("Al")).toBe("Al***");
+    expect(maskName("")).toBe("***");
   });
 });
 
 describe("ringkasUlasan (UL-N1)", () => {
   it("sebaran 5 sampai 1 berjumlah total; rata-rata 1 desimal", () => {
-    const rs = reviews();
-    const r = ringkasUlasan(rs);
-    expect(r.sebaran.map((s) => s.bintang)).toEqual([5, 4, 3, 2, 1]);
-    expect(r.sebaran.reduce((a, s) => a + s.jumlah, 0)).toBe(rs.length);
-    expect(r.total).toBe(20);
-    expect(r.rata).toBe(Math.round((rs.reduce((a, x) => a + x.rating, 0) / rs.length) * 10) / 10);
+    const reviewList = reviews();
+    const summary = summarizeReviews(reviewList);
+    expect(summary.distribution.map((bucket) => bucket.stars)).toEqual([5, 4, 3, 2, 1]);
+    expect(summary.distribution.reduce((sum, bucket) => sum + bucket.count, 0)).toBe(reviewList.length);
+    expect(summary.total).toBe(20);
+    expect(summary.average).toBe(
+      Math.round((reviewList.reduce((sum, review) => sum + review.rating, 0) / reviewList.length) * 10) / 10,
+    );
   });
   it("kosong -> rata 0", () => {
-    expect(ringkasUlasan([])).toMatchObject({ total: 0, rata: 0 });
+    expect(summarizeReviews([])).toMatchObject({ total: 0, average: 0 });
   });
 });
 
 describe("ringkasPerMenu (UL-N2)", () => {
   it("menu tanpa ulasan tetap tampil dengan jumlah 0", () => {
-    const rs = reviews();
-    const hasil = ringkasPerMenu(
-      rs,
-      menus().map((m) => ({ id: m.id, name: m.name })),
+    const reviewList = reviews();
+    const result = summarizeByMenu(
+      reviewList,
+      menus().map((menu) => ({ id: menu.id, name: menu.name })),
     );
-    expect(hasil.reduce((a, m) => a + m.jumlah, 0)).toBe(rs.length);
-    expect(hasil.length).toBe(menus().length);
+    expect(result.reduce((sum, menu) => sum + menu.count, 0)).toBe(reviewList.length);
+    expect(result.length).toBe(menus().length);
   });
   it("menu yang hanya ada di ulasan tetap ikut", () => {
-    const hasil = ringkasPerMenu(reviews(), []);
-    expect(hasil.reduce((a, m) => a + m.jumlah, 0)).toBe(20);
+    const result = summarizeByMenu(reviews(), []);
+    expect(result.reduce((sum, menu) => sum + menu.count, 0)).toBe(20);
   });
 });
 
 describe("saringUlasan (UL-N2, UL-N3)", () => {
-  const rs = reviews();
+  const reviewList = reviews();
   it("menyaring per menu dan bintang, terbaru dulu", () => {
-    const id = rs[0].menu_id;
-    const r = saringUlasan(rs, { menu: id }, 1);
-    expect(r.rows.every((x) => x.menu_id === id)).toBe(true);
-    const b = saringUlasan(rs, { bintang: 5 }, 1);
-    expect(b.rows.every((x) => x.rating === 5)).toBe(true);
-    const t = b.rows.map((x) => Date.parse(x.created_at));
-    expect([...t].sort((a, c) => c - a)).toEqual(t);
+    const id = reviewList[0].menu_id;
+    const result = filterReviews(reviewList, { menu: id }, 1);
+    expect(result.rows.every((review) => review.menu_id === id)).toBe(true);
+    const byStars = filterReviews(reviewList, { stars: 5 }, 1);
+    expect(byStars.rows.every((review) => review.rating === 5)).toBe(true);
+    const createdTimes = byStars.rows.map((review) => Date.parse(review.created_at));
+    expect([...createdTimes].sort((first, second) => second - first)).toEqual(createdTimes);
   });
   it("paginasi 10 per halaman", () => {
-    expect(LIMIT_ULASAN).toBe(10);
-    const p1 = saringUlasan(rs, {}, 1);
-    const p2 = saringUlasan(rs, {}, 2);
-    expect(p1.total).toBe(20);
-    expect(p1.rows).toHaveLength(10);
-    expect(p2.rows).toHaveLength(10);
-    expect(new Set([...p1.rows, ...p2.rows].map((x) => x.id)).size).toBe(20);
+    expect(LIMIT_REVIEWS).toBe(10);
+    const page1 = filterReviews(reviewList, {}, 1);
+    const page2 = filterReviews(reviewList, {}, 2);
+    expect(page1.total).toBe(20);
+    expect(page1.rows).toHaveLength(10);
+    expect(page2.rows).toHaveLength(10);
+    expect(new Set([...page1.rows, ...page2.rows].map((review) => review.id)).size).toBe(20);
   });
 });

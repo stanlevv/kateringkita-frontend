@@ -1,6 +1,6 @@
 import type { OrderStatus } from "@/types/order";
 
-export const LIMIT_PESANAN = 20;
+export const LIMIT_ORDERS = 20;
 
 export const STATUS_FILTER: { id: OrderStatus; label: string }[] = [
   { id: "holding", label: "Menunggu" },
@@ -13,8 +13,8 @@ export const STATUS_FILTER: { id: OrderStatus; label: string }[] = [
 ];
 
 /** "2× Nasi Ayam, +1 lainnya". */
-export function ringkasItem({ items }: { items: { qty: number; menu_name: string }[] }) {
-  const [a] = items;
-  if (!a) return "-";
-  return `${a.qty}× ${a.menu_name}${items.length > 1 ? `, +${items.length - 1} lainnya` : ""}`;
+export function summarizeItems({ items }: { items: { qty: number; menu_name: string }[] }) {
+  const [first] = items;
+  if (!first) return "-";
+  return `${first.qty}× ${first.menu_name}${items.length > 1 ? `, +${items.length - 1} lainnya` : ""}`;
 }

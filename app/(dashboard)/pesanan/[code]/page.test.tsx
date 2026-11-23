@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/services/authService", () => ({
+vi.mock("@/services/auth.service", () => ({
   requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: null }),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/actions/orders", () => ({ orderAction: vi.fn() }));
-vi.mock("@/services/orderService", async () => {
+vi.mock("@/services/order.service", async () => {
   const { orders } = await import("@/lib/fixtures/orders");
   return {
     getOrder: async (code: string) => {

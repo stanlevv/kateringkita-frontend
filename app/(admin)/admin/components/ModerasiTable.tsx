@@ -14,12 +14,12 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { formatRupiah, formatTanggal } from "@/lib/format";
-import type { AksiModerasi, MenuModerasi, UlasanModerasi } from "@/types/admin";
+import { callAction } from "@/lib/action";
+import { formatRupiah, formatDate } from "@/lib/format";
+import type { ModerationAction, ModerationMenu, ModerationReview } from "@/types/admin";
 
 // hide/takedown: dialog alasan; unhide/restore: konfirmasi (AUD-35: tidak jalan dengan sekali klik)
-const TEKS: Record<AksiModerasi, { label: string; judul: string; sukses: string; isi?: string; ya?: string }> = {
+const TEKS: Record<ModerationAction, { label: string; judul: string; sukses: string; isi?: string; ya?: string }> = {
   hide: { label: "Sembunyikan", judul: "Sembunyikan ulasan", sukses: "Ulasan disembunyikan." },
   unhide: {
     label: "Tampilkan lagi",
@@ -62,7 +62,7 @@ function Status({
 }
 
 /** Foto utama lalu foto tambahan; klik membuka ukuran penuh, tombol × menghapus satu foto (dengan alasan). */
-function FotoMenu({ m, onHapus }: { m: MenuModerasi; onHapus: (url: string) => void }) {
+function FotoMenu({ m, onHapus }: { m: ModerationMenu; onHapus: (url: string) => void }) {
   const foto = [m.image_url, ...(m.gallery ?? [])].filter((u): u is string => !!u);
   if (!foto.length) return <span className="text-sm text-ink-muted">Tanpa foto</span>;
   return (
@@ -94,11 +94,11 @@ function FotoMenu({ m, onHapus }: { m: MenuModerasi; onHapus: (url: string) => v
 
 /** F19 — daftar ulasan atau menu dengan aksi moderasi; alasan wajib untuk sembunyikan/turunkan. */
 export function ModerasiTable(
-  props: { jenis: "ulasan"; rows: UlasanModerasi[] } | { jenis: "menu"; rows: MenuModerasi[] },
+  props: { jenis: "ulasan"; rows: ModerationReview[] } | { jenis: "menu"; rows: ModerationMenu[] },
 ) {
   const router = useRouter();
-  const [dialog, setDialog] = useState<{ id: number; aksi: AksiModerasi } | null>(null);
-  const [pulih, setPulih] = useState<{ id: number; aksi: AksiModerasi } | null>(null);
+  const [dialog, setDialog] = useState<{ id: number; aksi: ModerationAction } | null>(null);
+  const [pulih, setPulih] = useState<{ id: number; aksi: ModerationAction } | null>(null);
   const [alasan, setAlasan] = useState("");
   const [sibuk, setSibuk] = useState(false);
   const [hapusFoto, setHapusFoto] = useState<{ id: number; url: string } | null>(null);
@@ -106,7 +106,7 @@ export function ModerasiTable(
   async function hapus(id: number, url: string, teks: string) {
     if (sibuk) return;
     setSibuk(true);
-    const r = await panggil(() => hapusFotoMenu(id, url, teks));
+    const r = await callAction(() => hapusFotoMenu(id, url, teks));
     setSibuk(false);
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     setHapusFoto(null);
@@ -115,10 +115,10 @@ export function ModerasiTable(
     router.refresh();
   }
 
-  async function kirim(id: number, aksi: AksiModerasi, teks?: string) {
+  async function kirim(id: number, aksi: ModerationAction, teks?: string) {
     if (sibuk) return;
     setSibuk(true);
-    const r = await panggil(() => moderasi(id, aksi, teks));
+    const r = await callAction(() => moderasi(id, aksi, teks));
     setSibuk(false);
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     setDialog(null);
@@ -128,7 +128,7 @@ export function ModerasiTable(
     router.refresh();
   }
 
-  const tombol = (id: number, aksi: AksiModerasi) => (
+  const tombol = (id: number, aksi: ModerationAction) => (
     <Button
       variant={aksi === "hide" || aksi === "takedown" ? "danger" : "secondary"}
       disabled={sibuk}
@@ -144,7 +144,7 @@ export function ModerasiTable(
 
   const tabel =
     props.jenis === "ulasan" ? (
-      <DataTable<UlasanModerasi>
+      <DataTable<ModerationReview>
         caption="Ulasan pembeli"
         rows={props.rows}
         rowKey={(u) => String(u.id)}
@@ -181,7 +181,7 @@ export function ModerasiTable(
                 </span>
               ),
             },
-            { key: "tanggal", header: "Tanggal", cell: (u) => formatTanggal(u.created_at) },
+            { key: "tanggal", header: "Tanggal", cell: (u) => formatDate(u.created_at) },
             {
               key: "status",
               header: "Status",
@@ -190,11 +190,11 @@ export function ModerasiTable(
               ),
             },
             { key: "aksi", header: "Aksi", cell: (u) => tombol(u.id, u.hidden ? "unhide" : "hide") },
-          ] satisfies Column<UlasanModerasi>[]
+          ] satisfies Column<ModerationReview>[]
         }
       />
     ) : (
-      <DataTable<MenuModerasi>
+      <DataTable<ModerationMenu>
         caption="Menu"
         rows={props.rows}
         rowKey={(m) => String(m.id)}
@@ -225,7 +225,7 @@ export function ModerasiTable(
               ),
             },
             { key: "aksi", header: "Aksi", cell: (m) => tombol(m.id, m.moderated ? "restore" : "takedown") },
-          ] satisfies Column<MenuModerasi>[]
+          ] satisfies Column<ModerationMenu>[]
         }
       />
     );

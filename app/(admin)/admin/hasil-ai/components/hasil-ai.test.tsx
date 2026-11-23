@@ -11,10 +11,10 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/app/actions/admin/hasilAi", () => ({ verifikasiHasilAi: (...a: unknown[]) => verifikasiHasilAi(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
-import type { HasilAi } from "@/types/hasil-ai";
+import type { AiResult } from "@/types/ai-result";
 import { KartuHasilAi } from "./KartuHasilAi";
 
-const ASISTEN: HasilAi = {
+const ASISTEN: AiResult = {
   id: 5,
   fitur: "asisten",
   input_text: "Harga risol untuk [nama]?",
@@ -27,7 +27,7 @@ const ASISTEN: HasilAi = {
   user: { id: 2, name: "Siti" },
   merchant: { id: 1, business_name: "Dapur Siti" },
 };
-const REKOMENDASI: HasilAi = {
+const REKOMENDASI: AiResult = {
   id: 6,
   fitur: "rekomendasi",
   input_text: "nasi goreng 2 porsi",

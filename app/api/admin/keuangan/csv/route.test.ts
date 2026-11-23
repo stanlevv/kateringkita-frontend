@@ -2,13 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 const getSession = vi.fn();
-vi.mock("@/services/authService", () => ({ getSession: () => getSession() }));
-const getRekapKeuangan = vi.fn();
-vi.mock("@/services/adminKeuanganService", () => ({ getRekapKeuangan: (...a: unknown[]) => getRekapKeuangan(...a) }));
-import { tanggalWib } from "@/lib/format";
+vi.mock("@/services/auth.service", () => ({ getSession: () => getSession() }));
+const getFinanceSummary = vi.fn();
+vi.mock("@/services/admin-finance.service", () => ({
+  getFinanceSummary: (...a: unknown[]) => getFinanceSummary(...a),
+}));
+import { wibDate } from "@/lib/format";
 import { GET } from "./route";
 
-const hariIni = tanggalWib(new Date().toISOString());
+const hariIni = wibDate(new Date().toISOString());
 const minta = (q: string) => GET(new Request(`http://localhost/api/admin/keuangan/csv${q}`));
 const angka = {
   orders: 2,
@@ -23,7 +25,7 @@ const angka = {
 
 beforeEach(() => {
   getSession.mockResolvedValue({ user: { role: "admin" }, merchant: null });
-  getRekapKeuangan.mockResolvedValue({
+  getFinanceSummary.mockResolvedValue({
     data: { rows: [{ merchant_id: 1, business_name: "=Dapur, Siti", ...angka }], totals: angka },
   });
 });
@@ -40,14 +42,14 @@ describe("F20 CSV keuangan", () => {
       `"'=Dapur, Siti",2,30000,2000,1000,2000,29000,28000,1000`,
       "TOTAL,2,30000,2000,1000,2000,29000,28000,1000",
     ]);
-    expect(getRekapKeuangan).toHaveBeenCalledWith({ from: hariIni, to: hariIni });
+    expect(getFinanceSummary).toHaveBeenCalledWith({ from: hariIni, to: hariIni });
   });
   it("bukan admin -> 401; rentang salah -> 400; API gagal -> 500", async () => {
     getSession.mockResolvedValue({ user: { role: "merchant" }, merchant: {} });
     expect((await minta(`?dari=${hariIni}&sampai=${hariIni}`)).status).toBe(401);
     getSession.mockResolvedValue({ user: { role: "admin" }, merchant: null });
     expect((await minta("?dari=x&sampai=y")).status).toBe(400);
-    getRekapKeuangan.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Dari server" } });
+    getFinanceSummary.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Dari server" } });
     expect((await minta(`?dari=${hariIni}&sampai=${hariIni}`)).status).toBe(500);
   });
 });

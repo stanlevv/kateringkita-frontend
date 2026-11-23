@@ -7,7 +7,7 @@ const adminFetch = vi.fn();
 const refresh = vi.fn();
 const catatPencairan = vi.fn();
 const tandaiRefund = vi.fn();
-vi.mock("@/services/authService", () => ({ requireAdmin: (...a: unknown[]) => requireAdmin(...a) }));
+vi.mock("@/services/auth.service", () => ({ requireAdmin: (...a: unknown[]) => requireAdmin(...a) }));
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
   adminFetch: (...a: unknown[]) => adminFetch(...a),

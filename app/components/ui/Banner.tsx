@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import type { Nada } from "@/lib/order-status";
+import type { Tone } from "@/lib/order-status";
 import { cx } from "./cx";
 import { toneClass, toneIcon } from "./tone";
 
-export function Banner({ tone, children, action }: { tone: Nada; children: ReactNode; action?: ReactNode }) {
+export function Banner({ tone, children, action }: { tone: Tone; children: ReactNode; action?: ReactNode }) {
   const Icon = toneIcon[tone];
   return (
     <div

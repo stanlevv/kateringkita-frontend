@@ -12,7 +12,7 @@ vi.mock("next/headers", () => ({
   headers: async () => ({ get: (k: string) => hdrs.get(k) ?? null }),
 }));
 vi.mock("@/services/api", () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a) }));
-vi.mock("@/services/authService", () => ({ SESSION_COOKIE: "kk_session", getSessionToken: async () => undefined }));
+vi.mock("@/services/auth.service", () => ({ SESSION_COOKIE: "kk_session", getSessionToken: async () => undefined }));
 
 import { login, mintaKodeReset, resetKataSandi } from "./auth";
 

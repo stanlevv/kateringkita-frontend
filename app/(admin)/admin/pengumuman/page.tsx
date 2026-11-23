@@ -1,6 +1,6 @@
 import { PengumumanForm } from "@/app/(admin)/admin/components/PengumumanForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { requireAdmin } from "@/services/authService";
+import { requireAdmin } from "@/services/auth.service";
 
 // Broadcast pengumuman admin → notifikasi tab Info di aplikasi pembeli/penjual.
 export default async function PengumumanPage() {

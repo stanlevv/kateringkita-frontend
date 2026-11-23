@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { batasSejak, satukanPesanan, selisihJam } from "@/lib/dashboard";
+import { updatedSinceCursor, mergeOrders, clockOffsetMs } from "@/lib/dashboard";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
 
@@ -34,7 +34,7 @@ export function useLangsung(awal: Awal) {
   if (awal.orders !== dari.orders || awal.menus !== dari.menus) {
     // D11: data baru dari halaman server (router.refresh) disatukan, tidak mengganti store.
     setDari(awal);
-    setOrders((l) => satukanPesanan(l, awal.orders));
+    setOrders((l) => mergeOrders(l, awal.orders));
     if (awal.menus !== dari.menus) setMenus(awal.menus);
   }
   const [terakhir, setTerakhir] = useState(awal.dimuat);
@@ -69,7 +69,7 @@ export function useLangsung(awal: Awal) {
           : TERSEMBUNYI_MS;
 
     // D8: semai selisih jam dari data awal halaman (jam perangkat saat dipasang, ±1 dtk).
-    const semai = selisihJam(terkini.current.orders, Date.now());
+    const semai = clockOffsetMs(terkini.current.orders, Date.now());
     if (semai !== null) setSelisih(semai);
 
     async function tarik() {
@@ -81,7 +81,7 @@ export function useLangsung(awal: Awal) {
       jalan = true;
       const versi = versiMenu.current;
       // D3: antrean kosong -> batas dari jam server halaman (`dimuat`), tidak pernah dari jam perangkat.
-      const sejak = batasSejak(terkini.current.orders, terkini.current.dimuat);
+      const sejak = updatedSinceCursor(terkini.current.orders, terkini.current.dimuat);
       // Per permintaan: batal saat dilepas atau setelah BATAS_MS (tanpa AbortSignal.any/timeout, belum ada di peramban lama).
       const minta = new AbortController();
       const batal = () => minta.abort();
@@ -102,9 +102,9 @@ export function useLangsung(awal: Awal) {
         const { data } = (await res.json()) as { data: { orders: MerchantOrder[]; menus: MerchantMenu[] } };
         const diterima = Date.now();
         galatBeruntun = 0;
-        setOrders((l) => satukanPesanan(l, data.orders));
+        setOrders((l) => mergeOrders(l, data.orders));
         if (versiMenu.current === versi) setMenus(data.menus);
-        const s = selisihJam(data.orders, diterima);
+        const s = clockOffsetMs(data.orders, diterima);
         if (s !== null) setSelisih(s);
         setTerakhir(diterima);
         setGagal(false);
@@ -140,8 +140,8 @@ export function useLangsung(awal: Awal) {
   }, []);
 
   const terima = useCallback((o: MerchantOrder) => {
-    setOrders((l) => satukanPesanan(l, [o]));
-    const s = selisihJam([o], Date.now());
+    setOrders((l) => mergeOrders(l, [o]));
+    const s = clockOffsetMs([o], Date.now());
     if (s !== null) setSelisih(s);
   }, []);
   const terimaMenu = useCallback((m: MerchantMenu) => {

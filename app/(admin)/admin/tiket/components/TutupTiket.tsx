@@ -6,7 +6,7 @@ import { tutupTiket } from "@/app/actions/admin/tiket";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 
 /** Tutup tiket setelah konfirmasi. Dialog tetap terbuka bila gagal; berhasil -> toast + muat ulang. */
 export function TutupTiket({ code }: { code: string }) {
@@ -17,7 +17,7 @@ export function TutupTiket({ code }: { code: string }) {
   async function tutup() {
     if (sibuk) return;
     setSibuk(true);
-    const r = await panggil(() => tutupTiket(code));
+    const r = await callAction(() => tutupTiket(code));
     setSibuk(false);
     if ("error" in r) {
       toast({ tone: "danger", message: r.error.message });

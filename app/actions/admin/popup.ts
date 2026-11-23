@@ -1,15 +1,15 @@
 "use server";
 
-import { galat, galatField } from "@/lib/action-result";
-import { adminFetch, hasil } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
+import { errorResult, fieldErrorResult } from "@/lib/action-result";
+import { adminFetch, toResult } from "@/services/api";
+import { requireAdmin } from "@/services/auth.service";
 import type { ActionResult } from "@/types/api";
-import type { IsianPopup, Popup } from "@/types/popup";
+import type { PopupInput, Popup } from "@/types/popup";
 
 // Pop-up promo mobile: hanya super & ops (support hanya melihat). Backend tetap penjaga utamanya.
 const idOk = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
 
-function cekPopup(v: Partial<IsianPopup>): Record<string, string> {
+function cekPopup(v: Partial<PopupInput>): Record<string, string> {
   const out: Record<string, string> = {};
   if (v.title !== undefined && (v.title.trim().length < 3 || v.title.trim().length > 80))
     out.title = "Judul 3–80 karakter.";
@@ -21,13 +21,13 @@ function cekPopup(v: Partial<IsianPopup>): Record<string, string> {
 }
 
 /** id null = buat (isian lengkap); id = ubah sebagian (mis. { is_active: false }). */
-export async function simpanPopup(id: number | null, input: Partial<IsianPopup>): Promise<ActionResult<Popup>> {
+export async function simpanPopup(id: number | null, input: Partial<PopupInput>): Promise<ActionResult<Popup>> {
   await requireAdmin("super", "ops");
-  if (id !== null && !idOk(id)) return galat("VALIDATION_ERROR", "Pop-up tidak valid.");
+  if (id !== null && !idOk(id)) return errorResult("VALIDATION_ERROR", "Pop-up tidak valid.");
   const masalah = cekPopup(id === null ? { title: "", image_url: "", ...input } : input);
-  if (Object.keys(masalah).length) return galatField(masalah, "Periksa kembali isian pop-up.");
+  if (Object.keys(masalah).length) return fieldErrorResult(masalah, "Periksa kembali isian pop-up.");
   const body = JSON.stringify(input.title === undefined ? input : { ...input, title: input.title.trim() });
-  return hasil(
+  return toResult(
     await adminFetch<Popup>(id === null ? "/popups" : `/popups/${id}`, {
       method: id === null ? "POST" : "PATCH",
       body,

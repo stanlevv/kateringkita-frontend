@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatHariJam } from "@/lib/shell";
+import { formatDayTime } from "@/lib/shell";
 
 export function Clock() {
   const [now, setNow] = useState(() => Date.now());
@@ -11,7 +11,7 @@ export function Clock() {
   }, []);
   return (
     <time suppressHydrationWarning className="whitespace-nowrap text-sm text-ink-muted">
-      {formatHariJam(now)}
+      {formatDayTime(now)}
     </time>
   );
 }

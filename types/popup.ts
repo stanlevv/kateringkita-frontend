@@ -10,7 +10,7 @@ export type Popup = {
   created_at: string;
 };
 
-export type IsianPopup = {
+export type PopupInput = {
   title: string;
   image_url: string;
   promo_id: number | null;

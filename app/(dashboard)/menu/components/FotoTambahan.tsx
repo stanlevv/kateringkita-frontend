@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Loader2, TriangleAlert, X } from "lucide-react";
-import { unggahFoto } from "@/lib/unggah";
+import { uploadPhoto } from "@/lib/upload";
 import { Button } from "@/app/components/ui/Button";
 import { FileDrop } from "@/app/components/ui/FileDrop";
 
@@ -38,7 +38,7 @@ export function FotoTambahan({
     setGalat(null);
     setSibuk(true);
     onBusy(true);
-    const r = await unggahFoto(f, "menu");
+    const r = await uploadPhoto(f, "menu");
     if (id !== unggahKe.current) return;
     setSibuk(false);
     onBusy(false);
@@ -109,7 +109,7 @@ export function FotoTambahan({
       {!penuh && !sibuk && (
         <FileDrop
           id="mf-gallery"
-          maxBytes={20 * MB /* diperkecil di lib/unggah.ts */}
+          maxBytes={20 * MB /* diperkecil di lib/upload.ts */}
           onFile={(f) => void pilih(f)}
           onError={setGalat}
           label="Tambah foto"

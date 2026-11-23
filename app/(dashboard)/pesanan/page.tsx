@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import { OrderTable } from "@/app/(dashboard)/pesanan/components/OrderTable";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getOrders } from "@/services/orderService";
-import { hariIniWib } from "@/lib/format";
+import { getOrders } from "@/services/order.service";
+import { todayWib } from "@/lib/format";
 import { STATUS_FILTER } from "@/lib/order-filter";
-import { requireMerchant } from "@/services/authService";
+import { requireMerchant } from "@/services/auth.service";
 
 const satu = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
@@ -20,7 +20,7 @@ export default async function PesananPage({
   const status = STATUS_FILTER.find((s) => s.id === satu(sp.status))?.id;
   const orders = await getOrders({
     status,
-    tanggal: /^\d{4}-\d{2}-\d{2}$/.test(tanggal) ? tanggal : hariIniWib(),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(tanggal) ? tanggal : todayWib(),
     q: satu(sp.q).trim().slice(0, 50) || undefined,
     page: Math.max(1, Math.floor(Number(satu(sp.page))) || 1),
   });

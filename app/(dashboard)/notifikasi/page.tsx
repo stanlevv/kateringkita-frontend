@@ -1,7 +1,7 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { requireMerchant } from "@/services/authService";
-import { getNotifikasi } from "@/services/notifikasiService";
+import { requireMerchant } from "@/services/auth.service";
+import { getNotifications } from "@/services/notification.service";
 import { DaftarNotifikasi } from "./DaftarNotifikasi";
 
 // Notifikasi penjual: pengumuman admin, foto menu yang dihapus admin, dll. Dibuka = semua ditandai dibaca.
@@ -14,7 +14,7 @@ export default async function NotifikasiPage({
   const q = await searchParams;
   const n = typeof q.page === "string" && /^\d{1,5}$/.test(q.page) ? Number(q.page) : 1;
   const page = Math.max(1, n);
-  const r = await getNotifikasi(page);
+  const r = await getNotifications(page);
   return (
     <PageHeader title="Notifikasi" description="Pengumuman dari admin dan kabar tentang toko kamu.">
       {"error" in r ? (

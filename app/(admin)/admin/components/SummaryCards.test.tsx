@@ -1,9 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SummaryCards } from "./SummaryCards";
-import type { Ringkasan } from "@/types/admin";
+import type { AdminSummary } from "@/types/admin";
 
-const data: Ringkasan = {
+const data: AdminSummary = {
   orders_today: { holding: 2, confirmed: 1, cooking: 0, ready: 3, completed: 9, cancelled: 1, expired: 0 },
   revenue_today: 1250000,
   merchants: { pending: 4, needs_fix: 2, verified: 11, suspended: 1, open_now: 6 },

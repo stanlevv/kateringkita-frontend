@@ -56,10 +56,13 @@ describe("struktur: pemanggil API di services/", () => {
     expect(pelanggar).toEqual([]);
   });
 
-  it("berkas services/ selain api.ts bernama <x>Service.ts", () => {
+  it("berkas services/ selain api.ts bernama <fitur>.service.ts", () => {
     const salah = (existsSync(join(AKAR, "services")) ? semuaBerkas(join(AKAR, "services")) : [])
       .map(relatif)
-      .filter((b) => !/\.test\.tsx?$/.test(b) && b !== "services/api.ts" && !/^services\/[a-z]+Service\.ts$/i.test(b));
+      .filter(
+        (b) =>
+          !/\.test\.tsx?$/.test(b) && b !== "services/api.ts" && !/^services\/[a-z]+(-[a-z]+)*\.service\.ts$/.test(b),
+      );
     expect(salah).toEqual([]);
   });
 });

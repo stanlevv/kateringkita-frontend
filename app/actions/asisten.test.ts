@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/auth.service", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),

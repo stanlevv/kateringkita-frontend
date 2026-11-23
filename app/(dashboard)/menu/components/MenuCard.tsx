@@ -6,9 +6,9 @@ import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { Stepper } from "@/app/components/ui/Stepper";
-import { stokMenu } from "@/lib/dashboard";
+import { menuStockLevel } from "@/lib/dashboard";
 import { formatRupiah } from "@/lib/format";
-import { marginPersen } from "@/lib/menu-filter";
+import { marginPercent } from "@/lib/menu-filter";
 import type { MerchantMenu } from "@/types/menu";
 import { BADGE } from "@/app/components/menu/QuotaRow";
 
@@ -26,7 +26,7 @@ export function MenuCard({
   onNonaktif: () => void;
   onAktif: () => void;
 }) {
-  const b = BADGE[stokMenu(m)];
+  const b = BADGE[menuStockLevel(m)];
   return (
     <article aria-label={m.name} className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
       <div className="relative flex aspect-[16/9] items-center justify-center bg-subtle">
@@ -63,7 +63,7 @@ export function MenuCard({
           <span className="font-mono font-semibold">{formatRupiah(m.price)}</span>
           <span className="text-ink-muted">
             {" "}
-            / {m.unit_label} · Margin {marginPersen(m)}%
+            / {m.unit_label} · Margin {marginPercent(m)}%
           </span>
         </p>
         <p className="text-sm text-ink-muted">

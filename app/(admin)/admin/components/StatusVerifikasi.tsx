@@ -1,9 +1,9 @@
 import { Badge } from "@/app/components/ui/Badge";
-import { STATUS_VERIFIKASI } from "@/services/adminMerchantService";
-import type { StatusVerifikasi as Status } from "@/types/admin";
+import { VERIFICATION_STATUSES } from "@/services/admin-merchant.service";
+import type { VerificationStatus as Status } from "@/types/admin";
 
 export function StatusVerifikasi({ status }: { status: Status }) {
-  const s = STATUS_VERIFIKASI[status];
+  const s = VERIFICATION_STATUSES[status];
   return (
     <Badge tone={s.tone} icon={s.icon}>
       {s.label}

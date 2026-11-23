@@ -1,8 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import { CheckCircle2, CircleAlert, Info, TriangleAlert } from "lucide-react";
-import type { Nada } from "@/lib/order-status";
+import type { Tone } from "@/lib/order-status";
 
-export const toneClass: Record<Nada, string> = {
+export const toneClass: Record<Tone, string> = {
   warning: "text-warning bg-warning-bg",
   info: "text-info bg-info-bg",
   success: "text-success bg-success-bg",
@@ -10,7 +10,7 @@ export const toneClass: Record<Nada, string> = {
   neutral: "text-ink-muted bg-subtle",
 };
 
-export const toneIcon: Record<Nada, LucideIcon> = {
+export const toneIcon: Record<Tone, LucideIcon> = {
   warning: TriangleAlert,
   info: Info,
   success: CheckCircle2,

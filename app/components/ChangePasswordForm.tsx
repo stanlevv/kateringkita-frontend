@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { changePassword } from "@/app/actions/account";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { cekField, changePasswordSchema } from "@/lib/schemas";
+import { validateFields, changePasswordSchema } from "@/lib/schemas";
 
 const KOSONG = { current_password: "", new_password: "", confirm: "" };
 const LABEL: Record<string, string> = {
@@ -27,7 +27,7 @@ export function ChangePasswordForm({ onSelesai }: { onSelesai?: () => void } = {
   const [server, setServer] = useState<Record<string, string>>({});
   const [mengirim, setMengirim] = useState(false);
 
-  const semua = cekField(changePasswordSchema, v);
+  const semua = validateFields(changePasswordSchema, v);
   if (v.confirm !== v.new_password) semua.confirm = "Konfirmasi kata sandi tidak sama.";
   const galatSemua = { ...server, ...semua };
   const galat = (k: string) => (dicoba || tersentuh.has(k) ? (galatSemua[k] ?? undefined) : undefined);
@@ -49,7 +49,7 @@ export function ChangePasswordForm({ onSelesai }: { onSelesai?: () => void } = {
     }
     if (mengirim) return;
     setMengirim(true);
-    const r = await panggil(() =>
+    const r = await callAction(() =>
       changePassword({ current_password: v.current_password, new_password: v.new_password }),
     );
     setMengirim(false);

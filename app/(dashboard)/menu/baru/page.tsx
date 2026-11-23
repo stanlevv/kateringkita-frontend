@@ -1,8 +1,8 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getCategories } from "@/services/metaService";
-import { requireMerchant } from "@/services/authService";
+import { getCategories } from "@/services/meta.service";
+import { requireMerchant } from "@/services/auth.service";
 
 const bulat = (v: string | string[] | undefined) =>
   typeof v === "string" && /^\d{1,9}$/.test(v) ? Number(v) : undefined;

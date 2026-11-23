@@ -13,10 +13,10 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { statusBanner } from "@/lib/banner";
-import { formatTanggal } from "@/lib/format";
-import type { Banner, PilihanVoucher } from "@/types/banner";
+import { callAction } from "@/lib/action";
+import { bannerStatus } from "@/lib/banner";
+import { formatDate } from "@/lib/format";
+import type { Banner, VoucherOption } from "@/types/banner";
 
 const ALASAN = "Tulis alasan penolakan (3–300 karakter).";
 
@@ -26,12 +26,12 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
   const [galat, setGalat] = useState<string>();
   const [sibuk, setSibuk] = useState(false);
   const [yakin, setYakin] = useState(false);
-  const st = statusBanner(b, now);
+  const st = bannerStatus(b, now);
 
   async function tinjau(status: "disetujui" | "ditolak" | "nonaktif") {
     if (status === "ditolak" && alasan.trim().length < 3) return setGalat(ALASAN);
     setSibuk(true);
-    const r = await panggil(() =>
+    const r = await callAction(() =>
       tinjauBannerAdmin(b.id, status === "ditolak" ? { status, catatan: alasan.trim() } : { status }),
     );
     setSibuk(false);
@@ -71,7 +71,7 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
             ? "Halaman toko"
             : "Tanpa tujuan"}
         {" · "}
-        {formatTanggal(b.starts_at)} – {formatTanggal(b.ends_at)}
+        {formatDate(b.starts_at)} – {formatDate(b.ends_at)}
         {b.merchant ? "" : ` · urutan ${b.sort_order}`}
       </p>
       {b.catatan && <p className="text-sm text-ink-muted">Catatan: {b.catatan}</p>}
@@ -133,7 +133,7 @@ export function BannerAdmin({
   bolehUbah,
 }: {
   banners: Banner[];
-  vouchers: PilihanVoucher[];
+  vouchers: VoucherOption[];
   bolehUbah: boolean;
 }) {
   const router = useRouter();

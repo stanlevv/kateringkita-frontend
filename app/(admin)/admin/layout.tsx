@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { Toaster } from "@/app/components/ui/Toast";
-import { requireAdmin } from "@/services/authService";
-import { COOKIE_SIDEBAR, modeSidebar } from "@/lib/shell";
+import { requireAdmin } from "@/services/auth.service";
+import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
 import { GantiSandiWajib } from "./components/GantiSandiWajib";
 
 export const metadata: Metadata = { title: "Panel admin", robots: { index: false, follow: false } };
@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           level={user.admin_level}
           store={null}
           badge={0}
-          mode={modeSidebar(kuki.get(COOKIE_SIDEBAR)?.value)}
+          mode={parseSidebarMode(kuki.get(SIDEBAR_COOKIE)?.value)}
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header

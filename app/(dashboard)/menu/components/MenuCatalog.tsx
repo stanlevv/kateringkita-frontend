@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, SearchX, UtensilsCrossed } from "lucide-react";
 import { setMenuActive } from "@/app/actions/menus";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -13,14 +13,20 @@ import { Input, Select } from "@/app/components/ui/Input";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { toast } from "@/app/components/ui/Toast";
 import { LinkButton } from "@/app/components/ui/LinkButton";
-import { hitungTab, saring, saringQK, STATUS_MENU, type StatusMenu } from "@/lib/menu-filter";
+import {
+  countMenuTabs,
+  filterMenus,
+  filterBySearchAndCategory,
+  MENU_STATUS_FILTERS,
+  type MenuStatusFilter,
+} from "@/lib/menu-filter";
 import type { Category } from "@/types/meta";
 import type { MerchantMenu } from "@/types/menu";
-import { urlDengan } from "@/lib/url";
+import { buildUrl } from "@/lib/url";
 import { MenuCard } from "./MenuCard";
 import { useKuota } from "@/hooks/useKuota";
 
-const LABEL: Record<StatusMenu, string> = {
+const LABEL: Record<MenuStatusFilter, string> = {
   semua: "Semua",
   aktif: "Aktif",
   menipis: "Menipis",
@@ -45,7 +51,7 @@ export function MenuCatalog({
   const q = params.get("q") ?? "";
   const kategori = params.get("kategori") ?? "";
   const s = params.get("status");
-  const status: StatusMenu = STATUS_MENU.find((x) => x === s) ?? "semua";
+  const status: MenuStatusFilter = MENU_STATUS_FILTERS.find((x) => x === s) ?? "semua";
 
   const [lokal, setLokal] = useState<Record<number, MerchantMenu>>({});
   // D13: overlay lokal hanya sampai data server berikutnya tiba (pola useKuota).
@@ -81,7 +87,7 @@ export function MenuCatalog({
     batalkanTimer();
     // Perubahan kategori/tab membawa ketikan q yang belum sempat dikirim.
     const semua = "q" in ubahan ? ubahan : { ...ubahan, q: terbaru.current.qInput.trim() };
-    router.replace(urlDengan(path, terbaru.current.params, semua, ["semua"]), { scroll: false });
+    router.replace(buildUrl(path, terbaru.current.params, semua, ["semua"]), { scroll: false });
   }
 
   // MN-N2: pencarian ke URL setelah 300 ms berhenti mengetik.
@@ -116,13 +122,13 @@ export function MenuCatalog({
   }
 
   const daftar = menus.map((m) => lokal[m.id] ?? m).map(dengan);
-  const tab = hitungTab(saringQK(daftar, { q, kategori }));
-  const hasil = saring(daftar, { q, kategori, status });
+  const tab = countMenuTabs(filterBySearchAndCategory(daftar, { q, category: kategori }));
+  const hasil = filterMenus(daftar, { q, category: kategori, status });
 
   async function setAktif(m: MerchantMenu, aktif: boolean) {
     const setFlag = (v: boolean) => setLokal((l) => ({ ...l, [m.id]: { ...(l[m.id] ?? m), is_active: v } }));
     setFlag(aktif);
-    const r = await panggil(() => setMenuActive(m.id, aktif));
+    const r = await callAction(() => setMenuActive(m.id, aktif));
     if ("error" in r) {
       setFlag(!aktif); // MN-E1
       toast({ tone: "danger", message: r.error.message });
@@ -181,7 +187,7 @@ export function MenuCatalog({
         label="Status menu"
         value={status}
         onChange={(id) => ke({ status: id })}
-        tabs={STATUS_MENU.map((id) => ({ id, label: LABEL[id], count: tab[id] }))}
+        tabs={MENU_STATUS_FILTERS.map((id) => ({ id, label: LABEL[id], count: tab[id] }))}
       />
       {hasil.length === 0 ? (
         <EmptyState

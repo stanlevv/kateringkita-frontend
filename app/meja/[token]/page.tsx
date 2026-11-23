@@ -1,11 +1,11 @@
-import { getMenuMeja } from "@/services/mejaService";
+import { getTableMenu } from "@/services/table.service";
 import { MejaPesan } from "../MejaPesan";
 import { MenuMejaApp } from "./MenuMejaApp";
 
 // F21: halaman yang dibuka QR meja. Data selalu segar (stok & jam buka).
 export default async function MenuMejaPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const r = await getMenuMeja(token);
+  const r = await getTableMenu(token);
   if (!r.ok || !r.data) {
     return r.status === 404 ? (
       <MejaPesan

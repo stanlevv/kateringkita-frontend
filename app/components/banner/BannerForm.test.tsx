@@ -2,8 +2,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const unggahFoto = vi.fn();
-vi.mock("@/lib/unggah", () => ({ unggahFoto: (...a: unknown[]) => unggahFoto(...a) }));
+const uploadPhoto = vi.fn();
+vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
 import { BannerForm } from "./BannerForm";
 
 const simpan = vi.fn();
@@ -13,7 +13,7 @@ const VOUCHER = [{ id: 5, code: "HEMAT10", label: "Diskon 10%" }];
 beforeEach(() => {
   simpan.mockReset();
   onSaved.mockReset();
-  unggahFoto.mockReset().mockResolvedValue({ data: { public_url: "https://foto.test/merchants/1/banner/a.webp" } });
+  uploadPhoto.mockReset().mockResolvedValue({ data: { public_url: "https://foto.test/merchants/1/banner/a.webp" } });
 });
 
 const isi = async () => {
@@ -31,7 +31,7 @@ describe("BannerForm", () => {
     simpan.mockResolvedValue({ data: { id: 9 } });
     render(<BannerForm mode="toko" vouchers={VOUCHER} simpan={simpan} onSaved={onSaved} onClose={() => {}} />);
     await isi();
-    expect(unggahFoto).toHaveBeenCalledWith(expect.any(File), "banner", undefined);
+    expect(uploadPhoto).toHaveBeenCalledWith(expect.any(File), "banner", undefined);
     await userEvent.selectOptions(screen.getByLabelText(/Tujuan/), "promo");
     await userEvent.selectOptions(screen.getByLabelText(/Voucher/), "5");
     await userEvent.click(screen.getByRole("button", { name: "Ajukan banner" }));
@@ -75,7 +75,7 @@ describe("BannerForm", () => {
       "promo",
     ]);
     await isi();
-    expect(unggahFoto).toHaveBeenCalledWith(expect.any(File), "banner", mintaAdmin);
+    expect(uploadPhoto).toHaveBeenCalledWith(expect.any(File), "banner", mintaAdmin);
     fireEvent.change(screen.getByLabelText(/Urutan/), { target: { value: "2" } });
     await userEvent.click(screen.getByRole("button", { name: "Simpan banner" }));
     await waitFor(() =>

@@ -7,14 +7,14 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh }
 const saveProfile = vi.fn();
 const changePassword = vi.fn();
 vi.mock("@/app/actions/profile", () => ({ saveProfile: (...a: unknown[]) => saveProfile(...a) }));
-const unggahFoto = vi.fn();
-vi.mock("@/lib/unggah", () => ({ unggahFoto: (...a: unknown[]) => unggahFoto(...a) }));
+const uploadPhoto = vi.fn();
+vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
 vi.mock("@/app/actions/account", () => ({ changePassword: (...a: unknown[]) => changePassword(...a) }));
 const saveRekening = vi.fn();
 vi.mock("@/app/actions/pencairan", () => ({ saveRekening: (...a: unknown[]) => saveRekening(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { pickupPoints } from "@/lib/fixtures/meta";
-import { pencairanSaya } from "@/lib/fixtures/pencairan";
+import { myPayouts } from "@/lib/fixtures/payouts";
 import { profile } from "@/lib/fixtures/profile";
 import { SettingsForm } from "./SettingsForm";
 
@@ -24,7 +24,7 @@ const tampil = (p: Partial<React.ComponentProps<typeof SettingsForm>> = {}) =>
     <>
       <a href="/dashboard">Beranda</a>
       <Toaster />
-      <SettingsForm profile={profile()} pickupPoints={pickupPoints()} user={user} pencairan={pencairanSaya()} {...p} />
+      <SettingsForm profile={profile()} pickupPoints={pickupPoints()} user={user} pencairan={myPayouts()} {...p} />
     </>,
   );
 const ketik = async (label: string | RegExp, teks: string) => {
@@ -35,7 +35,7 @@ const ketik = async (label: string | RegExp, teks: string) => {
 const bar = () => screen.queryByRole("button", { name: "Simpan perubahan" });
 
 beforeEach(() => {
-  unggahFoto.mockReset();
+  uploadPhoto.mockReset();
   saveProfile.mockReset();
   changePassword.mockReset();
   refresh.mockReset();
@@ -217,22 +217,22 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
     expect(screen.queryByText(/setelah fitur unggah/)).not.toBeInTheDocument();
   });
   it("unggah logo -> memanggil unggahFoto(berkas, 'logo'); simpan mengirim logo_url baru", async () => {
-    unggahFoto.mockResolvedValue({ data: { public_url: "https://cdn.test/baru.png" } });
+    uploadPhoto.mockResolvedValue({ data: { public_url: "https://cdn.test/baru.png" } });
     tampil({ profile: { ...profile(), ...dgn } });
     pilih(0);
     await waitFor(() => expect(bar()).toBeInTheDocument());
-    expect(unggahFoto.mock.calls[0][1]).toBe("logo");
+    expect(uploadPhoto.mock.calls[0][1]).toBe("logo");
     await userEvent.click(bar()!);
     await waitFor(() => expect(saveProfile).toHaveBeenCalled());
     expect(saveProfile.mock.calls[0][0]).toMatchObject({ logo_url: "https://cdn.test/baru.png" });
     expect(saveProfile.mock.calls[0][0]).not.toHaveProperty("qris_image_url");
   });
   it("unggah background -> unggahFoto(berkas, 'cover'); simpan mengirim cover_url baru", async () => {
-    unggahFoto.mockResolvedValue({ data: { public_url: "https://cdn.test/cover.jpg" } });
+    uploadPhoto.mockResolvedValue({ data: { public_url: "https://cdn.test/cover.jpg" } });
     tampil({ profile: { ...profile(), ...dgn } });
     pilih(1);
     await waitFor(() => expect(bar()).toBeInTheDocument());
-    expect(unggahFoto.mock.calls[0][1]).toBe("cover");
+    expect(uploadPhoto.mock.calls[0][1]).toBe("cover");
     expect(screen.getByAltText("Background toko")).toBeInTheDocument();
     await userEvent.click(bar()!);
     await waitFor(() => expect(saveProfile).toHaveBeenCalled());
@@ -246,7 +246,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
     expect(saveProfile.mock.calls[0][0]).toMatchObject(dgn);
   });
   it("unggah gagal -> pesan Indonesia, gambar lama tetap, tidak ada perubahan", async () => {
-    unggahFoto.mockResolvedValue({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
+    uploadPhoto.mockResolvedValue({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
     tampil({ profile: { ...profile(), ...dgn } });
     pilih(0);
     expect(await screen.findByText("Foto gagal diunggah. Coba lagi")).toBeInTheDocument();
@@ -254,7 +254,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
   });
   it("selama mengunggah: status tampil dan Simpan menunggu", async () => {
     let selesai!: (v: unknown) => void;
-    unggahFoto.mockReturnValue(
+    uploadPhoto.mockReturnValue(
       new Promise((r) => {
         selesai = r;
       }),
@@ -269,7 +269,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
   });
   it("Hapus gambar saat unggah berjalan: respons terlambat tidak menghidupkan gambar lagi", async () => {
     let selesai!: (v: unknown) => void;
-    unggahFoto.mockReturnValue(
+    uploadPhoto.mockReturnValue(
       new Promise((r) => {
         selesai = r;
       }),
@@ -290,7 +290,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
   });
   it("Batalkan perubahan saat unggah berjalan: respons terlambat diabaikan, form tidak kotor lagi", async () => {
     let selesai!: (v: unknown) => void;
-    unggahFoto.mockReturnValue(
+    uploadPhoto.mockReturnValue(
       new Promise((r) => {
         selesai = r;
       }),
@@ -307,7 +307,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
   });
   it("memilih dua kali: hanya unggahan terakhir yang dipakai", async () => {
     const tunda: ((v: unknown) => void)[] = [];
-    unggahFoto.mockImplementation(() => new Promise((r) => tunda.push(r)));
+    uploadPhoto.mockImplementation(() => new Promise((r) => tunda.push(r)));
     tampil({ profile: { ...profile(), ...dgn } });
     pilih(0);
     pilih(0);
@@ -319,7 +319,7 @@ describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
     expect(saveProfile.mock.calls[0][0]).toMatchObject({ logo_url: "https://cdn.test/kedua.png" });
   });
   it("sukses diumumkan lewat role=status", async () => {
-    unggahFoto.mockResolvedValue({ data: { public_url: "https://cdn.test/baru.png" } });
+    uploadPhoto.mockResolvedValue({ data: { public_url: "https://cdn.test/baru.png" } });
     tampil();
     pilih(0);
     expect(await screen.findByText("Logo terunggah.")).toHaveAttribute("role", "status");
@@ -423,9 +423,9 @@ describe("Akun", () => {
 });
 
 describe("F26 rekening pencairan (di luar form utama, tersimpan langsung)", () => {
-  const kosong = { ...pencairanSaya(), account: null, payouts: [] };
+  const kosong = { ...myPayouts(), account: null, payouts: [] };
   it("belum ada rekening: form tampil, saldo & bagian toko dijelaskan, simpan tidak membuat form utama kotor", async () => {
-    saveRekening.mockResolvedValue({ data: pencairanSaya() });
+    saveRekening.mockResolvedValue({ data: myPayouts() });
     tampil({ pencairan: kosong });
     const form = screen.getByRole("form", { name: "Rekening pencairan" });
     expect(screen.getByText("Rp 58.000")).toBeInTheDocument();
@@ -449,13 +449,13 @@ describe("F26 rekening pencairan (di luar form utama, tersimpan langsung)", () =
     saveRekening.mockResolvedValue({
       error: { code: "VALIDATION_ERROR", message: "Data tidak valid.", fields: { password: ["Kata sandi salah."] } },
     });
-    tampil({ pencairan: pencairanSaya() });
+    tampil({ pencairan: myPayouts() });
     await userEvent.click(screen.getByRole("button", { name: "Ganti rekening" }));
     await userEvent.click(screen.getByRole("button", { name: "Simpan rekening" }));
     expect(await screen.findByText("Kata sandi salah.")).toBeInTheDocument();
   });
   it("riwayat pencairan tampil; gagal dimuat -> pesan", () => {
-    const { unmount } = tampil({ pencairan: pencairanSaya() });
+    const { unmount } = tampil({ pencairan: myPayouts() });
     expect(screen.getByText(/Ref\. TRF-0001/)).toBeInTheDocument();
     unmount();
     tampil({ pencairan: null });

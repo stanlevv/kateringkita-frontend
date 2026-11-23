@@ -4,10 +4,10 @@ import { RangePicker } from "@/app/components/ui/RangePicker";
 import { ReportKpis } from "@/app/(dashboard)/laporan/components/ReportKpis";
 import { TransactionTable } from "@/app/(dashboard)/laporan/components/TransactionTable";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getHourly, getReportSummary, getTransactions } from "@/services/reportService";
-import { jumlahHari, LIMIT_TRANSAKSI, parseRentang, perJam } from "@/lib/laporan";
-import { hariIniWib } from "@/lib/format";
-import { requireMerchant } from "@/services/authService";
+import { getHourly, getReportSummary, getTransactions } from "@/services/report.service";
+import { countDays, LIMIT_TRANSACTIONS, parseRange, groupByHour } from "@/lib/report";
+import { todayWib } from "@/lib/format";
+import { requireMerchant } from "@/services/auth.service";
 
 // M-09 — Laporan (LP-N1..N3, LP-E1, LP-A1, LP-S1). Rentang dan halaman ada di URL: ?dari&sampai&page.
 export default async function LaporanPage({
@@ -17,9 +17,9 @@ export default async function LaporanPage({
 }) {
   await requireMerchant();
   const sp = await searchParams;
-  const hariIni = hariIniWib();
-  const { dari, sampai, galat } = parseRentang(sp.dari, sp.sampai, hariIni);
-  const hari = jumlahHari(dari, sampai);
+  const hariIni = todayWib();
+  const { from: dari, to: sampai, error: galat } = parseRange(sp.dari, sp.sampai, hariIni);
+  const hari = countDays(dari, sampai);
   const rentang = { from: dari, to: sampai };
 
   const [ringkasan, transaksi, perHari] = await Promise.all([
@@ -48,16 +48,16 @@ export default async function LaporanPage({
   const semua = transaksi.data;
   const halaman = Math.min(
     Math.max(1, Math.floor(Number(sp.page)) || 1),
-    Math.max(1, Math.ceil(semua.length / LIMIT_TRANSAKSI)),
+    Math.max(1, Math.ceil(semua.length / LIMIT_TRANSACTIONS)),
   );
-  const rows = semua.slice((halaman - 1) * LIMIT_TRANSAKSI, halaman * LIMIT_TRANSAKSI);
+  const rows = semua.slice((halaman - 1) * LIMIT_TRANSACTIONS, halaman * LIMIT_TRANSACTIONS);
 
   return (
     <PageHeader title="Laporan" description="Omzet, modal bahan, dan laba bersih toko Anda.">
       <div className="flex flex-col gap-6">
         {picker}
         <ReportKpis summary={ringkasan.data} />
-        <HourlyChart points={perHari && "data" in perHari ? perHari.data : perJam(semua)} hari={hari} />
+        <HourlyChart points={perHari && "data" in perHari ? perHari.data : groupByHour(semua)} hari={hari} />
         <TransactionTable rows={rows} total={semua.length} page={halaman} dari={dari} sampai={sampai} />
       </div>
     </PageHeader>

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestUpload = vi.fn();
-vi.mock("@/app/actions/menus", () => ({ requestUpload: (...a: unknown[]) => requestUpload(...a) }));
-import { unggahFoto } from "./unggah";
+vi.mock("@/app/actions/menus", () => ({ requestUpload: (...args: unknown[]) => requestUpload(...args) }));
+import { uploadPhoto } from "./upload";
 
-const GAGAL = { error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } };
-const berkas = new File([new Uint8Array(10)], "f.png", { type: "image/png" });
+const UPLOAD_FAILED = { error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } };
+const photo = new File([new Uint8Array(10)], "f.png", { type: "image/png" });
 const fetchMock = vi.fn();
 
 beforeEach(() => {
@@ -21,61 +21,61 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("unggahFoto (M-07, M-10, FE-08)", () => {
   it("sukses: minta URL lalu PUT berkas dengan Content-Type; hasil = public_url", async () => {
-    expect(await unggahFoto(berkas, "logo")).toEqual({ data: { public_url: "https://cdn.test/a.png" } });
+    expect(await uploadPhoto(photo, "logo")).toEqual({ data: { public_url: "https://cdn.test/a.png" } });
     expect(requestUpload).toHaveBeenCalledWith({ purpose: "logo", content_type: "image/png", size: 10 });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("https://r2.test/put?sig=1");
     expect(init.method).toBe("PUT");
     expect(init.headers).toEqual({ "Content-Type": "image/png" });
-    expect(init.body).toBe(berkas);
+    expect(init.body).toBe(photo);
   });
   it("PUT ditolak (403) -> UPLOAD_FAILED", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 403 });
-    expect(await unggahFoto(berkas, "menu")).toEqual(GAGAL);
+    expect(await uploadPhoto(photo, "menu")).toEqual(UPLOAD_FAILED);
   });
   it("jaringan putus saat PUT -> UPLOAD_FAILED, tidak melempar", async () => {
     fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
-    expect(await unggahFoto(berkas, "menu")).toEqual(GAGAL);
+    expect(await uploadPhoto(photo, "menu")).toEqual(UPLOAD_FAILED);
   });
   it("requestUpload gagal -> galatnya diteruskan, PUT tidak dipanggil", async () => {
     requestUpload.mockResolvedValue({
       error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
     });
-    expect(await unggahFoto(berkas, "logo")).toEqual({
+    expect(await uploadPhoto(photo, "logo")).toEqual({
       error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
     });
     expect(fetchMock).not.toHaveBeenCalled();
   });
   it("requestUpload melempar -> galat jaringan, tidak melempar", async () => {
     requestUpload.mockRejectedValue(new Error("putus"));
-    const r = await unggahFoto(berkas, "menu");
-    expect("error" in r).toBe(true);
+    const result = await uploadPhoto(photo, "menu");
+    expect("error" in result).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
 describe("unggahFoto memperkecil foto sebelum unggah", () => {
-  const MB = 1024 * 1024;
-  const fotoHp = () => new File([new Uint8Array(8 * MB)], "IMG_0001.jpg", { type: "image/jpeg" });
-  const ctx = { fillStyle: "", fillRect: vi.fn(), drawImage: vi.fn() };
-  const asli = {
+  const ONE_MB = 1024 * 1024;
+  const phonePhoto = () => new File([new Uint8Array(8 * ONE_MB)], "IMG_0001.jpg", { type: "image/jpeg" });
+  const context = { fillStyle: "", fillRect: vi.fn(), drawImage: vi.fn() };
+  const originalImage = {
     buat: URL.createObjectURL,
     hapus: URL.revokeObjectURL,
     decode: Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "decode"),
   };
-  let ukuranAsli = { w: 4000, h: 3000 };
+  let originalSize = { w: 4000, h: 3000 };
   let webp = true; // false = browser tanpa penyandi WebP (Safari) memberi PNG
   let decode: () => Promise<void>;
   const kanvas: { w: number; h: number }[] = [];
 
   beforeEach(() => {
-    ukuranAsli = { w: 4000, h: 3000 };
+    originalSize = { w: 4000, h: 3000 };
     webp = true;
     decode = () => Promise.resolve();
     kanvas.length = 0;
-    ctx.fillRect.mockReset();
-    ctx.drawImage.mockReset();
+    context.fillRect.mockReset();
+    context.drawImage.mockReset();
     URL.createObjectURL = vi.fn(() => "blob:foto");
     URL.revokeObjectURL = vi.fn();
     Object.defineProperty(HTMLImageElement.prototype, "decode", {
@@ -83,27 +83,31 @@ describe("unggahFoto memperkecil foto sebelum unggah", () => {
       writable: true,
       value: () => decode(),
     });
-    vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockImplementation(() => ukuranAsli.w);
-    vi.spyOn(HTMLImageElement.prototype, "naturalHeight", "get").mockImplementation(() => ukuranAsli.h);
-    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => ctx as never);
-    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(function (this: HTMLCanvasElement, cb, type) {
+    vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockImplementation(() => originalSize.w);
+    vi.spyOn(HTMLImageElement.prototype, "naturalHeight", "get").mockImplementation(() => originalSize.h);
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => context as never);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(function (
+      this: HTMLCanvasElement,
+      callback,
+      type,
+    ) {
       kanvas.push({ w: this.width, h: this.height });
-      cb(new Blob([new Uint8Array(1234)], { type: type === "image/webp" && !webp ? "image/png" : type }));
+      callback(new Blob([new Uint8Array(1234)], { type: type === "image/webp" && !webp ? "image/png" : type }));
     });
   });
   afterEach(() => {
     vi.restoreAllMocks();
-    URL.createObjectURL = asli.buat;
-    URL.revokeObjectURL = asli.hapus;
-    if (asli.decode) Object.defineProperty(HTMLImageElement.prototype, "decode", asli.decode);
+    URL.createObjectURL = originalImage.buat;
+    URL.revokeObjectURL = originalImage.hapus;
+    if (originalImage.decode) Object.defineProperty(HTMLImageElement.prototype, "decode", originalImage.decode);
     else delete (HTMLImageElement.prototype as { decode?: unknown }).decode;
   });
 
   it("foto HP 8 MB 4000x3000 -> WebP 1600x1200 berlatar putih; ukuran & tipe hasil yang diminta dan di-PUT", async () => {
-    expect(await unggahFoto(fotoHp(), "menu")).toEqual({ data: { public_url: "https://cdn.test/a.png" } });
+    expect(await uploadPhoto(phonePhoto(), "menu")).toEqual({ data: { public_url: "https://cdn.test/a.png" } });
     expect(kanvas).toEqual([{ w: 1600, h: 1200 }]);
-    expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 1600, 1200);
-    expect(ctx.drawImage).toHaveBeenCalledWith(expect.any(HTMLImageElement), 0, 0, 1600, 1200);
+    expect(context.fillRect).toHaveBeenCalledWith(0, 0, 1600, 1200);
+    expect(context.drawImage).toHaveBeenCalledWith(expect.any(HTMLImageElement), 0, 0, 1600, 1200);
     expect(requestUpload).toHaveBeenCalledWith({ purpose: "menu", content_type: "image/webp", size: 1234 });
     const [, init] = fetchMock.mock.calls[0];
     expect(init.headers).toEqual({ "Content-Type": "image/webp" });
@@ -113,32 +117,32 @@ describe("unggahFoto memperkecil foto sebelum unggah", () => {
   });
 
   it("foto kecil tidak diperbesar", async () => {
-    ukuranAsli = { w: 800, h: 600 };
-    await unggahFoto(fotoHp(), "menu");
+    originalSize = { w: 800, h: 600 };
+    await uploadPhoto(phonePhoto(), "menu");
     expect(kanvas).toEqual([{ w: 800, h: 600 }]);
   });
 
   it("browser tanpa WebP: foto menu -> JPEG, logo -> PNG 512 px tanpa latar (transparan tetap)", async () => {
     webp = false;
-    await unggahFoto(fotoHp(), "menu");
+    await uploadPhoto(phonePhoto(), "menu");
     expect(requestUpload).toHaveBeenLastCalledWith(expect.objectContaining({ content_type: "image/jpeg" }));
-    ctx.fillRect.mockReset();
-    ukuranAsli = { w: 1024, h: 2048 };
-    await unggahFoto(new File([new Uint8Array(10)], "logo.png", { type: "image/png" }), "logo");
+    context.fillRect.mockReset();
+    originalSize = { w: 1024, h: 2048 };
+    await uploadPhoto(new File([new Uint8Array(10)], "logo.png", { type: "image/png" }), "logo");
     expect(requestUpload).toHaveBeenLastCalledWith({ purpose: "logo", content_type: "image/png", size: 1234 });
     expect(kanvas.at(-1)).toEqual({ w: 256, h: 512 });
-    expect(ctx.fillRect).not.toHaveBeenCalled();
+    expect(context.fillRect).not.toHaveBeenCalled();
   });
 
   it("browser gagal membaca foto -> berkas asli; asli > 5 MB -> pesan ukuran tanpa minta URL", async () => {
     decode = () => Promise.reject(new Error("EncodingError"));
-    expect(await unggahFoto(fotoHp(), "menu")).toEqual({
+    expect(await uploadPhoto(phonePhoto(), "menu")).toEqual({
       error: { code: "VALIDATION_ERROR", message: "Ukuran foto maksimal 5 MB." },
     });
     expect(requestUpload).not.toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:foto");
-    await unggahFoto(berkas, "logo");
+    await uploadPhoto(photo, "logo");
     expect(requestUpload).toHaveBeenCalledWith({ purpose: "logo", content_type: "image/png", size: 10 });
-    expect(fetchMock.mock.calls[0][1].body).toBe(berkas);
+    expect(fetchMock.mock.calls[0][1].body).toBe(photo);
   });
 });

@@ -13,8 +13,15 @@ import { Banner } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
 import { IconButton } from "@/app/components/ui/IconButton";
 import { fokus } from "@/app/components/ui/cx";
-import { ganti, pangkasOptimis, ringkasHariIni, terapkanOptimis, terapkanWaktu, type Optimis } from "@/lib/dashboard";
-import { diLuarJamBuka, labelJamBuka, perluTindakan } from "@/lib/shell";
+import {
+  setOrDeleteKey,
+  pruneOptimisticActions,
+  summarizeToday,
+  applyOptimisticActions,
+  applyHoldExpiry,
+  type OptimisticActions,
+} from "@/lib/dashboard";
+import { isOutsideOpenHours, openHoursLabel, countNeedsAction } from "@/lib/shell";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
 import { KpiRow } from "./KpiRow";
@@ -83,11 +90,11 @@ function Isi({
     return () => clearInterval(i);
   }, []);
   const router = useRouter();
-  const [optimis, setOptimis] = useState<Optimis>({});
+  const [optimis, setOptimis] = useState<OptimisticActions>({});
   const [dariOrders, setDariOrders] = useState(orders);
   if (orders !== dariOrders) {
     setDariOrders(orders);
-    setOptimis((o) => pangkasOptimis(orders, o)); // entri yang sudah digantikan data server dibuang
+    setOptimis((o) => pruneOptimisticActions(orders, o)); // entri yang sudah digantikan data server dibuang
   }
   // DB-E5: galat halaman (refresh gagal) tampil sampai penyegaran sukses berikutnya, tidak menetap.
   const [galatSaat, setGalatSaat] = useState<number | null>(galat ? terakhir : null);
@@ -99,7 +106,7 @@ function Isi({
   const { baru, umumkan, suara, setSuara } = useNotifikasi(orders, dimuat, kini);
 
   // D11: badge sidebar dihitung di layout server; segarkan halaman hanya saat angkanya berubah.
-  const tindakan = perluTindakan(orders);
+  const tindakan = countNeedsAction(orders);
   const tindakanLalu = useRef(tindakan);
   useEffect(() => {
     if (tindakanLalu.current === tindakan) return;
@@ -112,8 +119,8 @@ function Isi({
     () => false,
   );
 
-  const efektif = terapkanWaktu(terapkanOptimis(orders, optimis), kini);
-  const ringkasan = ringkasHariIni(efektif, menus, kini);
+  const efektif = applyHoldExpiry(applyOptimisticActions(orders, optimis), kini);
+  const ringkasan = summarizeToday(efektif, menus, kini);
 
   function fokusKuota(menuId?: number) {
     // Setelah tab Kuota (tablet) dirender.
@@ -142,10 +149,10 @@ function Isi({
           Menu terlaris hari ini
         </h2>
         <p className="mt-2 text-ink">
-          {ringkasan.terlaris ? (
+          {ringkasan.bestSeller ? (
             <>
-              <span className="font-medium">{ringkasan.terlaris.name}</span>{" "}
-              <span className="text-ink-muted">· {ringkasan.terlaris.portions} porsi</span>
+              <span className="font-medium">{ringkasan.bestSeller.name}</span>{" "}
+              <span className="text-ink-muted">· {ringkasan.bestSeller.portions} porsi</span>
             </>
           ) : (
             <span className="text-ink-muted">Belum ada penjualan hari ini.</span>
@@ -185,7 +192,7 @@ function Isi({
             Dapur tutup — pembeli tidak bisa memesan
           </Banner>
         )}
-        {diLuarJamBuka(kini, buka, tutup) && (
+        {isOutsideOpenHours(kini, buka, tutup) && (
           <Banner
             tone="info"
             action={
@@ -197,7 +204,7 @@ function Isi({
               </Link>
             }
           >
-            {`Di luar jam buka (${labelJamBuka(buka, tutup)}) — pembeli belum bisa memesan sampai ${buka.replace(":", ".")}`}
+            {`Di luar jam buka (${openHoursLabel(buka, tutup)}) — pembeli belum bisa memesan sampai ${buka.replace(":", ".")}`}
           </Banner>
         )}
         {(!adaTitikTemu || menus.length === 0) && (
@@ -217,7 +224,7 @@ function Isi({
             sekarang={kini}
             baru={baru}
             optimis={optimis}
-            onOptimis={(c, v) => setOptimis((o) => ganti(o, c, v))}
+            onOptimis={(c, v) => setOptimis((o) => setOrDeleteKey(o, c, v))}
             onFokusKuota={fokusKuota}
             onTerima={terima}
             onSegarkan={segarkan}

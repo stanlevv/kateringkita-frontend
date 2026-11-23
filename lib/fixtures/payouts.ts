@@ -1,7 +1,7 @@
-import type { PencairanSaya } from "@/types/pencairan";
+import type { MyPayouts } from "@/types/payout";
 
 // F26: data contoh GET /merchant/payouts (rekening terisi, satu pencairan)
-export const pencairanSaya = (): PencairanSaya => ({
+export const myPayouts = (): MyPayouts => ({
   banks: [
     { code: "bca", name: "BCA" },
     { code: "bri", name: "BRI" },

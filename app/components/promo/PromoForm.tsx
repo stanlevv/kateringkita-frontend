@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { savePromo } from "@/app/actions/promos";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
 import { Field } from "@/app/components/ui/Field";
 import { Input, Select } from "@/app/components/ui/Input";
 import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
-import { inputWibKeIso, isoKeInputWib } from "@/lib/format";
-import { cekPromo } from "@/lib/schemas";
+import { wibInputToIso, isoToWibInput } from "@/lib/format";
+import { validatePromo } from "@/lib/schemas";
 import type { ActionResult } from "@/types/api";
 import type { Promo } from "@/types/promo";
 
@@ -55,8 +55,8 @@ const awalDari = (p?: Promo | null): Isian => {
     min_subtotal: String(p?.min_subtotal ?? 0),
     quota: p?.quota != null ? String(p.quota) : "",
     per_user_limit: String(p?.per_user_limit ?? 1),
-    starts: isoKeInputWib(p?.starts_at ?? sekarang),
-    ends: isoKeInputWib(p?.ends_at ?? new Date(Date.now() + 30 * 86400e3).toISOString()),
+    starts: isoToWibInput(p?.starts_at ?? sekarang),
+    ends: isoToWibInput(p?.ends_at ?? new Date(Date.now() + 30 * 86400e3).toISOString()),
     is_active: p?.is_active ?? true,
     is_public: p?.is_public ?? true,
   };
@@ -99,12 +99,12 @@ export function PromoForm({
     min_subtotal: num(v.min_subtotal),
     quota: opsional(v.quota),
     per_user_limit: num(v.per_user_limit),
-    starts_at: inputWibKeIso(v.starts),
-    ends_at: inputWibKeIso(v.ends),
+    starts_at: wibInputToIso(v.starts),
+    ends_at: wibInputToIso(v.ends),
     is_active: v.is_active,
     is_public: v.is_public,
   };
-  const semua = cekPromo(input, promo?.used_count ?? 0);
+  const semua = validatePromo(input, promo?.used_count ?? 0);
   const galatSemua = dicoba ? { ...server, ...semua } : semua;
   const galat = (k: string) => (dicoba || tersentuh.has(k) ? galatSemua[k] : undefined);
   const ringkasan = dicoba
@@ -120,7 +120,7 @@ export function PromoForm({
     }
     if (menyimpan) return;
     setMenyimpan(true);
-    const r = await panggil(() => simpan(promo?.id ?? null, input));
+    const r = await callAction(() => simpan(promo?.id ?? null, input));
     setMenyimpan(false);
     if ("error" in r) {
       if (r.error.fields) {

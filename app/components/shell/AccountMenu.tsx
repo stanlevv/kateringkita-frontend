@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronDown, LogOut, UserCog } from "lucide-react";
 import { logout } from "@/app/actions/auth";
 import { cx, fokus } from "@/app/components/ui/cx";
-import { inisial } from "@/lib/shell";
+import { initials } from "@/lib/shell";
 
 const item = cx("flex min-h-11 w-full items-center gap-2 rounded-md px-3 text-sm text-ink hover:bg-subtle", fokus);
 
@@ -51,7 +51,7 @@ export function AccountMenu({ nama, toko, admin = false }: { nama: string; toko:
           aria-hidden
           className="flex size-8 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary"
         >
-          {inisial(nama)}
+          {initials(nama)}
         </span>
         <span className="hidden text-left leading-tight lg:block">
           <span className="block text-sm font-semibold text-ink">{nama}</span>

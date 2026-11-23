@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { MenuMeja } from "@/types/meja";
+import type { TableMenu } from "@/types/table";
 
 const push = vi.fn();
 const pesanDariMeja = vi.fn();
@@ -14,7 +14,7 @@ vi.mock("@/app/actions/meja", () => ({
 
 import { MenuMejaApp } from "./MenuMejaApp";
 
-const menu = (o: Partial<MenuMeja["menus"][number]>) => ({
+const menu = (o: Partial<TableMenu["menus"][number]>) => ({
   id: 1,
   name: "Nasi Ayam",
   image_url: null,
@@ -30,7 +30,7 @@ const menu = (o: Partial<MenuMeja["menus"][number]>) => ({
   options: [],
   ...o,
 });
-const data: MenuMeja = {
+const data: TableMenu = {
   table: { label: "5" },
   merchant: {
     slug: "dapur",

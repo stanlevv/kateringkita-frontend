@@ -13,25 +13,25 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { IconButton } from "@/app/components/ui/IconButton";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { TAB_MASTER } from "@/services/adminMasterService";
-import type { ItemMaster } from "@/types/admin";
-import { urlDengan } from "@/lib/url";
+import { callAction } from "@/lib/action";
+import { MASTER_TABS } from "@/services/admin-master.service";
+import type { MasterItem } from "@/types/admin";
+import { buildUrl } from "@/lib/url";
 import { MasterForm } from "./MasterForm";
 
 /** A-01…A-03 — data master per tab (tab di URL). Titik temu urut nama; kategori & jenis usaha bisa dinaik-turunkan. */
-export function MasterTable({ tabId, rows }: { tabId: string; rows: ItemMaster[] }) {
+export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[] }) {
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
-  const tab = TAB_MASTER.find((t) => t.id === tabId) ?? TAB_MASTER[0];
-  const [form, setForm] = useState<"baru" | ItemMaster | null>(null);
-  const [nonaktif, setNonaktif] = useState<ItemMaster | null>(null);
+  const tab = MASTER_TABS.find((t) => t.id === tabId) ?? MASTER_TABS[0];
+  const [form, setForm] = useState<"baru" | MasterItem | null>(null);
+  const [nonaktif, setNonaktif] = useState<MasterItem | null>(null);
   const [sibuk, setSibuk] = useState(false);
 
-  async function aktifkan(i: ItemMaster, aktif: boolean) {
+  async function aktifkan(i: MasterItem, aktif: boolean) {
     setSibuk(true);
-    const r = await panggil(() => setAktifMaster(tab.kind, i.id, aktif));
+    const r = await callAction(() => setAktifMaster(tab.kind, i.id, aktif));
     setSibuk(false);
     setNonaktif(null);
     if ("error" in r) return toast({ tone: "danger", message: r.error.message }); // 409: nama toko ikut di pesan
@@ -51,16 +51,23 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: ItemMaster[]
       sa = lo + (arah < 0 ? 2 : 1);
     } // sb = nilai baru item ini
     setSibuk(true);
-    const r = await panggil(() => tukarUrutan(tab.kind, { id: a.id, sort_order: sa }, { id: b.id, sort_order: sb }));
+    const r = await callAction(() => tukarUrutan(tab.kind, { id: a.id, sort_order: sa }, { id: b.id, sort_order: sb }));
     setSibuk(false);
     if ("error" in r) return toast({ tone: "danger", message: `Urutan belum berubah. ${r.error.message}` });
     router.refresh();
   }
 
-  const kolom: Column<ItemMaster>[] = [
+  const kolom: Column<MasterItem>[] = [
     { key: "name", header: "Nama", cell: (i) => <span className="font-semibold">{i.name}</span> },
-    ...(tab.kolom
-      ? [{ key: tab.kolom, header: tab.kolomLabel!, wrap: true, cell: (i: ItemMaster) => i[tab.kolom!] || "-" }]
+    ...(tab.extraField
+      ? [
+          {
+            key: tab.extraField,
+            header: tab.extraFieldLabel!,
+            wrap: true,
+            cell: (i: MasterItem) => i[tab.extraField!] || "-",
+          },
+        ]
       : []),
     {
       key: "status",
@@ -83,7 +90,7 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: ItemMaster[]
         const idx = rows.indexOf(i);
         return (
           <div className="flex items-center gap-2">
-            {tab.urut && (
+            {tab.sortable && (
               <>
                 <IconButton
                   icon={ArrowUp}
@@ -122,21 +129,21 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: ItemMaster[]
     },
   ];
 
-  const tambah = <Button onClick={() => setForm("baru")}>Tambah {tab.satuan}</Button>;
+  const tambah = <Button onClick={() => setForm("baru")}>Tambah {tab.unitName}</Button>;
   return (
     <div className="flex flex-col gap-4">
       <Tabs
         label="Jenis data master"
-        tabs={TAB_MASTER.map((t) => ({ id: t.id, label: t.label }))}
+        tabs={MASTER_TABS.map((t) => ({ id: t.id, label: t.label }))}
         value={tab.id}
         onChange={(id) =>
-          router.replace(urlDengan(path, params.toString(), { tab: id }, [TAB_MASTER[0].id]), { scroll: false })
+          router.replace(buildUrl(path, params.toString(), { tab: id }, [MASTER_TABS[0].id]), { scroll: false })
         }
       />
       {rows.length === 0 ? (
         <EmptyState
           icon={Database}
-          title={`Belum ada ${tab.satuan}`}
+          title={`Belum ada ${tab.unitName}`}
           body="Tambahkan data pertama agar bisa dipilih penjual."
           action={tambah}
         />
@@ -149,7 +156,7 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: ItemMaster[]
       <Dialog
         open={form !== null}
         onClose={() => setForm(null)}
-        title={form === "baru" ? `Tambah ${tab.satuan}` : `Ubah ${tab.satuan}`}
+        title={form === "baru" ? `Tambah ${tab.unitName}` : `Ubah ${tab.unitName}`}
       >
         <MasterForm
           key={form === "baru" || form === null ? "baru" : form.id}
@@ -167,7 +174,7 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: ItemMaster[]
         onClose={() => setNonaktif(null)}
         tone="danger"
         busy={sibuk}
-        title={`Nonaktifkan ${tab.satuan}?`}
+        title={`Nonaktifkan ${tab.unitName}?`}
         body={`${nonaktif?.name ?? ""} tidak bisa dipilih lagi. Data yang sudah memakainya tidak berubah.`}
         confirmLabel="Nonaktifkan"
         onConfirm={() => void aktifkan(nonaktif!, false)}

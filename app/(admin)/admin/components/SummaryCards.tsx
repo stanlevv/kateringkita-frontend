@@ -5,12 +5,12 @@ import { Badge } from "@/app/components/ui/Badge";
 import { Card } from "@/app/components/ui/Card";
 import { fokus } from "@/app/components/ui/cx";
 import { KpiCard } from "@/app/components/ui/KpiCard";
-import { labelAksi, labelTarget } from "@/services/adminLogService";
-import type { Ringkasan, StatusPesananAdmin } from "@/types/admin";
-import { formatJam, formatRupiah, formatTanggal } from "@/lib/format";
-import { statusView, type TampilanStatus } from "@/lib/order-status";
+import { actionLabel, targetLabel } from "@/services/admin-log.service";
+import type { AdminSummary, AdminOrderStatus } from "@/types/admin";
+import { formatTime, formatRupiah, formatDate } from "@/lib/format";
+import { statusView, type DisplayStatus } from "@/lib/order-status";
 
-const STATUS: [StatusPesananAdmin, TampilanStatus][] = [
+const STATUS: [AdminOrderStatus, DisplayStatus][] = [
   ["holding", "menunggu-konfirmasi"],
   ["confirmed", "confirmed"],
   ["cooking", "cooking"],
@@ -20,7 +20,7 @@ const STATUS: [StatusPesananAdmin, TampilanStatus][] = [
   ["expired", "expired"],
 ];
 
-const PENJUAL: { key: keyof Ringkasan["merchants"]; label: string; href: string; icon: LucideIcon }[] = [
+const PENJUAL: { key: keyof AdminSummary["merchants"]; label: string; href: string; icon: LucideIcon }[] = [
   { key: "pending", label: "Menunggu verifikasi", href: "/admin/verifikasi", icon: Hourglass },
   { key: "needs_fix", label: "Perlu perbaikan", href: "/admin/verifikasi", icon: Wrench },
   { key: "verified", label: "Aktif", href: "/admin/penjual?status=verified", icon: CheckCircle2 },
@@ -30,7 +30,7 @@ const PENJUAL: { key: keyof Ringkasan["merchants"]; label: string; href: string;
 
 const tautan = `block rounded-lg ${fokus}`;
 
-export function SummaryCards({ data }: { data: Ringkasan }) {
+export function SummaryCards({ data }: { data: AdminSummary }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 lg:grid-cols-2">
@@ -99,10 +99,10 @@ export function SummaryCards({ data }: { data: Ringkasan }) {
             <ul className="mt-3 flex flex-col divide-y divide-line">
               {data.recent_logs.map((l) => (
                 <li key={l.id} className="py-2">
-                  <p className="font-medium text-ink">{labelAksi(l.action)}</p>
-                  <p className="text-sm text-ink-muted">{labelTarget(l.target_type, l.target_id)}</p>
+                  <p className="font-medium text-ink">{actionLabel(l.action)}</p>
+                  <p className="text-sm text-ink-muted">{targetLabel(l.target_type, l.target_id)}</p>
                   <p className="text-sm text-ink-muted">
-                    {l.admin_name} · {formatTanggal(l.created_at)}, {formatJam(l.created_at)} WIB
+                    {l.admin_name} · {formatDate(l.created_at)}, {formatTime(l.created_at)} WIB
                   </p>
                 </li>
               ))}

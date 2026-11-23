@@ -1,19 +1,19 @@
-import { formatJam, formatTanggal } from "@/lib/format";
-import { TAB_MASTER } from "@/services/adminMasterService";
-import { STATUS_VERIFIKASI } from "@/services/adminMerchantService";
-import type { StatusVerifikasi } from "@/types/admin";
+import { formatTime, formatDate } from "@/lib/format";
+import { MASTER_TABS } from "@/services/admin-master.service";
+import { VERIFICATION_STATUSES } from "@/services/admin-merchant.service";
+import type { VerificationStatus } from "@/types/admin";
 
 export const LIMIT_LOG = 20;
 
-const MASTER: Record<string, string> = Object.fromEntries(TAB_MASTER.map((t) => [t.kind, t.satuan]));
-const VERBA: Record<string, string> = {
+const MASTER_UNITS: Record<string, string> = Object.fromEntries(MASTER_TABS.map((tab) => [tab.kind, tab.unitName]));
+const VERB_LABELS: Record<string, string> = {
   create: "Tambah",
   update: "Ubah",
   activate: "Aktifkan",
   deactivate: "Nonaktifkan",
 };
 
-const TETAP: Record<string, string> = {
+const FIXED_ACTION_LABELS: Record<string, string> = {
   "merchant.verify": "Verifikasi penjual",
   "merchant.request_fix": "Minta perbaikan penjual",
   "merchant.suspend": "Tangguhkan penjual",
@@ -34,22 +34,26 @@ const TETAP: Record<string, string> = {
 };
 
 /** Semua aksi yang dikenal, untuk pilihan filter: [kode, label]. */
-export const AKSI_LOG: [string, string][] = [
-  ...Object.entries(TETAP),
-  ...Object.keys(MASTER).flatMap((k) =>
-    Object.keys(VERBA).map((v): [string, string] => [`master.${k}.${v}`, labelAksi(`master.${k}.${v}`)]),
+export const LOG_ACTIONS: [string, string][] = [
+  ...Object.entries(FIXED_ACTION_LABELS),
+  ...Object.keys(MASTER_UNITS).flatMap((kind) =>
+    Object.keys(VERB_LABELS).map((verb): [string, string] => [
+      `master.${kind}.${verb}`,
+      actionLabel(`master.${kind}.${verb}`),
+    ]),
   ),
 ];
 
-export function labelAksi(action: string): string {
-  if (TETAP[action]) return TETAP[action];
-  const m = /^master\.([a-z-]+)\.([a-z]+)$/.exec(action);
-  if (m && MASTER[m[1]] && VERBA[m[2]]) return `${VERBA[m[2]]} ${MASTER[m[1]]}`;
+export function actionLabel(action: string): string {
+  if (FIXED_ACTION_LABELS[action]) return FIXED_ACTION_LABELS[action];
+  const match = /^master\.([a-z-]+)\.([a-z]+)$/.exec(action);
+  if (match && MASTER_UNITS[match[1]] && VERB_LABELS[match[2]])
+    return `${VERB_LABELS[match[2]]} ${MASTER_UNITS[match[1]]}`;
   return action;
 }
 
 /** Jenis target untuk filter: [kode, label]. */
-export const TARGET_LOG: [string, string][] = [
+export const LOG_TARGETS: [string, string][] = [
   ["merchant", "Penjual"],
   ["categories", "Kategori"],
   ["pickup-points", "Titik temu"],
@@ -59,13 +63,13 @@ export const TARGET_LOG: [string, string][] = [
   ["ai_provider", "Penyedia AI"],
 ];
 
-export function labelTarget(type: string, id: string): string {
+export function targetLabel(type: string, id: string): string {
   if (type === "settings") return id === "service_fee" ? "Biaya layanan" : "Pengaturan";
-  const label = TARGET_LOG.find(([k]) => k === type)?.[1] ?? type;
+  const label = LOG_TARGETS.find(([key]) => key === type)?.[1] ?? type;
   return `${label} #${id}`;
 }
 
-const FIELD: Record<string, string> = {
+const FIELD_LABELS: Record<string, string> = {
   verification_status: "Status verifikasi",
   verified_at: "Diverifikasi pada",
   verification_note: "Catatan admin",
@@ -84,21 +88,26 @@ const FIELD: Record<string, string> = {
   quota: "Kuota",
 };
 
-const nilai = (field: string, v: unknown): string => {
-  if (v === null || v === undefined) return "—";
-  if (field === "verification_status") return STATUS_VERIFIKASI[v as StatusVerifikasi]?.label ?? String(v);
-  if (field === "is_open") return v && v !== "0" ? "Buka" : "Tutup";
-  if (field === "is_active") return v && v !== "0" ? "ya" : "tidak";
-  if (field.endsWith("_at") && typeof v === "string" && !Number.isNaN(Date.parse(v)))
-    return `${formatTanggal(v)}, ${formatJam(v)}`;
-  if (typeof v === "boolean") return v ? "ya" : "tidak";
-  return typeof v === "object" ? JSON.stringify(v) : String(v);
+const formatValue = (field: string, value: unknown): string => {
+  if (value === null || value === undefined) return "—";
+  if (field === "verification_status")
+    return VERIFICATION_STATUSES[value as VerificationStatus]?.label ?? String(value);
+  if (field === "is_open") return value && value !== "0" ? "Buka" : "Tutup";
+  if (field === "is_active") return value && value !== "0" ? "ya" : "tidak";
+  if (field.endsWith("_at") && typeof value === "string" && !Number.isNaN(Date.parse(value)))
+    return `${formatDate(value)}, ${formatTime(value)}`;
+  if (typeof value === "boolean") return value ? "ya" : "tidak";
+  return typeof value === "object" ? JSON.stringify(value) : String(value);
 };
 
 /** Field yang berubah dari `before` ke `after`, sudah berbentuk teks Indonesia; field tak dikenal memakai nama aslinya. */
-export function daftarPerubahan(before: Record<string, unknown> | null, after: Record<string, unknown> | null) {
-  const kunci = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])];
-  return kunci
-    .map((k) => ({ field: FIELD[k] ?? k, lama: nilai(k, before?.[k]), baru: nilai(k, after?.[k]) }))
-    .filter((p) => p.lama !== p.baru);
+export function listChanges(before: Record<string, unknown> | null, after: Record<string, unknown> | null) {
+  const keys = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])];
+  return keys
+    .map((key) => ({
+      field: FIELD_LABELS[key] ?? key,
+      before: formatValue(key, before?.[key]),
+      after: formatValue(key, after?.[key]),
+    }))
+    .filter((change) => change.before !== change.after);
 }

@@ -1,85 +1,89 @@
-import { formatJam, jamWib, tanggalWib } from "./format";
+import { formatTime, wibHour, wibDate } from "./format";
 import type { HourlyPoint, Transaction } from "@/types/report";
 
-export const MAKS_HARI = 92;
+export const MAX_RANGE_DAYS = 92;
 // Di sini, bukan di komponen "use client": halaman server hanya menerima nilainya dari modul biasa.
-export const LIMIT_TRANSAKSI = 20;
+export const LIMIT_TRANSACTIONS = 20;
 
-const POLA = /^\d{4}-\d{2}-\d{2}$/;
-const ms = (d: string) => Date.parse(`${d}T00:00:00Z`);
-const sah = (d: string) => POLA.test(d) && !Number.isNaN(ms(d)) && new Date(ms(d)).toISOString().slice(0, 10) === d;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const dayStartMs = (date: string) => Date.parse(`${date}T00:00:00Z`);
+const isValidDate = (date: string) =>
+  DATE_PATTERN.test(date) &&
+  !Number.isNaN(dayStartMs(date)) &&
+  new Date(dayStartMs(date)).toISOString().slice(0, 10) === date;
 
 /** Jumlah hari dalam rentang, ujung-ujungnya ikut dihitung. */
-export const jumlahHari = (dari: string, sampai: string) => Math.round((ms(sampai) - ms(dari)) / 86400e3) + 1;
+export const countDays = (from: string, to: string) => Math.round((dayStartMs(to) - dayStartMs(from)) / 86400e3) + 1;
 
 /** AUD-48: unduhan CSV yang sah selalu fetch dari halaman kita (same-origin). Navigasi dari situs lain dijawab seperti
  *  tanpa sesi agar tidak membocorkan siapa yang sedang login. Header kosong (peramban lama) dibiarkan. */
-export const dariSitusLain = (req: Request) => {
-  const asal = req.headers.get("sec-fetch-site");
-  return asal !== null && asal !== "same-origin";
+export const isCrossSiteRequest = (request: Request) => {
+  const fetchSite = request.headers.get("sec-fetch-site");
+  return fetchSite !== null && fetchSite !== "same-origin";
 };
 
 /** LP-E1: pesan galat untuk rentang yang tidak boleh dipakai, atau null. */
-export function cekRentang(dari: string, sampai: string, hariIni: string): string | null {
-  if (!sah(dari) || !sah(sampai)) return "Tanggal tidak valid.";
-  if (sampai < dari) return "Tanggal akhir harus setelah tanggal awal.";
-  if (sampai > hariIni || dari > hariIni) return "Tanggal tidak boleh melewati hari ini.";
-  if (jumlahHari(dari, sampai) > MAKS_HARI) return `Rentang maksimal ${MAKS_HARI} hari.`;
+export function validateRange(from: string, to: string, today: string): string | null {
+  if (!isValidDate(from) || !isValidDate(to)) return "Tanggal tidak valid.";
+  if (to < from) return "Tanggal akhir harus setelah tanggal awal.";
+  if (to > today || from > today) return "Tanggal tidak boleh melewati hari ini.";
+  if (countDays(from, to) > MAX_RANGE_DAYS) return `Rentang maksimal ${MAX_RANGE_DAYS} hari.`;
   return null;
 }
 
 /** Rentang dari URL; kosong atau tidak sah -> hari ini (galat hanya bila ada isian yang ditolak). */
-export function parseRentang(dari: string | undefined, sampai: string | undefined, hariIni: string) {
-  const bawaan = { dari: hariIni, sampai: hariIni };
-  if (!dari && !sampai) return { ...bawaan, galat: null };
-  if (!dari || !sampai) return { ...bawaan, galat: "Lengkapi tanggal awal dan akhir." };
-  const galat = cekRentang(dari, sampai, hariIni);
-  return galat ? { ...bawaan, galat } : { dari, sampai, galat: null };
+export function parseRange(from: string | undefined, to: string | undefined, today: string) {
+  const fallback = { from: today, to: today };
+  if (!from && !to) return { ...fallback, error: null };
+  if (!from || !to) return { ...fallback, error: "Lengkapi tanggal awal dan akhir." };
+  const error = validateRange(from, to, today);
+  return error ? { ...fallback, error } : { from, to, error: null };
 }
 
 /** Tanggal (YYYY-MM-DD, WIB) `n` hari sebelum `d`. */
-export const hariSebelum = (d: string, n: number) => new Date(ms(d) - n * 86400e3).toISOString().slice(0, 10);
+export const daysBefore = (date: string, days: number) =>
+  new Date(dayStartMs(date) - days * 86400e3).toISOString().slice(0, 10);
 
 /** LP-N2: total per jam WIB, urut jam; jam tanpa transaksi tidak muncul. Satu pesanan = satu `code`, walau punya banyak baris menu. */
-export function perJam(list: Transaction[]): HourlyPoint[] {
-  const peta = new Map<number, HourlyPoint>();
-  const terhitung = new Set<string>();
-  for (const t of list) {
-    const hour = jamWib(t.completed_at);
-    const p = peta.get(hour) ?? { hour, orders: 0, portions: 0, revenue: 0 };
-    if (!terhitung.has(`${hour}|${t.code}`)) {
-      terhitung.add(`${hour}|${t.code}`);
-      p.orders += 1;
+export function groupByHour(transactions: Transaction[]): HourlyPoint[] {
+  const byHour = new Map<number, HourlyPoint>();
+  const countedOrders = new Set<string>();
+  for (const transaction of transactions) {
+    const hour = wibHour(transaction.completed_at);
+    const point = byHour.get(hour) ?? { hour, orders: 0, portions: 0, revenue: 0 };
+    if (!countedOrders.has(`${hour}|${transaction.code}`)) {
+      countedOrders.add(`${hour}|${transaction.code}`);
+      point.orders += 1;
     }
-    p.portions += t.qty;
-    p.revenue += t.total;
-    peta.set(hour, p);
+    point.portions += transaction.qty;
+    point.revenue += transaction.total;
+    byHour.set(hour, point);
   }
-  return [...peta.values()].sort((a, b) => a.hour - b.hour);
+  return [...byHour.values()].sort((first, second) => first.hour - second.hour);
 }
 
 // Teks yang diawali karakter rumus dibuat aman agar tidak dijalankan aplikasi spreadsheet.
-function teks(v: string) {
-  const aman = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
-  return /[",\r\n]/.test(aman) ? `"${aman.replaceAll('"', '""')}"` : aman;
+function toCsvCell(value: string) {
+  const safeText = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return /[",\r\n]/.test(safeText) ? `"${safeText.replaceAll('"', '""')}"` : safeText;
 }
 
-// F20: dipakai juga CSV keuangan admin (lib/keuangan.ts)
-export const selCsv = teks;
+// F20: dipakai juga CSV keuangan admin (lib/finance.ts)
+export const csvCell = toCsvCell;
 
 /** LP-N4: isi CSV (kode,waktu,menu,qty,omzet,hpp,laba,metode). */
-export function buatCsv(list: Transaction[]): string {
-  const baris = list.map((t) =>
+export function createTransactionsCsv(transactions: Transaction[]): string {
+  const rows = transactions.map((transaction) =>
     [
-      teks(t.code),
-      teks(`${tanggalWib(t.completed_at)} ${formatJam(t.completed_at).replace(".", ":")}`),
-      teks(t.menu_name),
-      t.qty,
-      t.total,
-      t.hpp_total,
-      t.total - t.hpp_total,
-      teks(t.payment_method),
+      toCsvCell(transaction.code),
+      toCsvCell(`${wibDate(transaction.completed_at)} ${formatTime(transaction.completed_at).replace(".", ":")}`),
+      toCsvCell(transaction.menu_name),
+      transaction.qty,
+      transaction.total,
+      transaction.hpp_total,
+      transaction.total - transaction.hpp_total,
+      toCsvCell(transaction.payment_method),
     ].join(","),
   );
-  return ["kode,waktu,menu,qty,omzet,hpp,laba,metode", ...baris].join("\r\n") + "\r\n";
+  return ["kode,waktu,menu,qty,omzet,hpp,laba,metode", ...rows].join("\r\n") + "\r\n";
 }

@@ -1,7 +1,7 @@
 import { Ban, CheckCircle2, TimerOff } from "lucide-react";
 import { cx } from "@/app/components/ui/cx";
-import { formatJam, formatTanggal } from "@/lib/format";
-import { labelTahapSiap } from "@/lib/order-status";
+import { formatTime, formatDate } from "@/lib/format";
+import { readyStepLabel } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 
 const TAHAP: [keyof MerchantOrder, string | null][] = [
@@ -16,7 +16,7 @@ const OLEH = { merchant: "penjual", customer: "pembeli", system: "sistem" } as c
 /** PS-N2/PS-A1: tahap yang sudah dilalui dari cap waktu; dibatalkan/kadaluarsa menutup dengan pelaku + alasan. */
 export function StatusTimeline({ order: o }: { order: MerchantOrder }) {
   const langkah = TAHAP.filter(([k]) => o[k]).map(([k, label]) => ({
-    label: label ?? labelTahapSiap(o),
+    label: label ?? readyStepLabel(o),
     waktu: o[k] as string,
     detail: null as string | null,
     buruk: false,
@@ -49,7 +49,7 @@ export function StatusTimeline({ order: o }: { order: MerchantOrder }) {
             <div className="flex flex-col">
               <span className={cx("font-medium", l.buruk ? "text-danger" : "text-ink")}>{l.label}</span>
               <span className="font-mono text-sm text-ink-muted">
-                {formatTanggal(l.waktu)} {formatJam(l.waktu)}
+                {formatDate(l.waktu)} {formatTime(l.waktu)}
               </span>
               {l.detail && <span className="text-sm text-ink">{l.detail}</span>}
             </div>

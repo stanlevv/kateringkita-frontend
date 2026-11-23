@@ -1,11 +1,11 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { SettingsForm } from "@/app/(dashboard)/pengaturan/components/SettingsForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getPickupPoints } from "@/services/metaService";
-import { getProfile } from "@/services/profileService";
-import { getTables } from "@/services/mejaService";
-import { getPencairanSaya } from "@/services/pencairanService";
-import { requireMerchant } from "@/services/authService";
+import { getPickupPoints } from "@/services/meta.service";
+import { getProfile } from "@/services/profile.service";
+import { getTables } from "@/services/table.service";
+import { getMyPayouts } from "@/services/payout.service";
+import { requireMerchant } from "@/services/auth.service";
 
 const teks = (v: unknown) => (typeof v === "string" ? v : "");
 
@@ -20,7 +20,7 @@ export default async function PengaturanPage({
     getProfile(),
     getPickupPoints(),
     getTables(),
-    getPencairanSaya(),
+    getMyPayouts(),
     searchParams,
   ]);
   return (

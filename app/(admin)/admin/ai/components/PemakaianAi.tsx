@@ -3,11 +3,11 @@ import { Activity, CircleX, Coins, Timer } from "lucide-react";
 import { GrafikBatang } from "@/app/components/ui/GrafikBatang";
 import { KpiCard } from "@/app/components/ui/KpiCard";
 import { cx, fokus } from "@/app/components/ui/cx";
-import { formatJam, formatTanggal } from "@/lib/format";
-import type { FiturAi, PemakaianAi as Data } from "@/types/ai";
+import { formatTime, formatDate } from "@/lib/format";
+import type { AiFeature, AiUsage as Data } from "@/types/ai";
 
 export const RENTANG_AI = [7, 30] as const;
-const FITUR: Record<FiturAi, string> = {
+const FITUR: Record<AiFeature, string> = {
   asisten: "Asisten toko",
   rekomendasi: "Rekomendasi pembeli",
   uji: "Uji koneksi",
@@ -15,8 +15,8 @@ const FITUR: Record<FiturAi, string> = {
 const angka = (n: number) => n.toLocaleString("id-ID");
 const persen = (a: number, b: number) => `${b ? Math.round((a / b) * 100) : 0}%`;
 const ms = (v: number | null) => (v === null ? "-" : `${angka(v)} ms`);
-const tanggalPendek = (t: string) => formatTanggal(`${t}T12:00:00+07:00`).replace(/ \d{4}$/, "");
-const waktu = (iso: string) => `${formatTanggal(iso)}, ${formatJam(iso)}`;
+const tanggalPendek = (t: string) => formatDate(`${t}T12:00:00+07:00`).replace(/ \d{4}$/, "");
+const waktu = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`;
 const th = "px-3 py-2 font-medium";
 const td = "px-3 py-2";
 

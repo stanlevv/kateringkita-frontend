@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { orderAction } from "@/app/actions/orders";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { PaymentBadge } from "@/app/components/ui/PaymentBadge";
 import { StatusBadge } from "@/app/components/ui/StatusBadge";
 import { toast } from "@/app/components/ui/Toast";
 import { cx } from "@/app/components/ui/cx";
-import { formatJam, formatRupiah, formatTanggal, formatTelepon, tanggalWib } from "@/lib/format";
-import { statusViewPesanan, teksAksi, teksSukses, type AksiPesanan } from "@/lib/order-status";
+import { formatTime, formatRupiah, formatDate, formatPhone, wibDate } from "@/lib/format";
+import { orderStatusView, actionTexts, successText, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 import { ChatWaLink, galatAksi, StokDialog, TombolTolak } from "./galatAksi";
 import { RejectDialog } from "./RejectDialog";
@@ -34,17 +34,17 @@ const Bagian = ({ judul, children }: { judul: string; children: React.ReactNode 
 /** Tombol aksi sama dengan OrderCard (statusView), tetapi langsung terkirim tanpa jendela Batalkan. */
 function Aksi({ order }: { order: MerchantOrder }) {
   const router = useRouter();
-  const [kirim, setKirim] = useState<AksiPesanan | null>(null);
+  const [kirim, setKirim] = useState<OrderAction | null>(null);
   const [tolak, setTolak] = useState(false);
   const [stok, setStok] = useState(false);
-  const v = statusViewPesanan(order);
+  const v = orderStatusView(order);
 
-  async function jalankan(a: AksiPesanan, reason?: string) {
+  async function jalankan(a: OrderAction, reason?: string) {
     setKirim(a);
-    const r = await panggil(() => orderAction(order.code, a, reason));
+    const r = await callAction(() => orderAction(order.code, a, reason));
     if ("data" in r) {
       // Tombol tetap terkunci sampai status pada prop berubah (Aksi di-key status); jangan buka kunci di jeda refresh.
-      toast({ tone: "success", message: `Pesanan ${order.code} ${teksSukses(a, order)}` });
+      toast({ tone: "success", message: `Pesanan ${order.code} ${successText(a, order)}` });
     } else {
       setKirim(null);
       const g = galatAksi(r.error.code, a, r.error.message);
@@ -62,7 +62,7 @@ function Aksi({ order }: { order: MerchantOrder }) {
       {v.primary && (
         <Button
           loading={kirim === v.primary}
-          loadingText={teksAksi[v.primary].proses}
+          loadingText={actionTexts[v.primary].pending}
           disabled={!!kirim}
           onClick={() => void jalankan(v.primary!)}
         >
@@ -94,7 +94,7 @@ function Aksi({ order }: { order: MerchantOrder }) {
 
 /** PS-N2, PS-A1. `aksi={false}` untuk laci slip (dashboard sudah punya aksi di kartu). Selalu memakai prop; aksi sukses memuat ulang halaman. */
 export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; aksi?: boolean }) {
-  const hariPesan = tanggalWib(o.created_at);
+  const hariPesan = wibDate(o.created_at);
   return (
     <div className="flex flex-col gap-6 text-sm text-ink">
       <div className="flex flex-wrap items-center gap-2">
@@ -105,7 +105,7 @@ export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; a
       <Bagian judul="Pemesan">
         <p>
           <span className="font-semibold">{o.customer_name}</span>
-          {o.customer_phone && ` · ${formatTelepon(o.customer_phone)}`}
+          {o.customer_phone && ` · ${formatPhone(o.customer_phone)}`}
         </p>
         <p className="inline-flex items-center gap-1 text-ink-muted">
           <MapPin aria-hidden className="size-4" />
@@ -115,7 +115,7 @@ export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; a
           <p className="text-ink-muted">
             Waktu ambil:{" "}
             {o.pickup_at
-              ? `${tanggalWib(o.pickup_at) === hariPesan ? "" : `${formatTanggal(o.pickup_at)} `}${formatJam(o.pickup_at)}`
+              ? `${wibDate(o.pickup_at) === hariPesan ? "" : `${formatDate(o.pickup_at)} `}${formatTime(o.pickup_at)}`
               : "Secepatnya"}
           </p>
         )}

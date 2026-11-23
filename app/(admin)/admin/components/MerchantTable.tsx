@@ -10,16 +10,16 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Input, Select } from "@/app/components/ui/Input";
 import { Pagination } from "@/app/components/ui/Pagination";
 
-import { LIMIT_PENJUAL, STATUS_VERIFIKASI } from "@/services/adminMerchantService";
-import type { PenjualRingkas } from "@/types/admin";
-import { formatTelepon } from "@/lib/format";
-import { urlDengan } from "@/lib/url";
+import { LIMIT_MERCHANTS, VERIFICATION_STATUSES } from "@/services/admin-merchant.service";
+import type { MerchantSummary } from "@/types/admin";
+import { formatPhone } from "@/lib/format";
+import { buildUrl } from "@/lib/url";
 import { StatusVerifikasi } from "./StatusVerifikasi";
 
-const detail = (m: PenjualRingkas) => `/admin/penjual/${m.id}`;
-const buka = (m: PenjualRingkas) => (m.is_open ? "Buka" : "Tutup");
+const detail = (m: MerchantSummary) => `/admin/penjual/${m.id}`;
+const buka = (m: MerchantSummary) => (m.is_open ? "Buka" : "Tutup");
 
-const KOLOM: Column<PenjualRingkas>[] = [
+const KOLOM: Column<MerchantSummary>[] = [
   {
     key: "toko",
     header: "Toko",
@@ -30,7 +30,7 @@ const KOLOM: Column<PenjualRingkas>[] = [
     ),
   },
   { key: "pemilik", header: "Pemilik", cell: (m) => m.owner_name },
-  { key: "wa", header: "WhatsApp", cell: (m) => <span className="font-mono">{formatTelepon(m.wa_number)}</span> },
+  { key: "wa", header: "WhatsApp", cell: (m) => <span className="font-mono">{formatPhone(m.wa_number)}</span> },
   { key: "status", header: "Status", cell: (m) => <StatusVerifikasi status={m.verification_status} /> },
   { key: "buka", header: "Dapur", cell: buka },
   { key: "menu", header: "Menu aktif", align: "right", cell: (m) => m.menu_count },
@@ -43,7 +43,7 @@ export function MerchantTable({
   total,
   tersaring,
 }: {
-  rows: PenjualRingkas[];
+  rows: MerchantSummary[];
   page: number;
   total: number;
   tersaring: boolean;
@@ -74,7 +74,7 @@ export function MerchantTable({
     batalkanTimer();
     // Filter lain membawa ketikan q yang belum sempat dikirim.
     const semua = "q" in ubahan ? ubahan : { ...ubahan, q: terbaru.current.teks.trim() };
-    router.replace(urlDengan(path, terbaru.current.params, { ...semua, page: "" }), { scroll: false });
+    router.replace(buildUrl(path, terbaru.current.params, { ...semua, page: "" }), { scroll: false });
   }
 
   function ketik(v: string) {
@@ -114,7 +114,7 @@ export function MerchantTable({
             className="md:w-48"
           >
             <option value="">Semua</option>
-            {Object.entries(STATUS_VERIFIKASI).map(([k, s]) => (
+            {Object.entries(VERIFICATION_STATUSES).map(([k, s]) => (
               <option key={k} value={k}>
                 {s.label}
               </option>
@@ -166,7 +166,7 @@ export function MerchantTable({
                 >
                   <span className="font-semibold text-ink">{m.business_name}</span>
                   <span className="text-sm text-ink-muted">
-                    {m.owner_name} · {formatTelepon(m.wa_number)}
+                    {m.owner_name} · {formatPhone(m.wa_number)}
                   </span>
                   <span className="flex flex-wrap items-center justify-between gap-2">
                     <StatusVerifikasi status={m.verification_status} />
@@ -181,8 +181,8 @@ export function MerchantTable({
           <Pagination
             page={page}
             total={total}
-            limit={LIMIT_PENJUAL}
-            hrefFor={(p) => urlDengan(path, params.toString(), { page: String(p) }, ["1"])}
+            limit={LIMIT_MERCHANTS}
+            hrefFor={(p) => buildUrl(path, params.toString(), { page: String(p) }, ["1"])}
           />
         </>
       )}

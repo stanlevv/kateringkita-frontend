@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { requireMerchant } from "@/services/authService";
-import { getTables } from "@/services/mejaService";
-import { getProfile } from "@/services/profileService";
+import { requireMerchant } from "@/services/auth.service";
+import { getTables } from "@/services/table.service";
+import { getProfile } from "@/services/profile.service";
 import { CetakQr } from "./CetakQr";
 
 export const metadata: Metadata = { title: "Cetak QR meja", robots: { index: false } };

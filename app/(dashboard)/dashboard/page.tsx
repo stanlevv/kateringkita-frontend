@@ -1,14 +1,14 @@
 import { DashboardLive } from "@/app/(dashboard)/dashboard/components/DashboardLive";
-import { getMenus } from "@/services/menuService";
-import { getAntrean } from "@/services/orderService";
-import { getProfile } from "@/services/profileService";
-import { requireMerchant } from "@/services/authService";
+import { getMenus } from "@/services/menu.service";
+import { getQueue } from "@/services/order.service";
+import { getProfile } from "@/services/profile.service";
+import { requireMerchant } from "@/services/auth.service";
 
 // M-03, M-04, M-05, M-08 — Dashboard live v3 (brief docs/design/dashboard-v3-brief.md).
 // Selalu merender DashboardLive: galat saat polling memakai data terakhir di klien (DB-E5), bukan layar gagal.
 export default async function DashboardPage() {
   await requireMerchant();
-  const [orders, menus, profil] = await Promise.all([getAntrean(), getMenus(), getProfile()]);
+  const [orders, menus, profil] = await Promise.all([getQueue(), getMenus(), getProfile()]);
   if ("error" in orders || "error" in menus || "error" in profil) {
     return <DashboardLive data={null} galat />;
   }

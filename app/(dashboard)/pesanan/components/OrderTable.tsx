@@ -12,9 +12,9 @@ import { Input, Select } from "@/app/components/ui/Input";
 import { PaymentBadge } from "@/app/components/ui/PaymentBadge";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { StatusBadge } from "@/app/components/ui/StatusBadge";
-import { formatJam, formatRupiah, hariIniWib } from "@/lib/format";
-import { LIMIT_PESANAN, ringkasItem, STATUS_FILTER } from "@/lib/order-filter";
-import { urlDengan } from "@/lib/url";
+import { formatTime, formatRupiah, todayWib } from "@/lib/format";
+import { LIMIT_ORDERS, summarizeItems, STATUS_FILTER } from "@/lib/order-filter";
+import { buildUrl } from "@/lib/url";
 import type { MerchantOrder } from "@/types/order";
 
 const detail = (o: MerchantOrder) => `/pesanan/${encodeURIComponent(o.code)}`;
@@ -29,9 +29,9 @@ const KOLOM: Column<MerchantOrder>[] = [
       </Link>
     ),
   },
-  { key: "waktu", header: "Waktu", cell: (o) => <span className="font-mono">{formatJam(o.created_at)}</span> },
+  { key: "waktu", header: "Waktu", cell: (o) => <span className="font-mono">{formatTime(o.created_at)}</span> },
   { key: "pemesan", header: "Pemesan", cell: (o) => o.customer_name },
-  { key: "item", header: "Item", cell: (o) => <span className="block max-w-64 truncate">{ringkasItem(o)}</span> },
+  { key: "item", header: "Item", cell: (o) => <span className="block max-w-64 truncate">{summarizeItems(o)}</span> },
   { key: "total", header: "Total", align: "right", cell: (o) => formatRupiah(o.total) },
   {
     key: "bayar",
@@ -46,14 +46,14 @@ export function OrderTable({ rows, total, galat }: { rows: MerchantOrder[]; tota
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
-  const [hariIni] = useState(hariIniWib);
+  const [hariIni] = useState(todayWib);
 
   const q = params.get("q") ?? "";
   const status = STATUS_FILTER.find((s) => s.id === params.get("status"))?.id;
   const tanggal = /^\d{4}-\d{2}-\d{2}$/.test(params.get("tanggal") ?? "") ? params.get("tanggal")! : hariIni;
   const halaman = Math.max(1, Math.floor(Number(params.get("page"))) || 1);
 
-  const url = (ubahan: Record<string, string>) => urlDengan(path, params.toString(), ubahan);
+  const url = (ubahan: Record<string, string>) => buildUrl(path, params.toString(), ubahan);
   const ke = (ubahan: Record<string, string>) => router.replace(url({ ...ubahan, page: "" }), { scroll: false });
 
   function cari(e: FormEvent<HTMLFormElement>) {
@@ -149,10 +149,10 @@ export function OrderTable({ rows, total, galat }: { rows: MerchantOrder[]; tota
                 >
                   <span className="flex items-center justify-between gap-2">
                     <span className="font-mono font-semibold text-ink">{o.code}</span>
-                    <span className="font-mono text-sm text-ink-muted">{formatJam(o.created_at)}</span>
+                    <span className="font-mono text-sm text-ink-muted">{formatTime(o.created_at)}</span>
                   </span>
                   <span className="text-ink">{o.customer_name}</span>
-                  <span className="text-sm text-ink-muted">{ringkasItem(o)}</span>
+                  <span className="text-sm text-ink-muted">{summarizeItems(o)}</span>
                   <span className="flex flex-wrap items-center justify-between gap-2">
                     <StatusBadge order={o} />
                     <span className="font-mono font-semibold text-ink">{formatRupiah(o.total)}</span>
@@ -165,7 +165,7 @@ export function OrderTable({ rows, total, galat }: { rows: MerchantOrder[]; tota
           <Pagination
             page={halaman}
             total={total}
-            limit={LIMIT_PESANAN}
+            limit={LIMIT_ORDERS}
             hrefFor={(p) => url({ page: p > 1 ? String(p) : "" })}
           />
         </>

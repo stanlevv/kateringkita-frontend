@@ -5,7 +5,7 @@ const redirect = vi.fn((url: string) => {
 });
 vi.mock("next/navigation", () => ({ redirect: (u: string) => redirect(u) }));
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/auth.service", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),

@@ -1,38 +1,40 @@
-import { stokMenu } from "./dashboard";
+import { menuStockLevel } from "./dashboard";
 import type { MerchantMenu } from "@/types/menu";
 
-export type StatusMenu = "semua" | "aktif" | "menipis" | "habis" | "nonaktif";
-export type FilterMenu = { q: string; kategori: string; status: StatusMenu };
+export type MenuStatusFilter = "semua" | "aktif" | "menipis" | "habis" | "nonaktif";
+export type MenuFilter = { q: string; category: string; status: MenuStatusFilter };
 
-export const STATUS_MENU: StatusMenu[] = ["semua", "aktif", "menipis", "habis", "nonaktif"];
+export const MENU_STATUS_FILTERS: MenuStatusFilter[] = ["semua", "aktif", "menipis", "habis", "nonaktif"];
 
 // "Aktif" = semua menu aktif, jadi jumlahnya tumpang tindih dengan Menipis/Habis (mirip API.md status=active|low|sold_out|inactive).
-const cocokStatus: Record<StatusMenu, (m: MerchantMenu) => boolean> = {
+const matchesStatus: Record<MenuStatusFilter, (menu: MerchantMenu) => boolean> = {
   semua: () => true,
-  aktif: (m) => m.is_active,
-  menipis: (m) => m.is_active && stokMenu(m) === "menipis",
-  habis: (m) => m.is_active && stokMenu(m) === "habis",
-  nonaktif: (m) => !m.is_active,
+  aktif: (menu) => menu.is_active,
+  menipis: (menu) => menu.is_active && menuStockLevel(menu) === "menipis",
+  habis: (menu) => menu.is_active && menuStockLevel(menu) === "habis",
+  nonaktif: (menu) => !menu.is_active,
 };
 
-const tanpaStatus = (menus: MerchantMenu[], f: Pick<FilterMenu, "q" | "kategori">) => {
-  const q = f.q.trim().toLowerCase();
+const matchSearchAndCategory = (menus: MerchantMenu[], filter: Pick<MenuFilter, "q" | "category">) => {
+  const query = filter.q.trim().toLowerCase();
   return menus.filter(
-    (m) => (!q || m.name.toLowerCase().includes(q)) && (!f.kategori || m.category.slug === f.kategori),
+    (menu) =>
+      (!query || menu.name.toLowerCase().includes(query)) &&
+      (!filter.category || menu.category.slug === filter.category),
   );
 };
 
-export const saring = (menus: MerchantMenu[], f: FilterMenu) => tanpaStatus(menus, f).filter(cocokStatus[f.status]);
+export const filterMenus = (menus: MerchantMenu[], filter: MenuFilter) =>
+  matchSearchAndCategory(menus, filter).filter(matchesStatus[filter.status]);
 
 /** Jumlah per tab, mengikuti pencarian dan kategori (bukan tab terpilih). */
-export function hitungTab(menus: MerchantMenu[]): Record<StatusMenu, number> {
-  return Object.fromEntries(STATUS_MENU.map((s) => [s, menus.filter(cocokStatus[s]).length])) as Record<
-    StatusMenu,
-    number
-  >;
+export function countMenuTabs(menus: MerchantMenu[]): Record<MenuStatusFilter, number> {
+  return Object.fromEntries(
+    MENU_STATUS_FILTERS.map((status) => [status, menus.filter(matchesStatus[status]).length]),
+  ) as Record<MenuStatusFilter, number>;
 }
 
-export const saringQK = tanpaStatus;
+export const filterBySearchAndCategory = matchSearchAndCategory;
 
-export const marginPersen = ({ price, hpp }: Pick<MerchantMenu, "price" | "hpp">) =>
+export const marginPercent = ({ price, hpp }: Pick<MerchantMenu, "price" | "hpp">) =>
   price > 0 ? Math.round(((price - hpp) / price) * 100) : 0;

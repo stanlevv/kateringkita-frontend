@@ -8,7 +8,7 @@ vi.mock("@/app/actions/banner", () => ({
   simpanBannerToko: vi.fn(),
   hapusBannerToko: vi.fn().mockResolvedValue({ data: { id: 1 } }),
 }));
-vi.mock("@/lib/unggah", () => ({ unggahFoto: vi.fn() }));
+vi.mock("@/lib/upload", () => ({ uploadPhoto: vi.fn() }));
 import type { Banner } from "@/types/banner";
 import { BannerToko } from "./BannerToko";
 

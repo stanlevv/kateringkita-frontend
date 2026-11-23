@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { cekRentang, hariSebelum } from "@/lib/laporan";
+import { validateRange, daysBefore } from "@/lib/report";
 import { cx, fokus } from "@/app/components/ui/cx";
 import { Input } from "@/app/components/ui/Input";
 
@@ -22,8 +22,8 @@ export function RangePicker({
   const path = usePathname();
   const preset = [
     { label: "Hari ini", dari: hariIni },
-    { label: "7 hari", dari: hariSebelum(hariIni, 6) },
-    { label: "30 hari", dari: hariSebelum(hariIni, 29) },
+    { label: "7 hari", dari: daysBefore(hariIni, 6) },
+    { label: "30 hari", dari: daysBefore(hariIni, 29) },
   ];
   const aktif = preset.find((p) => p.dari === dari && sampai === hariIni)?.label;
   const [kustom, setKustom] = useState(!aktif || !!galat);
@@ -36,7 +36,7 @@ export function RangePicker({
   function ubah(bagian: "dari" | "sampai", nilai: string) {
     const baru = { ...isi, [bagian]: nilai };
     setIsi(baru);
-    const g = cekRentang(baru.dari, baru.sampai, hariIni);
+    const g = validateRange(baru.dari, baru.sampai, hariIni);
     setGalatLokal(g);
     if (!g) ke(baru.dari, baru.sampai);
   }

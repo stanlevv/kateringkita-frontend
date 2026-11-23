@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 const saveMenu = vi.fn();
-const unggahFoto = vi.fn();
+const uploadPhoto = vi.fn();
 vi.mock("@/app/actions/menus", () => ({ saveMenu: (...a: unknown[]) => saveMenu(...a) }));
-vi.mock("@/lib/unggah", () => ({ unggahFoto: (...a: unknown[]) => unggahFoto(...a) }));
+vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { categories } from "@/lib/fixtures/meta";
 import { menus } from "@/lib/fixtures/menus";
@@ -40,8 +40,8 @@ const pilihFoto = () =>
 beforeEach(() => {
   push.mockReset();
   saveMenu.mockReset();
-  unggahFoto.mockReset();
-  unggahFoto.mockResolvedValue({ data: { upload_url: null, public_url: null } });
+  uploadPhoto.mockReset();
+  uploadPhoto.mockResolvedValue({ data: { upload_url: null, public_url: null } });
   URL.createObjectURL = vi.fn(() => "blob:x");
   URL.revokeObjectURL = vi.fn();
 });
@@ -181,11 +181,11 @@ describe("MF-E2/E3/A2 foto", () => {
       target: { files: [new File(["x"], "a.gif", { type: "image/gif" })] },
     });
     expect(screen.getByText("Format foto harus JPG, PNG, atau WebP.")).toBeInTheDocument();
-    expect(unggahFoto).not.toHaveBeenCalled();
+    expect(uploadPhoto).not.toHaveBeenCalled();
   });
   it("MF-A2 progres selama unggah, tombol simpan menunggu", async () => {
     let selesai!: (v: unknown) => void;
-    unggahFoto.mockReturnValue(
+    uploadPhoto.mockReturnValue(
       new Promise((r) => {
         selesai = r;
       }),
@@ -193,14 +193,14 @@ describe("MF-E2/E3/A2 foto", () => {
     tampil();
     pilihFoto();
     expect(await screen.findByText("Mengunggah foto…")).toBeInTheDocument();
-    expect(unggahFoto.mock.calls[0][1]).toBe("menu");
-    expect(unggahFoto.mock.calls[0][0]).toBeInstanceOf(File);
+    expect(uploadPhoto.mock.calls[0][1]).toBe("menu");
+    expect(uploadPhoto.mock.calls[0][0]).toBeInstanceOf(File);
     expect(screen.getByRole("button", { name: "Simpan menu" })).toBeDisabled();
     await act(async () => selesai({ data: { upload_url: null, public_url: null } }));
     expect(screen.getByRole("button", { name: "Simpan menu" })).toBeEnabled();
   });
   it("MF-E3 unggah gagal -> pesan + ulang; menu tetap bisa disimpan tanpa foto", async () => {
-    unggahFoto.mockResolvedValueOnce({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
+    uploadPhoto.mockResolvedValueOnce({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
     saveMenu.mockResolvedValue({ data: menus()[0] });
     tampil();
     await isiValid();
@@ -211,7 +211,7 @@ describe("MF-E2/E3/A2 foto", () => {
   });
   it("unggahan lama yang terlambat tidak menimpa foto yang dipilih kemudian", async () => {
     const tunda: ((v: unknown) => void)[] = [];
-    unggahFoto.mockImplementation(() => new Promise((r) => tunda.push(r)));
+    uploadPhoto.mockImplementation(() => new Promise((r) => tunda.push(r)));
     let n = 0;
     URL.createObjectURL = vi.fn(() => `blob:${++n}`);
     saveMenu.mockResolvedValue({ data: menus()[0] });
@@ -227,7 +227,7 @@ describe("MF-E2/E3/A2 foto", () => {
   });
   it("Hapus foto saat unggah berjalan: respons terlambat tidak menghidupkan foto lagi", async () => {
     let selesai!: (v: unknown) => void;
-    unggahFoto.mockReturnValue(
+    uploadPhoto.mockReturnValue(
       new Promise((r) => {
         selesai = r;
       }),
@@ -243,14 +243,14 @@ describe("MF-E2/E3/A2 foto", () => {
     expect(saveMenu).toHaveBeenCalledWith(null, expect.objectContaining({ image_url: null }));
   });
   it("mode ubah: unggahan foto baru gagal -> pratinjau kembali ke foto tersimpan", async () => {
-    unggahFoto.mockResolvedValue({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
+    uploadPhoto.mockResolvedValue({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
     tampil({ menu: { ...menus()[0], image_url: "https://x/lama.png" } });
     pilihFoto();
     await screen.findByText("Foto gagal diunggah. Coba lagi");
     expect(screen.getByAltText("Pratinjau foto menu")).toHaveAttribute("src", expect.stringContaining("lama.png"));
   });
   it("sukses -> simpan mengirim image_url = public_url", async () => {
-    unggahFoto.mockResolvedValue({ data: { public_url: "https://r2.test/menu/a.png" } });
+    uploadPhoto.mockResolvedValue({ data: { public_url: "https://r2.test/menu/a.png" } });
     saveMenu.mockResolvedValue({ data: menus()[0] });
     tampil();
     await isiValid();
@@ -260,7 +260,7 @@ describe("MF-E2/E3/A2 foto", () => {
     expect(saveMenu).toHaveBeenCalledWith(null, expect.objectContaining({ image_url: "https://r2.test/menu/a.png" }));
   });
   it("mode ubah: unggah gagal -> simpan tetap mengirim image_url lama", async () => {
-    unggahFoto.mockResolvedValue({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
+    uploadPhoto.mockResolvedValue({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
     saveMenu.mockResolvedValue({ data: menus()[0] });
     tampil({ menu: { ...menus()[0], image_url: "https://x/lama.png" } });
     pilihFoto();
@@ -269,7 +269,7 @@ describe("MF-E2/E3/A2 foto", () => {
     expect(saveMenu).toHaveBeenCalledWith(menus()[0].id, expect.objectContaining({ image_url: "https://x/lama.png" }));
   });
   it("pesan galat dari server ditampilkan apa adanya (bukan pesan tetap)", async () => {
-    unggahFoto.mockResolvedValue({
+    uploadPhoto.mockResolvedValue({
       error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
     });
     tampil();
@@ -296,11 +296,11 @@ describe("MF-E2/E3/A2 foto", () => {
     ).toBeInTheDocument();
   });
   it("tombol ulang mencoba lagi", async () => {
-    unggahFoto.mockResolvedValueOnce({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
+    uploadPhoto.mockResolvedValueOnce({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
     tampil();
     pilihFoto();
     await userEvent.click(await screen.findByRole("button", { name: "Coba unggah lagi" }));
-    expect(unggahFoto).toHaveBeenCalledTimes(2);
+    expect(uploadPhoto).toHaveBeenCalledTimes(2);
     expect(screen.queryByText("Foto gagal diunggah. Coba lagi")).toBeNull();
   });
 });

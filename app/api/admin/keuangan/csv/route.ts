@@ -1,14 +1,14 @@
-import { getRekapKeuangan } from "@/services/adminKeuanganService";
-import { cekRentang, dariSitusLain } from "@/lib/laporan";
-import { buatCsvKeuangan } from "@/lib/keuangan";
-import { hariIniWib } from "@/lib/format";
-import { getSession } from "@/services/authService";
+import { getFinanceSummary } from "@/services/admin-finance.service";
+import { validateRange, isCrossSiteRequest } from "@/lib/report";
+import { createFinanceCsv } from "@/lib/finance";
+import { todayWib } from "@/lib/format";
+import { getSession } from "@/services/auth.service";
 
 const galat = (status: number, message: string) => Response.json({ message }, { status });
 
 // F20: unduhan CSV rekap keuangan; pola sama dengan /api/laporan/csv (tanpa sesi admin = 401, bukan redirect)
 export async function GET(req: Request) {
-  if (dariSitusLain(req)) return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
+  if (isCrossSiteRequest(req)) return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
   let session;
   try {
     session = await getSession();
@@ -20,13 +20,13 @@ export async function GET(req: Request) {
   const p = new URL(req.url).searchParams;
   const dari = p.get("dari") ?? "";
   const sampai = p.get("sampai") ?? "";
-  const salah = cekRentang(dari, sampai, hariIniWib());
+  const salah = validateRange(dari, sampai, todayWib());
   if (salah) return galat(400, salah);
 
-  const r = await getRekapKeuangan({ from: dari, to: sampai });
+  const r = await getFinanceSummary({ from: dari, to: sampai });
   if ("error" in r) return galat(500, r.error.message);
 
-  return new Response(`﻿${buatCsvKeuangan(r.data)}`, {
+  return new Response(`﻿${createFinanceCsv(r.data)}`, {
     headers: {
       "Cache-Control": "no-store",
       "Content-Type": "text/csv; charset=utf-8",

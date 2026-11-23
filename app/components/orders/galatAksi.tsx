@@ -2,18 +2,18 @@ import { MessageCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { cx, fokus } from "@/app/components/ui/cx";
-import { teksAksi, type AksiPesanan } from "@/lib/order-status";
+import { actionTexts, type OrderAction } from "@/lib/order-status";
 
 /** Cara menampilkan galat orderAction; dipakai antrean dashboard dan detail pesanan. */
 export function galatAksi(
   kode: string,
-  aksi: AksiPesanan,
+  aksi: OrderAction,
   pesan?: string,
 ): { jenis: "stok" } | { jenis: "toast"; tone: "warning" | "danger"; message: string; muatUlang: boolean } {
   if (kode === "OUT_OF_STOCK") return { jenis: "stok" };
   if (kode === "CONFLICT")
     return { jenis: "toast", tone: "warning", message: pesan || "Pesanan sudah berubah status", muatUlang: true };
-  return { jenis: "toast", tone: "danger", message: teksAksi[aksi].gagal, muatUlang: false };
+  return { jenis: "toast", tone: "danger", message: actionTexts[aksi].failure, muatUlang: false };
 }
 
 /** M-04, M-11: lewat Route Handler yang mengisi templat pesan toko lalu membuka wa.me. */

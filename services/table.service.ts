@@ -1,8 +1,8 @@
 import "server-only";
-import { apiFetch, hasil, merchantFetch } from "@/services/api";
-import type { Meja, MenuMeja } from "@/types/meja";
+import { apiFetch, toResult, merchantFetch } from "@/services/api";
+import type { Table, TableMenu } from "@/types/table";
 
 // F21: daftar meja toko (penjual) dan menu meja (publik, tanpa sesi)
-export const getTables = async () => hasil(await merchantFetch<Meja[]>("/tables"));
+export const getTables = async () => toResult(await merchantFetch<Table[]>("/tables"));
 
-export const getMenuMeja = (token: string) => apiFetch<MenuMeja>(`/tables/${encodeURIComponent(token)}`);
+export const getTableMenu = (token: string) => apiFetch<TableMenu>(`/tables/${encodeURIComponent(token)}`);

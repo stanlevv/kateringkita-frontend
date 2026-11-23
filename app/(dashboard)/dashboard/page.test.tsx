@@ -16,11 +16,11 @@ import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const getSkenario = vi.fn();
+const getScenario = vi.fn();
 const refresh = vi.fn();
 const setStoreOpen = vi.fn();
-vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
-vi.mock("@/services/authService", () => ({
+vi.mock("@/lib/scenario", () => ({ getScenario: () => getScenario() }));
+vi.mock("@/services/auth.service", () => ({
   requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: null }),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }), usePathname: () => "/dashboard" }));
@@ -29,14 +29,14 @@ vi.mock("@/app/actions/orders", () => ({ orderAction: vi.fn() }));
 vi.mock("@/app/actions/menus", () => ({ adjustQuota: vi.fn() }));
 import { StoreStatusProvider } from "@/app/components/shell/StoreStatus";
 import { Toaster } from "@/app/components/ui/Toast";
-import { getProfile } from "@/services/profileService";
-import { formatRupiah, tanggalWib } from "@/lib/format";
+import { getProfile } from "@/services/profile.service";
+import { formatRupiah, wibDate } from "@/lib/format";
 import { menus as fixMenus } from "@/lib/fixtures/menus";
 import { orders as fixOrders } from "@/lib/fixtures/orders";
 import DashboardPage from "./page";
 
 async function tampil(skenario: string | null) {
-  getSkenario.mockResolvedValue(skenario);
+  getScenario.mockResolvedValue(skenario);
   const p = await getProfile();
   const store = "data" in p ? { isOpen: p.data.is_open, buka: p.data.open_time, tutup: p.data.close_time } : null;
   const ui = await DashboardPage();
@@ -77,9 +77,9 @@ describe("Dashboard berisi (brief §3)", () => {
   });
   it("D2: KPI dihitung dari antrean & kuota nyata, bukan data contoh", async () => {
     await tampil(null);
-    const hari = tanggalWib(new Date().toISOString());
+    const hari = wibDate(new Date().toISOString());
     const omzet = fixOrders()
-      .filter((o) => o.status === "completed" && tanggalWib(o.completed_at!) === hari)
+      .filter((o) => o.status === "completed" && wibDate(o.completed_at!) === hari)
       .reduce((a, o) => a + o.total, 0);
     expect(omzet).toBeGreaterThan(0);
     expect(kpi("Omzet hari ini")).toHaveTextContent(formatRupiah(omzet));

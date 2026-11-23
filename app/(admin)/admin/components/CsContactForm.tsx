@@ -7,7 +7,7 @@ import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 
 /** Kontak CS (WhatsApp) yang tampil di aplikasi pembeli lewat GET /meta/settings. Kosong = belum diatur. */
 export function CsContactForm({ nilai }: { nilai: string }) {
@@ -23,7 +23,7 @@ export function CsContactForm({ nilai }: { nilai: string }) {
     setGalat(undefined);
     if (nomor === nilai) return void toast({ tone: "info", message: "Tidak ada perubahan" });
     setMenyimpan(true);
-    const r = await panggil(() => simpanKontakCs(nomor));
+    const r = await callAction(() => simpanKontakCs(nomor));
     setMenyimpan(false);
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: nomor ? "Kontak CS disimpan" : "Kontak CS dikosongkan" });

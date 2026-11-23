@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { merchantFetch } from "@/services/api";
-import { requireMerchant } from "@/services/authService";
+import { requireMerchant } from "@/services/auth.service";
 
 // M-04, M-11: tautan WA dibangun backend dari templat toko; hanya wa.me yang diikuti (cegah redirect terbuka).
 export async function GET(_req: Request, { params }: { params: Promise<{ code: string }> }) {

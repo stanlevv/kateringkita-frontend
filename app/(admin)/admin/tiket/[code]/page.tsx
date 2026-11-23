@@ -3,10 +3,10 @@ import { GagalMuat } from "@/app/components/GagalMuat";
 import { MuatUlangBerkala } from "@/app/components/MuatUlangBerkala";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { LinkButton } from "@/app/components/ui/LinkButton";
-import { kodeTiketValid } from "@/services/adminTiketService";
+import { isValidTicketCode } from "@/services/admin-ticket.service";
 import { adminFetch } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
-import type { DetailTiket } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
+import type { TicketDetail } from "@/types/admin";
 import { TiketDetail } from "../components/TiketDetail";
 import { TutupTiket } from "../components/TutupTiket";
 
@@ -14,8 +14,8 @@ import { TutupTiket } from "../components/TutupTiket";
 export default async function TiketDetailPage({ params }: { params: Promise<{ code: string }> }) {
   await requireAdmin();
   const { code } = await params;
-  if (!kodeTiketValid(code)) notFound();
-  const res = await adminFetch<DetailTiket>(`/tickets/${encodeURIComponent(code)}`);
+  if (!isValidTicketCode(code)) notFound();
+  const res = await adminFetch<TicketDetail>(`/tickets/${encodeURIComponent(code)}`);
   if (res.status === 404) notFound();
   const kembali = (
     <LinkButton href="/admin/tiket" variant="secondary">

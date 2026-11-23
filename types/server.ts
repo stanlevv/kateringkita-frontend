@@ -1,10 +1,10 @@
 // F23 dashboard server (kontrak backend: /admin/server-status, /admin/server-logs)
-export type LevelLog = "error" | "slow";
+export type LogLevel = "error" | "slow";
 
-export type LogServer = {
+export type ServerLog = {
   id: number;
   request_id: string | null;
-  level: LevelLog;
+  level: LogLevel;
   method: string;
   path: string;
   status: number;
@@ -14,13 +14,13 @@ export type LogServer = {
   created_at: string;
 };
 
-export type JamServer = { jam: string; error: number; lambat: number };
+export type HourlyServerStats = { jam: string; error: number; lambat: number };
 
-export type StatusServer = {
+export type ServerStatus = {
   uptime_s: number;
   memori_mb: number;
   node: string;
   db: { ok: boolean; latency_ms: number; migrasi_terakhir: string | null };
   ringkas_24j: { error: number; lambat: number };
-  per_jam: JamServer[];
+  per_jam: HourlyServerStats[];
 };

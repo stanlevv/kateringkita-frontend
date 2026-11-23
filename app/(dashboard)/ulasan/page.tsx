@@ -2,10 +2,10 @@ import { GagalMuat } from "@/app/components/GagalMuat";
 import { MenuRatings, RatingSummary } from "@/app/(dashboard)/ulasan/components/RatingSummary";
 import { ReviewList } from "@/app/(dashboard)/ulasan/components/ReviewList";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getMenus } from "@/services/menuService";
-import { getReviews } from "@/services/reviewService";
-import { requireMerchant } from "@/services/authService";
-import { saringUlasan } from "@/lib/ulasan";
+import { getMenus } from "@/services/menu.service";
+import { getReviews } from "@/services/review.service";
+import { requireMerchant } from "@/services/auth.service";
+import { filterReviews } from "@/lib/review";
 
 const angka = (v: string | string[] | undefined, min: number, maks: number) => {
   const n = typeof v === "string" && /^\d{1,9}$/.test(v) ? Number(v) : NaN;
@@ -31,9 +31,9 @@ export default async function UlasanPage({
     );
   }
   const filter = { menu: angka(q.menu, 1, 999_999_999), bintang: angka(q.bintang, 1, 5) };
-  const { rows, total } = saringUlasan(ulasan.data, filter, 1);
+  const { rows, total } = filterReviews(ulasan.data, filter, 1);
   const halaman = Math.min(angka(q.page, 1, 99_999) ?? 1, Math.max(1, Math.ceil(total / 10)));
-  const kini = halaman === 1 ? { rows, total } : saringUlasan(ulasan.data, filter, halaman);
+  const kini = halaman === 1 ? { rows, total } : filterReviews(ulasan.data, filter, halaman);
   const daftarMenu = "data" in menus ? menus.data.map((m) => ({ id: m.id, name: m.name })) : [];
 
   return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { langganan, mejaTerakhir } from "@/lib/meja-simpan";
+import { subscribe, readLastTable } from "@/lib/table-storage";
 import { MejaPesan } from "./MejaPesan";
 import { PindaiQr } from "./PindaiQr";
 
@@ -13,7 +13,7 @@ const mintaPindai = () => new URLSearchParams(window.location.search).has("pinda
 export function MejaTerakhir() {
   const router = useRouter();
   // undefined = render server (belum tahu), null = belum pernah scan
-  const meja = useSyncExternalStore(langganan, mejaTerakhir, () => undefined);
+  const meja = useSyncExternalStore(subscribe, readLastTable, () => undefined);
   const pindai = useSyncExternalStore(tanpaLangganan, mintaPindai, () => false);
   useEffect(() => {
     if (meja && !pindai) router.replace(`/meja/${meja}`);

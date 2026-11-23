@@ -8,12 +8,12 @@ import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { formatRupiah } from "@/lib/format";
-import type { RefundMenunggu } from "@/types/pencairan";
+import type { PendingRefund } from "@/types/payout";
 
 /** F26: dana dikembalikan di luar aplikasi (dashboard Midtrans atau transfer), lalu ditandai di sini dengan nomor referensinya. */
-export function TandaiRefund({ refund }: { refund: RefundMenunggu }) {
+export function TandaiRefund({ refund }: { refund: PendingRefund }) {
   const router = useRouter();
   const [buka, setBuka] = useState(false);
   const [referensi, setReferensi] = useState("");
@@ -24,7 +24,7 @@ export function TandaiRefund({ refund }: { refund: RefundMenunggu }) {
     e.preventDefault();
     if (sibuk) return;
     setSibuk(true);
-    const h = await panggil(() => tandaiRefund(refund.code, referensi));
+    const h = await callAction(() => tandaiRefund(refund.code, referensi));
     setSibuk(false);
     if ("error" in h) {
       if (h.error.fields?.reference) return setGalat(h.error.fields.reference[0]);

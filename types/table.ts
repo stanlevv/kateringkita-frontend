@@ -2,9 +2,9 @@ import type { MenuOption } from "@/types/menu";
 import type { OrderItem, OrderStatus, PaymentStatus } from "@/types/order";
 
 // F21 pesan dari meja (kontrak backend: GET /tables/:token, /guest/orders/:code, /merchant/tables)
-export type Meja = { id: number; label: string; token: string; is_active: boolean };
+export type Table = { id: number; label: string; token: string; is_active: boolean };
 
-export type MenuMejaItem = {
+export type TableMenuItem = {
   id: number;
   name: string;
   image_url: string | null;
@@ -20,7 +20,7 @@ export type MenuMejaItem = {
   options: MenuOption[];
 };
 
-export type MenuMeja = {
+export type TableMenu = {
   table: { label: string };
   merchant: {
     slug: string;
@@ -31,10 +31,10 @@ export type MenuMeja = {
     open_time: string;
     close_time: string;
   };
-  menus: MenuMejaItem[];
+  menus: TableMenuItem[];
 };
 
-export type PesananMeja = {
+export type TableOrder = {
   code: string;
   status: OrderStatus;
   payment_status: PaymentStatus;

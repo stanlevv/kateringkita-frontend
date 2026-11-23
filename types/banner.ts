@@ -1,5 +1,5 @@
 // Banner beranda mobile (GET /merchant/banners, GET /admin/banners)
-export type StatusBanner = "menunggu" | "disetujui" | "ditolak" | "nonaktif";
+export type BannerStatus = "menunggu" | "disetujui" | "ditolak" | "nonaktif";
 
 export type Banner = {
   id: number;
@@ -8,7 +8,7 @@ export type Banner = {
   target: "promo" | "merchant" | "none";
   promo: { id: number; code: string } | null;
   merchant: { id: number; slug: string; business_name: string } | null;
-  status: StatusBanner;
+  status: BannerStatus;
   catatan: string | null;
   starts_at: string;
   ends_at: string;
@@ -18,4 +18,4 @@ export type Banner = {
 };
 
 /** Pilihan voucher di form banner. */
-export type PilihanVoucher = { id: number; code: string; label: string };
+export type VoucherOption = { id: number; code: string; label: string };

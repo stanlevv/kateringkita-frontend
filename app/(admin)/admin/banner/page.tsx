@@ -1,8 +1,8 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { pilihanVoucher } from "@/lib/pilihan-voucher";
+import { voucherOptions } from "@/lib/voucher-options";
 import { adminFetch } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
+import { requireAdmin } from "@/services/auth.service";
 import type { Banner } from "@/types/banner";
 import type { Promo } from "@/types/promo";
 import { BannerAdmin } from "./components/BannerAdmin";
@@ -12,7 +12,7 @@ export default async function BannerAdminPage() {
   const session = await requireAdmin();
   const [banners, promos] = await Promise.all([adminFetch<Banner[]>("/banners"), adminFetch<Promo[]>("/promos")]);
   // eslint-disable-next-line react-hooks/purity -- daftar voucher yang belum berakhir saat halaman dimuat
-  const vouchers = promos.ok && promos.data ? pilihanVoucher(promos.data, Date.now()) : [];
+  const vouchers = promos.ok && promos.data ? voucherOptions(promos.data, Date.now()) : [];
   return (
     <PageHeader
       title="Banner"

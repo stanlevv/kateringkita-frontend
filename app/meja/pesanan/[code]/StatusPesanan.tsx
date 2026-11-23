@@ -6,10 +6,10 @@ import { Check, ChefHat, CircleX, Clock, PartyPopper, Utensils } from "lucide-re
 import { bayarPesananMeja, statusPesananMeja } from "@/app/actions/meja";
 import { Button } from "@/app/components/ui/Button";
 import { cx, fokus } from "@/app/components/ui/cx";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { formatRupiah } from "@/lib/format";
-import { langganan, tamuMentah, uraiTamu } from "@/lib/meja-simpan";
-import type { PesananMeja } from "@/types/meja";
+import { subscribe, readGuestRaw, parseGuest } from "@/lib/table-storage";
+import type { TableOrder } from "@/types/table";
 import { MejaPesan } from "../../MejaPesan";
 
 const LANGKAH = [
@@ -37,18 +37,18 @@ const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${St
 export function StatusPesanan({ code }: { code: string }) {
   // undefined = render server; null = pesanan dibuat di perangkat lain
   const mentah = useSyncExternalStore(
-    langganan,
-    () => tamuMentah(code),
+    subscribe,
+    () => readGuestRaw(code),
     () => undefined,
   );
-  const tamu = useMemo(() => (mentah === undefined ? undefined : uraiTamu(mentah)), [mentah]);
+  const tamu = useMemo(() => (mentah === undefined ? undefined : parseGuest(mentah)), [mentah]);
   // kembali dari Midtrans membawa ?transaction_status=...; notifikasi lunas bisa tiba beberapa detik kemudian
   const baruBayar = useSyncExternalStore(
-    langganan,
+    subscribe,
     () => /transaction_status=(settlement|capture)/.test(window.location.search),
     () => false,
   );
-  const [d, setD] = useState<PesananMeja | null>(null);
+  const [d, setD] = useState<TableOrder | null>(null);
   const [galat, setGalat] = useState<string | null>(null);
   const [sisa, setSisa] = useState<number | null>(null);
   const [membayar, setMembayar] = useState(false);
@@ -56,7 +56,7 @@ export function StatusPesanan({ code }: { code: string }) {
 
   const muat = useCallback(async () => {
     if (!tamu || akhir.current) return;
-    const r = await panggil(() => statusPesananMeja(code, tamu.tamu));
+    const r = await callAction(() => statusPesananMeja(code, tamu.tamu));
     if ("error" in r) return setGalat(r.error.message);
     setGalat(null);
     setD(r.data);
@@ -85,7 +85,9 @@ export function StatusPesanan({ code }: { code: string }) {
     if (!tamu || !d) return;
     if (d.payment_url) return window.location.assign(d.payment_url);
     setMembayar(true);
-    const r = await panggil(() => bayarPesananMeja(code, tamu.tamu, `${window.location.origin}/meja/pesanan/${code}`));
+    const r = await callAction(() =>
+      bayarPesananMeja(code, tamu.tamu, `${window.location.origin}/meja/pesanan/${code}`),
+    );
     if ("data" in r) return window.location.assign(r.data.payment_url);
     setMembayar(false);
     setGalat(r.error.message);

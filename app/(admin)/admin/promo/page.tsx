@@ -6,9 +6,9 @@ import { GagalMuat } from "@/app/components/GagalMuat";
 import { PromoList } from "@/app/components/promo/PromoList";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
+import { requireAdmin } from "@/services/auth.service";
 import type { Promo } from "@/types/promo";
-import type { Pemeliharaan } from "@/types/meta";
+import type { Maintenance } from "@/types/meta";
 
 // A-02…A-04 — Promo platform, biaya layanan, kontak CS; F27 mode pemeliharaan.
 export default async function PromoPlatformPage() {
@@ -16,7 +16,7 @@ export default async function PromoPlatformPage() {
   const bolehSetelan = user.admin_level === "super"; // Fase 1: ubah biaya & kontak CS khusus super
   const [promos, biaya] = await Promise.all([
     adminFetch<Promo[]>("/promos"),
-    adminFetch<{ service_fee: number; cs_whatsapp: string | null; maintenance: Pemeliharaan }>("/settings"),
+    adminFetch<{ service_fee: number; cs_whatsapp: string | null; maintenance: Maintenance }>("/settings"),
   ]);
   return (
     <PageHeader title="Promo & biaya" description="Promo yang berlaku di semua toko dan biaya layanan per pesanan.">

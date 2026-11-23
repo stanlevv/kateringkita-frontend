@@ -1,5 +1,5 @@
 // GET /me/notifications; type: order_status | promo | info | moderation
-export type Notifikasi = {
+export type AppNotification = {
   id: number;
   type: string;
   title: string;

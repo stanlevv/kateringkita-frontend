@@ -20,7 +20,7 @@ describe("LG-N1 next aman (Review Focus 4)", () => {
     // AUD-30: dinormalisasi menjadi "//evil.com" (protocol-relative) oleh URL parser maupun Next
     "/..//evil.com",
     "/./..//evil.com/x",
-  ])("%j -> /dashboard", (v) => expect(safeNext(v)).toBe("/dashboard"));
+  ])("%j -> /dashboard", (input) => expect(safeNext(input)).toBe("/dashboard"));
   it("fallback bisa diganti", () => expect(safeNext("//evil.com", "/pratinjau")).toBe("/pratinjau"));
   it("/%2F%2Fevil.com tetap path internal (garis miring tersandi tidak dinormalisasi)", () =>
     expect(safeNext("/%2F%2Fevil.com")).toBe("/%2F%2Fevil.com"));

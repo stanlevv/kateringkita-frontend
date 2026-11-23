@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { BARU_MS } from "@/lib/dashboard";
-import { perluTindakan } from "@/lib/shell";
-import { geserWib, tanggalWib } from "@/lib/format";
+import { NEW_ORDER_MS } from "@/lib/dashboard";
+import { countNeedsAction } from "@/lib/shell";
+import { toWibClock, wibDate } from "@/lib/format";
 import type { MerchantOrder } from "@/types/order";
 
 const KUNCI = "kk_suara";
@@ -69,7 +69,9 @@ export function useNotifikasi(orders: MerchantOrder[], dimuat: number, sekarang 
   const suara = useSyncExternalStore(langgan, bacaSuara, () => true);
   const [lama, setLama] = useState(orders);
   const [sorot, setSorot] = useState<string[]>(() =>
-    orders.filter((o) => perluTindakan([o]) === 1 && dimuat - Date.parse(o.created_at) < BARU_MS).map((o) => o.code),
+    orders
+      .filter((o) => countNeedsAction([o]) === 1 && dimuat - Date.parse(o.created_at) < NEW_ORDER_MS)
+      .map((o) => o.code),
   );
   const [belumDilihat, setBelumDilihat] = useState(() => (tidakDilihat() ? sorot.length : 0));
   const [gelombang, setGelombang] = useState(0);
@@ -77,10 +79,10 @@ export function useNotifikasi(orders: MerchantOrder[], dimuat: number, sekarang 
   if (orders !== lama) {
     // Pesanan dibuat hari ini (WIB, jam server) yang BARU menjadi "perlu tindakan": baru masuk, atau VA/online yang tadi
     // menunggu bayar lalu lunas (F26, diterima otomatis). Yang belum lunas tidak berbunyi: penjual belum bisa apa-apa.
-    const siapLama = new Set(lama.filter((o) => perluTindakan([o]) === 1).map((o) => o.code));
-    const hari = geserWib(sekarang).toISOString().slice(0, 10);
+    const siapLama = new Set(lama.filter((o) => countNeedsAction([o]) === 1).map((o) => o.code));
+    const hari = toWibClock(sekarang).toISOString().slice(0, 10);
     const masuk = orders
-      .filter((o) => !siapLama.has(o.code) && perluTindakan([o]) === 1 && tanggalWib(o.created_at) === hari)
+      .filter((o) => !siapLama.has(o.code) && countNeedsAction([o]) === 1 && wibDate(o.created_at) === hari)
       .map((o) => o.code);
     setLama(orders);
     if (masuk.length) {

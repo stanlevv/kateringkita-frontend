@@ -10,7 +10,7 @@ vi.mock("@/app/actions/admin/banner", () => ({
   buatBannerAdmin: vi.fn(),
   mintaUnggahAdmin: vi.fn(),
 }));
-vi.mock("@/lib/unggah", () => ({ unggahFoto: vi.fn() }));
+vi.mock("@/lib/upload", () => ({ uploadPhoto: vi.fn() }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { Banner } from "@/types/banner";
 import { BannerAdmin } from "./BannerAdmin";

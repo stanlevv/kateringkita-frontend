@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 
-const getSkenario = vi.fn();
-vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
+const getScenario = vi.fn();
+vi.mock("@/lib/scenario", () => ({ getScenario: () => getScenario() }));
 const requireMerchant = vi.fn(async () => ({}));
-vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/services/auth.service", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
@@ -18,7 +18,7 @@ const ok = (data: unknown) => ({ ok: true, status: 200, data });
 const kembali = orders()[0];
 
 beforeEach(() => {
-  getSkenario.mockReset().mockResolvedValue(null);
+  getScenario.mockReset().mockResolvedValue(null);
   merchantFetch.mockReset().mockResolvedValue(ok(kembali));
   requireMerchant.mockClear();
 });
@@ -30,9 +30,9 @@ describe("orderAction (M-04, M-08, D15)", () => {
   });
   it("tidak punya parameter status klien dan tidak membaca daftar pesanan", () => {
     const src = readFileSync("app/actions/orders.ts", "utf8");
-    expect(src).toMatch(/orderAction\(\s*code: string,\s*aksi: AksiPesanan,\s*reason\?: string,?\s*\)/);
+    expect(src).toMatch(/orderAction\(\s*code: string,\s*aksi: OrderAction,\s*reason\?: string,?\s*\)/);
     expect(src).not.toContain("current");
-    expect(src).not.toContain("@/services/orderService");
+    expect(src).not.toContain("@/services/order.service");
   });
   it("POST /orders/:code/:aksi dengan body kosong; hasil diteruskan", async () => {
     const r = await orderAction(KODE, "cook");
@@ -80,19 +80,19 @@ describe("orderAction (M-04, M-08, D15)", () => {
     expect(await orderAction("KK-X", "cook")).toMatchObject({ error: { code: "NOT_FOUND" } });
   });
   it("DB-E1 skenario gagal-aksi -> INTERNAL_ERROR tanpa fetch", async () => {
-    getSkenario.mockResolvedValue("gagal-aksi");
+    getScenario.mockResolvedValue("gagal-aksi");
     const r = await orderAction(KODE, "confirm");
     expect("error" in r && r.error.code).toBe("INTERNAL_ERROR");
     expect(merchantFetch).not.toHaveBeenCalled();
   });
   it("DB-E2 skenario status-berubah -> CONFLICT tanpa fetch", async () => {
-    getSkenario.mockResolvedValue("status-berubah");
+    getScenario.mockResolvedValue("status-berubah");
     const r = await orderAction(KODE, "confirm");
     expect("error" in r && r.error.code).toBe("CONFLICT");
     expect(merchantFetch).not.toHaveBeenCalled();
   });
   it("DB-E3 skenario stok-bentrok hanya untuk konfirmasi -> OUT_OF_STOCK", async () => {
-    getSkenario.mockResolvedValue("stok-bentrok");
+    getScenario.mockResolvedValue("stok-bentrok");
     const r = await orderAction(KODE, "confirm");
     expect("error" in r && r.error.code).toBe("OUT_OF_STOCK");
     await orderAction("KK-20261031-C5RW", "cook");

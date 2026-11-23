@@ -13,13 +13,13 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Field } from "@/app/components/ui/Field";
 import { Input, Select } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { KETERANGAN_LEVEL, LABEL_LEVEL, type AdminLevel } from "@/lib/admin-level";
-import { formatJam, formatTanggal } from "@/lib/format";
-import type { AdminDenganSandi, AkunAdmin } from "@/types/admin";
+import { callAction } from "@/lib/action";
+import { LEVEL_DESCRIPTIONS, LEVEL_LABELS, type AdminLevel } from "@/lib/admin-level";
+import { formatTime, formatDate } from "@/lib/format";
+import type { AdminWithPassword, AdminAccount } from "@/types/admin";
 import type { ActionResult } from "@/types/api";
 
-const LEVEL = Object.keys(LABEL_LEVEL) as AdminLevel[];
+const LEVEL = Object.keys(LEVEL_LABELS) as AdminLevel[];
 
 // AUD-35: setiap aksi akun lewat konfirmasi; "Aktifkan" tanpa konfirmasi bisa dipicu clickjacking dua kali klik
 const KONFIRMASI = {
@@ -40,7 +40,7 @@ const KONFIRMASI = {
   },
 };
 
-function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => void; onClose: () => void }) {
+function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminWithPassword) => void; onClose: () => void }) {
   const [v, setV] = useState({ full_name: "", phone: "", admin_level: "ops" as AdminLevel });
   const [galat, setGalat] = useState<Record<string, string>>({});
   const [menyimpan, setMenyimpan] = useState(false);
@@ -49,7 +49,7 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => voi
     e.preventDefault();
     if (menyimpan) return;
     setMenyimpan(true);
-    const r = await panggil(() => buatAdmin(v));
+    const r = await callAction(() => buatAdmin(v));
     setMenyimpan(false);
     if ("error" in r) {
       if (r.error.fields) setGalat(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
@@ -75,13 +75,13 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => voi
         label="Tingkat"
         id="fa-admin_level"
         required
-        help={KETERANGAN_LEVEL[v.admin_level]}
+        help={LEVEL_DESCRIPTIONS[v.admin_level]}
         error={galat.admin_level}
       >
         <Select value={v.admin_level} onChange={(e) => set("admin_level", e.target.value)}>
           {LEVEL.map((l) => (
             <option key={l} value={l}>
-              {LABEL_LEVEL[l]}
+              {LEVEL_LABELS[l]}
             </option>
           ))}
         </Select>
@@ -99,7 +99,7 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminDenganSandi) => voi
 }
 
 // Sandi sementara tampil sekali; tidak bisa dilihat lagi setelah dialog ditutup.
-function SandiSementara({ data, onClose }: { data: AdminDenganSandi; onClose: () => void }) {
+function SandiSementara({ data, onClose }: { data: AdminWithPassword; onClose: () => void }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-ink">
@@ -133,16 +133,16 @@ function SandiSementara({ data, onClose }: { data: AdminDenganSandi; onClose: ()
 }
 
 /** Fase 1 — kelola akun admin (khusus super). Akun sendiri tidak bisa diubah di sini. */
-export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number }) {
+export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: number }) {
   const router = useRouter();
   const [form, setForm] = useState(false);
-  const [sandi, setSandi] = useState<AdminDenganSandi | null>(null);
-  const [konfirmasi, setKonfirmasi] = useState<{ a: AkunAdmin; aksi: keyof typeof KONFIRMASI } | null>(null);
+  const [sandi, setSandi] = useState<AdminWithPassword | null>(null);
+  const [konfirmasi, setKonfirmasi] = useState<{ a: AdminAccount; aksi: keyof typeof KONFIRMASI } | null>(null);
   const [sibuk, setSibuk] = useState(false);
 
   async function jalankan<T>(fn: () => Promise<ActionResult<T>>, pesan: string) {
     setSibuk(true);
-    const r = await panggil(fn);
+    const r = await callAction(fn);
     setSibuk(false);
     setKonfirmasi(null);
     if ("error" in r) {
@@ -154,7 +154,7 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
     return r.data;
   }
 
-  const kolom: Column<AkunAdmin>[] = [
+  const kolom: Column<AdminAccount>[] = [
     {
       key: "nama",
       header: "Admin",
@@ -172,7 +172,7 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
       header: "Tingkat",
       cell: (a) =>
         a.id === sayaId || !a.is_active ? (
-          <span>{a.admin_level ? LABEL_LEVEL[a.admin_level] : "-"}</span>
+          <span>{a.admin_level ? LEVEL_LABELS[a.admin_level] : "-"}</span>
         ) : (
           <Select
             aria-label={`Tingkat ${a.full_name}`}
@@ -182,7 +182,7 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
           >
             {LEVEL.map((l) => (
               <option key={l} value={l}>
-                {LABEL_LEVEL[l]}
+                {LEVEL_LABELS[l]}
               </option>
             ))}
           </Select>
@@ -209,8 +209,7 @@ export function AdminTable({ rows, sayaId }: { rows: AkunAdmin[]; sayaId: number
     {
       key: "masuk",
       header: "Terakhir masuk",
-      cell: (a) =>
-        a.last_login_at ? `${formatTanggal(a.last_login_at)} ${formatJam(a.last_login_at)}` : "Belum pernah",
+      cell: (a) => (a.last_login_at ? `${formatDate(a.last_login_at)} ${formatTime(a.last_login_at)}` : "Belum pernah"),
     },
     {
       key: "aksi",

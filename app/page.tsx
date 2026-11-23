@@ -15,7 +15,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { getSession } from "@/services/authService";
+import { getSession } from "@/services/auth.service";
 import { AlurPesanan } from "@/app/components/landing/AlurPesanan";
 import { PrinterDemo } from "@/app/components/landing/PrinterDemo";
 import { Brand } from "@/app/components/shell/Brand";

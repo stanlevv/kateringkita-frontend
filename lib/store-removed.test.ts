@@ -10,8 +10,8 @@ describe("FE-01/FE-11 store contoh dihapus", () => {
     expect(layout).not.toContain("@/lib/store");
   });
   it("copilot tidak memakai store lama", () => {
-    const c = readFileSync(join(__dirname, "../app/(dashboard)/copilot/page.tsx"), "utf8");
-    expect(c).not.toContain("lib/store");
-    expect(c).not.toContain("useStore");
+    const copilotPage = readFileSync(join(__dirname, "../app/(dashboard)/copilot/page.tsx"), "utf8");
+    expect(copilotPage).not.toContain("lib/store");
+    expect(copilotPage).not.toContain("useStore");
   });
 });

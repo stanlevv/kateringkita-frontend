@@ -7,8 +7,8 @@ import { tandaiSemuaDibaca } from "@/app/actions/notifikasi";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { cx } from "@/app/components/ui/cx";
-import { formatJam, formatTanggal } from "@/lib/format";
-import type { Notifikasi } from "@/types/notifikasi";
+import { formatTime, formatDate } from "@/lib/format";
+import type { AppNotification } from "@/types/notification";
 
 const LIMIT = 20;
 const IKON = { moderation: ImageOff, info: Megaphone } as const;
@@ -20,7 +20,7 @@ export function DaftarNotifikasi({
   page,
   unread,
 }: {
-  rows: Notifikasi[];
+  rows: AppNotification[];
   total: number;
   page: number;
   unread: number;
@@ -67,7 +67,7 @@ export function DaftarNotifikasi({
                 </p>
                 <p className="whitespace-pre-wrap break-words text-sm text-ink">{n.body}</p>
                 <p className="text-xs text-ink-muted">
-                  {formatTanggal(n.created_at)} · {formatJam(n.created_at)} WIB
+                  {formatDate(n.created_at)} · {formatTime(n.created_at)} WIB
                 </p>
               </div>
             </li>

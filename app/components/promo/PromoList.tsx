@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { EyeOff, Pencil, Plus, Power, TicketPercent, Trash2 } from "lucide-react";
 import { deletePromo, setPromoActive } from "@/app/actions/promos";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
@@ -11,8 +11,8 @@ import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { toast } from "@/app/components/ui/Toast";
-import { formatRupiah, formatTanggal } from "@/lib/format";
-import { PROMO_STATUS, promoStatus, teksJenis } from "@/lib/promo-status";
+import { formatRupiah, formatDate } from "@/lib/format";
+import { PROMO_STATUS, promoStatus, describePromoType } from "@/lib/promo-status";
 import type { ActionResult } from "@/types/api";
 import type { Promo } from "@/types/promo";
 import { PromoForm } from "./PromoForm";
@@ -55,7 +55,7 @@ export function PromoList({
   async function setAktif(p: Promo, aktif: boolean) {
     const pasang = (x: Promo) => setLokal((l) => ({ ...l, [p.id]: x }));
     pasang({ ...p, is_active: aktif });
-    const r = await panggil(() => (setAktifAksi ?? setPromoActive)(p.id, aktif));
+    const r = await callAction(() => (setAktifAksi ?? setPromoActive)(p.id, aktif));
     if ("error" in r) {
       pasang(p);
       toast({ tone: "danger", message: r.error.message });
@@ -73,7 +73,7 @@ export function PromoList({
   }
 
   async function hapusPromo(p: Promo) {
-    const r = await panggil(() => deletePromo(p.id));
+    const r = await callAction(() => deletePromo(p.id));
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     setLokal((l) => ({ ...l, [p.id]: null }));
     toast({ tone: "success", message: "Promo dihapus" });
@@ -130,7 +130,7 @@ export function PromoList({
                       </div>
                     </div>
                     {p.description && <p className="text-ink-muted">{p.description}</p>}
-                    <p className="font-medium text-ink">{teksJenis(p)}</p>
+                    <p className="font-medium text-ink">{describePromoType(p)}</p>
                     <dl className="grid gap-1 text-sm text-ink-muted">
                       <div>
                         <dt className="sr-only">Min belanja</dt>
@@ -143,7 +143,7 @@ export function PromoList({
                       <div>
                         <dt className="sr-only">Periode</dt>
                         <dd>
-                          {formatTanggal(p.starts_at)} – {formatTanggal(p.ends_at)}
+                          {formatDate(p.starts_at)} – {formatDate(p.ends_at)}
                         </dd>
                       </div>
                       <div>

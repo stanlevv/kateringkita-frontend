@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, X } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
-import { tokenDariQr } from "@/lib/meja-qr";
+import { tableTokenFromQr } from "@/lib/table-qr";
 
 // Pemindai bawaan peramban (Chrome/Samsung Internet di Android). iPhone/Firefox belum punya:
 // di sana pelanggan memakai aplikasi kamera HP, yang membuka tautan QR dengan sendirinya.
@@ -75,7 +75,7 @@ export function PindaiQr() {
       sibuk = true;
       try {
         for (const { rawValue } of await pendeteksi.detect(v)) {
-          const token = tokenDariQr(rawValue);
+          const token = tableTokenFromQr(rawValue);
           if (!token) {
             setInfo("QR ini bukan QR meja KateringKita.");
             continue;

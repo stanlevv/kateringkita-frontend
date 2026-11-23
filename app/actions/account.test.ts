@@ -7,7 +7,7 @@ vi.mock("next/headers", () => ({
   }),
 }));
 const getSession = vi.fn(async () => ({ user: { role: "merchant" }, merchant: null }));
-vi.mock("@/services/authService", () => ({ getSession: () => getSession(), getSessionToken: async () => "tok" }));
+vi.mock("@/services/auth.service", () => ({ getSession: () => getSession(), getSessionToken: async () => "tok" }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 const apiFetch = vi.fn();
 vi.mock("@/services/api", () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a) }));

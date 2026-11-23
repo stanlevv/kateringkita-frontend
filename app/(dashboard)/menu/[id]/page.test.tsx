@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({}) }));
+vi.mock("@/services/auth.service", () => ({ requireMerchant: async () => ({}) }));
 const getMenu = vi.fn();
-vi.mock("@/services/menuService", () => ({ getMenu: (...a: unknown[]) => getMenu(...a) }));
-vi.mock("@/services/metaService", () => ({ getCategories: async () => ({ data: [] }) }));
+vi.mock("@/services/menu.service", () => ({ getMenu: (...a: unknown[]) => getMenu(...a) }));
+vi.mock("@/services/meta.service", () => ({ getCategories: async () => ({ data: [] }) }));
 vi.mock("@/app/(dashboard)/menu/components/MenuForm", () => ({ MenuForm: () => <p>FORM</p> }));
 import UbahMenuPage from "./page";
 

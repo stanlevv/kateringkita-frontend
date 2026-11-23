@@ -1,51 +1,57 @@
 import type { Review } from "@/types/review";
-import { urlDengan } from "./url";
+import { buildUrl } from "./url";
 
-export const LIMIT_ULASAN = 10;
+export const LIMIT_REVIEWS = 10;
 
 /** R-09: "Rafli R." -> "Ra***". */
-export function samarkanNama(nama: string): string {
-  return `${nama.trim().slice(0, 2)}***`;
+export function maskName(name: string): string {
+  return `${name.trim().slice(0, 2)}***`;
 }
 
-const satuDesimal = (n: number) => Math.round(n * 10) / 10;
-const rata = (rs: Review[]) => (rs.length ? satuDesimal(rs.reduce((a, r) => a + r.rating, 0) / rs.length) : 0);
+const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10;
+const average = (reviews: Review[]) =>
+  reviews.length ? roundToOneDecimal(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length) : 0;
 
 /** UL-N1 */
-export function ringkasUlasan(rs: Review[]) {
+export function summarizeReviews(reviews: Review[]) {
   return {
-    total: rs.length,
-    rata: rata(rs),
-    sebaran: [5, 4, 3, 2, 1].map((bintang) => ({ bintang, jumlah: rs.filter((r) => r.rating === bintang).length })),
+    total: reviews.length,
+    average: average(reviews),
+    distribution: [5, 4, 3, 2, 1].map((stars) => ({
+      stars,
+      count: reviews.filter((review) => review.rating === stars).length,
+    })),
   };
 }
 
 /** UL-N2: semua menu toko, ditambah menu yang hanya muncul di ulasan. */
-export function ringkasPerMenu(rs: Review[], menus: { id: number; name: string }[]) {
-  const daftar = new Map(menus.map((m) => [m.id, m.name]));
-  for (const r of rs) if (!daftar.has(r.menu_id)) daftar.set(r.menu_id, r.menu_name);
-  return [...daftar]
+export function summarizeByMenu(reviews: Review[], menus: { id: number; name: string }[]) {
+  const menuNames = new Map(menus.map((menu) => [menu.id, menu.name]));
+  for (const review of reviews) if (!menuNames.has(review.menu_id)) menuNames.set(review.menu_id, review.menu_name);
+  return [...menuNames]
     .map(([id, name]) => {
-      const milik = rs.filter((r) => r.menu_id === id);
-      return { menu_id: id, menu_name: name, rata: rata(milik), jumlah: milik.length };
+      const menuReviews = reviews.filter((review) => review.menu_id === id);
+      return { menu_id: id, menu_name: name, average: average(menuReviews), count: menuReviews.length };
     })
-    .sort((a, b) => a.menu_name.localeCompare(b.menu_name, "id"));
+    .sort((first, second) => first.menu_name.localeCompare(second.menu_name, "id"));
 }
 
 /** UL-N2, UL-N3: terbaru dulu. */
-export function saringUlasan(rs: Review[], f: { menu?: number; bintang?: number }, page: number) {
-  const hasil = rs
+export function filterReviews(reviews: Review[], filter: { menu?: number; stars?: number }, page: number) {
+  const matches = reviews
     .filter(
-      (r) => (f.menu === undefined || r.menu_id === f.menu) && (f.bintang === undefined || r.rating === f.bintang),
+      (review) =>
+        (filter.menu === undefined || review.menu_id === filter.menu) &&
+        (filter.stars === undefined || review.rating === filter.stars),
     )
-    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
-  return { total: hasil.length, rows: hasil.slice((page - 1) * LIMIT_ULASAN, page * LIMIT_ULASAN) };
+    .sort((first, second) => Date.parse(second.created_at) - Date.parse(first.created_at));
+  return { total: matches.length, rows: matches.slice((page - 1) * LIMIT_REVIEWS, page * LIMIT_REVIEWS) };
 }
 
-export function urlUlasan(f: { menu?: number; bintang?: number; page?: number }): string {
-  return urlDengan("/ulasan", "", {
-    menu: f.menu?.toString(),
-    bintang: f.bintang?.toString(),
-    page: f.page && f.page > 1 ? String(f.page) : null,
+export function reviewsUrl(filter: { menu?: number; stars?: number; page?: number }): string {
+  return buildUrl("/ulasan", "", {
+    menu: filter.menu?.toString(),
+    bintang: filter.stars?.toString(),
+    page: filter.page && filter.page > 1 ? String(filter.page) : null,
   });
 }

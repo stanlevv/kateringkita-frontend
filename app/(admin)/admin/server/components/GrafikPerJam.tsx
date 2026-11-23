@@ -3,8 +3,8 @@
 // Klien: seri membawa komponen ikon (fungsi), tidak bisa dikirim dari Server Component
 import { CircleCheck, CircleX, Clock } from "lucide-react";
 import { GrafikBatang } from "@/app/components/ui/GrafikBatang";
-import { formatJam } from "@/lib/format";
-import type { JamServer } from "@/types/server";
+import { formatTime } from "@/lib/format";
+import type { HourlyServerStats } from "@/types/server";
 
 // Warna status tetap (skill dataviz: critical & warning). Kuning < 3:1 di latar terang → selalu berpasangan ikon + label + tabel.
 const SERI = [
@@ -13,7 +13,7 @@ const SERI = [
 ];
 
 /** Error 5xx (bawah) dan request lambat (atas) per jam, 24 jam terakhir. */
-export function GrafikPerJam({ data }: { data: JamServer[] }) {
+export function GrafikPerJam({ data }: { data: HourlyServerStats[] }) {
   return (
     <GrafikBatang
       judul="Masalah per jam"
@@ -21,8 +21,8 @@ export function GrafikPerJam({ data }: { data: JamServer[] }) {
       seri={SERI}
       kolomLabel="Jam (WIB)"
       data={data.map((d) => ({
-        label: formatJam(d.jam),
-        lengkap: `${formatJam(d.jam)} WIB`,
+        label: formatTime(d.jam),
+        lengkap: `${formatTime(d.jam)} WIB`,
         nilai: { error: d.error, lambat: d.lambat },
       }))}
       sumbu={[0, 6, 12, 18, data.length - 1]}

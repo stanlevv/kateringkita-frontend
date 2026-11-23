@@ -7,8 +7,8 @@ import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { BATAS_BALASAN } from "@/services/adminTiketService";
+import { callAction } from "@/lib/action";
+import { MAX_REPLY_LENGTH } from "@/services/admin-ticket.service";
 
 /**
  * Balas pembeli (1–2000 karakter). Galat validasi tampil di bawah isian (fields.body, atau pesan umumnya);
@@ -24,7 +24,7 @@ export function BalasTiket({ code }: { code: string }) {
     e.preventDefault();
     if (sibuk || !teks.trim()) return;
     setSibuk(true);
-    const r = await panggil(() => balasTiket(code, teks));
+    const r = await callAction(() => balasTiket(code, teks));
     setSibuk(false);
     if ("error" in r) {
       if (r.error.code === "VALIDATION_ERROR") return setGalat(r.error.fields?.body?.[0] ?? r.error.message);
@@ -44,12 +44,12 @@ export function BalasTiket({ code }: { code: string }) {
         label="Balasan untuk pembeli"
         id={`balas-${code}`}
         required
-        help={`${teks.length}/${BATAS_BALASAN}`}
+        help={`${teks.length}/${MAX_REPLY_LENGTH}`}
         error={galat}
       >
         <Textarea
           value={teks}
-          maxLength={BATAS_BALASAN}
+          maxLength={MAX_REPLY_LENGTH}
           rows={4}
           onChange={(e) => {
             setTeks(e.target.value);

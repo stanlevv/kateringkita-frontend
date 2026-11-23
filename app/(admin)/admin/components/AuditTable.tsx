@@ -6,28 +6,28 @@ import { DataTable, type Column } from "@/app/components/ui/DataTable";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { Pagination } from "@/app/components/ui/Pagination";
-import { daftarPerubahan, labelAksi, LIMIT_LOG, labelTarget } from "@/services/adminLogService";
+import { listChanges, actionLabel, LIMIT_LOG, targetLabel } from "@/services/admin-log.service";
 import type { AuditLog } from "@/types/admin";
-import { formatJam, formatTanggal } from "@/lib/format";
-import { urlDengan } from "@/lib/url";
+import { formatTime, formatDate } from "@/lib/format";
+import { buildUrl } from "@/lib/url";
 
 const KOLOM: Column<AuditLog>[] = [
-  { key: "waktu", header: "Waktu (WIB)", cell: (l) => `${formatTanggal(l.created_at)}, ${formatJam(l.created_at)}` },
+  { key: "waktu", header: "Waktu (WIB)", cell: (l) => `${formatDate(l.created_at)}, ${formatTime(l.created_at)}` },
   { key: "admin", header: "Admin", cell: (l) => l.admin_name },
-  { key: "aksi", header: "Aksi", cell: (l) => labelAksi(l.action) },
-  { key: "target", header: "Target", cell: (l) => labelTarget(l.target_type, l.target_id) },
+  { key: "aksi", header: "Aksi", cell: (l) => actionLabel(l.action) },
+  { key: "target", header: "Target", cell: (l) => targetLabel(l.target_type, l.target_id) },
   { key: "alasan", header: "Alasan", wrap: true, cell: (l) => l.reason ?? "—" },
   {
     key: "perubahan",
     header: "Perubahan",
     wrap: true,
     cell: (l) => {
-      const p = daftarPerubahan(l.before, l.after);
+      const p = listChanges(l.before, l.after);
       if (p.length === 0) return "—";
       return (
         <ul>
           {p.map((x) => (
-            <li key={x.field}>{`${x.field}: ${x.lama} → ${x.baru}`}</li>
+            <li key={x.field}>{`${x.field}: ${x.before} → ${x.after}`}</li>
           ))}
         </ul>
       );
@@ -56,7 +56,7 @@ export function AuditTable({
           title="Halaman tidak ditemukan"
           body="Halaman ini melebihi jumlah data yang ada."
           action={
-            <LinkButton href={urlDengan(path, params.toString(), { page: "" })} variant="secondary">
+            <LinkButton href={buildUrl(path, params.toString(), { page: "" })} variant="secondary">
               Kembali ke halaman 1
             </LinkButton>
           }
@@ -85,7 +85,7 @@ export function AuditTable({
         page={page}
         total={total}
         limit={LIMIT_LOG}
-        hrefFor={(p) => urlDengan(path, params.toString(), { page: String(p) }, ["1"])}
+        hrefFor={(p) => buildUrl(path, params.toString(), { page: String(p) }, ["1"])}
       />
     </div>
   );

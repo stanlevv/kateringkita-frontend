@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { terapkanWaktu } from "@/lib/dashboard";
+import { applyHoldExpiry } from "@/lib/dashboard";
 import { orders } from "@/lib/fixtures/orders";
 import type { MerchantOrder } from "@/types/order";
 import { OrderCard } from "./OrderCard";
@@ -101,7 +101,7 @@ describe("DB-A4 timer tahan", () => {
     expect(screen.queryByText(/Segera/)).toBeNull();
   });
   it("sisa 0 -> Kadaluarsa tanpa aksi utama", () => {
-    kartu(terapkanWaktu([o({ hold_until: new Date(10_000).toISOString() })], 20_000)[0], { sisa: null });
+    kartu(applyHoldExpiry([o({ hold_until: new Date(10_000).toISOString() })], 20_000)[0], { sisa: null });
     expect(screen.getAllByText("Kadaluarsa").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Konfirmasi" })).toBeNull();
   });

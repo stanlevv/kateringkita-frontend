@@ -1,9 +1,9 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { TemplateEditor } from "@/app/(dashboard)/template-wa/components/TemplateEditor";
-import { getOrders } from "@/services/orderService";
-import { getProfile } from "@/services/profileService";
-import { requireMerchant } from "@/services/authService";
+import { getOrders } from "@/services/order.service";
+import { getProfile } from "@/services/profile.service";
+import { requireMerchant } from "@/services/auth.service";
 
 // M-11, WA-*. Pesanan contoh = pesanan terbaru toko.
 export default async function TemplateWAPage() {

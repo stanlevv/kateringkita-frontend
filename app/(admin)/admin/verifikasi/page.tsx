@@ -2,13 +2,13 @@ import { VerificationQueue } from "@/app/(admin)/admin/components/VerificationQu
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
-import type { AntrianPenjual } from "@/types/admin";
-import { requireAdmin } from "@/services/authService";
+import type { VerificationQueueItem } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
 
 // A-05 — Antrean verifikasi penjual.
 export default async function VerifikasiPage() {
   await requireAdmin();
-  const res = await adminFetch<AntrianPenjual[]>("/verification-queue");
+  const res = await adminFetch<VerificationQueueItem[]>("/verification-queue");
   return (
     <PageHeader
       title="Verifikasi penjual"

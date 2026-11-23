@@ -7,8 +7,8 @@ import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { cekBiaya } from "@/services/adminMasterService";
+import { callAction } from "@/lib/action";
+import { validateServiceFee } from "@/services/admin-master.service";
 import { formatRupiah } from "@/lib/format";
 
 /** A-04 — biaya layanan per pesanan. */
@@ -21,12 +21,12 @@ export function ServiceFeeForm({ nilai }: { nilai: number }) {
   async function kirim(e: React.FormEvent) {
     e.preventDefault();
     const n = teks.trim() === "" ? NaN : Number(teks);
-    const masalah = cekBiaya(n);
+    const masalah = validateServiceFee(n);
     if (masalah) return setGalat(masalah);
     setGalat(undefined);
     if (n === nilai) return void toast({ tone: "info", message: "Tidak ada perubahan" });
     setMenyimpan(true);
-    const r = await panggil(() => simpanBiayaLayanan(n));
+    const r = await callAction(() => simpanBiayaLayanan(n));
     setMenyimpan(false);
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: "Biaya layanan disimpan" });

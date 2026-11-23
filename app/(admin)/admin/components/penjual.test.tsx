@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/app/actions/admin/merchants", () => ({ aksiPenjual: (...a: unknown[]) => aksiPenjual(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { StatusToko } from "@/app/components/StatusToko";
-import type { AntrianPenjual, Checklist as C, DetailPenjual, PenjualRingkas } from "@/types/admin";
+import type { VerificationQueueItem, Checklist as C, AdminMerchantDetail, MerchantSummary } from "@/types/admin";
 import { MerchantDetail } from "./MerchantDetail";
 import { MerchantTable } from "./MerchantTable";
 import { VerificationQueue } from "./VerificationQueue";
@@ -27,7 +27,7 @@ const penuh: C = {
   menu_with_photo: true,
   opening_hours: true,
 };
-const antrian = (o: Partial<AntrianPenjual>): AntrianPenjual => ({
+const antrian = (o: Partial<VerificationQueueItem>): VerificationQueueItem => ({
   id: 1,
   business_name: "Dapur Siti",
   owner_name: "Siti",
@@ -127,7 +127,7 @@ describe("antrean verifikasi", () => {
   });
 });
 
-const detail = (o: Partial<DetailPenjual>): DetailPenjual => ({
+const detail = (o: Partial<AdminMerchantDetail>): AdminMerchantDetail => ({
   id: 7,
   business_name: "Dapur Siti",
   address: "Jl. Mawar 1",
@@ -232,7 +232,7 @@ describe("detail penjual", () => {
     );
   });
   it("aksi sesuai status (K1)", () => {
-    const hasil = (s: DetailPenjual["verification_status"]) => {
+    const hasil = (s: AdminMerchantDetail["verification_status"]) => {
       const v = render(<MerchantDetail m={detail({ verification_status: s })} />);
       const t = tombol();
       v.unmount();
@@ -251,7 +251,7 @@ describe("detail penjual", () => {
 });
 
 describe("daftar penjual", () => {
-  const row = (o: Partial<PenjualRingkas>): PenjualRingkas => ({
+  const row = (o: Partial<MerchantSummary>): MerchantSummary => ({
     id: 3,
     business_name: "Dapur A",
     owner_name: "Ani",

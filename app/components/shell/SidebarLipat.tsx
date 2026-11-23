@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { IconButton } from "@/app/components/ui/IconButton";
-import { COOKIE_SIDEBAR, type ModeSidebar } from "@/lib/shell";
+import { SIDEBAR_COOKIE, type SidebarMode } from "@/lib/shell";
 
 /**
  * SH-N1: bingkai sidebar. Di ≥ 1280 px tombolnya menciutkan/melebarkan sidebar dan pilihan disimpan di cookie
@@ -14,7 +14,7 @@ export function SidebarLipat({
   atas,
   children,
 }: {
-  mode: ModeSidebar;
+  mode: SidebarMode;
   atas: ReactNode;
   children: ReactNode;
 }) {
@@ -23,7 +23,7 @@ export function SidebarLipat({
   function ubah() {
     const baru = lebar ? "ringkas" : "lebar";
     setMode(baru);
-    document.cookie = `${COOKIE_SIDEBAR}=${baru}; path=/; max-age=31536000; samesite=lax`;
+    document.cookie = `${SIDEBAR_COOKIE}=${baru}; path=/; max-age=31536000; samesite=lax`;
   }
   return (
     <aside

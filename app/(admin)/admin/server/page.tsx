@@ -5,10 +5,10 @@ import { PageHeader } from "@/app/components/shell/PageHeader";
 import { KpiCard } from "@/app/components/ui/KpiCard";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { cx } from "@/app/components/ui/cx";
-import { formatJam, formatTanggal } from "@/lib/format";
-import { getLogServer, getStatusServer, LIMIT_LOG_SERVER } from "@/services/adminServerService";
-import { requireAdmin } from "@/services/authService";
-import type { LogServer } from "@/types/server";
+import { formatTime, formatDate } from "@/lib/format";
+import { getServerLogs, getServerStatus, LIMIT_SERVER_LOGS } from "@/services/admin-server.service";
+import { requireAdmin } from "@/services/auth.service";
+import type { ServerLog } from "@/types/server";
 import { FilterLogServer } from "./components/FilterLogServer";
 import { GrafikPerJam } from "./components/GrafikPerJam";
 
@@ -19,7 +19,7 @@ const lama = (s: number) => {
   return [h && `${h} hr`, j && `${j} j`, `${m} mnt`].filter(Boolean).join(" ");
 };
 
-function Level({ l }: { l: LogServer["level"] }) {
+function Level({ l }: { l: ServerLog["level"] }) {
   return l === "error" ? (
     <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
       <CircleX aria-hidden className="size-3.5" />
@@ -48,8 +48,8 @@ export default async function ServerPage({
   const page = Number.isInteger(n) && n >= 1 && n <= 100_000 ? n : 1;
   const hrefFor = (p: number) => `/admin/server?${new URLSearchParams({ ...Object.fromEntries(q), page: String(p) })}`;
   q.set("page", String(page));
-  q.set("limit", String(LIMIT_LOG_SERVER));
-  const [st, log] = await Promise.all([getStatusServer(), getLogServer(q)]);
+  q.set("limit", String(LIMIT_SERVER_LOGS));
+  const [st, log] = await Promise.all([getServerStatus(), getServerLogs(q)]);
   const total = (log.meta as { total?: number } | undefined)?.total ?? log.data?.length ?? 0;
 
   return (
@@ -109,7 +109,7 @@ export default async function ServerPage({
                     {log.data.map((r) => (
                       <tr key={r.id} className="border-t border-line align-top">
                         <td className="whitespace-nowrap px-3 py-2">
-                          {formatTanggal(r.created_at)}, {formatJam(r.created_at)}
+                          {formatDate(r.created_at)}, {formatTime(r.created_at)}
                         </td>
                         <td className="px-3 py-2">
                           <Level l={r.level} />
@@ -130,7 +130,7 @@ export default async function ServerPage({
                   </tbody>
                 </table>
               </div>
-              <Pagination page={page} total={total} limit={LIMIT_LOG_SERVER} hrefFor={hrefFor} />
+              <Pagination page={page} total={total} limit={LIMIT_SERVER_LOGS} hrefFor={hrefFor} />
             </>
           )}
         </section>

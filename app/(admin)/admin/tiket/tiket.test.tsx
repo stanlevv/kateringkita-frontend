@@ -7,7 +7,7 @@ const adminFetch = vi.fn();
 const replace = vi.fn();
 const push = vi.fn();
 const url = vi.hoisted(() => ({ q: "" }));
-vi.mock("@/services/authService", () => ({ requireAdmin: (...a: unknown[]) => requireAdmin(...a) }));
+vi.mock("@/services/auth.service", () => ({ requireAdmin: (...a: unknown[]) => requireAdmin(...a) }));
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
   adminFetch: (...a: unknown[]) => adminFetch(...a),
@@ -21,14 +21,14 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("@/app/actions/admin/tiket", () => ({ balasTiket: vi.fn(), tutupTiket: vi.fn() }));
-import type { DetailTiket, TiketRingkas } from "@/types/admin";
+import type { TicketDetail, TicketSummary } from "@/types/admin";
 import { TiketTable } from "./components/TiketTable";
 import TiketPage from "./page";
 import DetailPage from "./[code]/page";
 import TiketTidakDitemukan from "./[code]/not-found";
 
 const SEKARANG = Date.parse("2026-11-13T03:00:00.000Z");
-const tiket = (o: Partial<TiketRingkas> = {}): TiketRingkas => ({
+const tiket = (o: Partial<TicketSummary> = {}): TicketSummary => ({
   code: "TK-20261113-7QPX",
   category: "pembayaran",
   subject: "VA sudah dibayar tapi status belum lunas",
@@ -42,7 +42,7 @@ const tiket = (o: Partial<TiketRingkas> = {}): TiketRingkas => ({
   ...o,
 });
 const COUNTS = { open: 3, answered: 2, closed: 5 };
-const balas = (data: TiketRingkas[], meta: object = {}) => ({
+const balas = (data: TicketSummary[], meta: object = {}) => ({
   ok: true,
   status: 200,
   data,
@@ -218,7 +218,7 @@ describe("TiketTable", () => {
   });
 });
 
-const detail = (o: Partial<DetailTiket> = {}): DetailTiket => ({
+const detail = (o: Partial<TicketDetail> = {}): TicketDetail => ({
   code: "TK-20261113-7QPX",
   category: "pembayaran",
   subject: "VA sudah dibayar tapi status belum lunas",

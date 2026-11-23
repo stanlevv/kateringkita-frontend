@@ -1,5 +1,5 @@
 import { Ban, Banknote, CheckCircle2, Clock, Hourglass, Undo2, type LucideIcon } from "lucide-react";
-import type { Nada } from "@/lib/order-status";
+import type { Tone } from "@/lib/order-status";
 import type { PaymentMethod, PaymentStatus } from "@/types/order";
 import { Badge } from "./Badge";
 
@@ -9,7 +9,7 @@ const metode: Record<PaymentMethod, string> = {
   cod: "Tunai",
   online: "Bayar online",
 };
-const status: Record<PaymentStatus, { label: string; tone: Nada; icon: LucideIcon }> = {
+const status: Record<PaymentStatus, { label: string; tone: Tone; icon: LucideIcon }> = {
   unpaid: { label: "Belum bayar", tone: "warning", icon: Clock },
   paid: { label: "Lunas", tone: "success", icon: CheckCircle2 },
   failed: { label: "Gagal", tone: "danger", icon: Ban },

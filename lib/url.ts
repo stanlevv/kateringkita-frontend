@@ -1,15 +1,15 @@
 /** `path` dengan query `current` yang diubah; nilai kosong/null atau yang ada di `kosong` menghapus parameternya. */
-export function urlDengan(
+export function buildUrl(
   path: string,
   current: URLSearchParams | string,
-  ubahan: Record<string, string | null | undefined>,
-  kosong: string[] = [],
+  changes: Record<string, string | null | undefined>,
+  emptyValues: string[] = [],
 ): string {
-  const p = new URLSearchParams(current);
-  for (const [k, v] of Object.entries(ubahan)) {
-    if (v && !kosong.includes(v)) p.set(k, v);
-    else p.delete(k);
+  const params = new URLSearchParams(current);
+  for (const [key, value] of Object.entries(changes)) {
+    if (value && !emptyValues.includes(value)) params.set(key, value);
+    else params.delete(key);
   }
-  const qs = p.toString();
-  return qs ? `${path}?${qs}` : path;
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
 }

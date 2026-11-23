@@ -5,8 +5,8 @@ import { PageHeader } from "@/app/components/shell/PageHeader";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { adminFetch } from "@/services/api";
-import type { DetailPenjual } from "@/types/admin";
-import { requireAdmin } from "@/services/authService";
+import type { AdminMerchantDetail } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
 
 // A-05 — Detail penjual.
 export default async function PenjualDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +25,7 @@ export default async function PenjualDetailPage({ params }: { params: Promise<{ 
     />
   );
   if (!/^[1-9]\d{0,9}$/.test(id)) return tidakAda;
-  const res = await adminFetch<DetailPenjual>(`/merchants/${id}`);
+  const res = await adminFetch<AdminMerchantDetail>(`/merchants/${id}`);
   if (res.status === 404) return tidakAda;
   if (!res.ok || !res.data)
     return (

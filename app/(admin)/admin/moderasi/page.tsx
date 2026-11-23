@@ -6,8 +6,8 @@ import { cx, fokus } from "@/app/components/ui/cx";
 import { Input } from "@/app/components/ui/Input";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { adminFetch } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
-import type { MenuModerasi, MetaHalaman, UlasanModerasi } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
+import type { ModerationMenu, PageMeta, ModerationReview } from "@/types/admin";
 
 const LIMIT = 20;
 const JENIS = { ulasan: { label: "Ulasan", path: "/reviews" }, menu: { label: "Menu", path: "/menus" } } as const;
@@ -46,8 +46,8 @@ export default async function ModerasiPage({
   const q = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
   if (status) q.set("status", status);
   if (cari) q.set("q", cari);
-  const res = await adminFetch<UlasanModerasi[] | MenuModerasi[]>(`${JENIS[jenis].path}?${q}`);
-  const meta = res.meta as MetaHalaman | undefined;
+  const res = await adminFetch<ModerationReview[] | ModerationMenu[]>(`${JENIS[jenis].path}?${q}`);
+  const meta = res.meta as PageMeta | undefined;
 
   return (
     <PageHeader
@@ -95,9 +95,9 @@ export default async function ModerasiPage({
         {res.ok && res.data ? (
           <>
             {jenis === "ulasan" ? (
-              <ModerasiTable jenis="ulasan" rows={res.data as UlasanModerasi[]} />
+              <ModerasiTable jenis="ulasan" rows={res.data as ModerationReview[]} />
             ) : (
-              <ModerasiTable jenis="menu" rows={res.data as MenuModerasi[]} />
+              <ModerasiTable jenis="menu" rows={res.data as ModerationMenu[]} />
             )}
             <Pagination
               page={page}

@@ -8,8 +8,8 @@ import { Button } from "@/app/components/ui/Button";
 import { Card } from "@/app/components/ui/Card";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
-import { panggil } from "@/lib/aksi";
-import type { JawabanAsisten } from "@/types/hasil-ai";
+import { callAction } from "@/lib/action";
+import type { AssistantAnswer } from "@/types/ai-result";
 
 const CONTOH = [
   "Menu mana yang margin-nya paling tipis dan berapa harga yang lebih sehat?",
@@ -26,7 +26,7 @@ const pesanGagal: Record<string, string> = {
 // F17: tanya-jawab dengan konteks menu, HPP, dan penjualan toko sendiri
 export function AsistenPanel() {
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<JawabanAsisten | null>(null);
+  const [answer, setAnswer] = useState<AssistantAnswer | null>(null);
   const [gagal, setGagal] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -37,7 +37,7 @@ export function AsistenPanel() {
     setQuestion(q);
     setGagal(null);
     start(async () => {
-      const r = await panggil(() => tanyaAsisten(q));
+      const r = await callAction(() => tanyaAsisten(q));
       if ("data" in r) return setAnswer(r.data);
       // alasan per kolom dulu (mis. ditolak filter keamanan), lalu pesan umum
       setGagal(

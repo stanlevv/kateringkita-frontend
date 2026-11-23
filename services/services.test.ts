@@ -3,34 +3,34 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const jar = { value: undefined as string | undefined };
 vi.mock("next/headers", () => ({
   cookies: async () => ({
-    get: (n: string) => (n === "kk_skenario" && jar.value ? { name: n, value: jar.value } : undefined),
+    get: (name: string) => (name === "kk_skenario" && jar.value ? { name, value: jar.value } : undefined),
   }),
 }));
 
 const merchantFetch = vi.fn();
 const apiFetch = vi.fn();
-vi.mock("@/services/api", async (orig) => ({
-  ...(await orig<typeof import("@/services/api")>()),
-  merchantFetch: (...a: unknown[]) => merchantFetch(...a),
-  apiFetch: (...a: unknown[]) => apiFetch(...a),
+vi.mock("@/services/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/api")>()),
+  merchantFetch: (...args: unknown[]) => merchantFetch(...args),
+  apiFetch: (...args: unknown[]) => apiFetch(...args),
 }));
 import { profile } from "@/lib/fixtures/profile";
 import { categories, pickupPoints } from "@/lib/fixtures/meta";
 import { menus } from "@/lib/fixtures/menus";
 
-import { getMenu, getMenus } from "@/services/menuService";
+import { getMenu, getMenus } from "@/services/menu.service";
 import { orders } from "@/lib/fixtures/orders";
-import { getAntrean, getJumlahTindakan, getOrder, getOrders, getPerubahan } from "@/services/orderService";
-import { getProfile } from "@/services/profileService";
-import { getHourly, getReportSummary, getTransactions } from "@/services/reportService";
-import { getPromos } from "@/services/promoService";
-import { getReviews } from "@/services/reviewService";
-import { getPickupPoints, getCategories } from "@/services/metaService";
+import { getQueue, getNeedsActionCount, getOrder, getOrders, getChangedOrders } from "@/services/order.service";
+import { getProfile } from "@/services/profile.service";
+import { getHourly, getReportSummary, getTransactions } from "@/services/report.service";
+import { getPromos } from "@/services/promo.service";
+import { getReviews } from "@/services/review.service";
+import { getPickupPoints, getCategories } from "@/services/meta.service";
 
 const ERR = { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
-const set = (v?: string) => {
+const set = (scenario?: string) => {
   vi.stubEnv("NODE_ENV", "development");
-  jar.value = v;
+  jar.value = scenario;
   merchantFetch.mockImplementation(async (path: string) => {
     if (path.startsWith("/orders/")) return { ok: true, status: 200, data: orders()[0] };
     if (path.startsWith("/orders"))
@@ -57,8 +57,8 @@ afterEach(() => {
 describe("services", () => {
   it("tanpa skenario mengembalikan { data }", async () => {
     set();
-    const r = await getMenus();
-    expect("data" in r && r.data.length).toBeGreaterThan(0);
+    const result = await getMenus();
+    expect("data" in result && result.data.length).toBeGreaterThan(0);
   });
   it("getMenus: GET /menus dari backend apa adanya; 500 -> pesan backend", async () => {
     set();
@@ -101,11 +101,15 @@ describe("services", () => {
   });
   it("gagal-muat: semua baca mengembalikan error", async () => {
     set("gagal-muat");
-    const R = { from: "2026-10-25", to: "2026-10-31" };
-    for (const f of [() => getReportSummary(R), () => getHourly({ date: R.to }), () => getTransactions(R)])
-      expect(await f()).toEqual(ERR);
-    const fns = [getMenus, getOrders, getAntrean, getProfile, getPromos, getReviews, getPickupPoints, getCategories];
-    for (const f of fns) expect(await f()).toEqual(ERR);
+    const RANGE = { from: "2026-10-25", to: "2026-10-31" };
+    for (const load of [
+      () => getReportSummary(RANGE),
+      () => getHourly({ date: RANGE.to }),
+      () => getTransactions(RANGE),
+    ])
+      expect(await load()).toEqual(ERR);
+    const loaders = [getMenus, getOrders, getQueue, getProfile, getPromos, getReviews, getPickupPoints, getCategories];
+    for (const load of loaders) expect(await load()).toEqual(ERR);
   });
   it("kosong: daftar kosong", async () => {
     set("kosong");
@@ -113,8 +117,8 @@ describe("services", () => {
     expect(await getMenus()).toMatchObject({ data: [] });
     expect(merchantFetch).not.toHaveBeenCalled();
     expect(await getOrders()).toMatchObject({ data: { rows: [], total: 0 } });
-    expect(await getAntrean()).toEqual({ data: [] });
-    expect(await getJumlahTindakan()).toBe(0);
+    expect(await getQueue()).toEqual({ data: [] });
+    expect(await getNeedsActionCount()).toBe(0);
     expect(merchantFetch).not.toHaveBeenCalled();
     expect(await getPromos()).toMatchObject({ data: [] });
     expect(await getReviews()).toMatchObject({ data: [] });
@@ -125,18 +129,18 @@ describe("services", () => {
   });
   it("luar-jam: sekarang (WIB) di luar open/close", async () => {
     set("luar-jam");
-    const r = await getProfile();
-    if (!("data" in r)) throw new Error("harus data");
+    const result = await getProfile();
+    if (!("data" in result)) throw new Error("harus data");
     const wib = new Date(Date.now() + 7 * 3600e3);
     const now = wib.getUTCHours() * 60 + wib.getUTCMinutes();
-    const m = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
-    expect(now < m(r.data.open_time) || now > m(r.data.close_time)).toBe(true);
+    const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+    expect(now < toMinutes(result.data.open_time) || now > toMinutes(result.data.close_time)).toBe(true);
   });
   it("getProfile membaca /profile dari backend apa adanya", async () => {
     set();
-    const p = { ...profile(), business_name: "Dari Server" };
-    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: p });
-    expect(await getProfile()).toEqual({ data: p });
+    const serverProfile = { ...profile(), business_name: "Dari Server" };
+    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: serverProfile });
+    expect(await getProfile()).toEqual({ data: serverProfile });
     expect(merchantFetch).toHaveBeenCalledWith("/profile");
   });
   it("getProfile: backend 500 -> { error } pesan backend", async () => {
@@ -167,9 +171,9 @@ describe("services", () => {
     set();
     const rows = orders().slice(0, 3);
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: rows, meta: { page: 2, limit: 20, total: 41 } });
-    const r = await getOrders({ status: "ready", tanggal: "2026-11-01", q: "rina", page: 2 });
+    const result = await getOrders({ status: "ready", date: "2026-11-01", q: "rina", page: 2 });
     expect(merchantFetch).toHaveBeenCalledWith("/orders?status=ready&date=2026-11-01&q=rina&page=2&limit=20");
-    expect(r).toEqual({ data: { rows, total: 41 } });
+    expect(result).toEqual({ data: { rows, total: 41 } });
     merchantFetch.mockResolvedValue({
       ok: false,
       status: 500,
@@ -179,42 +183,44 @@ describe("services", () => {
   });
   it("getAntrean: aktif + hari ini, kode sama sekali; galat salah satu -> error", async () => {
     set();
-    const hari = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
-    const a = orders();
+    const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+    const allOrders = orders();
     merchantFetch.mockImplementation(async (path: string) => ({
       ok: true,
       status: 200,
-      data: path.includes("date=") ? [a[0], a[1]] : [a[1], a[2]],
+      data: path.includes("date=") ? [allOrders[0], allOrders[1]] : [allOrders[1], allOrders[2]],
     }));
-    const r = await getAntrean();
+    const result = await getQueue();
     expect(merchantFetch).toHaveBeenCalledWith("/orders?status=holding,confirmed,cooking,ready&limit=100");
-    expect(merchantFetch).toHaveBeenCalledWith(`/orders?date=${hari}&limit=100`);
-    expect("data" in r && r.data.map((o) => o.code).sort()).toEqual([a[0].code, a[1].code, a[2].code].sort());
+    expect(merchantFetch).toHaveBeenCalledWith(`/orders?date=${today}&limit=100`);
+    expect("data" in result && result.data.map((order) => order.code).sort()).toEqual(
+      [allOrders[0].code, allOrders[1].code, allOrders[2].code].sort(),
+    );
     merchantFetch.mockImplementation(async (path: string) =>
       path.includes("date=")
         ? { ok: false, status: 500, error: { code: "X", message: "x" } }
         : { ok: true, status: 200, data: [] },
     );
-    expect(await getAntrean()).toEqual({ error: { code: "X", message: "x" } });
+    expect(await getQueue()).toEqual({ error: { code: "X", message: "x" } });
   });
   it("getAntrean: pesanan-baru menumpuk satu pesanan holding dibuat sekarang", async () => {
     set();
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [] });
     set("pesanan-baru");
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [] });
-    const r = await getAntrean();
-    if (!("data" in r)) throw new Error("data");
-    expect(r.data).toHaveLength(1);
-    expect(r.data[0].status).toBe("holding");
-    expect(Math.abs(Date.now() - Date.parse(r.data[0].created_at))).toBeLessThan(5000);
+    const result = await getQueue();
+    if (!("data" in result)) throw new Error("data");
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].status).toBe("holding");
+    expect(Math.abs(Date.now() - Date.parse(result.data[0].created_at))).toBeLessThan(5000);
   });
   it("getJumlahTindakan: meta.total dari holding,confirmed; galat -> 0", async () => {
     set();
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [], meta: { page: 1, limit: 1, total: 7 } });
-    expect(await getJumlahTindakan()).toBe(7);
+    expect(await getNeedsActionCount()).toBe(7);
     expect(merchantFetch).toHaveBeenCalledWith("/orders?status=holding,confirmed&limit=1");
     merchantFetch.mockResolvedValue({ ok: false, status: 500, error: { code: "X", message: "x" } });
-    expect(await getJumlahTindakan()).toBe(0);
+    expect(await getNeedsActionCount()).toBe(0);
   });
   it("getOrder (PS-E1): GET /orders/:code, NOT_FOUND dan gagal-muat", async () => {
     set();
@@ -231,51 +237,53 @@ describe("services", () => {
 });
 
 describe("D4 getPerubahan (M-04)", () => {
-  const SEJAK = "2026-11-01T03:00:00.000Z";
-  const baris = (n: number, akhir: string, awalan = "K") =>
-    Array.from({ length: n }, (_, i) => ({
+  const SINCE = "2026-11-01T03:00:00.000Z";
+  const makeRows = (count: number, updatedAt: string, codePrefix = "K") =>
+    Array.from({ length: count }, (_, i) => ({
       ...orders()[0],
-      code: `${awalan}${i}`,
-      updated_at: i === n - 1 ? akhir : SEJAK,
+      code: `${codePrefix}${i}`,
+      updated_at: i === count - 1 ? updatedAt : SINCE,
     }));
-  const q = (sejak: string) => `/orders?${new URLSearchParams({ updated_since: sejak, limit: "100" })}`;
+  const ordersPath = (since: string) => `/orders?${new URLSearchParams({ updated_since: since, limit: "100" })}`;
 
   it("memanggil /orders?updated_since&limit=100; < 100 baris -> satu panggilan", async () => {
     set();
-    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: baris(2, "2026-11-01T03:01:00.000Z") });
-    expect(await getPerubahan(SEJAK)).toMatchObject({ data: [{ code: "K0" }, { code: "K1" }] });
+    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: makeRows(2, "2026-11-01T03:01:00.000Z") });
+    expect(await getChangedOrders(SINCE)).toMatchObject({ data: [{ code: "K0" }, { code: "K1" }] });
     expect(merchantFetch).toHaveBeenCalledWith("/orders?updated_since=2026-11-01T03%3A00%3A00.000Z&limit=100");
     expect(merchantFetch).toHaveBeenCalledTimes(1);
   });
   it("100 baris -> maju dengan updated_at terbesar; kode sama muncul sekali (versi terakhir)", async () => {
     set();
-    const T2 = "2026-11-01T03:05:00.000Z";
-    merchantFetch.mockResolvedValueOnce({ ok: true, status: 200, data: baris(100, T2) }).mockResolvedValueOnce({
+    const LATER = "2026-11-01T03:05:00.000Z";
+    merchantFetch.mockResolvedValueOnce({ ok: true, status: 200, data: makeRows(100, LATER) }).mockResolvedValueOnce({
       ok: true,
       status: 200,
-      data: [{ ...orders()[0], code: "K0", updated_at: T2, status: "confirmed" }],
+      data: [{ ...orders()[0], code: "K0", updated_at: LATER, status: "confirmed" }],
     });
-    const r = await getPerubahan(SEJAK);
-    expect(merchantFetch).toHaveBeenNthCalledWith(2, q(T2));
-    if (!("data" in r)) throw new Error("galat");
-    expect(r.data).toHaveLength(100);
-    expect(r.data.filter((o) => o.code === "K0")).toEqual([expect.objectContaining({ status: "confirmed" })]);
+    const result = await getChangedOrders(SINCE);
+    expect(merchantFetch).toHaveBeenNthCalledWith(2, ordersPath(LATER));
+    if (!("data" in result)) throw new Error("galat");
+    expect(result.data).toHaveLength(100);
+    expect(result.data.filter((order) => order.code === "K0")).toEqual([
+      expect.objectContaining({ status: "confirmed" }),
+    ]);
   });
   it("100 baris dengan terbesar = sejak -> berhenti", async () => {
     set();
-    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: baris(100, SEJAK) });
-    await getPerubahan(SEJAK);
+    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: makeRows(100, SINCE) });
+    await getChangedOrders(SINCE);
     expect(merchantFetch).toHaveBeenCalledTimes(1);
   });
   it("selalu 100 baris naik -> tepat 5 panggilan", async () => {
     set();
-    let n = 0;
+    let callCount = 0;
     merchantFetch.mockImplementation(async () => ({
       ok: true,
       status: 200,
-      data: baris(100, new Date(Date.parse(SEJAK) + ++n * 1000).toISOString(), `P${n}-`),
+      data: makeRows(100, new Date(Date.parse(SINCE) + ++callCount * 1000).toISOString(), `P${callCount}-`),
     }));
-    await getPerubahan(SEJAK);
+    await getChangedOrders(SINCE);
     expect(merchantFetch).toHaveBeenCalledTimes(5);
   });
   it("galat backend -> { error }", async () => {
@@ -285,22 +293,22 @@ describe("D4 getPerubahan (M-04)", () => {
       status: 500,
       error: { code: "INTERNAL_ERROR", message: "Dari server" },
     });
-    expect(await getPerubahan(SEJAK)).toEqual({ error: { code: "INTERNAL_ERROR", message: "Dari server" } });
+    expect(await getChangedOrders(SINCE)).toEqual({ error: { code: "INTERNAL_ERROR", message: "Dari server" } });
   });
   it("skenario: kosong -> [] tanpa fetch; gagal-sinkron & gagal-muat -> error", async () => {
     set("kosong");
     merchantFetch.mockClear();
-    expect(await getPerubahan(SEJAK)).toEqual({ data: [] });
+    expect(await getChangedOrders(SINCE)).toEqual({ data: [] });
     expect(merchantFetch).not.toHaveBeenCalled();
-    for (const s of ["gagal-sinkron", "gagal-muat"]) {
-      set(s);
-      expect(await getPerubahan(SEJAK)).toEqual(ERR);
+    for (const scenario of ["gagal-sinkron", "gagal-muat"]) {
+      set(scenario);
+      expect(await getChangedOrders(SINCE)).toEqual(ERR);
     }
   });
 });
 
 describe("D11 laporan memakai API (M-09, FE-09)", () => {
-  const R = { from: "2026-10-25", to: "2026-10-31" };
+  const RANGE = { from: "2026-10-25", to: "2026-10-31" };
   const summary = {
     target: 3_500_000,
     revenue: 2_270_000,
@@ -312,7 +320,7 @@ describe("D11 laporan memakai API (M-09, FE-09)", () => {
   it("getReportSummary / getHourly / getTransactions: path + query, data apa adanya", async () => {
     set();
     const jam = [{ hour: 11, orders: 2, portions: 4, revenue: 30000 }];
-    const baris = [
+    const transactionRows = [
       {
         code: "KK-20261031-AB2C",
         created_at: "2026-10-31T04:00:00.000Z",
@@ -327,37 +335,45 @@ describe("D11 laporan memakai API (M-09, FE-09)", () => {
       },
     ];
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: summary });
-    expect(await getReportSummary(R)).toEqual({ data: summary });
+    expect(await getReportSummary(RANGE)).toEqual({ data: summary });
     expect(merchantFetch).toHaveBeenLastCalledWith("/reports/summary?from=2026-10-25&to=2026-10-31");
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: jam });
-    expect(await getHourly({ date: R.to })).toEqual({ data: jam });
+    expect(await getHourly({ date: RANGE.to })).toEqual({ data: jam });
     expect(merchantFetch).toHaveBeenLastCalledWith("/reports/hourly?date=2026-10-31");
-    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: baris });
-    expect(await getTransactions(R)).toEqual({ data: baris });
+    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: transactionRows });
+    expect(await getTransactions(RANGE)).toEqual({ data: transactionRows });
     expect(merchantFetch).toHaveBeenLastCalledWith("/reports/transactions?from=2026-10-25&to=2026-10-31");
   });
   it("galat API diteruskan sebagai { error }", async () => {
     set();
     const error = { code: "VALIDATION_ERROR", message: "Data tidak valid." };
     merchantFetch.mockResolvedValue({ ok: false, status: 400, error });
-    for (const f of [() => getReportSummary(R), () => getHourly({ date: R.to }), () => getTransactions(R)])
-      expect(await f()).toEqual({ error });
+    for (const load of [
+      () => getReportSummary(RANGE),
+      () => getHourly({ date: RANGE.to }),
+      () => getTransactions(RANGE),
+    ])
+      expect(await load()).toEqual({ error });
   });
   it("gagal-muat -> error tanpa memanggil API", async () => {
     set("gagal-muat");
     merchantFetch.mockClear();
-    for (const f of [() => getReportSummary(R), () => getHourly({ date: R.to }), () => getTransactions(R)])
-      expect(await f()).toEqual(ERR);
+    for (const load of [
+      () => getReportSummary(RANGE),
+      () => getHourly({ date: RANGE.to }),
+      () => getTransactions(RANGE),
+    ])
+      expect(await load()).toEqual(ERR);
     expect(merchantFetch).not.toHaveBeenCalled();
   });
-  it.each(["kosong", "penjual-baru"])("%s -> nol dan [] tanpa memanggil API (LP-S1)", async (skenario) => {
-    set(skenario);
+  it.each(["kosong", "penjual-baru"])("%s -> nol dan [] tanpa memanggil API (LP-S1)", async (scenario) => {
+    set(scenario);
     merchantFetch.mockClear();
-    expect(await getReportSummary(R)).toEqual({
+    expect(await getReportSummary(RANGE)).toEqual({
       data: { target: 0, revenue: 0, hpp_total: 0, profit: 0, achievement_pct: 0, orders: 0 },
     });
-    expect(await getTransactions(R)).toEqual({ data: [] });
-    expect(await getHourly({ date: R.to })).toEqual({ data: [] });
+    expect(await getTransactions(RANGE)).toEqual({ data: [] });
+    expect(await getHourly({ date: RANGE.to })).toEqual({ data: [] });
     expect(merchantFetch).not.toHaveBeenCalled();
   });
 });
@@ -366,23 +382,23 @@ describe("D2 data contoh dashboard dihapus (DS-10)", () => {
   it("tidak ada getDashboard / DashboardSummary / omzetHariIni di fe", async () => {
     const { existsSync, readdirSync, readFileSync, statSync } = await import("node:fs");
     const { join } = await import("node:path");
-    const akar = join(__dirname, "..");
-    const temuan: string[] = [];
-    let terpindai = 0;
-    const jelajah = (d: string) => {
-      for (const n of readdirSync(d)) {
-        if (["node_modules", ".next", "docs"].includes(n)) continue;
-        const p = join(d, n);
-        if (statSync(p).isDirectory()) jelajah(p);
-        else if (/\.(ts|tsx)$/.test(n) && !p.endsWith("services.test.ts")) {
-          terpindai++;
-          if (/getDashboard|DashboardSummary|omzetHariIni/.test(readFileSync(p, "utf8"))) temuan.push(p);
+    const root = join(__dirname, "..");
+    const matches: string[] = [];
+    let scannedCount = 0;
+    const walk = (folder: string) => {
+      for (const entry of readdirSync(folder)) {
+        if (["node_modules", ".next", "docs"].includes(entry)) continue;
+        const fullPath = join(folder, entry);
+        if (statSync(fullPath).isDirectory()) walk(fullPath);
+        else if (/\.(ts|tsx)$/.test(entry) && !fullPath.endsWith("services.test.ts")) {
+          scannedCount++;
+          if (/getDashboard|DashboardSummary|omzetHariIni/.test(readFileSync(fullPath, "utf8"))) matches.push(fullPath);
         }
       }
     };
-    for (const d of ["app", "components", "lib", "services", "hooks"])
-      if (existsSync(join(akar, d))) jelajah(join(akar, d));
-    expect(terpindai).toBeGreaterThan(0);
-    expect(temuan).toEqual([]);
+    for (const folder of ["app", "components", "lib", "services", "hooks"])
+      if (existsSync(join(root, folder))) walk(join(root, folder));
+    expect(scannedCount).toBeGreaterThan(0);
+    expect(matches).toEqual([]);
   });
 });

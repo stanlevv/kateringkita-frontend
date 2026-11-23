@@ -1,60 +1,60 @@
-import type { BarisTersimpan } from "./meja-keranjang";
+import type { SavedCartLine } from "./table-cart";
 
 // F21: data tamu di peramban, dibaca komponen lewat useSyncExternalStore (snapshot = string mentah agar stabil).
 // localStorage bisa melempar (mode privat/diblokir) → cadangan di memori agar keranjang tetap jalan selama halaman terbuka.
-const memori = new Map<string, string>();
-const ambil = (k: string): string | null => {
+const memoryStore = new Map<string, string>();
+const readItem = (key: string): string | null => {
   try {
-    return localStorage.getItem(k);
+    return localStorage.getItem(key);
   } catch {
-    return memori.get(k) ?? null;
+    return memoryStore.get(key) ?? null;
   }
 };
-const taruh = (k: string, v: string | null) => {
+const writeItem = (key: string, value: string | null) => {
   try {
-    if (v === null) localStorage.removeItem(k);
-    else localStorage.setItem(k, v);
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
   } catch {
-    if (v === null) memori.delete(k);
-    else memori.set(k, v);
+    if (value === null) memoryStore.delete(key);
+    else memoryStore.set(key, value);
   }
 };
-const urai = <T>(v: string | null, cadangan: T): T => {
-  if (v === null) return cadangan;
+const parseJson = <T>(value: string | null, fallback: T): T => {
+  if (value === null) return fallback;
   try {
-    return JSON.parse(v) as T;
+    return JSON.parse(value) as T;
   } catch {
-    return cadangan;
+    return fallback;
   }
 };
 
-const KEJADIAN = "kk-meja-simpan";
+const CHANGE_EVENT = "kk-meja-simpan";
 /** Langganan useSyncExternalStore: perubahan di tab ini (kejadian sendiri) dan tab lain (storage). */
-export function langganan(ubah: () => void) {
-  window.addEventListener(KEJADIAN, ubah);
-  window.addEventListener("storage", ubah);
+export function subscribe(onChange: () => void) {
+  window.addEventListener(CHANGE_EVENT, onChange);
+  window.addEventListener("storage", onChange);
   return () => {
-    window.removeEventListener(KEJADIAN, ubah);
-    window.removeEventListener("storage", ubah);
+    window.removeEventListener(CHANGE_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
   };
 }
-const kabari = () => window.dispatchEvent(new Event(KEJADIAN));
+const notifyChange = () => window.dispatchEvent(new Event(CHANGE_EVENT));
 
-export type DataTamu = { tamu: string; meja: string };
+export type GuestData = { tamu: string; meja: string };
 // token tamu = satu-satunya kunci untuk melihat & membayar pesanan ini
-export const tamuMentah = (code: string) => ambil(`kk-tamu:${code}`);
-export const uraiTamu = (mentah: string | null) => urai<DataTamu | null>(mentah, null);
-export const simpanTamu = (code: string, d: DataTamu) => taruh(`kk-tamu:${code}`, JSON.stringify(d));
+export const readGuestRaw = (code: string) => readItem(`kk-tamu:${code}`);
+export const parseGuest = (raw: string | null) => parseJson<GuestData | null>(raw, null);
+export const saveGuest = (code: string, guest: GuestData) => writeItem(`kk-tamu:${code}`, JSON.stringify(guest));
 
-export const keranjangMentah = (meja: string) => ambil(`kk-keranjang:${meja}`);
-export const uraiKeranjang = (mentah: string | null) => urai<BarisTersimpan[]>(mentah, []);
-export function simpanKeranjang(meja: string, items: BarisTersimpan[]) {
-  taruh(`kk-keranjang:${meja}`, items.length ? JSON.stringify(items) : null);
-  kabari();
+export const readCartRaw = (table: string) => readItem(`kk-keranjang:${table}`);
+export const parseCart = (raw: string | null) => parseJson<SavedCartLine[]>(raw, []);
+export function saveCart(table: string, items: SavedCartLine[]) {
+  writeItem(`kk-keranjang:${table}`, items.length ? JSON.stringify(items) : null);
+  notifyChange();
 }
 
-export const mejaTerakhir = () => urai<string | null>(ambil("kk-meja-terakhir"), null);
-export const simpanMejaTerakhir = (meja: string) => taruh("kk-meja-terakhir", JSON.stringify(meja));
+export const readLastTable = () => parseJson<string | null>(readItem("kk-meja-terakhir"), null);
+export const saveLastTable = (table: string) => writeItem("kk-meja-terakhir", JSON.stringify(table));
 
-export const bacaNama = () => urai<string>(ambil("kk-nama-tamu"), "");
-export const simpanNama = (nama: string) => taruh("kk-nama-tamu", JSON.stringify(nama));
+export const readGuestName = () => parseJson<string>(readItem("kk-nama-tamu"), "");
+export const saveGuestName = (name: string) => writeItem("kk-nama-tamu", JSON.stringify(name));

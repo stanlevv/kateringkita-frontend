@@ -8,17 +8,17 @@ import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { formatJam, formatRupiah, formatTanggal } from "@/lib/format";
-import type { SaldoPenjual } from "@/types/pencairan";
+import { callAction } from "@/lib/action";
+import { formatTime, formatRupiah, formatDate } from "@/lib/format";
+import type { MerchantBalance } from "@/types/payout";
 
-const waktu = (iso: string) => `${formatTanggal(iso)} ${formatJam(iso)}`;
+const waktu = (iso: string) => `${formatDate(iso)} ${formatTime(iso)}`;
 
 /**
  * F26: admin mentransfer dulu lewat bank KateringKita, lalu mencatat nomor referensinya di sini.
  * `asOf` = waktu saldo dihitung; backend menolak (409) bila saldo berubah sejak itu atau sudah dicatat.
  */
-export function CatatPencairan({ saldo, asOf }: { saldo: SaldoPenjual; asOf: string }) {
+export function CatatPencairan({ saldo, asOf }: { saldo: MerchantBalance; asOf: string }) {
   const router = useRouter();
   const [buka, setBuka] = useState(false);
   const [referensi, setReferensi] = useState("");
@@ -31,7 +31,7 @@ export function CatatPencairan({ saldo, asOf }: { saldo: SaldoPenjual; asOf: str
     e.preventDefault();
     if (sibuk) return;
     setSibuk(true);
-    const h = await panggil(() =>
+    const h = await callAction(() =>
       catatPencairan({
         merchant_id: saldo.merchant_id,
         amount: saldo.amount,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { adjustQuota } from "@/app/actions/menus";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { toast } from "@/app/components/ui/Toast";
 import type { MerchantMenu } from "@/types/menu";
 
@@ -80,7 +80,7 @@ export function useKuota(onBerubah: (m: MerchantMenu) => void, menus: MerchantMe
     q.inFlight = true;
     q.inFlightPayload = payload;
 
-    const r = await panggil(() => adjustQuota(id, payload as { delta: number } | { quota_today: number }));
+    const r = await callAction(() => adjustQuota(id, payload as { delta: number } | { quota_today: number }));
     const ok = "data" in r;
     const sentPayload = q.inFlightPayload;
     q.inFlight = false;

@@ -1,7 +1,7 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getPemakaianAi, getPenyediaAi } from "@/services/adminAiService";
-import { requireAdmin } from "@/services/authService";
+import { getAiUsage, getAiProviders } from "@/services/admin-ai.service";
+import { requireAdmin } from "@/services/auth.service";
 import { PemakaianAi } from "./components/PemakaianAi";
 import { PenyediaAiPanel } from "./components/PenyediaAiPanel";
 
@@ -13,7 +13,7 @@ export default async function AdminAiPage({
 }) {
   await requireAdmin("super");
   const hari = (await searchParams).hari === "30" ? 30 : 7;
-  const [r, pakai] = await Promise.all([getPenyediaAi(), getPemakaianAi(hari)]);
+  const [r, pakai] = await Promise.all([getAiProviders(), getAiUsage(hari)]);
   return (
     <PageHeader
       title="AI"

@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { menus } from "@/lib/fixtures/menus";
 import { reviews } from "@/lib/fixtures/reviews";
-import { ringkasUlasan, saringUlasan } from "@/lib/ulasan";
+import { summarizeReviews, filterReviews } from "@/lib/review";
 import { MenuRatings, RatingSummary } from "./RatingSummary";
 import { ReviewList } from "./ReviewList";
 
@@ -12,8 +12,8 @@ const daftarMenu = menus().map((m) => ({ id: m.id, name: m.name }));
 describe("RatingSummary (UL-N1)", () => {
   it("rata-rata, jumlah, dan sebaran 5->1 berjumlah total (teks, bukan warna saja)", () => {
     render(<RatingSummary reviews={rs} />);
-    const r = ringkasUlasan(rs);
-    expect(screen.getByText(r.rata.toLocaleString("id-ID", { minimumFractionDigits: 1 }))).toBeInTheDocument();
+    const r = summarizeReviews(rs);
+    expect(screen.getByText(r.average.toLocaleString("id-ID", { minimumFractionDigits: 1 }))).toBeInTheDocument();
     expect(screen.getByText("dari 20 ulasan")).toBeInTheDocument();
     const baris = screen.getAllByRole("listitem");
     expect(baris).toHaveLength(5);
@@ -35,7 +35,7 @@ describe("MenuRatings (UL-N2)", () => {
 
 describe("ReviewList (UL-N3, UL-S1)", () => {
   it("nama disamarkan, bintang dengan teks pembaca layar, menu, tanggal", () => {
-    const { rows, total } = saringUlasan(rs, {}, 1);
+    const { rows, total } = filterReviews(rs, {}, 1);
     render(<ReviewList rows={rows} total={total} page={1} filter={{}} />);
     expect(screen.getAllByText(/^[A-Za-z]{2}\*\*\*$/)).toHaveLength(10);
     expect(screen.queryByText(/Rafli R\./)).toBeNull();
@@ -43,7 +43,7 @@ describe("ReviewList (UL-N3, UL-S1)", () => {
     expect(screen.getByRole("link", { name: "Berikutnya" })).toHaveAttribute("href", "/ulasan?page=2");
   });
   it("filter bintang berupa tautan yang mempertahankan menu", () => {
-    const { rows, total } = saringUlasan(rs, { menu: 3 }, 1);
+    const { rows, total } = filterReviews(rs, { menu: 3 }, 1);
     render(<ReviewList rows={rows} total={total} page={1} filter={{ menu: 3 }} />);
     expect(screen.getByRole("link", { name: /^4 bintang/ })).toHaveAttribute("href", "/ulasan?menu=3&bintang=4");
     expect(screen.getByRole("link", { name: "Semua bintang" })).toHaveAttribute("aria-current", "true");

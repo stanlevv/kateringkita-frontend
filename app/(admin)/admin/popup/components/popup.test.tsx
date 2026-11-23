@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
 const simpanPopup = vi.fn();
-const unggahFoto = vi.fn();
+const uploadPhoto = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/admin/popup", () => ({ simpanPopup: (...a: unknown[]) => simpanPopup(...a) }));
 vi.mock("@/app/actions/admin/banner", () => ({ mintaUnggahAdmin: vi.fn() }));
-vi.mock("@/lib/unggah", () => ({ unggahFoto: (...a: unknown[]) => unggahFoto(...a) }));
+vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { Popup } from "@/types/popup";
 import { DaftarPopup, statusPopup } from "./DaftarPopup";
@@ -30,7 +30,7 @@ const p = (o: Partial<Popup>): Popup => ({
 beforeEach(() => {
   refresh.mockReset();
   simpanPopup.mockReset().mockResolvedValue({ data: { id: 2 } });
-  unggahFoto.mockReset().mockResolvedValue({ data: { public_url: "https://foto.test/platform/popup/a.webp" } });
+  uploadPhoto.mockReset().mockResolvedValue({ data: { public_url: "https://foto.test/platform/popup/a.webp" } });
 });
 
 describe("statusPopup", () => {
@@ -72,7 +72,7 @@ describe("DaftarPopup", () => {
       target: { files: [new File(["x"], "p.png", { type: "image/png" })] },
     });
     await waitFor(() => expect(screen.getByRole("img", { name: "Pratinjau pop-up" })).toBeInTheDocument());
-    expect(unggahFoto).toHaveBeenCalledWith(expect.any(File), "popup", expect.anything());
+    expect(uploadPhoto).toHaveBeenCalledWith(expect.any(File), "popup", expect.anything());
     await userEvent.selectOptions(screen.getByLabelText(/Voucher/), "7");
     fireEvent.change(screen.getByLabelText(/Mulai/), { target: { value: "2026-11-20T07:00" } });
     fireEvent.change(screen.getByLabelText(/Selesai/), { target: { value: "2026-11-27T07:00" } });

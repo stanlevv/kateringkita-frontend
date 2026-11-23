@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 const getSession = vi.fn();
-vi.mock("@/services/authService", () => ({ getSession: () => getSession() }));
+vi.mock("@/services/auth.service", () => ({ getSession: () => getSession() }));
 const getTransactions = vi.fn();
-vi.mock("@/services/reportService", () => ({ getTransactions: (...a: unknown[]) => getTransactions(...a) }));
-import { tanggalWib } from "@/lib/format";
+vi.mock("@/services/report.service", () => ({ getTransactions: (...a: unknown[]) => getTransactions(...a) }));
+import { wibDate } from "@/lib/format";
 import { GET } from "./route";
 
-const hariIni = tanggalWib(new Date().toISOString());
+const hariIni = wibDate(new Date().toISOString());
 const minta = (q: string) => GET(new Request(`http://localhost/api/laporan/csv${q}`));
 
 const baris = {

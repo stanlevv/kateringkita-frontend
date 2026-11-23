@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
-vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
+vi.mock("@/services/auth.service", () => ({ requireAdmin: () => requireAdmin() }));
 vi.mock("@/services/api", async (asli) => ({
   ...(await asli<object>()),
   adminFetch: (...a: unknown[]) => adminFetch(...a),

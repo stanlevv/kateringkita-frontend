@@ -3,10 +3,10 @@
 import { Printer, ScanLine } from "lucide-react";
 import { QrMeja } from "@/app/components/meja/QrMeja";
 import { Button } from "@/app/components/ui/Button";
-import type { Meja } from "@/types/meja";
+import type { Table } from "@/types/table";
 
 // Kartu bergaris putus-putus untuk digunting; tombol cetak tidak ikut tercetak
-export function CetakQr({ toko, meja }: { toko: string; meja: Meja[] }) {
+export function CetakQr({ toko, meja }: { toko: string; meja: Table[] }) {
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 print:max-w-none print:p-0">
       <style>{"@page { size: A4; margin: 12mm }"}</style>

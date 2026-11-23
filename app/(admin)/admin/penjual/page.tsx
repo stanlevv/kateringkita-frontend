@@ -3,9 +3,9 @@ import { MerchantTable } from "@/app/(admin)/admin/components/MerchantTable";
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
-import { LIMIT_PENJUAL } from "@/services/adminMerchantService";
-import type { MetaHalaman, PenjualRingkas } from "@/types/admin";
-import { requireAdmin } from "@/services/authService";
+import { LIMIT_MERCHANTS } from "@/services/admin-merchant.service";
+import type { PageMeta, MerchantSummary } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
 
 const STATUS = ["pending", "needs_fix", "verified", "suspended"];
 
@@ -28,9 +28,9 @@ export default async function PenjualPage({
   const n = Number(sp.page);
   const page = Number.isInteger(n) && n >= 1 && n <= 100_000 ? n : 1;
   q.set("page", String(page));
-  q.set("limit", String(LIMIT_PENJUAL));
-  const res = await adminFetch<PenjualRingkas[]>(`/merchants?${q}`);
-  const meta = res.meta as MetaHalaman | undefined;
+  q.set("limit", String(LIMIT_MERCHANTS));
+  const res = await adminFetch<MerchantSummary[]>(`/merchants?${q}`);
+  const meta = res.meta as PageMeta | undefined;
   return (
     <PageHeader title="Penjual" description="Semua penjual yang terdaftar.">
       {res.ok && res.data ? (

@@ -11,29 +11,29 @@ vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to), notF
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: "t" }) }) }));
 vi.mock("@/services/api", () => ({ apiFetch: async () => me }));
 
-const sesi = (role: string) => {
+const asRole = (role: string) => {
   me = { status: 200, ok: true, data: { user: { role }, merchant: null } };
 };
 
 describe("G-10 requireMerchant", () => {
   it("sesi habis -> alasan=sesi-habis", async () => {
     me = { status: 401, ok: false };
-    const { requireMerchant } = await import("./authService");
+    const { requireMerchant } = await import("./auth.service");
     await expect(requireMerchant()).rejects.toThrow("REDIRECT /login?alasan=sesi-habis");
   });
   it("bukan penjual -> alasan=bukan-penjual", async () => {
-    sesi("customer");
-    const { requireMerchant } = await import("./authService");
+    asRole("customer");
+    const { requireMerchant } = await import("./auth.service");
     await expect(requireMerchant()).rejects.toThrow("REDIRECT /login?alasan=bukan-penjual");
   });
   it("admin -> /admin", async () => {
-    sesi("admin");
-    const { requireMerchant } = await import("./authService");
+    asRole("admin");
+    const { requireMerchant } = await import("./auth.service");
     await expect(requireMerchant()).rejects.toThrow("REDIRECT /admin");
   });
   it("penjual -> sesi", async () => {
-    sesi("merchant");
-    const { requireMerchant } = await import("./authService");
+    asRole("merchant");
+    const { requireMerchant } = await import("./auth.service");
     await expect(requireMerchant()).resolves.toMatchObject({ user: { role: "merchant" } });
   });
 });
@@ -41,17 +41,17 @@ describe("G-10 requireMerchant", () => {
 describe("F18 requireAdmin", () => {
   it("sesi habis -> alasan=sesi-habis", async () => {
     me = { status: 401, ok: false };
-    const { requireAdmin } = await import("./authService");
+    const { requireAdmin } = await import("./auth.service");
     await expect(requireAdmin()).rejects.toThrow("REDIRECT /login?alasan=sesi-habis");
   });
   it.each(["merchant", "customer"])("%s -> notFound", async (role) => {
-    sesi(role);
-    const { requireAdmin } = await import("./authService");
+    asRole(role);
+    const { requireAdmin } = await import("./auth.service");
     await expect(requireAdmin()).rejects.toThrow("NOT_FOUND");
   });
   it("admin -> sesi", async () => {
-    sesi("admin");
-    const { requireAdmin } = await import("./authService");
+    asRole("admin");
+    const { requireAdmin } = await import("./auth.service");
     await expect(requireAdmin()).resolves.toMatchObject({ user: { role: "admin" } });
   });
 });

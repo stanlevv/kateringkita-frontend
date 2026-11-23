@@ -10,7 +10,7 @@ import { Button } from "@/app/components/ui/Button";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
-import { cekField, emailResetSchema, resetSandiSchema } from "@/lib/schemas";
+import { validateFields, emailResetSchema, resetPasswordSchema } from "@/lib/schemas";
 
 const pesanGagal: Record<string, string> = {
   RATE_LIMITED: "Terlalu banyak permintaan. Coba lagi beberapa menit lagi.",
@@ -40,7 +40,8 @@ export default function LupaSandiForm() {
 
   function kirim(ev: FormEvent) {
     ev.preventDefault();
-    const e = langkah === "email" ? cekField(emailResetSchema, nilai) : cekField(resetSandiSchema, nilai);
+    const e =
+      langkah === "email" ? validateFields(emailResetSchema, nilai) : validateFields(resetPasswordSchema, nilai);
     setErrors(e);
     setGagal(null);
     if (Object.keys(e).length) return setKunci((k) => k + 1);

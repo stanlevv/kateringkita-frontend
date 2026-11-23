@@ -1,14 +1,14 @@
-import { getTransactions } from "@/services/reportService";
-import { buatCsv, cekRentang, dariSitusLain } from "@/lib/laporan";
-import { hariIniWib } from "@/lib/format";
-import { getSession } from "@/services/authService";
+import { getTransactions } from "@/services/report.service";
+import { createTransactionsCsv, validateRange, isCrossSiteRequest } from "@/lib/report";
+import { todayWib } from "@/lib/format";
+import { getSession } from "@/services/auth.service";
 
 const galat = (status: number, message: string) => Response.json({ message }, { status });
 
 // LP-N4. Unduhan lewat fetch: tanpa sesi dijawab 401 (bukan redirect ke halaman masuk, yang akan
 // terunduh sebagai HTML).
 export async function GET(req: Request) {
-  if (dariSitusLain(req)) return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
+  if (isCrossSiteRequest(req)) return galat(401, "Sesi berakhir. Masuk lagi untuk mengunduh.");
   let session;
   try {
     session = await getSession();
@@ -20,14 +20,14 @@ export async function GET(req: Request) {
   const p = new URL(req.url).searchParams;
   const dari = p.get("dari") ?? "";
   const sampai = p.get("sampai") ?? "";
-  const salah = cekRentang(dari, sampai, hariIniWib());
+  const salah = validateRange(dari, sampai, todayWib());
   if (salah) return galat(400, salah);
 
   const r = await getTransactions({ from: dari, to: sampai });
   if ("error" in r) return galat(500, r.error.message);
 
   // BOM agar Excel membaca UTF-8 (nama menu bertanda baca).
-  return new Response(`﻿${buatCsv(r.data)}`, {
+  return new Response(`﻿${createTransactionsCsv(r.data)}`, {
     headers: {
       "Cache-Control": "no-store",
       "Content-Type": "text/csv; charset=utf-8",

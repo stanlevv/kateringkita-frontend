@@ -5,26 +5,26 @@ import { Sidebar } from "@/app/components/shell/Sidebar";
 import { StoreStatusProvider, type StoreInfo } from "@/app/components/shell/StoreStatus";
 import { StatusToko } from "@/app/components/StatusToko";
 import { Toaster } from "@/app/components/ui/Toast";
-import { getJumlahNotif } from "@/services/notifikasiService";
-import { getJumlahTindakan } from "@/services/orderService";
-import { getProfile } from "@/services/profileService";
-import { requireMerchant } from "@/services/authService";
-import { getPemeliharaan } from "@/services/metaService";
+import { getUnreadNotificationCount } from "@/services/notification.service";
+import { getNeedsActionCount } from "@/services/order.service";
+import { getProfile } from "@/services/profile.service";
+import { requireMerchant } from "@/services/auth.service";
+import { getMaintenance } from "@/services/meta.service";
 import { HalamanPemeliharaan } from "@/app/components/Pemeliharaan";
-import { COOKIE_SIDEBAR, modeSidebar } from "@/lib/shell";
+import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
 
 export const metadata: Metadata = { title: "Dashboard penjual", robots: { index: false, follow: false } };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, merchant } = await requireMerchant();
   // F27: API penjual dibalas 503 selama pemeliharaan, jadi shell diganti halaman pemberitahuan
-  const pemeliharaan = await getPemeliharaan();
+  const pemeliharaan = await getMaintenance();
   if (pemeliharaan.aktif) return <HalamanPemeliharaan pesan={pemeliharaan.pesan} />;
   // Badge dan status dapur dihitung di layout, jadi hanya segar saat muat penuh atau router.refresh() (polling).
   const [profil, badge, notif, kuki] = await Promise.all([
     getProfile(),
-    getJumlahTindakan(),
-    getJumlahNotif(),
+    getNeedsActionCount(),
+    getUnreadNotificationCount(),
     cookies(),
   ]);
   const store: StoreInfo | null =
@@ -43,7 +43,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         Lewati ke konten
       </a>
       <div className="flex min-h-dvh bg-canvas text-ink">
-        <Sidebar store={store} badge={badge} notif={notif} mode={modeSidebar(kuki.get(COOKIE_SIDEBAR)?.value)} />
+        <Sidebar store={store} badge={badge} notif={notif} mode={parseSidebarMode(kuki.get(SIDEBAR_COOKIE)?.value)} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header nama={nama} toko={toko} store={store} badge={badge} notif={notif} />
           <div className="px-4 pt-4 empty:hidden md:px-6">

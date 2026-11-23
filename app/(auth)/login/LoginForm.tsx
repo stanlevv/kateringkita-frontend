@@ -11,7 +11,7 @@ import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
 import { Field } from "@/app/components/ui/Field";
 import { IconButton } from "@/app/components/ui/IconButton";
 import { Input } from "@/app/components/ui/Input";
-import { cekField, loginSchema } from "@/lib/schemas";
+import { validateFields, loginSchema } from "@/lib/schemas";
 
 const TEKS_PEMBELI = "Akun ini akun pembeli. Gunakan aplikasi KateringKita di ponsel.";
 const ID_FIELD = { identifier: "identifier", password: "password" } as const;
@@ -50,13 +50,13 @@ export default function LoginForm({ next, alasan, registered, reset, pemeliharaa
   }, [aktif]);
 
   const blur = (nama: "identifier" | "password") => () => {
-    const e = cekField(loginSchema, { identifier, password })[nama];
+    const e = validateFields(loginSchema, { identifier, password })[nama];
     setErrors((p) => ({ ...p, [nama]: e ?? "" }));
   };
 
   function kirim(ev: FormEvent) {
     ev.preventDefault();
-    const e = cekField(loginSchema, { identifier, password });
+    const e = validateFields(loginSchema, { identifier, password });
     setErrors(e);
     setGagal(null);
     if (Object.keys(e).length) return setKunci((k) => k + 1);

@@ -4,7 +4,7 @@ import Home from "./page";
 
 let down = false;
 const getSession = vi.fn();
-vi.mock("@/services/authService", () => ({
+vi.mock("@/services/auth.service", () => ({
   getSession: () => (down ? Promise.reject(new Error("down")) : getSession()),
 }));
 

@@ -1,7 +1,7 @@
 // F26 pencairan dana: bentuk sama dengan respons backend (GET /merchant/payouts, /admin/payouts*, /admin/refunds).
-export type BankPencairan = { code: string; name: string };
+export type PayoutBank = { code: string; name: string };
 
-export type RekeningPencairan = {
+export type BankAccount = {
   bank: string;
   bank_name: string;
   account_number: string;
@@ -9,7 +9,7 @@ export type RekeningPencairan = {
   updated_at: string;
 };
 
-export type Pencairan = {
+export type Payout = {
   id: number;
   merchant_id: number;
   business_name: string;
@@ -25,29 +25,29 @@ export type Pencairan = {
   created_at: string;
 };
 
-export type PencairanSaya = {
-  banks: BankPencairan[];
-  account: RekeningPencairan | null;
+export type MyPayouts = {
+  banks: PayoutBank[];
+  account: BankAccount | null;
   balance: { amount: number; orders: number; since: string | null };
-  payouts: Pencairan[];
+  payouts: Payout[];
 };
 
 // as_of dikirim balik sebagai `until` saat mencatat pencairan
-export type SaldoPenjual = {
+export type MerchantBalance = {
   merchant_id: number;
   business_name: string;
-  account: RekeningPencairan | null;
+  account: BankAccount | null;
   amount: number;
   orders: number;
   /** AUD-25: total voucher platform di pesanan saldo ini; opsional selama backend lama belum mengirimnya */
   platform_discount?: number;
   since: string;
 };
-export type DaftarSaldo = { as_of: string; rows: SaldoPenjual[] };
+export type BalanceList = { as_of: string; rows: MerchantBalance[] };
 
-export type RiwayatPencairan = { data: Pencairan[]; meta: { page: number; limit: number; total: number } };
+export type PayoutHistory = { data: Payout[]; meta: { page: number; limit: number; total: number } };
 
-export type RefundMenunggu = {
+export type PendingRefund = {
   code: string;
   status: "cancelled" | "expired";
   customer_name: string;

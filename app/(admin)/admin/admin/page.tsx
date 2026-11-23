@@ -1,14 +1,14 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
-import type { AkunAdmin } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
+import type { AdminAccount } from "@/types/admin";
 import { AdminTable } from "./components/AdminTable";
 
 // Fase 1: kelola akun admin (khusus super). Tingkat lain mendapat 404.
 export default async function KelolaAdminPage() {
   const { user } = await requireAdmin("super");
-  const res = await adminFetch<AkunAdmin[]>("/admins");
+  const res = await adminFetch<AdminAccount[]>("/admins");
   return (
     <PageHeader
       title="Kelola admin"

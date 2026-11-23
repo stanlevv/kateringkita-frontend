@@ -6,13 +6,13 @@ import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { FileDrop } from "@/app/components/ui/FileDrop";
 import { Input, Select } from "@/app/components/ui/Input";
-import { cekBanner, type IsianBanner } from "@/lib/banner";
-import { inputWibKeIso, isoKeInputWib } from "@/lib/format";
-import { unggahFoto } from "@/lib/unggah";
+import { validateBanner, type BannerInput } from "@/lib/banner";
+import { wibInputToIso, isoToWibInput } from "@/lib/format";
+import { uploadPhoto } from "@/lib/upload";
 import type { ActionResult } from "@/types/api";
-import type { Banner, PilihanVoucher } from "@/types/banner";
+import type { Banner, VoucherOption } from "@/types/banner";
 
-type Minta = Parameters<typeof unggahFoto>[2];
+type Minta = Parameters<typeof uploadPhoto>[2];
 
 /**
  * Form banner beranda. `toko`: penjual mengajukan (tujuan halaman toko / voucher tokonya, butuh persetujuan admin).
@@ -29,8 +29,8 @@ export function BannerForm({
 }: {
   mode: "toko" | "admin";
   banner?: Banner | null;
-  vouchers: PilihanVoucher[];
-  simpan: (id: number | null, input: IsianBanner) => Promise<ActionResult<unknown>>;
+  vouchers: VoucherOption[];
+  simpan: (id: number | null, input: BannerInput) => Promise<ActionResult<unknown>>;
   onSaved: () => void;
   onClose: () => void;
   mintaUnggah?: Minta;
@@ -39,9 +39,9 @@ export function BannerForm({
   const [image, setImage] = useState(banner?.image_url ?? "");
   const [target, setTarget] = useState<string>(banner?.target ?? (mode === "toko" ? "merchant" : "none"));
   const [promoId, setPromoId] = useState<string>(banner?.promo ? String(banner.promo.id) : "");
-  const [starts, setStarts] = useState(() => isoKeInputWib(banner?.starts_at ?? new Date().toISOString()));
+  const [starts, setStarts] = useState(() => isoToWibInput(banner?.starts_at ?? new Date().toISOString()));
   const [ends, setEnds] = useState(() =>
-    isoKeInputWib(banner?.ends_at ?? new Date(Date.now() + 7 * 86400e3).toISOString()),
+    isoToWibInput(banner?.ends_at ?? new Date(Date.now() + 7 * 86400e3).toISOString()),
   );
   const [urutan, setUrutan] = useState(String(banner?.sort_order ?? 0));
   const [galat, setGalat] = useState<Record<string, string>>({});
@@ -49,19 +49,19 @@ export function BannerForm({
   const [mengunggah, setMengunggah] = useState(false);
   const [menyimpan, setMenyimpan] = useState(false);
 
-  const input: IsianBanner = {
+  const input: BannerInput = {
     title: title.trim(),
     image_url: image,
     target,
     promo_id: target === "promo" && promoId ? Number(promoId) : null,
-    starts_at: inputWibKeIso(starts),
-    ends_at: inputWibKeIso(ends),
+    starts_at: wibInputToIso(starts),
+    ends_at: wibInputToIso(ends),
     ...(mode === "admin" ? { sort_order: Number(urutan) || 0 } : {}),
   };
 
   async function pilihGambar(f: File) {
     setMengunggah(true);
-    const r = await unggahFoto(f, "banner", mintaUnggah);
+    const r = await uploadPhoto(f, "banner", mintaUnggah);
     setMengunggah(false);
     if ("error" in r) return setGalat((g) => ({ ...g, image_url: r.error.message }));
     setImage(r.data.public_url);
@@ -70,7 +70,7 @@ export function BannerForm({
 
   async function kirim(e: React.FormEvent) {
     e.preventDefault();
-    const masalah = cekBanner(input);
+    const masalah = validateBanner(input);
     setGalat(masalah);
     setUmum(undefined);
     if (Object.keys(masalah).length || menyimpan) return;

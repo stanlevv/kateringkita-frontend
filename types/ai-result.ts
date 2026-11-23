@@ -1,9 +1,9 @@
 // Rubrik AI: hasil AI tersimpan (GET /admin/hasil-ai) untuk verifikasi manual
-export type StatusHasilAi = "menunggu" | "disetujui" | "ditolak";
-export type FiturHasilAi = "asisten" | "rekomendasi";
+export type AiResultStatus = "menunggu" | "disetujui" | "ditolak";
+export type AiResultFeature = "asisten" | "rekomendasi";
 
-export type KeluaranAsisten = { jawaban: string; poin: string[]; asumsi: string };
-export type ItemRekomendasi = {
+export type AssistantOutput = { jawaban: string; poin: string[]; asumsi: string };
+export type RecommendationItem = {
   menu_id: number;
   menu: string;
   toko: string;
@@ -11,23 +11,23 @@ export type ItemRekomendasi = {
   subtotal: number;
   reason: string | null;
 };
-export type KeluaranRekomendasi = { summary: string; total: number; items: ItemRekomendasi[] };
+export type RecommendationOutput = { summary: string; total: number; items: RecommendationItem[] };
 
-type Orang = { id: number; name: string };
+type Person = { id: number; name: string };
 
-export type HasilAi = {
+export type AiResult = {
   id: number;
-  fitur: FiturHasilAi;
+  fitur: AiResultFeature;
   input_text: string;
-  output: KeluaranAsisten | KeluaranRekomendasi;
-  status: StatusHasilAi;
+  output: AssistantOutput | RecommendationOutput;
+  status: AiResultStatus;
   catatan: string | null;
   created_at: string;
   verified_at: string | null;
-  verified_by: Orang | null;
-  user: Orang | null;
+  verified_by: Person | null;
+  user: Person | null;
   merchant: { id: number; business_name: string } | null;
 };
 
 /** Jawaban POST /merchant/assistant: jawaban + poin + asumsi (keluaran AI tervalidasi). */
-export type JawabanAsisten = { answer: string; points: string[]; assumption: string | null; result_id: number | null };
+export type AssistantAnswer = { answer: string; points: string[]; assumption: string | null; result_id: number | null };

@@ -7,7 +7,7 @@ const getSession = vi.fn();
 const redirect = vi.fn((to: string) => {
   throw new Error(`REDIRECT ${to}`);
 });
-vi.mock("@/services/authService", () => ({
+vi.mock("@/services/auth.service", () => ({
   getSession: () => (down ? Promise.reject(new Error("down")) : getSession()),
 }));
 vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to) }));

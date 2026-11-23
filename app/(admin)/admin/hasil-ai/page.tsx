@@ -1,9 +1,9 @@
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
-import type { HasilAi } from "@/types/hasil-ai";
-import { LIMIT_HASIL_AI, tabHasilAi } from "@/lib/hasil-ai";
+import { requireAdmin } from "@/services/auth.service";
+import type { AiResult } from "@/types/ai-result";
+import { LIMIT_AI_RESULTS, parseAiResultTab } from "@/lib/ai-result";
 import { DaftarHasilAi } from "./components/DaftarHasilAi";
 
 // Rubrik AI: verifikasi manual hasil AI tersimpan. Semua tingkat admin melihat; super & ops menyetujui / menolak.
@@ -14,7 +14,7 @@ export default async function HasilAiPage({
 }) {
   const session = await requireAdmin();
   const sp = await searchParams;
-  const tab = tabHasilAi(sp.status);
+  const tab = parseAiResultTab(sp.status);
   const fitur = sp.fitur === "asisten" || sp.fitur === "rekomendasi" ? sp.fitur : "";
   const n = Number(sp.page);
   const page = Number.isInteger(n) && n >= 1 && n <= 100_000 ? n : 1;
@@ -22,8 +22,8 @@ export default async function HasilAiPage({
   if (tab !== "semua") q.set("status", tab);
   if (fitur) q.set("fitur", fitur);
   q.set("page", String(page));
-  q.set("limit", String(LIMIT_HASIL_AI));
-  const res = await adminFetch<HasilAi[]>(`/hasil-ai?${q}`);
+  q.set("limit", String(LIMIT_AI_RESULTS));
+  const res = await adminFetch<AiResult[]>(`/hasil-ai?${q}`);
   const total = (res.meta as { total?: number } | undefined)?.total ?? res.data?.length ?? 0;
 
   return (

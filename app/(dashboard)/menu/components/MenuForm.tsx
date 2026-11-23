@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, TriangleAlert, X } from "lucide-react";
 import { saveMenu } from "@/app/actions/menus";
-import { panggil } from "@/lib/aksi";
-import { unggahFoto } from "@/lib/unggah";
+import { callAction } from "@/lib/action";
+import { uploadPhoto } from "@/lib/upload";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
@@ -17,8 +17,8 @@ import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { formatRupiah } from "@/lib/format";
-import { marginPersen } from "@/lib/menu-filter";
-import { cekField, menuFormSchema } from "@/lib/schemas";
+import { marginPercent } from "@/lib/menu-filter";
+import { validateFields, menuFormSchema } from "@/lib/schemas";
 import type { Category } from "@/types/meta";
 import type { MerchantMenu } from "@/types/menu";
 import { FotoTambahan } from "./FotoTambahan";
@@ -153,7 +153,7 @@ export function MenuForm({
     min_order_qty: num(v.min_order_qty),
     options: v.options.map((o) => ({ name: o.name, extra_price: num(o.extra_price) })),
   };
-  const semua = cekField(menuFormSchema, input);
+  const semua = validateFields(menuFormSchema, input);
   const galatSemua = dicoba ? { ...server, ...semua } : semua;
   const galat = (k: string) => (dicoba || tersentuh.has(k) ? galatSemua[k] : undefined);
   const galatOpsi = dicoba
@@ -170,14 +170,14 @@ export function MenuForm({
   const price = num(v.price),
     hpp = num(v.hpp);
   const hitungOk = Number.isFinite(price) && Number.isFinite(hpp) && price > 0;
-  const margin = hitungOk ? marginPersen({ price, hpp }) : null;
+  const margin = hitungOk ? marginPercent({ price, hpp }) : null;
   const namaKategori = categories.find((c) => String(c.id) === v.category_id)?.name ?? "";
   const uploading = foto?.status === "mengunggah" || galeriSibuk;
 
   async function unggah(file: File, preview: string) {
     const id = ++unggahKe.current;
     setFoto({ file, preview, status: "mengunggah" });
-    const r = await unggahFoto(file, "menu");
+    const r = await uploadPhoto(file, "menu");
     if (id !== unggahKe.current) return;
     if ("error" in r) return setFoto({ file, preview, status: "gagal", pesan: r.error.message }); // MF-E3
     setImageUrl(r.data.public_url);
@@ -207,7 +207,7 @@ export function MenuForm({
     }
     if (menyimpan) return;
     setMenyimpan(true);
-    const r = await panggil(() => saveMenu(menu?.id ?? null, input));
+    const r = await callAction(() => saveMenu(menu?.id ?? null, input));
     if ("error" in r) {
       setMenyimpan(false); // sukses: tetap "Menyimpan…" sampai halaman berpindah
       if (r.error.fields) {
@@ -329,7 +329,7 @@ export function MenuForm({
                 {fotoGalat}
               </p>
             )}
-            {/* foto HP besar diperkecil di lib/unggah.ts sebelum diunggah (batas backend 5 MB) */}
+            {/* foto HP besar diperkecil di lib/upload.ts sebelum diunggah (batas backend 5 MB) */}
             <FileDrop
               id="mf-image_url"
               maxBytes={20 * MB}

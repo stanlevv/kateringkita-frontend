@@ -1,25 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { daftarPerubahan, labelAksi } from "@/services/adminLogService";
+import { listChanges, actionLabel } from "@/services/admin-log.service";
 
 describe("label log", () => {
   it("memetakan aksi ke label Indonesia, tak dikenal apa adanya", () => {
-    expect(labelAksi("merchant.verify")).toBe("Verifikasi penjual");
-    expect(labelAksi("master.categories.create")).toBe("Tambah kategori");
-    expect(labelAksi("promo.update")).toBe("Ubah promo");
-    expect(labelAksi("settings.service_fee")).toBe("Ubah biaya layanan");
-    expect(labelAksi("ticket.reply")).toBe("Balas tiket bantuan");
-    expect(labelAksi("ticket.close")).toBe("Tutup tiket bantuan");
-    expect(labelAksi("x.y")).toBe("x.y");
+    expect(actionLabel("merchant.verify")).toBe("Verifikasi penjual");
+    expect(actionLabel("master.categories.create")).toBe("Tambah kategori");
+    expect(actionLabel("promo.update")).toBe("Ubah promo");
+    expect(actionLabel("settings.service_fee")).toBe("Ubah biaya layanan");
+    expect(actionLabel("ticket.reply")).toBe("Balas tiket bantuan");
+    expect(actionLabel("ticket.close")).toBe("Tutup tiket bantuan");
+    expect(actionLabel("x.y")).toBe("x.y");
   });
   it("daftar perubahan: hanya field yang berbeda, lama → baru", () => {
-    expect(daftarPerubahan({ a: 1, b: "x", c: true }, { a: 2, b: "x", c: false })).toEqual([
-      { field: "a", lama: "1", baru: "2" },
-      { field: "c", lama: "ya", baru: "tidak" },
+    expect(listChanges({ a: 1, b: "x", c: true }, { a: 2, b: "x", c: false })).toEqual([
+      { field: "a", before: "1", after: "2" },
+      { field: "c", before: "ya", after: "tidak" },
     ]);
   });
   it("label Indonesia untuk field dan nilai; field tak dikenal memakai nama asli", () => {
     expect(
-      daftarPerubahan(
+      listChanges(
         { verification_status: "pending", is_open: 1, is_active: 0, suspended_reason: null, verified_at: null, zzz: 1 },
         {
           verification_status: "suspended",
@@ -31,21 +31,20 @@ describe("label log", () => {
         },
       ),
     ).toEqual([
-      { field: "Status verifikasi", lama: "Menunggu", baru: "Ditangguhkan" },
-      { field: "Status dapur", lama: "Buka", baru: "Tutup" },
-      { field: "Aktif", lama: "tidak", baru: "ya" },
-      { field: "Alasan penangguhan", lama: "—", baru: "Menu palsu" },
-      { field: "Diverifikasi pada", lama: "—", baru: expect.stringMatching(/31 Okt 2026/) },
-      { field: "zzz", lama: "1", baru: "2" },
+      { field: "Status verifikasi", before: "Menunggu", after: "Ditangguhkan" },
+      { field: "Status dapur", before: "Buka", after: "Tutup" },
+      { field: "Aktif", before: "tidak", after: "ya" },
+      { field: "Alasan penangguhan", before: "—", after: "Menu palsu" },
+      { field: "Diverifikasi pada", before: "—", after: expect.stringMatching(/31 Okt 2026/) },
+      { field: "zzz", before: "1", after: "2" },
     ]);
-    expect(daftarPerubahan({ sort_order: 1, name: "A" }, { sort_order: 2, name: "B" }).map((p) => p.field)).toEqual([
-      "Urutan",
-      "Nama",
-    ]);
+    expect(
+      listChanges({ sort_order: 1, name: "A" }, { sort_order: 2, name: "B" }).map((change) => change.field),
+    ).toEqual(["Urutan", "Nama"]);
   });
   it("tanpa before (buat): lama '—'; null dan objek bersarang", () => {
-    expect(daftarPerubahan(null, { nama: "Soto", x: null })).toEqual([{ field: "nama", lama: "—", baru: "Soto" }]);
-    expect(daftarPerubahan({ a: null }, { a: 5 })).toEqual([{ field: "a", lama: "—", baru: "5" }]);
-    expect(daftarPerubahan(null, null)).toEqual([]);
+    expect(listChanges(null, { nama: "Soto", x: null })).toEqual([{ field: "nama", before: "—", after: "Soto" }]);
+    expect(listChanges({ a: null }, { a: 5 })).toEqual([{ field: "a", before: "—", after: "5" }]);
+    expect(listChanges(null, null)).toEqual([]);
   });
 });

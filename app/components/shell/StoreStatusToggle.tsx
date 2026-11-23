@@ -3,12 +3,12 @@
 import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { setStoreOpen } from "@/app/actions/store";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
 import { cx } from "@/app/components/ui/cx";
-import { diLuarJamBuka, labelJamBuka } from "@/lib/shell";
+import { isOutsideOpenHours, openHoursLabel } from "@/lib/shell";
 import { useStoreStatus } from "./StoreStatus";
 
 /** SH-E1: ubah status dapur lewat status bersama; gagal -> kembali + toast. Dipakai juga oleh banner dashboard. */
@@ -20,7 +20,7 @@ export function useUbahStatusDapur() {
   async function ubah(ke: boolean) {
     setPending(true);
     setIsOpen(ke);
-    const r = await panggil(() => setStoreOpen(ke));
+    const r = await callAction(() => setStoreOpen(ke));
     setPending(false);
     if ("error" in r) {
       setIsOpen(!ke);
@@ -41,7 +41,7 @@ export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
   // Snapshot server = false, jadi HTML server dan klien awal sama; dihitung ulang setelah hidrasi.
   const luarJam = useSyncExternalStore(
     () => () => {},
-    () => diLuarJamBuka(Date.now(), buka, tutup),
+    () => isOutsideOpenHours(Date.now(), buka, tutup),
     () => false,
   );
 
@@ -67,7 +67,7 @@ export function StoreStatusToggle({ rail = false }: { rail?: boolean }) {
       </div>
       {isOpen && luarJam && (
         <p className={cx("text-xs text-warning", rail && "hidden sb-lebar:block")}>
-          Di luar jam buka ({labelJamBuka(buka, tutup)}) · pembeli belum bisa memesan
+          Di luar jam buka ({openHoursLabel(buka, tutup)}) · pembeli belum bisa memesan
         </p>
       )}
       <ConfirmDialog

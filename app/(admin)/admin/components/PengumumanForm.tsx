@@ -7,7 +7,7 @@ import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Field } from "@/app/components/ui/Field";
 import { Input, Select, Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 
 const LABEL: Record<Penerima, string> = {
   all: "Semua pembeli dan penjual",
@@ -37,7 +37,7 @@ export function PengumumanForm() {
 
   async function kirim() {
     setSibuk(true);
-    const r = await panggil(() => kirimPengumuman(nilai));
+    const r = await callAction(() => kirimPengumuman(nilai));
     setSibuk(false);
     setKonfirmasi(false);
     if ("error" in r) {

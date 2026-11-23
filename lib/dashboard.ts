@@ -1,166 +1,192 @@
-import { geserWib, tanggalWib } from "./format";
-import { nextStatus, type AksiPesanan } from "./order-status";
-import { perluTindakan } from "./shell";
+import { toWibClock, wibDate } from "./format";
+import { nextStatus, type OrderAction } from "./order-status";
+import { countNeedsAction } from "./shell";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
 
 /** Salinan `rec` dengan `key` diganti, atau dihapus bila `v` undefined. */
-export function ganti<V>(rec: Record<string, V>, key: string | number, v: V | undefined): Record<string, V> {
-  const baru = { ...rec };
-  if (v === undefined) delete baru[key];
-  else baru[key] = v;
-  return baru;
+export function setOrDeleteKey<V>(
+  record: Record<string, V>,
+  key: string | number,
+  value: V | undefined,
+): Record<string, V> {
+  const copy = { ...record };
+  if (value === undefined) delete copy[key];
+  else copy[key] = value;
+  return copy;
 }
 
 /** Aksi yang sedang tertunda/terkirim; `dasar` = `updated_at` server saat aksi dipilih (D14). */
-export type Optimis = Record<string, { aksi: AksiPesanan; dasar: string }>;
+export type OptimisticActions = Record<string, { action: OrderAction; baseUpdatedAt: string }>;
 
 /**
  * Tampilkan status tujuan selama `updated_at` server masih sama dengan `dasar`; begitu data baru datang
  * (refresh/polling) entri gugur sendiri dan objek server dipakai apa adanya. `updated_at` tetap milik server.
  */
-export function terapkanOptimis(orders: MerchantOrder[], o: Optimis): MerchantOrder[] {
-  return orders.map((x) => {
-    const e = o[x.code];
-    if (!e || e.dasar !== x.updated_at) return x;
-    const next = nextStatus(x, e.aksi);
-    return "error" in next ? x : { ...next, updated_at: x.updated_at };
+export function applyOptimisticActions(orders: MerchantOrder[], actions: OptimisticActions): MerchantOrder[] {
+  return orders.map((order) => {
+    const action = actions[order.code];
+    if (!action || action.baseUpdatedAt !== order.updated_at) return order;
+    const next = nextStatus(order, action.action);
+    return "error" in next ? order : { ...next, updated_at: order.updated_at };
   });
 }
 
 /** Buang entri yang `dasar`-nya tak cocok lagi dengan data server; objek sama bila tak ada yang dibuang. */
-export function pangkasOptimis(orders: MerchantOrder[], o: Optimis): Optimis {
-  const sisa = Object.entries(o).filter(([c, e]) => orders.some((x) => x.code === c && x.updated_at === e.dasar));
-  return sisa.length === Object.keys(o).length ? o : Object.fromEntries(sisa);
+export function pruneOptimisticActions(orders: MerchantOrder[], actions: OptimisticActions): OptimisticActions {
+  const kept = Object.entries(actions).filter(([code, action]) =>
+    orders.some((order) => order.code === code && order.updated_at === action.baseUpdatedAt),
+  );
+  return kept.length === Object.keys(actions).length ? actions : Object.fromEntries(kept);
 }
 
 /** Detik tahan tersisa dari `hold_until`. */
-export function sisaHold(o: MerchantOrder, sekarang: number): number | null {
-  if (o.status !== "holding" || !o.hold_until) return null;
-  return Math.max(0, Math.ceil((Date.parse(o.hold_until) - sekarang) / 1000));
+export function holdSecondsLeft(order: MerchantOrder, now: number): number | null {
+  if (order.status !== "holding" || !order.hold_until) return null;
+  return Math.max(0, Math.ceil((Date.parse(order.hold_until) - now) / 1000));
 }
 
 /** DB-A4: holding yang waktunya habis ditampilkan Kadaluarsa (server akan menyusul lewat polling). */
-export function terapkanWaktu(orders: MerchantOrder[], sekarang: number): MerchantOrder[] {
-  return orders.map((o) => (sisaHold(o, sekarang) === 0 ? { ...o, status: "expired" } : o));
+export function applyHoldExpiry(orders: MerchantOrder[], now: number): MerchantOrder[] {
+  return orders.map((order) => (holdSecondsLeft(order, now) === 0 ? { ...order, status: "expired" } : order));
 }
 
-export type TabAntrean = "tindakan" | "dimasak" | "siap" | "semua";
+export type QueueTab = "tindakan" | "dimasak" | "siap" | "semua";
 
-const ms = (iso: string | null) => (iso ? Date.parse(iso) : 0);
-const naik = (k: (o: MerchantOrder) => number) => (a: MerchantOrder, b: MerchantOrder) => k(a) - k(b);
-export const BARU_MS = 60_000;
-const KADALUARSA_TAMPIL_MS = 3000;
+const toTimestamp = (iso: string | null) => (iso ? Date.parse(iso) : 0);
+const ascendingBy = (getValue: (order: MerchantOrder) => number) => (first: MerchantOrder, second: MerchantOrder) =>
+  getValue(first) - getValue(second);
+export const NEW_ORDER_MS = 60_000;
+const EXPIRED_VISIBLE_MS = 3000;
 
-export function antrean(orders: MerchantOrder[], tab: TabAntrean, sekarang: number): MerchantOrder[] {
-  const by = (s: MerchantOrder["status"]) => orders.filter((o) => o.status === s);
+export function queueForTab(orders: MerchantOrder[], tab: QueueTab, now: number): MerchantOrder[] {
+  const ofStatus = (status: MerchantOrder["status"]) => orders.filter((order) => order.status === status);
   switch (tab) {
     case "tindakan": {
       // DB-A4: kadaluarsa barusan tetap terlihat 3 dtk. Brief §6: pesanan baru di atas, sisanya paling cepat habis dulu.
-      const tahan = orders.filter(
-        (o) =>
-          o.status === "holding" ||
-          (o.status === "expired" && o.hold_until && sekarang - ms(o.hold_until) < KADALUARSA_TAMPIL_MS),
+      const holdingOrders = orders.filter(
+        (order) =>
+          order.status === "holding" ||
+          (order.status === "expired" && order.hold_until && now - toTimestamp(order.hold_until) < EXPIRED_VISIBLE_MS),
       );
-      const baru = tahan
-        .filter((o) => o.status === "holding" && sekarang - ms(o.created_at) < BARU_MS)
-        .sort(naik((o) => -ms(o.created_at)));
-      const lain = tahan.filter((o) => !baru.includes(o)).sort(naik((o) => ms(o.hold_until)));
-      return [...baru, ...lain, ...by("confirmed").sort(naik((o) => ms(o.confirmed_at)))];
+      const newOrders = holdingOrders
+        .filter((order) => order.status === "holding" && now - toTimestamp(order.created_at) < NEW_ORDER_MS)
+        .sort(ascendingBy((order) => -toTimestamp(order.created_at)));
+      const otherOrders = holdingOrders
+        .filter((order) => !newOrders.includes(order))
+        .sort(ascendingBy((order) => toTimestamp(order.hold_until)));
+      return [
+        ...newOrders,
+        ...otherOrders,
+        ...ofStatus("confirmed").sort(ascendingBy((order) => toTimestamp(order.confirmed_at))),
+      ];
     }
     case "dimasak":
-      return by("cooking").sort(naik((o) => ms(o.cooking_at)));
+      return ofStatus("cooking").sort(ascendingBy((order) => toTimestamp(order.cooking_at)));
     case "siap":
-      return by("ready").sort(naik((o) => ms(o.ready_at)));
+      return ofStatus("ready").sort(ascendingBy((order) => toTimestamp(order.ready_at)));
     case "semua":
-      return [...orders].sort(naik((o) => -ms(o.created_at)));
+      return [...orders].sort(ascendingBy((order) => -toTimestamp(order.created_at)));
   }
 }
 
-export function jumlahTab(orders: MerchantOrder[]): Record<TabAntrean, number> {
-  const n = (s: MerchantOrder["status"]) => orders.filter((o) => o.status === s).length;
-  return { tindakan: perluTindakan(orders), dimasak: n("cooking"), siap: n("ready"), semua: orders.length };
+export function countQueueTabs(orders: MerchantOrder[]): Record<QueueTab, number> {
+  const countStatus = (status: MerchantOrder["status"]) => orders.filter((order) => order.status === status).length;
+  return {
+    tindakan: countNeedsAction(orders),
+    dimasak: countStatus("cooking"),
+    siap: countStatus("ready"),
+    semua: orders.length,
+  };
 }
 
-export type Stok = "habis" | "menipis" | "aman";
-export const stokMenu = (m: Pick<MerchantMenu, "available">): Stok =>
-  m.available <= 0 ? "habis" : m.available <= 3 ? "menipis" : "aman";
+export type StockLevel = "habis" | "menipis" | "aman";
+export const menuStockLevel = (menu: Pick<MerchantMenu, "available">): StockLevel =>
+  menu.available <= 0 ? "habis" : menu.available <= 3 ? "menipis" : "aman";
 
-const PERINGKAT: Record<Stok, number> = { habis: 0, menipis: 1, aman: 2 };
+const STOCK_RANK: Record<StockLevel, number> = { habis: 0, menipis: 1, aman: 2 };
 /** Brief §5: Habis -> Menipis (<= 3) -> Aman; hanya menu aktif. */
-export const urutKuota = (menus: MerchantMenu[]) =>
-  menus.filter((m) => m.is_active).sort((a, b) => PERINGKAT[stokMenu(a)] - PERINGKAT[stokMenu(b)]);
+export const sortMenusByStock = (menus: MerchantMenu[]) =>
+  menus
+    .filter((menu) => menu.is_active)
+    .sort((first, second) => STOCK_RANK[menuStockLevel(first)] - STOCK_RANK[menuStockLevel(second)]);
 
 /**
  * D5: per `code`, baris masuk menang bila `updated_at` >= yang ada; baris dengan `updated_at` & status sama
  * dianggap tak berubah, sehingga respons identik mengembalikan referensi yang sama.
  */
-export function satukanPesanan(lama: MerchantOrder[], masuk: MerchantOrder[]): MerchantOrder[] {
-  const peta = new Map(lama.map((o) => [o.code, o]));
-  let berubah = false;
-  for (const o of masuk) {
-    const ada = peta.get(o.code);
+export function mergeOrders(current: MerchantOrder[], incoming: MerchantOrder[]): MerchantOrder[] {
+  const byCode = new Map(current.map((order) => [order.code, order]));
+  let changed = false;
+  for (const order of incoming) {
+    const existing = byCode.get(order.code);
     if (
-      ada &&
-      (Date.parse(o.updated_at) < Date.parse(ada.updated_at) ||
-        (o.updated_at === ada.updated_at && o.status === ada.status))
+      existing &&
+      (Date.parse(order.updated_at) < Date.parse(existing.updated_at) ||
+        (order.updated_at === existing.updated_at && order.status === existing.status))
     )
       continue;
-    peta.set(o.code, o);
-    berubah = true;
+    byCode.set(order.code, order);
+    changed = true;
   }
-  return berubah ? [...peta.values()] : lama;
+  return changed ? [...byCode.values()] : current;
 }
 
 /** D3: `updated_at` terbesar - 5 dtk (tumpang tindih), atau `cadangan` - 60 dtk bila belum ada pesanan. */
-export function batasSejak(orders: MerchantOrder[], cadangan: number): string {
-  if (orders.length === 0) return new Date(cadangan - 60_000).toISOString();
-  return new Date(Math.max(...orders.map((o) => Date.parse(o.updated_at))) - 5000).toISOString();
+export function updatedSinceCursor(orders: MerchantOrder[], fallbackMs: number): string {
+  if (orders.length === 0) return new Date(fallbackMs - 60_000).toISOString();
+  return new Date(Math.max(...orders.map((order) => Date.parse(order.updated_at))) - 5000).toISOString();
 }
 
 /** D8: selisih jam server - jam klien dari pesanan `holding` pertama yang masih berjalan; null bila tidak ada. */
-export function selisihJam(orders: MerchantOrder[], diterima: number): number | null {
-  const h = orders.find((o) => o.status === "holding" && o.hold_until && (o.seconds_left ?? 0) > 0);
-  return h ? Date.parse(h.hold_until!) - h.seconds_left! * 1000 - diterima : null;
+export function clockOffsetMs(orders: MerchantOrder[], receivedAt: number): number | null {
+  const holdingOrder = orders.find(
+    (order) => order.status === "holding" && order.hold_until && (order.seconds_left ?? 0) > 0,
+  );
+  return holdingOrder ? Date.parse(holdingOrder.hold_until!) - holdingOrder.seconds_left! * 1000 - receivedAt : null;
 }
 
-export type Ringkasan = {
-  omzet: number;
-  kapasitas: { terpakai: number; total: number };
-  perluTindakan: number;
-  rataSiapMenit: number | null;
-  terlaris: { name: string; portions: number } | null;
+export type TodaySummary = {
+  revenue: number;
+  capacity: { used: number; total: number };
+  needsAction: number;
+  averageReadyMinutes: number | null;
+  bestSeller: { name: string; portions: number } | null;
 };
 
-const DIBAYAR_ALUR = new Set<MerchantOrder["status"]>(["confirmed", "cooking", "ready", "completed"]);
+const PAID_FLOW_STATUSES = new Set<MerchantOrder["status"]>(["confirmed", "cooking", "ready", "completed"]);
 
 /** D2 (M-04): KPI dari antrean & kuota yang sama dengan kartu; "hari ini" = tanggal WIB dari `sekarang`. */
-export function ringkasHariIni(orders: MerchantOrder[], menus: MerchantMenu[], sekarang: number): Ringkasan {
-  const hari = geserWib(sekarang).toISOString().slice(0, 10);
-  const hariIni = (iso: string | null) => !!iso && tanggalWib(iso) === hari;
-  const omzet = orders
-    .filter((o) => o.status === "completed" && hariIni(o.completed_at))
-    .reduce((a, o) => a + o.subtotal, 0); // D10: sama dengan revenue laporan (tanpa biaya layanan)
-  const aktif = menus.filter((m) => m.is_active);
-  const kapasitas = {
-    terpakai: aktif.reduce((a, m) => a + m.sold_today + m.held_today, 0),
-    total: aktif.reduce((a, m) => a + m.quota_today, 0),
+export function summarizeToday(orders: MerchantOrder[], menus: MerchantMenu[], now: number): TodaySummary {
+  const todayDate = toWibClock(now).toISOString().slice(0, 10);
+  const isToday = (iso: string | null) => !!iso && wibDate(iso) === todayDate;
+  const revenue = orders
+    .filter((order) => order.status === "completed" && isToday(order.completed_at))
+    .reduce((sum, order) => sum + order.subtotal, 0); // D10: sama dengan revenue laporan (tanpa biaya layanan)
+  const activeMenus = menus.filter((menu) => menu.is_active);
+  const capacity = {
+    used: activeMenus.reduce((sum, menu) => sum + menu.sold_today + menu.held_today, 0),
+    total: activeMenus.reduce((sum, menu) => sum + menu.quota_today, 0),
   };
-  const siap = orders.filter((o) => hariIni(o.ready_at) && o.confirmed_at);
-  const rataSiapMenit = siap.length
-    ? Math.round(siap.reduce((a, o) => a + ms(o.ready_at) - ms(o.confirmed_at), 0) / siap.length / 60_000)
+  const readyOrders = orders.filter((order) => isToday(order.ready_at) && order.confirmed_at);
+  const averageReadyMinutes = readyOrders.length
+    ? Math.round(
+        readyOrders.reduce((sum, order) => sum + toTimestamp(order.ready_at) - toTimestamp(order.confirmed_at), 0) /
+          readyOrders.length /
+          60_000,
+      )
     : null;
-  const porsi = new Map<number, { name: string; portions: number }>();
-  for (const o of orders) {
-    if (!DIBAYAR_ALUR.has(o.status) || !hariIni(o.created_at)) continue;
-    for (const it of o.items) {
-      const p = porsi.get(it.menu_id) ?? { name: it.menu_name, portions: 0 };
-      porsi.set(it.menu_id, { ...p, portions: p.portions + it.qty });
+  const portionsByMenu = new Map<number, { name: string; portions: number }>();
+  for (const order of orders) {
+    if (!PAID_FLOW_STATUSES.has(order.status) || !isToday(order.created_at)) continue;
+    for (const item of order.items) {
+      const entry = portionsByMenu.get(item.menu_id) ?? { name: item.menu_name, portions: 0 };
+      portionsByMenu.set(item.menu_id, { ...entry, portions: entry.portions + item.qty });
     }
   }
-  const terlaris = [...porsi.values()].reduce<Ringkasan["terlaris"]>(
-    (a, p) => (!a || p.portions > a.portions ? p : a),
+  const bestSeller = [...portionsByMenu.values()].reduce<TodaySummary["bestSeller"]>(
+    (best, entry) => (!best || entry.portions > best.portions ? entry : best),
     null,
   );
-  return { omzet, kapasitas, perluTindakan: perluTindakan(orders), rataSiapMenit, terlaris };
+  return { revenue, capacity, needsAction: countNeedsAction(orders), averageReadyMinutes, bestSeller };
 }

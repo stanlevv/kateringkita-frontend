@@ -1,16 +1,16 @@
 // F21: isi QR meja = `${origin}/meja/${token}` (app/components/meja/QrMeja.tsx).
 // Hanya token yang diambil; tujuan selalu /meja/<token> di web ini sendiri, jadi QR dari
 // domain lain tidak bisa membelokkan pelanggan ke situs luar.
-const JALUR_MEJA = /^\/meja\/([A-Za-z0-9_-]{16,64})\/?$/;
+const TABLE_PATH = /^\/meja\/([A-Za-z0-9_-]{16,64})\/?$/;
 
 /** Token meja dari teks QR, atau null bila bukan QR meja KateringKita. */
-export function tokenDariQr(teks: string): string | null {
+export function tableTokenFromQr(text: string): string | null {
   let url: URL;
   try {
-    url = new URL(teks.trim());
+    url = new URL(text.trim());
   } catch {
     return null;
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-  return JALUR_MEJA.exec(url.pathname)?.[1] ?? null;
+  return TABLE_PATH.exec(url.pathname)?.[1] ?? null;
 }

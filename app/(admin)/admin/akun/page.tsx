@@ -1,12 +1,12 @@
 import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { LABEL_LEVEL, type AdminLevel } from "@/lib/admin-level";
-import { requireAdmin } from "@/services/authService";
+import { LEVEL_LABELS, type AdminLevel } from "@/lib/admin-level";
+import { requireAdmin } from "@/services/auth.service";
 
 // Fase 1: akun admin sendiri (ganti sandi). Nama/nomor diubah oleh admin super lain bila perlu.
 export default async function AkunAdminPage() {
   const { user } = await requireAdmin();
-  const level = LABEL_LEVEL[user.admin_level as AdminLevel] ?? "-";
+  const level = LEVEL_LABELS[user.admin_level as AdminLevel] ?? "-";
   return (
     <PageHeader title="Pengaturan akun" description="Ganti kata sandi akun admin Anda.">
       <div className="flex flex-col gap-6">

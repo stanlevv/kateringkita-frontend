@@ -9,21 +9,21 @@ import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { formatJam, formatRupiah, formatTanggal } from "@/lib/format";
-import type { Nada } from "@/lib/order-status";
-import type { HasilAi, KeluaranAsisten, KeluaranRekomendasi, StatusHasilAi } from "@/types/hasil-ai";
+import { callAction } from "@/lib/action";
+import { formatTime, formatRupiah, formatDate } from "@/lib/format";
+import type { Tone } from "@/lib/order-status";
+import type { AiResult, AssistantOutput, RecommendationOutput, AiResultStatus } from "@/types/ai-result";
 
-export const LABEL_STATUS: Record<StatusHasilAi, { label: string; tone: Nada; icon: LucideIcon }> = {
+export const LABEL_STATUS: Record<AiResultStatus, { label: string; tone: Tone; icon: LucideIcon }> = {
   menunggu: { label: "Menunggu", tone: "warning", icon: Clock },
   disetujui: { label: "Disetujui", tone: "success", icon: CheckCircle2 },
   ditolak: { label: "Ditolak", tone: "danger", icon: XCircle },
 };
 const LABEL_FITUR = { asisten: "Asisten toko", rekomendasi: "Rekomendasi pembeli" } as const;
 const ALASAN = "Tulis alasan penolakan (3–300 karakter).";
-const waktu = (iso: string) => `${formatTanggal(iso)} · ${formatJam(iso)} WIB`;
+const waktu = (iso: string) => `${formatDate(iso)} · ${formatTime(iso)} WIB`;
 
-function IsiAsisten({ o }: { o: KeluaranAsisten }) {
+function IsiAsisten({ o }: { o: AssistantOutput }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="whitespace-pre-wrap">{o.jawaban}</p>
@@ -39,7 +39,7 @@ function IsiAsisten({ o }: { o: KeluaranAsisten }) {
   );
 }
 
-function IsiRekomendasi({ o }: { o: KeluaranRekomendasi }) {
+function IsiRekomendasi({ o }: { o: RecommendationOutput }) {
   return (
     <div className="flex flex-col gap-2">
       <p>{o.summary}</p>
@@ -61,7 +61,7 @@ function IsiRekomendasi({ o }: { o: KeluaranRekomendasi }) {
 }
 
 /** Satu hasil AI tersimpan: konteks, masukan (sudah disamarkan), keluaran tervalidasi, status, dan aksi verifikasi. */
-export function KartuHasilAi({ h, bolehUbah }: { h: HasilAi; bolehUbah: boolean }) {
+export function KartuHasilAi({ h, bolehUbah }: { h: AiResult; bolehUbah: boolean }) {
   const router = useRouter();
   const [catatan, setCatatan] = useState("");
   const [galat, setGalat] = useState<string>();
@@ -73,7 +73,7 @@ export function KartuHasilAi({ h, bolehUbah }: { h: HasilAi; bolehUbah: boolean 
     const isi = catatan.trim();
     if (status === "ditolak" && (isi.length < 3 || isi.length > 300)) return setGalat(ALASAN);
     setSibuk(status);
-    const r = await panggil(() => verifikasiHasilAi(h.id, status, isi));
+    const r = await callAction(() => verifikasiHasilAi(h.id, status, isi));
     setSibuk(null);
     if ("error" in r) {
       if (r.error.code === "VALIDATION_ERROR" && r.error.fields?.catatan) return setGalat(r.error.fields.catatan[0]);
@@ -109,9 +109,9 @@ export function KartuHasilAi({ h, bolehUbah }: { h: HasilAi; bolehUbah: boolean 
       <div>
         <p className="text-sm font-semibold text-ink-muted">Keluaran AI (lolos validasi skema)</p>
         {h.fitur === "asisten" ? (
-          <IsiAsisten o={h.output as KeluaranAsisten} />
+          <IsiAsisten o={h.output as AssistantOutput} />
         ) : (
-          <IsiRekomendasi o={h.output as KeluaranRekomendasi} />
+          <IsiRekomendasi o={h.output as RecommendationOutput} />
         )}
       </div>
       {h.verified_by && h.verified_at && (

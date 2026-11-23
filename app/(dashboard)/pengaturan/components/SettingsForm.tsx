@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, TriangleAlert, X } from "lucide-react";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { saveProfile } from "@/app/actions/profile";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -15,13 +15,13 @@ import { FileDrop } from "@/app/components/ui/FileDrop";
 import { Input, Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
-import { formatTelepon } from "@/lib/format";
-import { unggahFoto } from "@/lib/unggah";
-import { cekProfil } from "@/lib/schemas";
+import { formatPhone } from "@/lib/format";
+import { uploadPhoto } from "@/lib/upload";
+import { validateProfile } from "@/lib/schemas";
 import type { MerchantProfile } from "@/types/profile";
 import type { PickupPoint } from "@/types/meta";
-import type { Meja } from "@/types/meja";
-import type { PencairanSaya } from "@/types/pencairan";
+import type { Table } from "@/types/table";
+import type { MyPayouts } from "@/types/payout";
 import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
 import { PesanMeja } from "./PesanMeja";
 import { PickupPointPicker } from "./PickupPointPicker";
@@ -164,7 +164,7 @@ function Gambar({
     berjalan.current = true;
     setSibuk(true);
     onBusy(true);
-    const r = await unggahFoto(f, jenis);
+    const r = await uploadPhoto(f, jenis);
     if (id !== unggahKe.current) return;
     berjalan.current = false;
     setSibuk(false);
@@ -203,7 +203,7 @@ function Gambar({
       <div ref={wadah}>
         <FileDrop
           id={id}
-          maxBytes={20 * MB /* diperkecil di lib/unggah.ts */}
+          maxBytes={20 * MB /* diperkecil di lib/upload.ts */}
           onFile={(f) => void pilih(f)}
           onError={setGalat}
           label={`${url ? "Ganti" : "Pilih"} ${jenis === "logo" ? "logo" : "background"}`}
@@ -235,8 +235,8 @@ type Props = {
   pickupPoints: PickupPoint[] | null;
   user: { full_name: string; phone: string; email: string };
   lengkapi?: string;
-  tables?: Meja[] | null; // F21; undefined = belum dimuat (pratinjau)
-  pencairan?: PencairanSaya | null; // F26; null = gagal dimuat
+  tables?: Table[] | null; // F21; undefined = belum dimuat (pratinjau)
+  pencairan?: MyPayouts | null; // F26; null = gagal dimuat
 };
 
 /** M-10, M-03, PG-*: pengaturan toko. */
@@ -287,7 +287,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
     daily_revenue_target: num(v.daily_revenue_target),
     pickup_point_ids: v.pickup_point_ids,
   };
-  const semua = cekProfil(input);
+  const semua = validateProfile(input);
   const galatSemua = dicoba ? { ...server, ...semua } : semua;
   const galat = (k: string) => (dicoba || tersentuh.has(k) ? galatSemua[k] : undefined);
   const ringkasan = dicoba
@@ -313,7 +313,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
     }
     if (menyimpan) return;
     setMenyimpan(true);
-    const r = await panggil(() => saveProfile(input));
+    const r = await callAction(() => saveProfile(input));
     setMenyimpan(false);
     if ("error" in r) {
       if (r.error.fields) {
@@ -542,7 +542,7 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
               </div>
               <div>
                 <dt className="text-sm text-ink-muted">Nomor WA login</dt>
-                <dd className="font-medium text-ink">{formatTelepon(user.phone)}</dd>
+                <dd className="font-medium text-ink">{formatPhone(user.phone)}</dd>
               </div>
               <div>
                 <dt className="text-sm text-ink-muted">Email</dt>

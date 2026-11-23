@@ -2,10 +2,10 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const getSkenario = vi.fn();
+const getScenario = vi.fn();
 const refresh = vi.fn();
-vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
-vi.mock("@/services/authService", () => ({ requireMerchant: async () => ({}) }));
+vi.mock("@/lib/scenario", () => ({ getScenario: () => getScenario() }));
+vi.mock("@/services/auth.service", () => ({ requireMerchant: async () => ({}) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/store", () => ({ setStoreOpen: vi.fn() }));
 const adjustQuota = vi.fn();
@@ -14,7 +14,7 @@ const orderAction = vi.fn();
 vi.mock("@/app/actions/orders", () => ({ orderAction: (...a: unknown[]) => orderAction(...a) }));
 import { StoreStatusProvider } from "@/app/components/shell/StoreStatus";
 import { Toaster } from "@/app/components/ui/Toast";
-import { formatJam, formatRupiah } from "@/lib/format";
+import { formatTime, formatRupiah } from "@/lib/format";
 import { menus } from "@/lib/fixtures/menus";
 import { orders } from "@/lib/fixtures/orders";
 import type { MerchantMenu } from "@/types/menu";
@@ -86,7 +86,7 @@ let ue: ReturnType<typeof userEvent.setup>;
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   ue = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-  getSkenario.mockResolvedValue(null);
+  getScenario.mockResolvedValue(null);
   refresh.mockReset();
   orderAction.mockReset();
   adjustQuota.mockReset();
@@ -270,7 +270,7 @@ describe("galat data (G-1 / DB-E5)", () => {
   it("penyegaran 503 -> banner dengan jam sinkron sukses terakhir, kartu & aksi tetap; sukses -> banner hilang", async () => {
     render(ui(muat()));
     await maju(5000); // sukses
-    const jam = formatJam(new Date().toISOString());
+    const jam = formatTime(new Date().toISOString());
     fetchMock.mockImplementation(async () => gagal());
     await maju(5000);
     expect(screen.getByText(`Koneksi terputus — data terakhir ${jam}. Mencoba lagi…`)).toBeInTheDocument();

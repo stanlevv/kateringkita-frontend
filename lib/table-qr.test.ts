@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { tokenDariQr } from "./meja-qr";
+import { tableTokenFromQr } from "./table-qr";
 
-const T = "18239d39dcdeb7616e3c5abb87316985";
+const TOKEN = "18239d39dcdeb7616e3c5abb87316985";
 
 describe("tokenDariQr", () => {
   it("QR meja KateringKita (domain mana pun yang memakai jalur /meja/<token>)", () => {
-    expect(tokenDariQr(`https://ketringkita.edufin.app/meja/${T}`)).toBe(T);
-    expect(tokenDariQr(`https://ketringkita-frontend.vercel.app/meja/${T}/`)).toBe(T);
-    expect(tokenDariQr(`  http://localhost:3000/meja/${T}?ref=x  `)).toBe(T);
+    expect(tableTokenFromQr(`https://ketringkita.edufin.app/meja/${TOKEN}`)).toBe(TOKEN);
+    expect(tableTokenFromQr(`https://ketringkita-frontend.vercel.app/meja/${TOKEN}/`)).toBe(TOKEN);
+    expect(tableTokenFromQr(`  http://localhost:3000/meja/${TOKEN}?ref=x  `)).toBe(TOKEN);
   });
   it("bukan QR meja → null", () => {
-    expect(tokenDariQr("https://ketringkita.edufin.app/menu")).toBeNull();
-    expect(tokenDariQr(`https://ketringkita.edufin.app/meja/pesanan/KK-1`)).toBeNull();
-    expect(tokenDariQr("halo dunia")).toBeNull();
-    expect(tokenDariQr("javascript:alert(1)")).toBeNull();
-    expect(tokenDariQr(`https://ketringkita.edufin.app/meja/${T}/lain`)).toBeNull();
-    expect(tokenDariQr("https://ketringkita.edufin.app/meja/ab")).toBeNull();
+    expect(tableTokenFromQr("https://ketringkita.edufin.app/menu")).toBeNull();
+    expect(tableTokenFromQr(`https://ketringkita.edufin.app/meja/pesanan/KK-1`)).toBeNull();
+    expect(tableTokenFromQr("halo dunia")).toBeNull();
+    expect(tableTokenFromQr("javascript:alert(1)")).toBeNull();
+    expect(tableTokenFromQr(`https://ketringkita.edufin.app/meja/${TOKEN}/lain`)).toBeNull();
+    expect(tableTokenFromQr("https://ketringkita.edufin.app/meja/ab")).toBeNull();
   });
 });

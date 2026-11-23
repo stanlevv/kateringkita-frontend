@@ -1,9 +1,9 @@
 import type { Review } from "@/types/review";
 import { menus } from "./menus";
-import { hariLalu } from "./waktu";
+import { daysAgo } from "./time";
 
-const NAMA = ["Rafli R.", "Salsa P.", "Dimas P.", "Nadia K.", "Bagas W.", "Intan P.", "Yoga P.", "Citra A."];
-const KOMENTAR: (string | null)[] = [
+const CUSTOMER_NAMES = ["Rafli R.", "Salsa P.", "Dimas P.", "Nadia K.", "Bagas W.", "Intan P.", "Yoga P.", "Citra A."];
+const COMMENTS: (string | null)[] = [
   "Enak dan porsinya pas.",
   "Datang tepat waktu, masih hangat.",
   null,
@@ -18,17 +18,17 @@ const KOMENTAR: (string | null)[] = [
 const RATING = [5, 5, 4, 5, 3, 5, 4, 5, 2, 5, 4, 5, 5, 4, 3, 5, 4, 5, 5, 4];
 
 export const reviews = (): Review[] => {
-  const katalog = menus();
+  const menuList = menus();
   return RATING.map((rating, i) => {
-    const m = katalog[(i * 5) % katalog.length];
+    const menu = menuList[(i * 5) % menuList.length];
     return {
       id: i + 1,
-      menu_id: m.id,
-      menu_name: m.name,
-      customer_name: NAMA[i % NAMA.length],
+      menu_id: menu.id,
+      menu_name: menu.name,
+      customer_name: CUSTOMER_NAMES[i % CUSTOMER_NAMES.length],
       rating,
-      comment: KOMENTAR[i % KOMENTAR.length],
-      created_at: hariLalu(Math.floor(i / 2)),
+      comment: COMMENTS[i % COMMENTS.length],
+      created_at: daysAgo(Math.floor(i / 2)),
     };
   });
 };

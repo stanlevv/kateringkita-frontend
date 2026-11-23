@@ -1,11 +1,11 @@
 "use server";
 
-import { galat, galatField } from "@/lib/action-result";
-import { cekField, changePasswordSchema } from "@/lib/schemas";
+import { errorResult, fieldErrorResult } from "@/lib/action-result";
+import { validateFields, changePasswordSchema } from "@/lib/schemas";
 import { apiFetch } from "@/services/api";
-import { getSession, getSessionToken } from "@/services/authService";
+import { getSession, getSessionToken } from "@/services/auth.service";
 import { redirect } from "next/navigation";
-import { getSkenario } from "@/lib/skenario";
+import { getScenario } from "@/lib/scenario";
 import type { ActionResult } from "@/types/api";
 
 // F02: PUT /me/password (204); backend mencabut sesi lain, sesi ini tetap
@@ -15,15 +15,15 @@ export async function changePassword(input: {
   new_password: string;
 }): Promise<ActionResult<{ ok: true }>> {
   if (!(await getSession())) redirect("/login?alasan=sesi-habis");
-  const s = await getSkenario();
-  if (s === "gagal-aksi") return galat("INTERNAL_ERROR", "Kata sandi belum diganti. Coba lagi.");
+  const s = await getScenario();
+  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Kata sandi belum diganti. Coba lagi.");
 
-  const masalah = cekField(changePasswordSchema, input);
+  const masalah = validateFields(changePasswordSchema, input);
   if (Object.keys(masalah).length > 0) {
-    return galatField(masalah, "Periksa kembali isian kata sandi.");
+    return fieldErrorResult(masalah, "Periksa kembali isian kata sandi.");
   }
   if (s === "konflik") {
-    return galatField({ current_password: "Kata sandi lama salah." }, "Kata sandi lama salah.");
+    return fieldErrorResult({ current_password: "Kata sandi lama salah." }, "Kata sandi lama salah.");
   }
   const res = await apiFetch("/me/password", {
     method: "PUT",

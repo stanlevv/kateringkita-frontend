@@ -5,8 +5,8 @@ import { PageHeader } from "@/app/components/shell/PageHeader";
 import { Banner } from "@/app/components/ui/Banner";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
-import { getOrder } from "@/services/orderService";
-import { requireMerchant } from "@/services/authService";
+import { getOrder } from "@/services/order.service";
+import { requireMerchant } from "@/services/auth.service";
 import { KembaliKePesanan } from "../components/KembaliKePesanan";
 
 // M-04, M-08 — Detail pesanan (PS-N2, PS-A1, PS-E1).

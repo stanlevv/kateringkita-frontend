@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { cx, fokus } from "@/app/components/ui/cx";
-import { ringkasPerMenu, ringkasUlasan, urlUlasan } from "@/lib/ulasan";
+import { summarizeByMenu, summarizeReviews, reviewsUrl } from "@/lib/review";
 import type { Review } from "@/types/review";
 
 const desimal = (n: number) => n.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -24,7 +24,7 @@ export function Bintang({ nilai, teks }: { nilai: number; teks?: string }) {
 
 /** UL-N1: rata-rata toko, jumlah ulasan, sebaran 5→1. */
 export function RatingSummary({ reviews }: { reviews: Review[] }) {
-  const { total, rata, sebaran } = ringkasUlasan(reviews);
+  const { total, average: rata, distribution: sebaran } = summarizeReviews(reviews);
   return (
     <section
       aria-label="Ringkasan ulasan"
@@ -37,16 +37,16 @@ export function RatingSummary({ reviews }: { reviews: Review[] }) {
       </div>
       <ul className="flex flex-1 flex-col gap-2">
         {sebaran.map((s) => (
-          <li key={s.bintang} className="flex items-center gap-3">
-            <span className="w-20 shrink-0 text-sm text-ink">{s.bintang} bintang</span>
+          <li key={s.stars} className="flex items-center gap-3">
+            <span className="w-20 shrink-0 text-sm text-ink">{s.stars} bintang</span>
             <span aria-hidden className="h-2 flex-1 overflow-hidden rounded-full bg-subtle">
               <span
                 className="block h-full rounded-full bg-warning"
-                style={{ width: `${total ? (s.jumlah / total) * 100 : 0}%` }}
+                style={{ width: `${total ? (s.count / total) * 100 : 0}%` }}
               />
             </span>
             <span data-testid="jumlah" className="w-8 shrink-0 text-right font-mono text-sm text-ink">
-              {s.jumlah}
+              {s.count}
             </span>
           </li>
         ))}
@@ -72,10 +72,10 @@ export function MenuRatings({
       <Link href="/ulasan" aria-current={menuId === undefined ? "true" : undefined} className={cx(baris, fokus)}>
         Semua menu
       </Link>
-      {ringkasPerMenu(reviews, menus).map((m) => (
+      {summarizeByMenu(reviews, menus).map((m) => (
         <Link
           key={m.menu_id}
-          href={urlUlasan({ menu: m.menu_id })}
+          href={reviewsUrl({ menu: m.menu_id })}
           aria-current={menuId === m.menu_id ? "true" : undefined}
           className={cx(baris, fokus)}
         >
@@ -83,13 +83,13 @@ export function MenuRatings({
             {m.menu_name}
           </span>
           <span className="flex shrink-0 items-center gap-2 text-sm">
-            {m.jumlah > 0 ? (
+            {m.count > 0 ? (
               <>
-                <Bintang nilai={m.rata} teks={`${desimal(m.rata)} dari 5 bintang`} />
-                <span className="font-mono">{desimal(m.rata)}</span>
+                <Bintang nilai={m.average} teks={`${desimal(m.average)} dari 5 bintang`} />
+                <span className="font-mono">{desimal(m.average)}</span>
               </>
             ) : null}
-            <span className="text-ink-muted">{m.jumlah > 0 ? `${m.jumlah} ulasan` : "Belum ada ulasan"}</span>
+            <span className="text-ink-muted">{m.count > 0 ? `${m.count} ulasan` : "Belum ada ulasan"}</span>
           </span>
         </Link>
       ))}

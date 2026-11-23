@@ -6,8 +6,8 @@ import { Button } from "@/app/components/ui/Button";
 import { PaymentBadge } from "@/app/components/ui/PaymentBadge";
 import { StatusBadge } from "@/app/components/ui/StatusBadge";
 import { cx } from "@/app/components/ui/cx";
-import { formatJam, formatRupiah, formatTelepon } from "@/lib/format";
-import { statusViewPesanan, teksAksi, type AksiPesanan } from "@/lib/order-status";
+import { formatTime, formatRupiah, formatPhone } from "@/lib/format";
+import { orderStatusView, actionTexts, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 import { ChatWaLink, TombolTolak } from "@/app/components/orders/galatAksi";
 
@@ -20,15 +20,15 @@ type Props = {
   sekarang?: number;
   baru?: boolean;
   /** Aksi yang sedang ditunda/dikirim untuk kartu ini. */
-  pending?: AksiPesanan;
-  onAksi: (aksi: AksiPesanan) => void;
+  pending?: OrderAction;
+  onAksi: (aksi: OrderAction) => void;
   onTolak: () => void;
   onSlip: () => void;
 };
 
 /** Brief v3 §4. Satu aksi utama per status dari `statusView`. */
 export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onTolak, onSlip }: Props) {
-  const v = statusViewPesanan(o);
+  const v = orderStatusView(o);
   const segera = sisa !== null && sisa < 60;
   const totalTahan = o.hold_until ? Math.max(1, (Date.parse(o.hold_until) - Date.parse(o.created_at)) / 1000) : 300;
   const menitMasak =
@@ -89,14 +89,14 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
             </span>
           )}
           {menitMasak !== null && <span className="text-info">{menitMasak} mnt</span>}
-          <span className="font-mono text-ink-muted">{formatJam(o.created_at)}</span>
+          <span className="font-mono text-ink-muted">{formatTime(o.created_at)}</span>
         </span>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-ink">
           <span className="font-semibold">{o.customer_name}</span>{" "}
-          {o.customer_phone && <span className="text-ink-muted">· {formatTelepon(o.customer_phone)}</span>}
+          {o.customer_phone && <span className="text-ink-muted">· {formatPhone(o.customer_phone)}</span>}
         </p>
         <PaymentBadge method={o.payment_method} status={o.payment_status} />
       </div>
@@ -120,7 +120,7 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
           <span>{o.table ? `Meja ${o.table.label}` : o.pickup_point?.name}</span>
         </span>
         <span>
-          {o.table ? "Makan di tempat" : o.pickup_at ? `Ambil: ${formatJam(o.pickup_at)}` : "Ambil: secepatnya"}
+          {o.table ? "Makan di tempat" : o.pickup_at ? `Ambil: ${formatTime(o.pickup_at)}` : "Ambil: secepatnya"}
         </span>
       </div>
       {o.note && <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink">“{o.note}”</p>}
@@ -143,7 +143,7 @@ export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onT
               data-aksi-utama
               className="w-full sm:w-auto"
               loading={pending === v.primary}
-              loadingText={teksAksi[v.primary].proses}
+              loadingText={actionTexts[v.primary].pending}
               disabled={!!pending}
               onClick={() => onAksi(v.primary!)}
             >

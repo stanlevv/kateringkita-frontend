@@ -9,7 +9,7 @@ vi.mock("@/services/api", async (orig) => ({
       : path === "/tables"
         ? []
         : path === "/payouts"
-          ? (await import("@/lib/fixtures/pencairan")).pencairanSaya()
+          ? (await import("@/lib/fixtures/payouts")).myPayouts()
           : (await import("@/lib/fixtures/profile")).profile(),
     meta: { total: 16 },
   }),
@@ -18,13 +18,13 @@ vi.mock("@/services/api", async (orig) => ({
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const getSkenario = vi.fn();
+const getScenario = vi.fn();
 const requireMerchant = vi.fn(async () => ({
   user: { full_name: "Diego", phone: "081234567890", email: "d@x.id" },
   merchant: null,
 }));
-vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
-vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
+vi.mock("@/lib/scenario", () => ({ getScenario: () => getScenario() }));
+vi.mock("@/services/auth.service", () => ({ requireMerchant: () => requireMerchant() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock("@/app/actions/profile", () => ({ saveProfile: vi.fn() }));
 vi.mock("@/app/actions/account", () => ({ changePassword: vi.fn() }));
@@ -33,13 +33,13 @@ import TemplateWAPage from "../template-wa/page";
 
 const q = (o: Record<string, string> = {}) => Promise.resolve(o);
 afterEach(() => {
-  getSkenario.mockReset();
+  getScenario.mockReset();
   requireMerchant.mockClear();
 });
 
 describe("halaman /pengaturan (M-10)", () => {
   it("memanggil requireMerchant; satu h1; semua bagian ada", async () => {
-    getSkenario.mockResolvedValue(null);
+    getScenario.mockResolvedValue(null);
     render(await PengaturanPage({ searchParams: q() }));
     expect(requireMerchant).toHaveBeenCalled();
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
@@ -47,7 +47,7 @@ describe("halaman /pengaturan (M-10)", () => {
       expect(document.getElementById(id)).toBeInTheDocument();
   });
   it("gagal-muat -> pesan dan Coba lagi, tanpa form", async () => {
-    getSkenario.mockResolvedValue("gagal-muat");
+    getScenario.mockResolvedValue("gagal-muat");
     render(await PengaturanPage({ searchParams: q() }));
     expect(screen.getByRole("button", { name: "Coba lagi" })).toBeInTheDocument();
     expect(document.getElementById("profil")).not.toBeInTheDocument();
@@ -56,14 +56,14 @@ describe("halaman /pengaturan (M-10)", () => {
 
 describe("halaman /template-wa (M-11)", () => {
   it("memanggil requireMerchant; satu h1; pratinjau dari pesanan pertama", async () => {
-    getSkenario.mockResolvedValue(null);
+    getScenario.mockResolvedValue(null);
     render(await TemplateWAPage());
     expect(requireMerchant).toHaveBeenCalled();
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByRole("region", { name: "Pratinjau pesan" })).toHaveTextContent("Rafli Ramadhan");
   });
   it("gagal-muat -> Coba lagi", async () => {
-    getSkenario.mockResolvedValue("gagal-muat");
+    getScenario.mockResolvedValue("gagal-muat");
     render(await TemplateWAPage());
     expect(screen.getByRole("button", { name: "Coba lagi" })).toBeInTheDocument();
   });

@@ -7,11 +7,11 @@ import { Field } from "@/app/components/ui/Field";
 import { Select } from "@/app/components/ui/Input";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { Tabs } from "@/app/components/ui/Tabs";
-import { LIMIT_HASIL_AI, TAB_HASIL_AI as TAB, type TabHasilAi } from "@/lib/hasil-ai";
-import type { HasilAi } from "@/types/hasil-ai";
+import { LIMIT_AI_RESULTS, AI_RESULT_TABS as TAB, type AiResultTab } from "@/lib/ai-result";
+import type { AiResult } from "@/types/ai-result";
 import { KartuHasilAi } from "./KartuHasilAi";
 
-const KOSONG: Record<TabHasilAi, string> = {
+const KOSONG: Record<AiResultTab, string> = {
   menunggu: "Tidak ada hasil AI yang menunggu verifikasi",
   disetujui: "Belum ada hasil AI yang disetujui",
   ditolak: "Belum ada hasil AI yang ditolak",
@@ -27,8 +27,8 @@ export function DaftarHasilAi({
   total,
   bolehUbah,
 }: {
-  rows: HasilAi[];
-  tab: TabHasilAi;
+  rows: AiResult[];
+  tab: AiResultTab;
   fitur: string;
   page: number;
   total: number;
@@ -76,8 +76,8 @@ export function DaftarHasilAi({
           ))}
         </div>
       )}
-      {total > LIMIT_HASIL_AI && (
-        <Pagination page={page} total={total} limit={LIMIT_HASIL_AI} hrefFor={(p) => url({ page: p })} />
+      {total > LIMIT_AI_RESULTS && (
+        <Pagination page={page} total={total} limit={LIMIT_AI_RESULTS} hrefFor={(p) => url({ page: p })} />
       )}
     </div>
   );

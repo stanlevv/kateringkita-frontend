@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cx, fokus } from "@/app/components/ui/cx";
-import { halamanBoleh } from "@/lib/admin-level";
+import { canAccessPage } from "@/lib/admin-level";
 import { NAV, adminNav } from "./nav";
 
 /** `rail`: hanya ikon (tooltip lewat title/aria-label) kecuali sidebar sedang lebar (varian sb-lebar); tanpa `rail` selalu penuh (drawer). */
@@ -23,7 +23,7 @@ export function NavList({
   admin?: boolean;
   level?: unknown;
 }) {
-  const nav = admin ? adminNav.map((g) => ({ ...g, items: g.items.filter((i) => halamanBoleh(level, i.href)) })) : NAV;
+  const nav = admin ? adminNav.map((g) => ({ ...g, items: g.items.filter((i) => canAccessPage(level, i.href)) })) : NAV;
   const path = usePathname();
   const teks = rail ? "hidden sb-lebar:inline" : "";
   return (

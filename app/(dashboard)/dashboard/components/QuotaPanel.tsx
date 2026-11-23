@@ -3,7 +3,7 @@
 import { UtensilsCrossed } from "lucide-react";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
-import { urutKuota } from "@/lib/dashboard";
+import { sortMenusByStock } from "@/lib/dashboard";
 import type { MerchantMenu } from "@/types/menu";
 import { QuotaRow } from "@/app/components/menu/QuotaRow";
 import { useKuota } from "@/hooks/useKuota";
@@ -24,7 +24,7 @@ export function QuotaPanel({
   const { ubahDelta, ubahMutlak, dengan } = useKuota(onBerubah, menus);
 
   // Urutan dari nilai tersimpan agar baris tidak melompat saat sedang diubah.
-  const daftar = urutKuota(menus).map(dengan);
+  const daftar = sortMenusByStock(menus).map(dengan);
 
   return (
     <section

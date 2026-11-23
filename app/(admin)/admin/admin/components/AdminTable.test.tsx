@@ -11,10 +11,10 @@ vi.mock("@/app/actions/admin/akun", () => ({
   ubahLevelAdmin: vi.fn(),
   setAktifAdmin: (...a: unknown[]) => setAktifAdmin(...a),
 }));
-import type { AkunAdmin } from "@/types/admin";
+import type { AdminAccount } from "@/types/admin";
 import { AdminTable } from "./AdminTable";
 
-const nonaktif: AkunAdmin = {
+const nonaktif: AdminAccount = {
   id: 5,
   full_name: "Rina",
   phone: "081211112222",

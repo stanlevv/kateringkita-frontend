@@ -1,30 +1,30 @@
-import type { JenisAi } from "@/types/ai";
+import type { AiProviderType } from "@/types/ai";
 
 /** F22: tiap jenis penyedia AI — tempat membuat key gratis & contoh model (nama model bisa berubah; admin bebas mengetik). */
-export const INFO_AI: Record<JenisAi, { nama: string; kunci: string; contoh: string[] }> = {
+export const AI_PROVIDER_INFO: Record<AiProviderType, { name: string; keyUrl: string; exampleModels: string[] }> = {
   gemini: {
-    nama: "Google Gemini (AI Studio)",
-    kunci: "https://aistudio.google.com/apikey",
-    contoh: ["gemini-2.5-flash", "gemini-2.5-flash-lite"],
+    name: "Google Gemini (AI Studio)",
+    keyUrl: "https://aistudio.google.com/apikey",
+    exampleModels: ["gemini-2.5-flash", "gemini-2.5-flash-lite"],
   },
   groq: {
-    nama: "Groq",
-    kunci: "https://console.groq.com/keys",
-    contoh: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+    name: "Groq",
+    keyUrl: "https://console.groq.com/keys",
+    exampleModels: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
   },
   openrouter: {
-    nama: "OpenRouter",
-    kunci: "https://openrouter.ai/settings/keys",
-    contoh: ["meta-llama/llama-3.3-70b-instruct:free"],
+    name: "OpenRouter",
+    keyUrl: "https://openrouter.ai/settings/keys",
+    exampleModels: ["meta-llama/llama-3.3-70b-instruct:free"],
   },
-  nvidia: { nama: "NVIDIA NIM", kunci: "https://build.nvidia.com", contoh: ["meta/llama-3.3-70b-instruct"] },
+  nvidia: { name: "NVIDIA NIM", keyUrl: "https://build.nvidia.com", exampleModels: ["meta/llama-3.3-70b-instruct"] },
 };
-export const JENIS_AI = Object.keys(INFO_AI) as JenisAi[];
+export const AI_PROVIDER_TYPES = Object.keys(AI_PROVIDER_INFO) as AiProviderType[];
 
 /** Status siap pakai untuk tampilan: nonaktif, istirahat (sampai jam), atau siap. */
-export function statusAi(p: { is_active: boolean; cooldown_until: string | null }, kini = Date.now()) {
-  if (!p.is_active) return { jenis: "nonaktif" as const };
-  if (p.cooldown_until && Date.parse(p.cooldown_until) > kini)
-    return { jenis: "istirahat" as const, sampai: p.cooldown_until };
-  return { jenis: "siap" as const };
+export function aiProviderStatus(provider: { is_active: boolean; cooldown_until: string | null }, now = Date.now()) {
+  if (!provider.is_active) return { kind: "nonaktif" as const };
+  if (provider.cooldown_until && Date.parse(provider.cooldown_until) > now)
+    return { kind: "istirahat" as const, until: provider.cooldown_until };
+  return { kind: "siap" as const };
 }

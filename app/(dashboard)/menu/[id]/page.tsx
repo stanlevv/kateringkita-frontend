@@ -4,9 +4,9 @@ import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";
-import { getMenu } from "@/services/menuService";
-import { getCategories } from "@/services/metaService";
-import { requireMerchant } from "@/services/authService";
+import { getMenu } from "@/services/menu.service";
+import { getCategories } from "@/services/meta.service";
+import { requireMerchant } from "@/services/auth.service";
 
 // M-07, MF-N2 — Ubah menu. MF-E5: id tidak ada ditampilkan di halaman ini, bukan 404 global.
 export default async function UbahMenuPage({ params }: { params: Promise<{ id: string }> }) {

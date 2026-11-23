@@ -1,33 +1,33 @@
 import "server-only";
 import { apiFetch } from "@/services/api";
-import { getSessionToken } from "@/services/authService";
-import { getSkenario } from "@/lib/skenario";
+import { getSessionToken } from "@/services/auth.service";
+import { getScenario } from "@/lib/scenario";
 import type { DataResult } from "@/types/api";
-import type { Notifikasi } from "@/types/notifikasi";
+import type { AppNotification } from "@/types/notification";
 
-export const LIMIT_NOTIF = 20;
-type Meta = { total?: number; unread_count?: number };
+export const LIMIT_NOTIFICATIONS = 20;
+type NotificationMeta = { total?: number; unread_count?: number };
 
 // GET /me/notifications (semua peran): pengumuman admin, hasil moderasi foto menu, dll.
-export async function getNotifikasi(
+export async function getNotifications(
   page: number,
-): Promise<DataResult<{ rows: Notifikasi[]; total: number; unread: number }>> {
-  const s = await getSkenario();
-  if (s === "gagal-muat") return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
-  if (s === "kosong" || s === "penjual-baru") return { data: { rows: [], total: 0, unread: 0 } };
-  const res = await apiFetch<Notifikasi[]>(`/me/notifications?page=${page}&limit=${LIMIT_NOTIF}`, {
+): Promise<DataResult<{ rows: AppNotification[]; total: number; unread: number }>> {
+  const scenario = await getScenario();
+  if (scenario === "gagal-muat") return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
+  if (scenario === "kosong" || scenario === "penjual-baru") return { data: { rows: [], total: 0, unread: 0 } };
+  const response = await apiFetch<AppNotification[]>(`/me/notifications?page=${page}&limit=${LIMIT_NOTIFICATIONS}`, {
     token: await getSessionToken(),
   });
-  if (!res.ok || !res.data)
-    return { error: res.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
-  const m = (res.meta ?? {}) as Meta;
-  return { data: { rows: res.data, total: m.total ?? res.data.length, unread: m.unread_count ?? 0 } };
+  if (!response.ok || !response.data)
+    return { error: response.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
+  const meta = (response.meta ?? {}) as NotificationMeta;
+  return { data: { rows: response.data, total: meta.total ?? response.data.length, unread: meta.unread_count ?? 0 } };
 }
 
 /** Badge sidebar "Notifikasi"; galat dianggap 0 (sama dengan getJumlahTindakan). */
-export async function getJumlahNotif(): Promise<number> {
-  const s = await getSkenario();
-  if (s === "gagal-muat" || s === "kosong" || s === "penjual-baru") return 0;
-  const res = await apiFetch<Notifikasi[]>("/me/notifications?limit=1", { token: await getSessionToken() });
-  return res.ok ? Number((res.meta as Meta | undefined)?.unread_count ?? 0) : 0;
+export async function getUnreadNotificationCount(): Promise<number> {
+  const scenario = await getScenario();
+  if (scenario === "gagal-muat" || scenario === "kosong" || scenario === "penjual-baru") return 0;
+  const response = await apiFetch<AppNotification[]>("/me/notifications?limit=1", { token: await getSessionToken() });
+  return response.ok ? Number((response.meta as NotificationMeta | undefined)?.unread_count ?? 0) : 0;
 }

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Download, Printer, RefreshCw } from "lucide-react";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { setDineIn, tambahMeja, ubahMeja } from "@/app/actions/meja";
 import { gambarQr, QrMeja } from "@/app/components/meja/QrMeja";
 import { Button } from "@/app/components/ui/Button";
@@ -12,26 +12,26 @@ import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
-import type { Meja } from "@/types/meja";
+import type { Table } from "@/types/table";
 
-async function unduh(m: Meja) {
+async function unduh(m: Table) {
   const a = document.createElement("a");
   a.href = await gambarQr(m.token, 1024);
   a.download = `qr-meja-${m.label}.png`;
   a.click();
 }
 
-export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwal: Meja[] | null }) {
+export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwal: Table[] | null }) {
   const [aktif, setAktif] = useState(aktifAwal);
-  const [meja, setMeja] = useState<Meja[]>(mejaAwal ?? []);
+  const [meja, setMeja] = useState<Table[]>(mejaAwal ?? []);
   const [label, setLabel] = useState("");
   const [galat, setGalat] = useState<string>();
   const [sibuk, setSibuk] = useState(false);
-  const [ganti, setGanti] = useState<Meja | null>(null);
+  const [ganti, setGanti] = useState<Table | null>(null);
 
   async function sakelar(v: boolean) {
     setAktif(v);
-    const r = await panggil(() => setDineIn(v));
+    const r = await callAction(() => setDineIn(v));
     if ("error" in r) {
       setAktif(!v);
       toast({ tone: "danger", message: r.error.message });
@@ -43,7 +43,7 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
   async function tambah(e: FormEvent) {
     e.preventDefault();
     setSibuk(true);
-    const r = await panggil(() => tambahMeja(label));
+    const r = await callAction(() => tambahMeja(label));
     setSibuk(false);
     if ("error" in r) {
       setGalat(r.error.fields?.label?.[0] ?? r.error.message);
@@ -54,8 +54,8 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
     setGalat(undefined);
   }
 
-  async function ubah(m: Meja, input: { is_active?: boolean; ganti_token?: true }) {
-    const r = await panggil(() => ubahMeja(m.id, input));
+  async function ubah(m: Table, input: { is_active?: boolean; ganti_token?: true }) {
+    const r = await callAction(() => ubahMeja(m.id, input));
     if ("error" in r) {
       toast({ tone: "danger", message: r.error.message });
       return;

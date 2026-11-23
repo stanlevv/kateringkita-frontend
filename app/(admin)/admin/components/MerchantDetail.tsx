@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { checklistLengkap, linkWa } from "@/services/adminMerchantService";
-import { daftarPerubahan, labelAksi } from "@/services/adminLogService";
-import type { DetailPenjual } from "@/types/admin";
-import { formatJam, formatTanggal, formatTelepon } from "@/lib/format";
+import { isChecklistComplete, whatsappLink } from "@/services/admin-merchant.service";
+import { listChanges, actionLabel } from "@/services/admin-log.service";
+import type { AdminMerchantDetail } from "@/types/admin";
+import { formatTime, formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
 import { StatusVerifikasi } from "./StatusVerifikasi";
@@ -21,12 +21,12 @@ const Kartu = ({ judul, children }: { judul: string; children: React.ReactNode }
 );
 
 /** A-05 — profil lengkap penjual, checklist, aksi sesuai status, dan log toko. */
-export function MerchantDetail({ m }: { m: DetailPenjual }) {
+export function MerchantDetail({ m }: { m: AdminMerchantDetail }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <StatusVerifikasi status={m.verification_status} />
-        <AdminActionDialog id={m.id} status={m.verification_status} lengkap={checklistLengkap(m.checklist)} />
+        <AdminActionDialog id={m.id} status={m.verification_status} lengkap={isChecklistComplete(m.checklist)} />
       </div>
       {m.verification_status === "needs_fix" && m.verification_note && <p>Catatan admin: {m.verification_note}</p>}
       {m.verification_status === "suspended" && m.suspended_reason && <p>Alasan penangguhan: {m.suspended_reason}</p>}
@@ -38,8 +38,8 @@ export function MerchantDetail({ m }: { m: DetailPenjual }) {
           <Baris k="Jumlah menu">{m.menu_count} menu aktif</Baris>
           <Baris k="Alamat">{m.address}</Baris>
           <Baris k="WhatsApp">
-            <a href={linkWa(m.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
-              {formatTelepon(m.wa_number)}
+            <a href={whatsappLink(m.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
+              {formatPhone(m.wa_number)}
             </a>
           </Baris>
           <Baris k="Jam buka">
@@ -54,7 +54,7 @@ export function MerchantDetail({ m }: { m: DetailPenjual }) {
       <Kartu judul="Pemilik">
         <dl className="flex flex-col gap-2">
           <Baris k="Nama">{m.owner.full_name}</Baris>
-          <Baris k="Telepon">{formatTelepon(m.owner.phone)}</Baris>
+          <Baris k="Telepon">{formatPhone(m.owner.phone)}</Baris>
           <Baris k="Email">{m.owner.email ?? "—"}</Baris>
         </dl>
       </Kartu>
@@ -69,14 +69,14 @@ export function MerchantDetail({ m }: { m: DetailPenjual }) {
             {m.recent_logs.map((l) => (
               <li key={l.id} className="text-sm">
                 <p className="font-medium">
-                  {labelAksi(l.action)} · {l.admin_name}
+                  {actionLabel(l.action)} · {l.admin_name}
                 </p>
                 <p className="text-ink-muted">
-                  {formatTanggal(l.created_at)}, {formatJam(l.created_at)}
+                  {formatDate(l.created_at)}, {formatTime(l.created_at)}
                   {l.reason ? ` · ${l.reason}` : ""}
                 </p>
-                {daftarPerubahan(l.before, l.after).map((p) => (
-                  <p key={p.field} className="text-ink-muted">{`${p.field}: ${p.lama} → ${p.baru}`}</p>
+                {listChanges(l.before, l.after).map((p) => (
+                  <p key={p.field} className="text-ink-muted">{`${p.field}: ${p.before} → ${p.after}`}</p>
                 ))}
               </li>
             ))}

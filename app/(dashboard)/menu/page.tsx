@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import { MenuCatalog } from "@/app/(dashboard)/menu/components/MenuCatalog";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { LinkButton } from "@/app/components/ui/LinkButton";
-import { getCategories } from "@/services/metaService";
-import { getMenus } from "@/services/menuService";
-import { requireMerchant } from "@/services/authService";
+import { getCategories } from "@/services/meta.service";
+import { getMenus } from "@/services/menu.service";
+import { requireMerchant } from "@/services/auth.service";
 
 // M-05, M-06 — Katalog menu (MN-*). Gagal muat ditangani MenuCatalog (MN-S3).
 export default async function MenuPage() {

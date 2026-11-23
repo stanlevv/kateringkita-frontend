@@ -4,11 +4,11 @@ import { CircleCheck, CircleX, TriangleAlert } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { Stepper } from "@/app/components/ui/Stepper";
-import { stokMenu, type Stok } from "@/lib/dashboard";
-import type { Nada } from "@/lib/order-status";
+import { menuStockLevel, type StockLevel } from "@/lib/dashboard";
+import type { Tone } from "@/lib/order-status";
 import type { MerchantMenu } from "@/types/menu";
 
-export const BADGE: Record<Stok, { label: string; tone: Nada; icon: typeof CircleX }> = {
+export const BADGE: Record<StockLevel, { label: string; tone: Tone; icon: typeof CircleX }> = {
   habis: { label: "Habis", tone: "danger", icon: CircleX },
   menipis: { label: "Menipis", tone: "warning", icon: TriangleAlert },
   aman: { label: "Aman", tone: "success", icon: CircleCheck },
@@ -24,7 +24,7 @@ export function QuotaRow({
   onUbah: (quota: number) => void;
   onDelta?: (delta: number) => void;
 }) {
-  const stok = stokMenu(m);
+  const stok = menuStockLevel(m);
   const b = BADGE[stok];
   return (
     <li id={`kuota-${m.id}`} data-stok={stok} className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0">

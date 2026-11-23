@@ -1,10 +1,10 @@
 import "server-only";
-import { adminFetch, hasil } from "@/services/api";
-import type { LogServer, StatusServer } from "@/types/server";
+import { adminFetch, toResult } from "@/services/api";
+import type { ServerLog, ServerStatus } from "@/types/server";
 
 // F23 dashboard server
-export const LIMIT_LOG_SERVER = 20;
+export const LIMIT_SERVER_LOGS = 20;
 
-export const getStatusServer = async () => hasil(await adminFetch<StatusServer>("/server-status"));
+export const getServerStatus = async () => toResult(await adminFetch<ServerStatus>("/server-status"));
 
-export const getLogServer = (q: URLSearchParams) => adminFetch<LogServer[]>(`/server-logs?${q}`);
+export const getServerLogs = (query: URLSearchParams) => adminFetch<ServerLog[]>(`/server-logs?${query}`);

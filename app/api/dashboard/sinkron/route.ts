@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { getMenus } from "@/services/menuService";
-import { getPerubahan } from "@/services/orderService";
-import { requireMerchant } from "@/services/authService";
+import { getMenus } from "@/services/menu.service";
+import { getChangedOrders } from "@/services/order.service";
+import { requireMerchant } from "@/services/auth.service";
 
 const SEJAK = z.iso.datetime({ offset: true });
 const json = (body: unknown, status: number) =>
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   await requireMerchant();
   const sejak = SEJAK.safeParse(req.nextUrl.searchParams.get("sejak"));
   if (!sejak.success) return json({ error: { code: "VALIDATION_ERROR", message: "Data tidak valid." } }, 400);
-  const [orders, menus] = await Promise.all([getPerubahan(sejak.data), getMenus()]);
+  const [orders, menus] = await Promise.all([getChangedOrders(sejak.data), getMenus()]);
   if ("error" in orders) return json({ error: orders.error }, 503);
   if ("error" in menus) return json({ error: menus.error }, 503);
   return json({ data: { orders: orders.data, menus: menus.data } }, 200);

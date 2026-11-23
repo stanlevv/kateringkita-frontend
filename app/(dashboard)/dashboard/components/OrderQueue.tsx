@@ -3,13 +3,20 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Inbox } from "lucide-react";
 import { orderAction } from "@/app/actions/orders";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { dismissToast, toast } from "@/app/components/ui/Toast";
-import { antrean, ganti, jumlahTab, sisaHold, type Optimis, type TabAntrean } from "@/lib/dashboard";
-import { nextStatus, teksAksi, teksSukses, type AksiPesanan } from "@/lib/order-status";
+import {
+  queueForTab,
+  setOrDeleteKey,
+  countQueueTabs,
+  holdSecondsLeft,
+  type OptimisticActions,
+  type QueueTab,
+} from "@/lib/dashboard";
+import { nextStatus, actionTexts, successText, type OrderAction } from "@/lib/order-status";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
 import { galatAksi, StokDialog } from "@/app/components/orders/galatAksi";
@@ -18,7 +25,7 @@ import { OrderSlipDrawer } from "./OrderSlipDrawer";
 import { RejectDialog } from "@/app/components/orders/RejectDialog";
 import { useDeferredAction } from "@/hooks/useDeferredAction";
 
-const LABEL: Record<TabAntrean, string> = {
+const LABEL: Record<QueueTab, string> = {
   tindakan: "Perlu tindakan",
   dimasak: "Dimasak",
   siap: "Siap diambil",
@@ -32,9 +39,9 @@ type Props = {
   sekarang: number;
   baru: string[];
   /** Aksi yang sedang tertunda/terkirim; gugur sendiri begitu `updated_at` server berubah (D14). */
-  optimis: Optimis;
+  optimis: OptimisticActions;
   /** Pasang (atau hapus bila undefined) entri optimistis satu pesanan. */
-  onOptimis: (code: string, v: Optimis[string] | undefined) => void;
+  onOptimis: (code: string, v: OptimisticActions[string] | undefined) => void;
   onFokusKuota: (menuId?: number) => void;
   /** D10: baris terkini dari respons aksi, disatukan ke antrean live. */
   onTerima: (o: MerchantOrder) => void;
@@ -45,7 +52,7 @@ type Props = {
 };
 
 /** Aksi yang ditunda; `order` = pesanan saat aksi dipilih (untuk dialog stok dan dasar entri optimistis). */
-type Tunda = { aksi: AksiPesanan; order: MerchantOrder };
+type Tunda = { aksi: OrderAction; order: MerchantOrder };
 
 const KIRIM_LANGSUNG_DETIK = 5; // sisa tahan sependek ini tidak memberi jendela Batalkan
 
@@ -64,15 +71,15 @@ export function OrderQueue({
   const [tolak, setTolak] = useState<string | null>(null);
   const [slip, setSlip] = useState<string | null>(null);
   const [stok, setStok] = useState<MerchantOrder | null>(null);
-  const [kirim, setKirim] = useState<Record<string, AksiPesanan>>({});
+  const [kirim, setKirim] = useState<Record<string, OrderAction>>({});
   const toastAksi = useRef(new Map<string, number>());
 
   async function kirimAksi(code: string, t: Tunda, reason?: string) {
     setKirim((k) => ({ ...k, [code]: t.aksi }));
-    const r = await panggil(() => orderAction(code, t.aksi, reason));
-    setKirim((k) => ganti(k, code, undefined));
+    const r = await callAction(() => orderAction(code, t.aksi, reason));
+    setKirim((k) => setOrDeleteKey(k, code, undefined));
     if ("data" in r) {
-      onOptimis(code, { aksi: t.aksi, dasar: t.order.updated_at }); // gugur saat baris respons (updated_at baru) disatukan
+      onOptimis(code, { action: t.aksi, baseUpdatedAt: t.order.updated_at }); // gugur saat baris respons (updated_at baru) disatukan
       onTerima(r.data);
       onSegarkan();
       return true;
@@ -95,7 +102,7 @@ export function OrderQueue({
   }, 5000);
 
   /** DB-A2: kartu langsung pindah ke status tujuan (optimistis); dikirim sekali setelah 5 dtk kecuali dibatalkan. */
-  function aksi(o: MerchantOrder, a: AksiPesanan) {
+  function aksi(o: MerchantOrder, a: OrderAction) {
     const hasil = nextStatus(o, a);
     if ("error" in hasil) {
       toast({ tone: "warning", message: "Pesanan sudah berubah status" });
@@ -103,9 +110,9 @@ export function OrderQueue({
       return;
     }
     const t: Tunda = { aksi: a, order: o };
-    onOptimis(o.code, { aksi: a, dasar: o.updated_at });
-    const pesan = `Pesanan ${o.code} ${teksSukses(a, o)}`;
-    const sisa = sisaHold(o, sekarang);
+    onOptimis(o.code, { action: a, baseUpdatedAt: o.updated_at });
+    const pesan = `Pesanan ${o.code} ${successText(a, o)}`;
+    const sisa = holdSecondsLeft(o, sekarang);
     if (a === "confirm" && sisa !== null && sisa <= KIRIM_LANGSUNG_DETIK) {
       void kirimAksi(o.code, t).then((ok) => ok && toast({ tone: "success", message: pesan }));
       return;
@@ -127,7 +134,7 @@ export function OrderQueue({
     setTolak(null);
     const o = orders.find((x) => x.code === code);
     if (o && (await kirimAksi(code, { aksi: "reject", order: o }, reason))) {
-      toast({ tone: "success", message: `Pesanan ${code} ${teksAksi.reject.sukses}` });
+      toast({ tone: "success", message: `Pesanan ${code} ${actionTexts.reject.success}` });
     }
   }
 
@@ -143,13 +150,13 @@ export function OrderQueue({
     fokusKuota(kurang.menu_id);
   }
 
-  const jumlah = jumlahTab(orders);
+  const jumlah = countQueueTabs(orders);
   const aktif = tab === "kuota" && !kuota ? "tindakan" : tab;
   const tabs = [
-    ...(Object.keys(LABEL) as TabAntrean[]).map((id) => ({ id, label: LABEL[id], count: jumlah[id] })),
+    ...(Object.keys(LABEL) as QueueTab[]).map((id) => ({ id, label: LABEL[id], count: jumlah[id] })),
     ...(kuota ? [{ id: "kuota", label: "Kuota" }] : []),
   ];
-  const daftar = aktif === "kuota" ? [] : antrean(orders, aktif as TabAntrean, sekarang);
+  const daftar = aktif === "kuota" ? [] : queueForTab(orders, aktif as QueueTab, sekarang);
   const kosong = jumlah.tindakan + jumlah.dimasak + jumlah.siap === 0 && daftar.length === 0;
   const slipOrder = orders.find((o) => o.code === slip) ?? null;
 
@@ -180,7 +187,7 @@ export function OrderQueue({
               <OrderCard
                 key={o.code}
                 order={o}
-                sisa={sisaHold(o, sekarang)}
+                sisa={holdSecondsLeft(o, sekarang)}
                 sekarang={sekarang}
                 baru={baru.includes(o.code)}
                 pending={pending[o.code]?.aksi ?? kirim[o.code]}

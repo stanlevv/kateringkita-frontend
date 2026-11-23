@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { EmptyState } from "@/app/components/ui/EmptyState";
-import { checklistLengkap, linkWa } from "@/services/adminMerchantService";
-import type { AntrianPenjual } from "@/types/admin";
-import { formatTanggal, formatTelepon } from "@/lib/format";
+import { isChecklistComplete, whatsappLink } from "@/services/admin-merchant.service";
+import type { VerificationQueueItem } from "@/types/admin";
+import { formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
 import { StatusVerifikasi } from "./StatusVerifikasi";
 
 /** A-05 — antrean verifikasi, terlama dulu (urutan dari backend). */
-export function VerificationQueue({ rows }: { rows: AntrianPenjual[] }) {
+export function VerificationQueue({ rows }: { rows: VerificationQueueItem[] }) {
   if (rows.length === 0)
     return (
       <EmptyState
@@ -40,14 +40,14 @@ export function VerificationQueue({ rows }: { rows: AntrianPenjual[] }) {
           </div>
           <p className="text-sm text-ink-muted">
             {m.owner_name} ·{" "}
-            <a href={linkWa(m.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
-              {formatTelepon(m.wa_number)}
+            <a href={whatsappLink(m.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
+              {formatPhone(m.wa_number)}
             </a>{" "}
-            · Daftar {formatTanggal(m.created_at)}
+            · Daftar {formatDate(m.created_at)}
           </p>
           {m.verification_note && <p className="text-sm">Catatan admin: {m.verification_note}</p>}
           <Checklist checklist={m.checklist} />
-          <AdminActionDialog id={m.id} status={m.verification_status} lengkap={checklistLengkap(m.checklist)} />
+          <AdminActionDialog id={m.id} status={m.verification_status} lengkap={isChecklistComplete(m.checklist)} />
         </li>
       ))}
     </ul>

@@ -6,12 +6,12 @@ import { Field } from "@/app/components/ui/Field";
 import { Input, Select } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
 import { saveRekening } from "@/app/actions/pencairan";
-import { panggil } from "@/lib/aksi";
-import { formatRupiah, formatTanggal } from "@/lib/format";
-import type { PencairanSaya } from "@/types/pencairan";
+import { callAction } from "@/lib/action";
+import { formatRupiah, formatDate } from "@/lib/format";
+import type { MyPayouts } from "@/types/payout";
 
 type Isian = { bank: string; account_number: string; account_name: string; password: string };
-const dari = (d: PencairanSaya | null): Isian => ({
+const dari = (d: MyPayouts | null): Isian => ({
   bank: d?.account?.bank ?? "",
   account_number: d?.account?.account_number ?? "",
   account_name: d?.account?.account_name ?? "",
@@ -22,7 +22,7 @@ const dari = (d: PencairanSaya | null): Isian => ({
  * F26: pembayaran non-tunai masuk ke KateringKita lewat Midtrans; admin mentransfer bagian toko ke rekening ini.
  * Di luar form utama: tersimpan langsung, wajib kata sandi (dicek backend). `data` null = gagal dimuat.
  */
-export function RekeningPencairan({ data }: { data: PencairanSaya | null }) {
+export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
   const [d, setD] = useState(data);
   const [ubah, setUbah] = useState(!data?.account);
   const [v, setV] = useState(() => dari(data));
@@ -49,7 +49,7 @@ export function RekeningPencairan({ data }: { data: PencairanSaya | null }) {
     e.preventDefault();
     if (sibuk) return;
     setSibuk(true);
-    const r = await panggil(() => saveRekening(v));
+    const r = await callAction(() => saveRekening(v));
     setSibuk(false);
     if ("error" in r) {
       if (r.error.fields) setGalat(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
@@ -76,7 +76,7 @@ export function RekeningPencairan({ data }: { data: PencairanSaya | null }) {
           <dt className="text-sm text-ink-muted">Saldo belum dicairkan</dt>
           <dd className="font-mono text-xl font-semibold text-ink">{formatRupiah(d.balance.amount)}</dd>
           <dd className="text-sm text-ink-muted">
-            {d.balance.orders} pesanan selesai{d.balance.since ? ` sejak ${formatTanggal(d.balance.since)}` : ""}
+            {d.balance.orders} pesanan selesai{d.balance.since ? ` sejak ${formatDate(d.balance.since)}` : ""}
           </dd>
         </div>
         <div>
@@ -178,7 +178,7 @@ export function RekeningPencairan({ data }: { data: PencairanSaya | null }) {
             {d.payouts.map((p) => (
               <li key={p.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 py-3">
                 <span className="text-ink">
-                  {formatTanggal(p.created_at)} · {p.orders_count} pesanan · {p.bank_name} {p.account_number}
+                  {formatDate(p.created_at)} · {p.orders_count} pesanan · {p.bank_name} {p.account_number}
                 </span>
                 <span className="font-mono font-semibold text-ink">{formatRupiah(p.amount)}</span>
                 <span className="w-full text-sm text-ink-muted">

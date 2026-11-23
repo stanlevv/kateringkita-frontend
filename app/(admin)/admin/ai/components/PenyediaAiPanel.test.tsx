@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { DaftarAi, PenyediaAi } from "@/types/ai";
+import type { AiProviderList, AiProvider } from "@/types/ai";
 
 const refresh = vi.fn();
 const tambahPenyediaAi = vi.fn();
@@ -16,7 +16,7 @@ vi.mock("@/app/actions/admin/ai", () => ({
 
 import { PenyediaAiPanel } from "./PenyediaAiPanel";
 
-const p = (o: Partial<PenyediaAi>): PenyediaAi => ({
+const p = (o: Partial<AiProvider>): AiProvider => ({
   id: 1,
   provider: "groq",
   provider_name: "Groq",
@@ -31,7 +31,7 @@ const p = (o: Partial<PenyediaAi>): PenyediaAi => ({
   cooldown_until: null,
   ...o,
 });
-const data: DaftarAi = {
+const data: AiProviderList = {
   providers: [
     p({}),
     p({

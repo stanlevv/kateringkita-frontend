@@ -8,7 +8,7 @@ import { IconButton } from "@/app/components/ui/IconButton";
 import { Input } from "@/app/components/ui/Input";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { formatRupiah } from "@/lib/format";
-import { cekHpp, hitungHpp } from "@/lib/hpp";
+import { validateHpp, calculateHpp } from "@/lib/hpp";
 
 type Baris = { k: number; nama: string; biaya: string; porsi: string };
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
@@ -20,9 +20,9 @@ export function HppKalkulator() {
   const [berikut, setBerikut] = useState(1);
   const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
 
-  const bahan = baris.map((b) => ({ nama: b.nama, biaya: num(b.biaya), porsi: num(b.porsi) }));
-  const galat = cekHpp(bahan, num(margin));
-  const hasil = Object.keys(galat).length === 0 ? hitungHpp(bahan, num(margin)) : null;
+  const bahan = baris.map((b) => ({ name: b.nama, cost: num(b.biaya), portions: num(b.porsi) }));
+  const galat = validateHpp(bahan, num(margin));
+  const hasil = Object.keys(galat).length === 0 ? calculateHpp(bahan, num(margin)) : null;
 
   const ubah = (k: number, f: Partial<Baris>) => setBaris((r) => r.map((b) => (b.k === k ? { ...b, ...f } : b)));
   const sentuh = (id: string) => () => setTersentuh((s) => new Set(s).add(id));

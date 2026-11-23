@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/services/authService", () => ({
+vi.mock("@/services/auth.service", () => ({
   requireMerchant: async () => ({ user: { full_name: "Diego" }, merchant: { business_name: "Dapur" } }),
 }));
-vi.mock("@/services/profileService", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
-vi.mock("@/services/orderService", () => ({ getJumlahTindakan: async () => 7 }));
-vi.mock("@/services/notifikasiService", () => ({ getJumlahNotif: async () => 4 }));
+vi.mock("@/services/profile.service", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
+vi.mock("@/services/order.service", () => ({ getNeedsActionCount: async () => 7 }));
+vi.mock("@/services/notification.service", () => ({ getUnreadNotificationCount: async () => 4 }));
 let pemeliharaan = { aktif: false, pesan: null as string | null };
-vi.mock("@/services/metaService", () => ({ getPemeliharaan: async () => pemeliharaan }));
+vi.mock("@/services/meta.service", () => ({ getMaintenance: async () => pemeliharaan }));
 let kuki: string | undefined;
 vi.mock("next/headers", () => ({
   cookies: async () => ({ get: (k: string) => (k === "kk-sidebar" && kuki ? { value: kuki } : undefined) }),

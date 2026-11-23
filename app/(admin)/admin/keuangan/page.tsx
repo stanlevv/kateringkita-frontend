@@ -7,13 +7,13 @@ import { DataTable, type Column } from "@/app/components/ui/DataTable";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { KpiCard } from "@/app/components/ui/KpiCard";
 import { RangePicker } from "@/app/components/ui/RangePicker";
-import { formatRupiah, hariIniWib } from "@/lib/format";
-import { parseRentang } from "@/lib/laporan";
-import { getRekapKeuangan } from "@/services/adminKeuanganService";
-import { requireAdmin } from "@/services/authService";
-import type { RekapKeuangan } from "@/types/admin";
+import { formatRupiah, todayWib } from "@/lib/format";
+import { parseRange } from "@/lib/report";
+import { getFinanceSummary } from "@/services/admin-finance.service";
+import { requireAdmin } from "@/services/auth.service";
+import type { FinanceSummary } from "@/types/admin";
 
-type Baris = RekapKeuangan["rows"][number];
+type Baris = FinanceSummary["rows"][number];
 const rp = (k: keyof Baris) => (b: Baris) => formatRupiah(Number(b[k]));
 const KOLOM: Column<Baris>[] = [
   { key: "toko", header: "Toko", cell: (b) => <span className="font-medium">{b.business_name}</span> },
@@ -34,9 +34,9 @@ export default async function KeuanganPage({
 }) {
   await requireAdmin("super");
   const sp = await searchParams;
-  const hariIni = hariIniWib();
-  const { dari, sampai, galat } = parseRentang(sp.dari, sp.sampai, hariIni);
-  const res = await getRekapKeuangan({ from: dari, to: sampai });
+  const hariIni = todayWib();
+  const { from: dari, to: sampai, error: galat } = parseRange(sp.dari, sp.sampai, hariIni);
+  const res = await getFinanceSummary({ from: dari, to: sampai });
   const unduh = cx(
     "inline-flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle",
     fokus,

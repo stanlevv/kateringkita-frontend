@@ -12,31 +12,31 @@ import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
 import { Input, Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { formatRupiah } from "@/lib/format";
 import {
-  hargaSatuan,
-  jumlahItem,
-  keItems,
-  pulihkan,
-  qtyMenu,
-  tambah,
-  totalKeranjang,
-  ubahQty,
-  type Baris,
-} from "@/lib/meja-keranjang";
+  unitPrice,
+  countItems,
+  toSavedLines,
+  restoreCart,
+  menuQty,
+  addToCart,
+  cartTotal,
+  updateQty,
+  type CartLine,
+} from "@/lib/table-cart";
 import {
-  bacaNama,
-  keranjangMentah,
-  langganan,
-  simpanKeranjang,
-  simpanMejaTerakhir,
-  simpanNama,
-  simpanTamu,
-  uraiKeranjang,
-} from "@/lib/meja-simpan";
+  readGuestName,
+  readCartRaw,
+  subscribe,
+  saveCart,
+  saveLastTable,
+  saveGuestName,
+  saveGuest,
+  parseCart,
+} from "@/lib/table-storage";
 import type { MenuOption } from "@/types/menu";
-import type { MenuMeja, MenuMejaItem } from "@/types/meja";
+import type { TableMenu, TableMenuItem } from "@/types/table";
 
 // Panel bawah di HP, kotak di layar lebar
 const LEMBAR = "mx-auto mb-0 mt-auto max-h-[88dvh] rounded-b-none rounded-t-2xl sm:mb-auto sm:rounded-2xl";
@@ -78,7 +78,7 @@ function Stepper({
   );
 }
 
-function Piring({ m, qty }: { m: MenuMejaItem; qty: number }) {
+function Piring({ m, qty }: { m: TableMenuItem; qty: number }) {
   const habis = m.badge === "sold_out";
   return (
     <div className="relative size-24 shrink-0">
@@ -112,7 +112,7 @@ function Piring({ m, qty }: { m: MenuMejaItem; qty: number }) {
   );
 }
 
-function KartuMenu({ m, qty, buka, onTambah }: { m: MenuMejaItem; qty: number; buka: boolean; onTambah: () => void }) {
+function KartuMenu({ m, qty, buka, onTambah }: { m: TableMenuItem; qty: number; buka: boolean; onTambah: () => void }) {
   const habis = m.badge === "sold_out";
   return (
     <li
@@ -160,7 +160,7 @@ function KartuMenu({ m, qty, buka, onTambah }: { m: MenuMejaItem; qty: number; b
   );
 }
 
-function PilihOpsi({ menu, onTambah }: { menu: MenuMejaItem; onTambah: (opsi: MenuOption[], qty: number) => void }) {
+function PilihOpsi({ menu, onTambah }: { menu: TableMenuItem; onTambah: (opsi: MenuOption[], qty: number) => void }) {
   const [dipilih, setDipilih] = useState<number[]>([]);
   const [qty, setQty] = useState(menu.min_order_qty);
   const opsi = menu.options.filter((o) => dipilih.includes(o.id));
@@ -199,27 +199,27 @@ function PilihOpsi({ menu, onTambah }: { menu: MenuMejaItem; onTambah: (opsi: Me
         />
       </div>
       <Button size="lg" className="w-full" onClick={() => onTambah(opsi, qty)}>
-        Tambah ke pesanan · {formatRupiah(hargaSatuan({ menu, opsi }) * qty)}
+        Tambah ke pesanan · {formatRupiah(unitPrice({ menu, options: opsi }) * qty)}
       </Button>
     </div>
   );
 }
 
-export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) {
+export function MenuMejaApp({ token, data }: { token: string; data: TableMenu }) {
   const router = useRouter();
   const { merchant: toko, table: meja } = data;
   // keranjang tersimpan di peramban (bertahan saat muat ulang); render server = kosong
   const mentah = useSyncExternalStore(
-    langganan,
-    () => keranjangMentah(token),
+    subscribe,
+    () => readCartRaw(token),
     () => null,
   );
-  const baris = useMemo(() => pulihkan(uraiKeranjang(mentah), data.menus), [mentah, data.menus]);
-  const setBaris = (b: Baris[]) => simpanKeranjang(token, keItems(b));
-  const namaAwal = useSyncExternalStore(langganan, bacaNama, () => "");
+  const baris = useMemo(() => restoreCart(parseCart(mentah), data.menus), [mentah, data.menus]);
+  const setBaris = (b: CartLine[]) => saveCart(token, toSavedLines(b));
+  const namaAwal = useSyncExternalStore(subscribe, readGuestName, () => "");
   const [namaKetik, setNama] = useState<string | null>(null);
   const nama = namaKetik ?? namaAwal;
-  const [pilih, setPilih] = useState<MenuMejaItem | null>(null);
+  const [pilih, setPilih] = useState<TableMenuItem | null>(null);
   const [lihat, setLihat] = useState(false);
   const [hp, setHp] = useState("");
   const [catatan, setCatatan] = useState("");
@@ -227,7 +227,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
   const [kirim, setKirim] = useState(false);
 
   const kategori = useMemo(() => {
-    const per = new Map<string, { slug: string; name: string; items: MenuMejaItem[] }>();
+    const per = new Map<string, { slug: string; name: string; items: TableMenuItem[] }>();
     for (const m of data.menus) {
       const k = per.get(m.category.slug) ?? { slug: m.category.slug, name: m.category.name, items: [] };
       k.items.push(m);
@@ -238,7 +238,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
   const [aktifKat, setAktifKat] = useState(kategori[0]?.slug);
 
   // meja diingat untuk start_url PWA (/meja)
-  useEffect(() => simpanMejaTerakhir(token), [token]);
+  useEffect(() => saveLastTable(token), [token]);
 
   // sorot kategori yang sedang terlihat
   useEffect(() => {
@@ -258,11 +258,11 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
     return () => amati.disconnect();
   }, [kategori]);
 
-  const total = totalKeranjang(baris);
-  const jumlah = jumlahItem(baris);
+  const total = cartTotal(baris);
+  const jumlah = countItems(baris);
 
-  function masuk(m: MenuMejaItem, opsi: MenuOption[], qty: number) {
-    const k = tambah(baris, m, opsi, qty);
+  function masuk(m: TableMenuItem, opsi: MenuOption[], qty: number) {
+    const k = addToCart(baris, m, opsi, qty);
     if (!k) {
       toast({ tone: "warning", message: `Sisa ${m.name} tinggal ${m.available} ${m.unit_label}.` });
       return false;
@@ -272,7 +272,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
   }
 
   function ubah(kunci: string, qty: number) {
-    const k = ubahQty(baris, kunci, qty);
+    const k = updateQty(baris, kunci, qty);
     if (k) setBaris(k);
     else toast({ tone: "warning", message: "Jumlah melebihi sisa porsi." });
   }
@@ -282,9 +282,9 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
     if (!nama.trim()) return setGalat("Isi nama pemesan agar pesanan bisa diantar ke kamu.");
     setKirim(true);
     setGalat(null);
-    const r = await panggil(() =>
+    const r = await callAction(() =>
       pesanDariMeja(token, {
-        items: keItems(baris),
+        items: toSavedLines(baris),
         customer_name: nama.trim(),
         customer_phone: hp || null,
         note: catatan.trim() || null,
@@ -295,9 +295,9 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
       return setGalat([r.error.message, ...Object.values(r.error.fields ?? {}).flat()].join(" "));
     }
     const { code, guest_token } = r.data;
-    simpanTamu(code, { tamu: guest_token, meja: token });
-    simpanNama(nama.trim());
-    const b = await panggil(() =>
+    saveGuest(code, { tamu: guest_token, meja: token });
+    saveGuestName(nama.trim());
+    const b = await callAction(() =>
       bayarPesananMeja(code, guest_token, `${window.location.origin}/meja/pesanan/${code}`),
     );
     // dikosongkan saat diteruskan, bukan selagi form masih terbuka menunggu tautan bayar (sempat tampil "Rp 0")
@@ -404,7 +404,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
                 <KartuMenu
                   key={m.id}
                   m={m}
-                  qty={qtyMenu(baris, m.id)}
+                  qty={menuQty(baris, m.id)}
                   buka={toko.is_open}
                   onTambah={() => (m.options.length ? setPilih(m) : masuk(m, [], 1))}
                 />
@@ -452,15 +452,15 @@ export function MenuMejaApp({ token, data }: { token: string; data: MenuMeja }) 
           ) : (
             <ul className="flex flex-col divide-y divide-line">
               {baris.map((b) => (
-                <li key={b.kunci} className="flex items-center justify-between gap-3 py-3">
+                <li key={b.key} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="font-semibold">{b.menu.name}</p>
-                    {b.opsi.length > 0 && (
-                      <p className="text-sm text-ink-muted">+ {b.opsi.map((o) => o.name).join(", ")}</p>
+                    {b.options.length > 0 && (
+                      <p className="text-sm text-ink-muted">+ {b.options.map((o) => o.name).join(", ")}</p>
                     )}
-                    <p className="font-mono text-sm">{formatRupiah(hargaSatuan(b) * b.qty)}</p>
+                    <p className="font-mono text-sm">{formatRupiah(unitPrice(b) * b.qty)}</p>
                   </div>
-                  <Stepper nilai={b.qty} label={b.menu.name} onUbah={(v) => ubah(b.kunci, v)} />
+                  <Stepper nilai={b.qty} label={b.menu.name} onUbah={(v) => ubah(b.key, v)} />
                 </li>
               ))}
             </ul>

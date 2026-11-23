@@ -12,34 +12,34 @@ import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
-import { INFO_AI, JENIS_AI, statusAi } from "@/lib/ai";
-import { panggil } from "@/lib/aksi";
-import { formatJam, formatTanggal } from "@/lib/format";
-import type { DaftarAi, HasilUjiAi, JenisAi, PenyediaAi } from "@/types/ai";
+import { AI_PROVIDER_INFO, AI_PROVIDER_TYPES, aiProviderStatus } from "@/lib/ai";
+import { callAction } from "@/lib/action";
+import { formatTime, formatDate } from "@/lib/format";
+import type { AiProviderList, AiTestResult, AiProviderType, AiProvider } from "@/types/ai";
 
-const waktu = (iso: string) => `${formatTanggal(iso)}, ${formatJam(iso)}`;
+const waktu = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`;
 
-function Formulir({ awal, onSelesai }: { awal: PenyediaAi | null; onSelesai: () => void }) {
-  const [jenis, setJenis] = useState<JenisAi>(awal?.provider ?? "gemini");
-  const [label, setLabel] = useState(awal?.label ?? INFO_AI.gemini.nama);
-  const [model, setModel] = useState(awal?.model ?? INFO_AI.gemini.contoh[0]);
+function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () => void }) {
+  const [jenis, setJenis] = useState<AiProviderType>(awal?.provider ?? "gemini");
+  const [label, setLabel] = useState(awal?.label ?? AI_PROVIDER_INFO.gemini.name);
+  const [model, setModel] = useState(awal?.model ?? AI_PROVIDER_INFO.gemini.exampleModels[0]);
   const [kunci, setKunci] = useState("");
   const [prioritas, setPrioritas] = useState(String(awal?.priority ?? 100));
   const [galat, setGalat] = useState<Record<string, string>>({});
   const [kirim, setKirim] = useState(false);
-  const info = INFO_AI[jenis];
+  const info = AI_PROVIDER_INFO[jenis];
 
-  function pilih(j: JenisAi) {
+  function pilih(j: AiProviderType) {
     setJenis(j);
-    setLabel(INFO_AI[j].nama);
-    setModel(INFO_AI[j].contoh[0]);
+    setLabel(AI_PROVIDER_INFO[j].name);
+    setModel(AI_PROVIDER_INFO[j].exampleModels[0]);
   }
 
   async function simpan(e: FormEvent) {
     e.preventDefault();
     setKirim(true);
     const isi = { label, model, priority: Number(prioritas), ...(kunci.trim() ? { api_key: kunci.trim() } : {}) };
-    const r = await panggil(() =>
+    const r = await callAction(() =>
       awal
         ? ubahPenyediaAi(awal.id, isi)
         : tambahPenyediaAi({ ...isi, provider: jenis, api_key: kunci.trim(), is_active: true }),
@@ -59,7 +59,7 @@ function Formulir({ awal, onSelesai }: { awal: PenyediaAi | null; onSelesai: () 
       <fieldset disabled={!!awal} className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium text-ink">Penyedia</legend>
         <div className="grid gap-2 sm:grid-cols-2">
-          {JENIS_AI.map((j) => (
+          {AI_PROVIDER_TYPES.map((j) => (
             <label
               key={j}
               className={cx(
@@ -75,7 +75,7 @@ function Formulir({ awal, onSelesai }: { awal: PenyediaAi | null; onSelesai: () 
                 onChange={() => pilih(j)}
                 className={cx("size-4 accent-primary", fokus)}
               />
-              {INFO_AI[j].nama}
+              {AI_PROVIDER_INFO[j].name}
             </label>
           ))}
         </div>
@@ -86,12 +86,12 @@ function Formulir({ awal, onSelesai }: { awal: PenyediaAi | null; onSelesai: () 
         )}
       </fieldset>
       <a
-        href={info.kunci}
+        href={info.keyUrl}
         target="_blank"
         rel="noopener noreferrer"
         className={cx("inline-flex items-center gap-1 self-start text-sm font-medium text-primary underline", fokus)}
       >
-        Buat API key gratis di {info.nama}
+        Buat API key gratis di {info.name}
         <ExternalLink aria-hidden className="size-3.5" />
       </a>
       <Field label="Nama" id="ai-label" required error={galat.label}>
@@ -101,13 +101,13 @@ function Formulir({ awal, onSelesai }: { awal: PenyediaAi | null; onSelesai: () 
         label="Model"
         id="ai-model"
         required
-        help={`Contoh: ${info.contoh.join(", ")}. Nama model bisa berubah, cek halaman penyedia.`}
+        help={`Contoh: ${info.exampleModels.join(", ")}. Nama model bisa berubah, cek halaman penyedia.`}
         error={galat.model}
       >
         <Input value={model} maxLength={120} list="ai-model-contoh" onChange={(e) => setModel(e.target.value)} />
       </Field>
       <datalist id="ai-model-contoh">
-        {info.contoh.map((m) => (
+        {info.exampleModels.map((m) => (
           <option key={m} value={m} />
         ))}
       </datalist>
@@ -153,14 +153,14 @@ function Formulir({ awal, onSelesai }: { awal: PenyediaAi | null; onSelesai: () 
   );
 }
 
-function StatusChip({ p }: { p: PenyediaAi }) {
-  const s = statusAi(p);
-  if (s.jenis === "nonaktif")
+function StatusChip({ p }: { p: AiProvider }) {
+  const s = aiProviderStatus(p);
+  if (s.kind === "nonaktif")
     return <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-semibold text-ink-muted">Nonaktif</span>;
-  if (s.jenis === "istirahat")
+  if (s.kind === "istirahat")
     return (
       <span className="rounded-full bg-warning-bg px-2.5 py-0.5 text-xs font-semibold text-warning">
-        Istirahat s.d. {formatJam(s.sampai)}
+        Istirahat s.d. {formatTime(s.until)}
       </span>
     );
   return (
@@ -168,21 +168,21 @@ function StatusChip({ p }: { p: PenyediaAi }) {
   );
 }
 
-export function PenyediaAiPanel({ data }: { data: DaftarAi }) {
+export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
   const router = useRouter();
-  const [form, setForm] = useState<{ awal: PenyediaAi | null } | null>(null);
-  const [hapus, setHapus] = useState<PenyediaAi | null>(null);
-  const [uji, setUji] = useState<Record<number, HasilUjiAi | "memuat">>({});
+  const [form, setForm] = useState<{ awal: AiProvider | null } | null>(null);
+  const [hapus, setHapus] = useState<AiProvider | null>(null);
+  const [uji, setUji] = useState<Record<number, AiTestResult | "memuat">>({});
 
-  async function aktif(p: PenyediaAi, v: boolean) {
-    const r = await panggil(() => ubahPenyediaAi(p.id, { is_active: v }));
+  async function aktif(p: AiProvider, v: boolean) {
+    const r = await callAction(() => ubahPenyediaAi(p.id, { is_active: v }));
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
     router.refresh();
   }
 
-  async function cek(p: PenyediaAi) {
+  async function cek(p: AiProvider) {
     setUji((u) => ({ ...u, [p.id]: "memuat" }));
-    const r = await panggil(() => ujiPenyediaAi(p.id));
+    const r = await callAction(() => ujiPenyediaAi(p.id));
     setUji((u) => ({ ...u, [p.id]: "data" in r ? r.data : { ok: false, message: r.error.message } }));
     router.refresh();
   }
@@ -338,7 +338,7 @@ export function PenyediaAiPanel({ data }: { data: DaftarAi }) {
           const p = hapus;
           setHapus(null);
           if (!p) return;
-          const r = await panggil(() => hapusPenyediaAi(p.id));
+          const r = await callAction(() => hapusPenyediaAi(p.id));
           if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
           toast({ tone: "success", message: `${p.label} dihapus` });
           router.refresh();

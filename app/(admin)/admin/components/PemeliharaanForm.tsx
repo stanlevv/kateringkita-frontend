@@ -9,11 +9,11 @@ import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import type { Pemeliharaan } from "@/types/meta";
+import { callAction } from "@/lib/action";
+import type { Maintenance } from "@/types/meta";
 
 /** F27: saklar mode pemeliharaan. Saat aktif penjual & pembeli tidak bisa memakai KateringKita; panel admin tetap jalan. */
-export function PemeliharaanForm({ nilai }: { nilai: Pemeliharaan }) {
+export function PemeliharaanForm({ nilai }: { nilai: Maintenance }) {
   const router = useRouter();
   const [pesan, setPesan] = useState(nilai.pesan ?? "");
   const [galat, setGalat] = useState<string>();
@@ -23,7 +23,7 @@ export function PemeliharaanForm({ nilai }: { nilai: Pemeliharaan }) {
   async function simpan(aktif: boolean) {
     if (pesan.trim().length > 200) return setGalat("Pesan maksimal 200 karakter.");
     setMenyimpan(true);
-    const r = await panggil(() => simpanPemeliharaan(aktif, pesan));
+    const r = await callAction(() => simpanPemeliharaan(aktif, pesan));
     setMenyimpan(false);
     setKonfirmasi(false);
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });

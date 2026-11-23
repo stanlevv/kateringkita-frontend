@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getSession } from "@/services/authService";
-import { getPemeliharaan } from "@/services/metaService";
+import { getSession } from "@/services/auth.service";
+import { getMaintenance } from "@/services/meta.service";
 import { PESAN_PEMELIHARAAN } from "@/app/components/Pemeliharaan";
 import LoginForm from "./LoginForm";
 
@@ -20,7 +20,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const session = await getSession().catch(() => null);
   if (session?.user.role === "merchant") redirect("/dashboard");
   if (session?.user.role === "admin") redirect("/admin");
-  const pemeliharaan = await getPemeliharaan();
+  const pemeliharaan = await getMaintenance();
   return (
     <LoginForm
       next={next}

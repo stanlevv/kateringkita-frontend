@@ -4,9 +4,9 @@ import { LogFilters } from "@/app/(admin)/admin/components/LogFilters";
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
-import { LIMIT_LOG } from "@/services/adminLogService";
-import type { AuditLog, MetaHalaman } from "@/types/admin";
-import { requireAdmin } from "@/services/authService";
+import { LIMIT_LOG } from "@/services/admin-log.service";
+import type { AuditLog, PageMeta } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
 
 const FILTER = ["action", "target_type", "target_id", "from", "to"] as const;
 
@@ -21,7 +21,7 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
   q.set("page", String(page));
   q.set("limit", String(LIMIT_LOG));
   const res = await adminFetch<AuditLog[]>(`/audit-logs?${q}`);
-  const meta = res.meta as MetaHalaman | undefined;
+  const meta = res.meta as PageMeta | undefined;
 
   return (
     <PageHeader title="Log aksi admin" description="Setiap perubahan oleh admin tercatat di sini. Hanya untuk dibaca.">

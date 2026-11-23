@@ -9,18 +9,18 @@ import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { AKSI_BOLEH } from "@/services/adminMerchantService";
-import type { AksiPenjual, StatusVerifikasi } from "@/types/admin";
+import { callAction } from "@/lib/action";
+import { ALLOWED_ACTIONS } from "@/services/admin-merchant.service";
+import type { MerchantAction, VerificationStatus } from "@/types/admin";
 
-const TOMBOL: Record<AksiPenjual, { label: string; variant: "primary" | "secondary" | "danger"; sukses: string }> = {
+const TOMBOL: Record<MerchantAction, { label: string; variant: "primary" | "secondary" | "danger"; sukses: string }> = {
   verify: { label: "Verifikasi", variant: "primary", sukses: "Penjual terverifikasi." },
   "request-fix": { label: "Minta perbaiki", variant: "secondary", sukses: "Permintaan perbaikan terkirim." },
   suspend: { label: "Tangguhkan", variant: "danger", sukses: "Penjual ditangguhkan." },
   reactivate: { label: "Aktifkan lagi", variant: "primary", sukses: "Penjual diaktifkan lagi." },
   "close-today": { label: "Tutup hari ini", variant: "secondary", sukses: "Dapur ditutup untuk hari ini." },
 };
-const JUDUL_ALASAN: Partial<Record<AksiPenjual, string>> = {
+const JUDUL_ALASAN: Partial<Record<MerchantAction, string>> = {
   "request-fix": "Minta penjual memperbaiki",
   suspend: "Tangguhkan penjual",
 };
@@ -31,7 +31,7 @@ function FormAlasan({
   onClose,
   onKirim,
 }: {
-  aksi: AksiPenjual;
+  aksi: MerchantAction;
   sibuk: boolean;
   onClose: () => void;
   onKirim: (alasan: string) => void;
@@ -59,16 +59,24 @@ function FormAlasan({
 }
 
 /** A-05 — tombol aksi penjual sesuai status (K1) dengan konfirmasi/alasan, toast, dan penyegaran data. */
-export function AdminActionDialog({ id, status, lengkap }: { id: number; status: StatusVerifikasi; lengkap: boolean }) {
+export function AdminActionDialog({
+  id,
+  status,
+  lengkap,
+}: {
+  id: number;
+  status: VerificationStatus;
+  lengkap: boolean;
+}) {
   const router = useRouter();
-  const [dialog, setDialog] = useState<AksiPenjual | null>(null);
+  const [dialog, setDialog] = useState<MerchantAction | null>(null);
   const [sibuk, setSibuk] = useState(false);
 
   // Dialog tetap terbuka (alasan terisi) saat gagal; menutup hanya bila berhasil atau status sudah berubah (409).
-  async function kirim(aksi: AksiPenjual, alasan?: string) {
+  async function kirim(aksi: MerchantAction, alasan?: string) {
     if (sibuk) return;
     setSibuk(true);
-    const r = await panggil(() => aksiPenjual(id, aksi, alasan));
+    const r = await callAction(() => aksiPenjual(id, aksi, alasan));
     setSibuk(false);
     if ("error" in r) {
       const konflik = r.error.code === "CONFLICT";
@@ -88,11 +96,11 @@ export function AdminActionDialog({ id, status, lengkap }: { id: number; status:
   }
 
   // AUD-35: semua aksi lewat dialog, termasuk verifikasi dengan checklist lengkap (checklist diisi penjual sendiri)
-  const klik = (aksi: AksiPenjual) => setDialog(aksi);
+  const klik = (aksi: MerchantAction) => setDialog(aksi);
 
   return (
     <div className="flex flex-wrap gap-2">
-      {AKSI_BOLEH[status].map((a) => (
+      {ALLOWED_ACTIONS[status].map((a) => (
         <Button key={a} variant={TOMBOL[a].variant} disabled={sibuk} onClick={() => klik(a)}>
           {TOMBOL[a].label}
         </Button>

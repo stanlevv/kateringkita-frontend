@@ -10,15 +10,21 @@ import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Input } from "@/app/components/ui/Input";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { Tabs } from "@/app/components/ui/Tabs";
-import { formatTelepon } from "@/lib/format";
-import { urlDengan } from "@/lib/url";
-import { LABEL_PENGIRIM, LIMIT_TIKET, TAB_TIKET, labelKategori, type TabTiket } from "@/services/adminTiketService";
-import type { MetaTiket, TiketRingkas } from "@/types/admin";
+import { formatPhone } from "@/lib/format";
+import { buildUrl } from "@/lib/url";
+import {
+  SENDER_LABELS,
+  LIMIT_TICKETS,
+  TICKET_TABS,
+  categoryLabel,
+  type TicketTab,
+} from "@/services/admin-ticket.service";
+import type { TicketMeta, TicketSummary } from "@/types/admin";
 import { StatusTiket, WaktuRelatif } from "./StatusTiket";
 
-const detail = (t: TiketRingkas) => `/admin/tiket/${encodeURIComponent(t.code)}`;
+const detail = (t: TicketSummary) => `/admin/tiket/${encodeURIComponent(t.code)}`;
 
-const KOSONG: Record<TabTiket, { title: string; body: string }> = {
+const KOSONG: Record<TicketTab, { title: string; body: string }> = {
   open: {
     title: "Tidak ada tiket yang menunggu",
     body: "Semua tiket sudah dibalas. Tiket baru dari pembeli akan muncul di sini.",
@@ -31,8 +37,8 @@ const KOSONG: Record<TabTiket, { title: string; body: string }> = {
   semua: { title: "Belum ada tiket", body: "Tiket bantuan dari pembeli akan muncul di sini." },
 };
 
-function kolom(tab: TabTiket, sekarang: number): Column<TiketRingkas>[] {
-  const k: Column<TiketRingkas>[] = [
+function kolom(tab: TicketTab, sekarang: number): Column<TicketSummary>[] {
+  const k: Column<TicketSummary>[] = [
     {
       key: "kode",
       header: "Tiket",
@@ -49,7 +55,7 @@ function kolom(tab: TabTiket, sekarang: number): Column<TiketRingkas>[] {
       cell: (t) => (
         <span className="flex flex-col">
           <span className="font-medium">{t.subject}</span>
-          <span className="text-ink-muted">{labelKategori(t.category)}</span>
+          <span className="text-ink-muted">{categoryLabel(t.category)}</span>
           {t.last_message_preview && <span className="line-clamp-1 text-ink-muted">{t.last_message_preview}</span>}
         </span>
       ),
@@ -60,7 +66,7 @@ function kolom(tab: TabTiket, sekarang: number): Column<TiketRingkas>[] {
       cell: (t) => (
         <span className="flex flex-col">
           <span>{t.customer.full_name}</span>
-          <span className="font-mono text-ink-muted">{formatTelepon(t.customer.phone)}</span>
+          <span className="font-mono text-ink-muted">{formatPhone(t.customer.phone)}</span>
         </span>
       ),
     },
@@ -75,7 +81,7 @@ function kolom(tab: TabTiket, sekarang: number): Column<TiketRingkas>[] {
       cell: (t) => (
         <span className="flex flex-col">
           <WaktuRelatif iso={t.last_message_at} sekarang={sekarang} />
-          <span className="text-ink-muted">dari {LABEL_PENGIRIM[t.last_sender_role] ?? t.last_sender_role}</span>
+          <span className="text-ink-muted">dari {SENDER_LABELS[t.last_sender_role] ?? t.last_sender_role}</span>
         </span>
       ),
     },
@@ -95,9 +101,9 @@ export function TiketTable({
   total,
   sekarang,
 }: {
-  rows: TiketRingkas[];
-  tab: TabTiket;
-  counts?: MetaTiket["counts"];
+  rows: TicketSummary[];
+  tab: TicketTab;
+  counts?: TicketMeta["counts"];
   page: number;
   total: number;
   sekarang: number;
@@ -128,7 +134,7 @@ export function TiketTable({
     batalkanTimer();
     // Pindah tab membawa ketikan q yang belum sempat dikirim.
     const semua = "q" in ubahan ? ubahan : { ...ubahan, q: terbaru.current.teks.trim() };
-    router.replace(urlDengan(path, terbaru.current.params, { ...semua, page: "" }), { scroll: false });
+    router.replace(buildUrl(path, terbaru.current.params, { ...semua, page: "" }), { scroll: false });
   }
 
   function ketik(v: string) {
@@ -142,7 +148,7 @@ export function TiketTable({
     ke({ q: "" });
   }
 
-  const jumlah = (id: TabTiket) =>
+  const jumlah = (id: TicketTab) =>
     counts ? (id === "semua" ? counts.open + counts.answered + counts.closed : counts[id]) : undefined;
 
   return (
@@ -165,7 +171,7 @@ export function TiketTable({
         label="Status tiket"
         value={tab}
         onChange={(id) => ke({ status: id === "open" ? "" : id })}
-        tabs={TAB_TIKET.map((t) => ({ id: t.id, label: t.label, count: jumlah(t.id) }))}
+        tabs={TICKET_TABS.map((t) => ({ id: t.id, label: t.label, count: jumlah(t.id) }))}
       />
 
       {rows.length === 0 ? (
@@ -208,7 +214,7 @@ export function TiketTable({
                   </span>
                   <span className="font-semibold text-ink">{t.subject}</span>
                   <span className="text-sm text-ink-muted">
-                    {labelKategori(t.category)} · {t.customer.full_name} · {formatTelepon(t.customer.phone)}
+                    {categoryLabel(t.category)} · {t.customer.full_name} · {formatPhone(t.customer.phone)}
                     {t.order_code && (
                       <>
                         {" "}
@@ -218,7 +224,7 @@ export function TiketTable({
                   </span>
                   <span className="text-sm text-ink-muted">
                     <WaktuRelatif iso={t.last_message_at} sekarang={sekarang} /> · dari{" "}
-                    {LABEL_PENGIRIM[t.last_sender_role] ?? t.last_sender_role}
+                    {SENDER_LABELS[t.last_sender_role] ?? t.last_sender_role}
                   </span>
                 </Link>
               </li>
@@ -227,8 +233,8 @@ export function TiketTable({
           <Pagination
             page={page}
             total={total}
-            limit={LIMIT_TIKET}
-            hrefFor={(p) => urlDengan(path, params.toString(), { page: p > 1 ? String(p) : "" })}
+            limit={LIMIT_TICKETS}
+            hrefFor={(p) => buildUrl(path, params.toString(), { page: p > 1 ? String(p) : "" })}
           />
         </>
       )}

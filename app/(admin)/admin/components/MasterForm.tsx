@@ -6,9 +6,9 @@ import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { cekMaster, type TAB_MASTER } from "@/services/adminMasterService";
-import type { ItemMaster } from "@/types/admin";
+import { callAction } from "@/lib/action";
+import { validateMaster, type MASTER_TABS } from "@/services/admin-master.service";
+import type { MasterItem } from "@/types/admin";
 
 /** A-01…A-03 — isi dialog tambah/ubah data master. `item` ada = mode ubah. */
 export function MasterForm({
@@ -17,12 +17,12 @@ export function MasterForm({
   onSaved,
   onClose,
 }: {
-  tab: (typeof TAB_MASTER)[number];
-  item: ItemMaster | null;
+  tab: (typeof MASTER_TABS)[number];
+  item: MasterItem | null;
   onSaved: () => void;
   onClose: () => void;
 }) {
-  const kolom = tab.kolom;
+  const kolom = tab.extraField;
   const [name, setName] = useState(item?.name ?? "");
   const [extra, setExtra] = useState((kolom && item?.[kolom]) || "");
   const [dicoba, setDicoba] = useState(false);
@@ -30,7 +30,7 @@ export function MasterForm({
   const [menyimpan, setMenyimpan] = useState(false);
 
   const input = { name, ...(kolom ? { [kolom]: extra } : {}) };
-  const lokal = cekMaster(tab.kind, input);
+  const lokal = validateMaster(tab.kind, input);
   const galat = (k: string) => (dicoba ? (lokal[k] ?? server[k]) : undefined);
 
   async function kirim(e: React.FormEvent) {
@@ -38,7 +38,7 @@ export function MasterForm({
     if (Object.keys(lokal).length > 0) return setDicoba(true);
     if (menyimpan) return;
     setMenyimpan(true);
-    const r = await panggil(() => simpanMaster(tab.kind, item?.id ?? null, input));
+    const r = await callAction(() => simpanMaster(tab.kind, item?.id ?? null, input));
     setMenyimpan(false);
     if ("error" in r) {
       if (r.error.code === "CONFLICT") {
@@ -70,14 +70,14 @@ export function MasterForm({
       </Field>
       {kolom && (
         <Field
-          label={tab.kolomLabel!}
+          label={tab.extraFieldLabel!}
           id={`mf-${kolom}`}
           help={kolom === "icon" ? "Nama ikon, boleh dikosongkan." : "Boleh dikosongkan."}
           error={galat(kolom)}
         >
           <Input
             value={extra}
-            maxLength={tab.kolomMax}
+            maxLength={tab.extraFieldMax}
             onChange={(e) => {
               setServer({});
               setExtra(e.target.value);

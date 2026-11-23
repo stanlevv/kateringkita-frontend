@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PesananMeja } from "@/types/meja";
+import type { TableOrder } from "@/types/table";
 
 const statusPesananMeja = vi.fn();
 vi.mock("@/app/actions/meja", () => ({
@@ -10,7 +10,7 @@ vi.mock("@/app/actions/meja", () => ({
 
 import { StatusPesanan } from "./StatusPesanan";
 
-const pesanan = (o: Partial<PesananMeja> = {}): PesananMeja => ({
+const pesanan = (o: Partial<TableOrder> = {}): TableOrder => ({
   code: "KK-1",
   status: "holding",
   payment_status: "pending",

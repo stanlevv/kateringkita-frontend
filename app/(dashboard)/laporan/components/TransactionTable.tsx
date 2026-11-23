@@ -9,8 +9,8 @@ import { DataTable, type Column } from "@/app/components/ui/DataTable";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { toast } from "@/app/components/ui/Toast";
-import { formatJam, formatRupiah, formatTanggal } from "@/lib/format";
-import { LIMIT_TRANSAKSI } from "@/lib/laporan";
+import { formatTime, formatRupiah, formatDate } from "@/lib/format";
+import { LIMIT_TRANSACTIONS } from "@/lib/report";
 import type { PaymentMethod } from "@/types/order";
 import type { Transaction } from "@/types/report";
 
@@ -21,7 +21,7 @@ const METODE: Record<PaymentMethod, string> = {
   online: "Bayar online",
 };
 const laba = (t: Transaction) => t.total - t.hpp_total;
-const waktu = (t: Transaction) => `${formatTanggal(t.completed_at)}, ${formatJam(t.completed_at)}`;
+const waktu = (t: Transaction) => `${formatDate(t.completed_at)}, ${formatTime(t.completed_at)}`;
 
 const KOLOM: Column<Transaction>[] = [
   { key: "kode", header: "Kode", cell: (t) => <span className="font-mono font-semibold">{t.code}</span> },
@@ -133,7 +133,7 @@ export function TransactionTable({
           <Pagination
             page={page}
             total={total}
-            limit={LIMIT_TRANSAKSI}
+            limit={LIMIT_TRANSACTIONS}
             hrefFor={(p) => `/laporan?dari=${dari}&sampai=${sampai}${p > 1 ? `&page=${p}` : ""}`}
           />
         </>

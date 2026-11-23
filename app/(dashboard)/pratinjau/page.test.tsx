@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { requireMerchant } = vi.hoisted(() => ({ requireMerchant: vi.fn(async () => ({})) }));
-vi.mock("@/services/authService", () => ({ requireMerchant }));
-vi.mock("@/lib/skenario", async (orig) => ({
-  ...(await orig<typeof import("@/lib/skenario")>()),
-  getSkenario: async () => null,
+vi.mock("@/services/auth.service", () => ({ requireMerchant }));
+vi.mock("@/lib/scenario", async (orig) => ({
+  ...(await orig<typeof import("@/lib/scenario")>()),
+  getScenario: async () => null,
 }));
 
 import PratinjauPage from "./page";

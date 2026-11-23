@@ -4,7 +4,7 @@ const requireMerchant = vi.fn();
 const requireAdmin = vi.fn();
 const merchantFetch = vi.fn();
 const adminFetch = vi.fn();
-vi.mock("@/services/authService", () => ({
+vi.mock("@/services/auth.service", () => ({
   requireMerchant: (...a: unknown[]) => requireMerchant(...a),
   requireAdmin: (...a: unknown[]) => requireAdmin(...a),
 }));

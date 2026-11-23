@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
 import { ModerasiTable } from "./ModerasiTable";
-import type { MenuModerasi, UlasanModerasi } from "@/types/admin";
+import type { ModerationMenu, ModerationReview } from "@/types/admin";
 
 const moderasi = vi.fn();
 const hapusFotoMenu = vi.fn();
@@ -13,7 +13,7 @@ vi.mock("@/app/actions/admin/moderasi", () => ({
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 
-const ulasan: UlasanModerasi = {
+const ulasan: ModerationReview = {
   id: 5,
   rating: 1,
   comment: "Spam judi",
@@ -26,7 +26,7 @@ const ulasan: UlasanModerasi = {
   customer_name: "Budi",
   order_code: "KK-20261101-AAAA",
 };
-const menu: MenuModerasi = {
+const menu: ModerationMenu = {
   id: 9,
   name: "Es Teh",
   price: 5000,

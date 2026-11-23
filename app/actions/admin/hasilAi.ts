@@ -1,8 +1,8 @@
 "use server";
 
-import { galat, galatField } from "@/lib/action-result";
-import { adminFetch, hasil } from "@/services/api";
-import { requireAdmin } from "@/services/authService";
+import { errorResult, fieldErrorResult } from "@/lib/action-result";
+import { adminFetch, toResult } from "@/services/api";
+import { requireAdmin } from "@/services/auth.service";
 import type { ActionResult } from "@/types/api";
 
 // Rubrik AI: verifikasi manual hasil AI. Hanya super & ops (support hanya melihat); backend tetap penjaga utamanya.
@@ -14,15 +14,17 @@ export async function verifikasiHasilAi(
   catatan?: string,
 ): Promise<ActionResult<null>> {
   await requireAdmin("super", "ops");
-  if (!Number.isInteger(id) || id < 1) return galat("VALIDATION_ERROR", "Hasil AI tidak valid.");
-  if (status !== "disetujui" && status !== "ditolak") return galat("VALIDATION_ERROR", "Pilih setujui atau tolak.");
+  if (!Number.isInteger(id) || id < 1) return errorResult("VALIDATION_ERROR", "Hasil AI tidak valid.");
+  if (status !== "disetujui" && status !== "ditolak")
+    return errorResult("VALIDATION_ERROR", "Pilih setujui atau tolak.");
   const isi = typeof catatan === "string" ? catatan.trim() : "";
   if (status === "ditolak" && (isi.length < 3 || isi.length > 300))
-    return galatField({ catatan: ALASAN }, "Periksa kembali catatan.");
-  if (isi.length > 300) return galatField({ catatan: "Catatan maksimal 300 karakter." }, "Periksa kembali catatan.");
+    return fieldErrorResult({ catatan: ALASAN }, "Periksa kembali catatan.");
+  if (isi.length > 300)
+    return fieldErrorResult({ catatan: "Catatan maksimal 300 karakter." }, "Periksa kembali catatan.");
   const res = await adminFetch<null>(`/hasil-ai/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ status, ...(isi ? { catatan: isi } : {}) }),
   });
-  return res.ok ? { data: null } : hasil(res);
+  return res.ok ? { data: null } : toResult(res);
 }

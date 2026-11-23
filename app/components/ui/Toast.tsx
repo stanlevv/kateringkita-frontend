@@ -2,14 +2,14 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { X } from "lucide-react";
-import type { Nada } from "@/lib/order-status";
+import type { Tone } from "@/lib/order-status";
 import { cx } from "./cx";
 import { IconButton } from "./IconButton";
 import { toneClass, toneIcon } from "./tone";
 
 type Item = {
   id: number;
-  tone: Nada;
+  tone: Tone;
   message: string;
   action?: { label: string; onClick: () => void };
   duration?: number;

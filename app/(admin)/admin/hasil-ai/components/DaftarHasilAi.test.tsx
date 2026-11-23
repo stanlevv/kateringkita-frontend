@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 vi.mock("@/app/actions/admin/hasilAi", () => ({ verifikasiHasilAi: vi.fn() }));
-import type { HasilAi } from "@/types/hasil-ai";
-import { tabHasilAi } from "@/lib/hasil-ai";
+import type { AiResult } from "@/types/ai-result";
+import { parseAiResultTab } from "@/lib/ai-result";
 import { DaftarHasilAi } from "./DaftarHasilAi";
 
-const H: HasilAi = {
+const H: AiResult = {
   id: 5,
   fitur: "asisten",
   input_text: "Harga risol?",
@@ -26,10 +26,10 @@ beforeEach(() => push.mockReset());
 
 describe("DaftarHasilAi", () => {
   it("tabHasilAi: tanpa status = menunggu; nilai asing jadi menunggu", () => {
-    expect(tabHasilAi(undefined)).toBe("menunggu");
-    expect(tabHasilAi("ditolak")).toBe("ditolak");
-    expect(tabHasilAi("semua")).toBe("semua");
-    expect(tabHasilAi("hapus")).toBe("menunggu");
+    expect(parseAiResultTab(undefined)).toBe("menunggu");
+    expect(parseAiResultTab("ditolak")).toBe("ditolak");
+    expect(parseAiResultTab("semua")).toBe("semua");
+    expect(parseAiResultTab("hapus")).toBe("menunggu");
   });
 
   it("pindah tab & fitur memperbarui URL (halaman kembali ke 1)", () => {

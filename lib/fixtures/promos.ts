@@ -1,5 +1,5 @@
 import type { Promo } from "@/types/promo";
-import { hariLagi, hariLalu } from "./waktu";
+import { daysFromNow, daysAgo } from "./time";
 
 // Empat status tampilan: berjalan, terjadwal, berakhir, nonaktif.
 export const promos = (): Promo[] => [
@@ -14,8 +14,8 @@ export const promos = (): Promo[] => [
     quota: 100,
     used_count: 37,
     per_user_limit: 1,
-    starts_at: hariLalu(5),
-    ends_at: hariLagi(10),
+    starts_at: daysAgo(5),
+    ends_at: daysFromNow(10),
     is_active: true,
     is_public: true,
   },
@@ -30,8 +30,8 @@ export const promos = (): Promo[] => [
     quota: null,
     used_count: 0,
     per_user_limit: 2,
-    starts_at: hariLagi(3),
-    ends_at: hariLagi(17),
+    starts_at: daysFromNow(3),
+    ends_at: daysFromNow(17),
     is_active: true,
     is_public: true,
   },
@@ -46,8 +46,8 @@ export const promos = (): Promo[] => [
     quota: 50,
     used_count: 50,
     per_user_limit: 1,
-    starts_at: hariLalu(20),
-    ends_at: hariLalu(2),
+    starts_at: daysAgo(20),
+    ends_at: daysAgo(2),
     is_active: true,
     is_public: true,
   },
@@ -62,8 +62,8 @@ export const promos = (): Promo[] => [
     quota: 200,
     used_count: 12,
     per_user_limit: 1,
-    starts_at: hariLalu(3),
-    ends_at: hariLagi(25),
+    starts_at: daysAgo(3),
+    ends_at: daysFromNow(25),
     is_active: false,
     is_public: true,
   },

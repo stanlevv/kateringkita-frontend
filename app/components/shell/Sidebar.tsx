@@ -1,4 +1,4 @@
-import type { ModeSidebar } from "@/lib/shell";
+import type { SidebarMode } from "@/lib/shell";
 import { Brand } from "./Brand";
 import { MobileNav } from "./MobileNav";
 import { NavList } from "./NavList";
@@ -23,7 +23,7 @@ export function Sidebar({
   notif?: number;
   admin?: boolean;
   level?: unknown;
-  mode?: ModeSidebar;
+  mode?: SidebarMode;
 }) {
   return (
     <SidebarLipat

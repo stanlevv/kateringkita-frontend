@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Badge } from "@/app/components/ui/Badge";
 import { Banner } from "@/app/components/ui/Banner";
 import { cx } from "@/app/components/ui/cx";
-import { formatRupiah, formatTelepon } from "@/lib/format";
-import { linkWa } from "@/services/adminMerchantService";
-import { LABEL_PENGIRIM, labelKategori, statusPesananTiket } from "@/services/adminTiketService";
-import type { DetailTiket, PesanTiket } from "@/types/admin";
+import { formatRupiah, formatPhone } from "@/lib/format";
+import { whatsappLink } from "@/services/admin-merchant.service";
+import { SENDER_LABELS, categoryLabel, ticketOrderStatus } from "@/services/admin-ticket.service";
+import type { TicketDetail, TicketMessage } from "@/types/admin";
 import { BalasTiket } from "./BalasTiket";
 import { StatusTiket, waktuLengkap } from "./StatusTiket";
 
@@ -23,7 +23,7 @@ const Kartu = ({ judul, children }: { judul: string; children: React.ReactNode }
 );
 
 /** Pesan pembeli di kiri, pesan admin di kanan berlatar oranye lembut; nama pengirim + peran + waktu WIB. */
-function Pesan({ m, pembeli }: { m: PesanTiket; pembeli: string }) {
+function Pesan({ m, pembeli }: { m: TicketMessage; pembeli: string }) {
   const admin = m.sender_role === "admin";
   return (
     <li className={cx("flex flex-col gap-1", admin ? "items-end" : "items-start")}>
@@ -35,7 +35,7 @@ function Pesan({ m, pembeli }: { m: PesanTiket; pembeli: string }) {
       >
         <p className="text-sm">
           <span className="font-semibold text-ink">{m.sender_name ?? (admin ? "Admin" : pembeli)}</span>
-          <span className="text-ink-muted"> · {LABEL_PENGIRIM[m.sender_role] ?? m.sender_role}</span>
+          <span className="text-ink-muted"> · {SENDER_LABELS[m.sender_role] ?? m.sender_role}</span>
         </p>
         <p className="mt-1 whitespace-pre-wrap break-words text-ink">{m.body}</p>
       </div>
@@ -47,15 +47,15 @@ function Pesan({ m, pembeli }: { m: PesanTiket; pembeli: string }) {
 }
 
 /** Detail tiket: info singkat, percakapan + formulir balas (bila belum ditutup), pembeli, dan pesanan terkait. */
-export function TiketDetail({ t }: { t: DetailTiket }) {
+export function TiketDetail({ t }: { t: TicketDetail }) {
   const ditutup = t.status === "closed";
-  const pesanan = t.order && statusPesananTiket(t.order.status);
+  const pesanan = t.order && ticketOrderStatus(t.order.status);
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink-muted">
         <StatusTiket status={t.status} />
         <span className="font-mono font-semibold text-ink">{t.code}</span>
-        <span>Kategori {labelKategori(t.category)}</span>
+        <span>Kategori {categoryLabel(t.category)}</span>
         <span>Dibuat {waktuLengkap(t.created_at)}</span>
       </div>
       {ditutup && (
@@ -92,12 +92,12 @@ export function TiketDetail({ t }: { t: DetailTiket }) {
               <Baris k="Nama">{t.customer.full_name}</Baris>
               <Baris k="WhatsApp">
                 <a
-                  href={linkWa(t.customer.phone)}
+                  href={whatsappLink(t.customer.phone)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary underline"
                 >
-                  {formatTelepon(t.customer.phone)}
+                  {formatPhone(t.customer.phone)}
                 </a>
               </Baris>
               <Baris k="Email">{t.customer.email ?? "—"}</Baris>

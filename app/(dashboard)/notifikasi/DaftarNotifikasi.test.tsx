@@ -6,9 +6,9 @@ const tandaiSemuaDibaca = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/notifikasi", () => ({ tandaiSemuaDibaca: () => tandaiSemuaDibaca() }));
 import { DaftarNotifikasi } from "./DaftarNotifikasi";
-import type { Notifikasi } from "@/types/notifikasi";
+import type { AppNotification } from "@/types/notification";
 
-const n = (o: Partial<Notifikasi>): Notifikasi => ({
+const n = (o: Partial<AppNotification>): AppNotification => ({
   id: 1,
   type: "moderation",
   title: "Foto menu dihapus admin",

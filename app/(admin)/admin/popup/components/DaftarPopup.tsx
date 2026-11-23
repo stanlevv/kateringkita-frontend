@@ -15,14 +15,14 @@ import { FileDrop } from "@/app/components/ui/FileDrop";
 import { Input, Select } from "@/app/components/ui/Input";
 import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { formatTanggal, inputWibKeIso, isoKeInputWib } from "@/lib/format";
-import type { Nada } from "@/lib/order-status";
-import { unggahFoto } from "@/lib/unggah";
-import type { PilihanVoucher } from "@/types/banner";
+import { callAction } from "@/lib/action";
+import { formatDate, wibInputToIso, isoToWibInput } from "@/lib/format";
+import type { Tone } from "@/lib/order-status";
+import { uploadPhoto } from "@/lib/upload";
+import type { VoucherOption } from "@/types/banner";
 import type { Popup } from "@/types/popup";
 
-export function statusPopup(p: Popup, now: number): { label: string; tone: Nada; icon: LucideIcon } {
+export function statusPopup(p: Popup, now: number): { label: string; tone: Tone; icon: LucideIcon } {
   if (!p.is_active) return { label: "Nonaktif", tone: "neutral", icon: EyeOff };
   if (Date.parse(p.ends_at) <= now) return { label: "Berakhir", tone: "neutral", icon: EyeOff };
   if (Date.parse(p.starts_at) > now) return { label: "Terjadwal", tone: "info", icon: CalendarClock };
@@ -34,22 +34,22 @@ function PopupForm({
   onSaved,
   onClose,
 }: {
-  vouchers: PilihanVoucher[];
+  vouchers: VoucherOption[];
   onSaved: () => void;
   onClose: () => void;
 }) {
   const [title, setTitle] = useState("");
   const [image, setImage] = useState("");
   const [promoId, setPromoId] = useState("");
-  const [starts, setStarts] = useState(() => isoKeInputWib(new Date().toISOString()));
-  const [ends, setEnds] = useState(() => isoKeInputWib(new Date(Date.now() + 7 * 86400e3).toISOString()));
+  const [starts, setStarts] = useState(() => isoToWibInput(new Date().toISOString()));
+  const [ends, setEnds] = useState(() => isoToWibInput(new Date(Date.now() + 7 * 86400e3).toISOString()));
   const [aktif, setAktif] = useState(true);
   const [galat, setGalat] = useState<Record<string, string>>({});
   const [umum, setUmum] = useState<string>();
   const [sibuk, setSibuk] = useState(false);
 
   async function pilihGambar(f: File) {
-    const r = await unggahFoto(f, "popup", mintaUnggahAdmin);
+    const r = await uploadPhoto(f, "popup", mintaUnggahAdmin);
     if ("error" in r) return setGalat((g) => ({ ...g, image_url: r.error.message }));
     setImage(r.data.public_url);
   }
@@ -58,13 +58,13 @@ function PopupForm({
     e.preventDefault();
     if (sibuk) return;
     setSibuk(true);
-    const r = await panggil(() =>
+    const r = await callAction(() =>
       simpanPopup(null, {
         title: title.trim(),
         image_url: image,
         promo_id: promoId ? Number(promoId) : null,
-        starts_at: inputWibKeIso(starts),
-        ends_at: inputWibKeIso(ends),
+        starts_at: wibInputToIso(starts),
+        ends_at: wibInputToIso(ends),
         is_active: aktif,
       }),
     );
@@ -147,7 +147,7 @@ export function DaftarPopup({
   bolehUbah,
 }: {
   popups: Popup[];
-  vouchers: PilihanVoucher[];
+  vouchers: VoucherOption[];
   bolehUbah: boolean;
 }) {
   const router = useRouter();
@@ -156,7 +156,7 @@ export function DaftarPopup({
   const now = Date.now();
 
   async function setAktif(p: Popup, aktif: boolean) {
-    const r = await panggil(() => simpanPopup(p.id, { is_active: aktif }));
+    const r = await callAction(() => simpanPopup(p.id, { is_active: aktif }));
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: aktif ? "Pop-up diaktifkan." : "Pop-up dinonaktifkan." });
     router.refresh();
@@ -197,8 +197,8 @@ export function DaftarPopup({
                     </Badge>
                   </div>
                   <p className="text-sm text-ink-muted">
-                    {p.promo ? `Voucher ${p.promo.code}` : "Tanpa voucher"} · {formatTanggal(p.starts_at)} –{" "}
-                    {formatTanggal(p.ends_at)}
+                    {p.promo ? `Voucher ${p.promo.code}` : "Tanpa voucher"} · {formatDate(p.starts_at)} –{" "}
+                    {formatDate(p.ends_at)}
                   </p>
                   {bolehUbah && (
                     <div className="mt-auto flex justify-end">

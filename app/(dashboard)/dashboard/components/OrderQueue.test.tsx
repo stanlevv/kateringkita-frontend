@@ -8,7 +8,7 @@ const onTerima = vi.fn();
 const onSegarkan = vi.fn();
 vi.mock("@/app/actions/orders", () => ({ orderAction: (...a: unknown[]) => orderAction(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
-import { ganti, terapkanOptimis, type Optimis } from "@/lib/dashboard";
+import { setOrDeleteKey, applyOptimisticActions, type OptimisticActions } from "@/lib/dashboard";
 import { menus } from "@/lib/fixtures/menus";
 import { orders } from "@/lib/fixtures/orders";
 import type { MerchantOrder } from "@/types/order";
@@ -30,15 +30,15 @@ function Induk({
   sekarang: number;
   onFokusKuota: (id?: number) => void;
 }) {
-  const [optimis, setOptimis] = useState<Optimis>({});
+  const [optimis, setOptimis] = useState<OptimisticActions>({});
   return (
     <OrderQueue
-      orders={terapkanOptimis(list, optimis)}
+      orders={applyOptimisticActions(list, optimis)}
       menus={menus()}
       sekarang={sekarang}
       baru={[]}
       optimis={optimis}
-      onOptimis={(c, v) => setOptimis((o) => ganti(o, c, v))}
+      onOptimis={(c, v) => setOptimis((o) => setOrDeleteKey(o, c, v))}
       onFokusKuota={onFokusKuota}
       onTerima={onTerima}
       onSegarkan={onSegarkan}

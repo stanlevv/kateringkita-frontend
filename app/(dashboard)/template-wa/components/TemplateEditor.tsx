@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { saveProfile } from "@/app/actions/profile";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { cx, fokus } from "@/app/components/ui/cx";
@@ -12,9 +12,9 @@ import { toast } from "@/app/components/ui/Toast";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import type { MerchantOrder } from "@/types/order";
 import {
-  cekTemplate,
-  contohDariPesanan,
-  MAKS_TEMPLATE,
+  validateTemplate,
+  templateValuesFromOrder,
+  MAX_TEMPLATE_LENGTH,
   PLACEHOLDER,
   renderTemplate,
   TEMPLATE_BAWAAN,
@@ -40,7 +40,7 @@ export function TemplateEditor({
 
   const dirty = teks !== awal;
   const guard = useUnsavedGuard(dirty);
-  const galat = cekTemplate(teks);
+  const galat = validateTemplate(teks);
 
   // Kursor dikembalikan setelah React menulis ulang isi textarea.
   useEffect(() => {
@@ -62,7 +62,7 @@ export function TemplateEditor({
   async function simpan() {
     if (galat || menyimpan) return;
     setMenyimpan(true);
-    const r = await panggil(() => saveProfile({ wa_template: teks }));
+    const r = await callAction(() => saveProfile({ wa_template: teks }));
     setMenyimpan(false);
     if ("error" in r) return toast({ tone: "danger", message: r.error.fields?.wa_template?.[0] ?? r.error.message });
     setAwal(teks);
@@ -80,17 +80,17 @@ export function TemplateEditor({
             </p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {PLACEHOLDER.map((p) => (
-                <li key={p.kode}>
+                <li key={p.code}>
                   <button
                     type="button"
-                    onClick={() => sisip(p.kode)}
+                    onClick={() => sisip(p.code)}
                     className={cx(
                       "flex min-h-11 w-full flex-col items-start justify-center rounded-md border border-line-strong bg-surface px-3 py-1 text-left hover:bg-subtle",
                       fokus,
                     )}
                   >
-                    <span className="font-mono text-sm font-semibold text-ink">{p.kode}</span>
-                    <span className="text-sm text-ink-muted">{p.deskripsi}</span>
+                    <span className="font-mono text-sm font-semibold text-ink">{p.code}</span>
+                    <span className="text-sm text-ink-muted">{p.description}</span>
                   </button>
                 </li>
               ))}
@@ -99,7 +99,7 @@ export function TemplateEditor({
           <Field
             label="Isi templat"
             id="wa-template"
-            help={`${teks.length.toLocaleString("id-ID")}/${MAKS_TEMPLATE.toLocaleString("id-ID")} karakter`}
+            help={`${teks.length.toLocaleString("id-ID")}/${MAX_TEMPLATE_LENGTH.toLocaleString("id-ID")} karakter`}
             error={galat ?? undefined}
           >
             <Textarea
@@ -138,7 +138,7 @@ export function TemplateEditor({
 
         <ChatPreview
           namaToko={namaToko}
-          teks={order ? renderTemplate(teks, contohDariPesanan(order)) : teks}
+          teks={order ? renderTemplate(teks, templateValuesFromOrder(order)) : teks}
           catatan={order ? `Contoh dari pesanan ${order.code}.` : "Pratinjau terisi data pesanan setelah ada pesanan."}
         />
       </div>

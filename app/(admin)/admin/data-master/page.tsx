@@ -3,9 +3,9 @@ import { MasterTable } from "@/app/(admin)/admin/components/MasterTable";
 import { GagalMuat } from "@/app/components/GagalMuat";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
-import { tabDariId } from "@/services/adminMasterService";
-import type { ItemMaster } from "@/types/admin";
-import { requireAdmin } from "@/services/authService";
+import { tabById } from "@/services/admin-master.service";
+import type { MasterItem } from "@/types/admin";
+import { requireAdmin } from "@/services/auth.service";
 
 // A-01…A-03 — Data master. Tab aktif di URL (?tab=); nilai tak dikenal jatuh ke Kategori.
 export default async function DataMasterPage({
@@ -14,8 +14,8 @@ export default async function DataMasterPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   await requireAdmin();
-  const tab = tabDariId((await searchParams).tab);
-  const res = await adminFetch<ItemMaster[]>(`/master/${tab.kind}`);
+  const tab = tabById((await searchParams).tab);
+  const res = await adminFetch<MasterItem[]>(`/master/${tab.kind}`);
   return (
     <PageHeader
       title="Data master"

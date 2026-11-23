@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PemakaianAi } from "@/types/ai";
+import type { AiUsage } from "@/types/ai";
 
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
-vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() }));
+vi.mock("@/services/auth.service", () => ({ requireAdmin: () => requireAdmin() }));
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
   adminFetch: (...a: unknown[]) => adminFetch(...a),
@@ -22,7 +22,7 @@ vi.mock("@/app/actions/admin/ai", () => ({
 import AdminAiPage from "./page";
 
 const hari = (t: string, token = 0, panggilan = 0, gagal = 0) => ({ tanggal: t, token, panggilan, gagal });
-const pakai: PemakaianAi = {
+const pakai: AiUsage = {
   hari: 7,
   ringkas: { panggilan: 1240, gagal: 31, token: 1234567, token_masuk: 1000000, token_keluar: 234567, rata_ms: 1830 },
   per_penyedia: [

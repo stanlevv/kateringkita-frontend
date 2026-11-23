@@ -10,21 +10,21 @@ import { Button } from "@/app/components/ui/Button";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { toast } from "@/app/components/ui/Toast";
-import { panggil } from "@/lib/aksi";
-import { bannerAktif, statusBanner } from "@/lib/banner";
-import { formatTanggal } from "@/lib/format";
-import type { Banner, PilihanVoucher } from "@/types/banner";
+import { callAction } from "@/lib/action";
+import { isBannerActive, bannerStatus } from "@/lib/banner";
+import { formatDate } from "@/lib/format";
+import type { Banner, VoucherOption } from "@/types/banner";
 
 /** Banner toko: satu banner aktif (menunggu / tayang) per toko; ditolak bisa diajukan ulang. */
-export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers: PilihanVoucher[] }) {
+export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers: VoucherOption[] }) {
   const router = useRouter();
   const [form, setForm] = useState<Banner | "baru" | null>(null);
   // eslint-disable-next-line react-hooks/purity -- status tayang/berakhir dihitung saat render
   const now = Date.now();
-  const adaAktif = banners.some((b) => bannerAktif(b, now));
+  const adaAktif = banners.some((b) => isBannerActive(b, now));
 
   async function hapus(b: Banner) {
-    const r = await panggil(() => hapusBannerToko(b.id));
+    const r = await callAction(() => hapusBannerToko(b.id));
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: "Banner dihapus." });
     router.refresh();
@@ -49,7 +49,7 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
           {banners.map((b) => {
-            const st = statusBanner(b, now);
+            const st = bannerStatus(b, now);
             return (
               <li key={b.id}>
                 <article
@@ -66,7 +66,7 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
                   </div>
                   <p className="text-sm text-ink-muted">
                     {b.target === "promo" && b.promo ? `Voucher ${b.promo.code}` : "Halaman toko"} ·{" "}
-                    {formatTanggal(b.starts_at)} – {formatTanggal(b.ends_at)}
+                    {formatDate(b.starts_at)} – {formatDate(b.ends_at)}
                   </p>
                   {b.status === "ditolak" && b.catatan && (
                     <p className="text-sm text-danger">Alasan admin: {b.catatan}</p>
