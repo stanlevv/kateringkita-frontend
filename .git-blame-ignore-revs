@@ -24,3 +24,7 @@ e29a4d9f53928edf53a0ed0ea42e0fb89f3cbb03
 785720c9d1d29860a9391797044bf3c985d8317e
 # refactor(web-pembeli): nama kode bahasa Inggris yang jelas (F28)
 c39a03641efd895915974a102f989ad2a55a5670
+# refactor(test): nama file dan deskripsi test bahasa Inggris (F28) - pindah file
+bd3ca56ae786b815b92098a0e3aabe100546ae6b
+# refactor(test): nama file dan deskripsi test bahasa Inggris (F28) - isi test
+d00423cc33096e5375855623bf8057876dff4686
