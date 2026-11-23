@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageIcon, Plus } from "lucide-react";
-import { buatBannerAdmin, mintaUnggahAdmin, tinjauBannerAdmin } from "@/app/actions/admin/banner";
+import { createAdminBanner, requestAdminUpload, reviewAdminBanner } from "@/app/actions/admin/banner";
 import { BannerForm } from "@/app/components/banner/BannerForm";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
@@ -32,7 +32,7 @@ function KartuBanner({ b, now, bolehUbah }: { b: Banner; now: number; bolehUbah:
     if (status === "ditolak" && alasan.trim().length < 3) return setGalat(ALASAN);
     setSibuk(true);
     const r = await callAction(() =>
-      tinjauBannerAdmin(b.id, status === "ditolak" ? { status, catatan: alasan.trim() } : { status }),
+      reviewAdminBanner(b.id, status === "ditolak" ? { status, catatan: alasan.trim() } : { status }),
     );
     setSibuk(false);
     if ("error" in r) {
@@ -175,8 +175,8 @@ export function BannerAdmin({
           <BannerForm
             mode="admin"
             vouchers={vouchers}
-            simpan={buatBannerAdmin}
-            mintaUnggah={mintaUnggahAdmin}
+            simpan={createAdminBanner}
+            mintaUnggah={requestAdminUpload}
             onClose={() => setBuat(false)}
             onSaved={() => {
               setBuat(false);

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { simpanKontakCs } from "@/app/actions/admin/promos";
+import { saveCustomerServiceContact } from "@/app/actions/admin/promos";
 import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
@@ -23,7 +23,7 @@ export function CsContactForm({ nilai }: { nilai: string }) {
     setGalat(undefined);
     if (nomor === nilai) return void toast({ tone: "info", message: "Tidak ada perubahan" });
     setMenyimpan(true);
-    const r = await callAction(() => simpanKontakCs(nomor));
+    const r = await callAction(() => saveCustomerServiceContact(nomor));
     setMenyimpan(false);
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: nomor ? "Kontak CS disimpan" : "Kontak CS dikosongkan" });

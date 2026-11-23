@@ -8,13 +8,13 @@ import type { ActionResult } from "@/types/api";
 import type { Banner } from "@/types/banner";
 
 // Banner beranda penjual: POST/PATCH/DELETE /merchant/banners. Aturan sama dengan backend (banner.dto); 1 banner aktif dicek backend.
-const idOk = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
+const isValidId = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
 
-export async function simpanBannerToko(id: number | null, input: BannerInput): Promise<ActionResult<Banner>> {
+export async function saveMerchantBanner(id: number | null, input: BannerInput): Promise<ActionResult<Banner>> {
   await requireMerchant();
-  if (id !== null && !idOk(id)) return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
-  const masalah = validateBanner(input);
-  if (Object.keys(masalah).length) return fieldErrorResult(masalah, "Periksa kembali isian banner.");
+  if (id !== null && !isValidId(id)) return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
+  const errors = validateBanner(input);
+  if (Object.keys(errors).length) return fieldErrorResult(errors, "Periksa kembali isian banner.");
   const body = JSON.stringify({
     title: input.title.trim(),
     image_url: input.image_url,
@@ -31,8 +31,8 @@ export async function simpanBannerToko(id: number | null, input: BannerInput): P
   );
 }
 
-export async function hapusBannerToko(id: number): Promise<ActionResult<{ id: number }>> {
+export async function deleteMerchantBanner(id: number): Promise<ActionResult<{ id: number }>> {
   await requireMerchant();
-  if (!idOk(id)) return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
+  if (!isValidId(id)) return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
   return toResult(await merchantFetch<{ id: number }>(`/banners/${id}`, { method: "DELETE" }));
 }

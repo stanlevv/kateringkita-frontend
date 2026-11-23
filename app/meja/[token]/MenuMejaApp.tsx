@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, ScanLine, ShoppingBag, UtensilsCrossed } from "lucide-react";
-import { bayarPesananMeja, pesanDariMeja } from "@/app/actions/meja";
+import { payTableOrder, createTableOrder } from "@/app/actions/table";
 import { Button } from "@/app/components/ui/Button";
 import { cx, fokus } from "@/app/components/ui/cx";
 import { Dialog } from "@/app/components/ui/Dialog";
@@ -283,7 +283,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: TableMenu })
     setKirim(true);
     setGalat(null);
     const r = await callAction(() =>
-      pesanDariMeja(token, {
+      createTableOrder(token, {
         items: toSavedLines(baris),
         customer_name: nama.trim(),
         customer_phone: hp || null,
@@ -298,7 +298,7 @@ export function MenuMejaApp({ token, data }: { token: string; data: TableMenu })
     saveGuest(code, { tamu: guest_token, meja: token });
     saveGuestName(nama.trim());
     const b = await callAction(() =>
-      bayarPesananMeja(code, guest_token, `${window.location.origin}/meja/pesanan/${code}`),
+      payTableOrder(code, guest_token, `${window.location.origin}/meja/pesanan/${code}`),
     );
     // dikosongkan saat diteruskan, bukan selagi form masih terbuka menunggu tautan bayar (sempat tampil "Rp 0")
     setBaris([]);

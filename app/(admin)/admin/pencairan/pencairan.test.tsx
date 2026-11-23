@@ -5,17 +5,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
 const refresh = vi.fn();
-const catatPencairan = vi.fn();
-const tandaiRefund = vi.fn();
+const recordPayout = vi.fn();
+const markRefundPaid = vi.fn();
 vi.mock("@/services/auth.service", () => ({ requireAdmin: (...a: unknown[]) => requireAdmin(...a) }));
 vi.mock("@/services/api", async (orig) => ({
   ...(await orig<typeof import("@/services/api")>()),
   adminFetch: (...a: unknown[]) => adminFetch(...a),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-vi.mock("@/app/actions/pencairan", () => ({
-  catatPencairan: (...a: unknown[]) => catatPencairan(...a),
-  tandaiRefund: (...a: unknown[]) => tandaiRefund(...a),
+vi.mock("@/app/actions/payouts", () => ({
+  recordPayout: (...a: unknown[]) => recordPayout(...a),
+  markRefundPaid: (...a: unknown[]) => markRefundPaid(...a),
 }));
 import { Toaster } from "@/app/components/ui/Toast";
 import PencairanPage from "./page";
@@ -97,8 +97,8 @@ const tampil = async () =>
 beforeEach(() => {
   requireAdmin.mockReset().mockResolvedValue({ user: { full_name: "Dina", admin_level: "super" }, merchant: null });
   refresh.mockReset();
-  catatPencairan.mockReset();
-  tandaiRefund.mockReset();
+  recordPayout.mockReset();
+  markRefundPaid.mockReset();
   adminFetch
     .mockReset()
     .mockImplementation(async (path: string) =>
@@ -130,7 +130,7 @@ describe("/admin/pencairan (F26)", () => {
   });
 
   it("catat pencairan mengirim nominal & as_of yang tampil, lalu memuat ulang", async () => {
-    catatPencairan.mockResolvedValue({ data: { ...RIWAYAT[0], id: 8, amount: 58_000 } });
+    recordPayout.mockResolvedValue({ data: { ...RIWAYAT[0], id: 8, amount: 58_000 } });
     await tampil();
     await userEvent.click(
       within(screen.getByRole("table", { name: "Saldo per toko" })).getByRole("button", { name: "Catat pencairan" }),
@@ -139,7 +139,7 @@ describe("/admin/pencairan (F26)", () => {
     await userEvent.type(within(dialog).getByLabelText(/Nomor referensi transfer/), "TRF-0002");
     await userEvent.click(within(dialog).getByRole("button", { name: "Catat pencairan" }));
     // AUD-34: versi rekening yang tampil ikut dikirim; backend menolak bila rekening sudah diganti
-    expect(catatPencairan).toHaveBeenCalledWith({
+    expect(recordPayout).toHaveBeenCalledWith({
       merchant_id: 1,
       amount: 58_000,
       until: AS_OF,
@@ -152,7 +152,7 @@ describe("/admin/pencairan (F26)", () => {
   });
 
   it("saldo berubah (409) -> pesan backend dan muat ulang", async () => {
-    catatPencairan.mockResolvedValue({
+    recordPayout.mockResolvedValue({
       error: { code: "CONFLICT", message: "Saldo penjual berubah. Muat ulang lalu periksa lagi." },
     });
     await tampil();
@@ -167,13 +167,13 @@ describe("/admin/pencairan (F26)", () => {
   });
 
   it("tandai dana dikembalikan dengan nomor referensi", async () => {
-    tandaiRefund.mockResolvedValue({ data: { code: REFUND[0].code, amount: 30_000, reference: "RF-0001" } });
+    markRefundPaid.mockResolvedValue({ data: { code: REFUND[0].code, amount: 30_000, reference: "RF-0001" } });
     await tampil();
     await userEvent.click(screen.getByRole("button", { name: "Tandai dikembalikan" }));
     const dialog = screen.getByRole("dialog", { name: "Tandai dana dikembalikan" });
     await userEvent.type(within(dialog).getByLabelText(/Nomor referensi pengembalian/), "RF-0001");
     await userEvent.click(within(dialog).getByRole("button", { name: "Tandai dikembalikan" }));
-    expect(tandaiRefund).toHaveBeenCalledWith(REFUND[0].code, "RF-0001");
+    expect(markRefundPaid).toHaveBeenCalledWith(REFUND[0].code, "RF-0001");
     expect(await screen.findByText(`Pengembalian Rp 30.000 untuk ${REFUND[0].code} tercatat.`)).toBeInTheDocument();
   });
 

@@ -3,11 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
-const simpanPopup = vi.fn();
+const savePopup = vi.fn();
 const uploadPhoto = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-vi.mock("@/app/actions/admin/popup", () => ({ simpanPopup: (...a: unknown[]) => simpanPopup(...a) }));
-vi.mock("@/app/actions/admin/banner", () => ({ mintaUnggahAdmin: vi.fn() }));
+vi.mock("@/app/actions/admin/popup", () => ({ savePopup: (...a: unknown[]) => savePopup(...a) }));
+vi.mock("@/app/actions/admin/banner", () => ({ requestAdminUpload: vi.fn() }));
 vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { Popup } from "@/types/popup";
@@ -29,7 +29,7 @@ const p = (o: Partial<Popup>): Popup => ({
 
 beforeEach(() => {
   refresh.mockReset();
-  simpanPopup.mockReset().mockResolvedValue({ data: { id: 2 } });
+  savePopup.mockReset().mockResolvedValue({ data: { id: 2 } });
   uploadPhoto.mockReset().mockResolvedValue({ data: { public_url: "https://foto.test/platform/popup/a.webp" } });
 });
 
@@ -54,7 +54,7 @@ describe("DaftarPopup", () => {
     expect(k.getByText("Tayang")).toBeInTheDocument();
     expect(k.getByText(/Voucher HEMAT3K/)).toBeInTheDocument();
     await userEvent.click(k.getByRole("button", { name: "Nonaktifkan" }));
-    expect(simpanPopup).toHaveBeenCalledWith(1, { is_active: false });
+    expect(savePopup).toHaveBeenCalledWith(1, { is_active: false });
     expect(refresh).toHaveBeenCalled();
   });
 
@@ -78,7 +78,7 @@ describe("DaftarPopup", () => {
     fireEvent.change(screen.getByLabelText(/Selesai/), { target: { value: "2026-11-27T07:00" } });
     await userEvent.click(screen.getByRole("button", { name: "Simpan pop-up" }));
     await waitFor(() =>
-      expect(simpanPopup).toHaveBeenCalledWith(null, {
+      expect(savePopup).toHaveBeenCalledWith(null, {
         title: "Promo akhir pekan",
         image_url: "https://foto.test/platform/popup/a.webp",
         promo_id: 7,

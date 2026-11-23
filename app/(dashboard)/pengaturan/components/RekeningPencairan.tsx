@@ -5,7 +5,7 @@ import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Input, Select } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
-import { saveRekening } from "@/app/actions/pencairan";
+import { saveBankAccount } from "@/app/actions/payouts";
 import { callAction } from "@/lib/action";
 import { formatRupiah, formatDate } from "@/lib/format";
 import type { MyPayouts } from "@/types/payout";
@@ -49,7 +49,7 @@ export function RekeningPencairan({ data }: { data: MyPayouts | null }) {
     e.preventDefault();
     if (sibuk) return;
     setSibuk(true);
-    const r = await callAction(() => saveRekening(v));
+    const r = await callAction(() => saveBankAccount(v));
     setSibuk(false);
     if ("error" in r) {
       if (r.error.fields) setGalat(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));

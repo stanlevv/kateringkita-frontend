@@ -5,16 +5,16 @@ vi.mock("@/lib/scenario", () => ({ getScenario: () => getScenario() }));
 const requireMerchant = vi.fn(async () => ({}));
 vi.mock("@/services/auth.service", () => ({ requireMerchant: () => requireMerchant() }));
 const merchantFetch = vi.fn();
-vi.mock("@/services/api", async (orig) => ({
-  ...(await orig<typeof import("@/services/api")>()),
-  merchantFetch: (...a: unknown[]) => merchantFetch(...a),
+vi.mock("@/services/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/api")>()),
+  merchantFetch: (...args: unknown[]) => merchantFetch(...args),
 }));
 import { setStoreOpen } from "./store";
 
 beforeEach(() => {
   getScenario.mockReset();
   merchantFetch.mockReset();
-  merchantFetch.mockImplementation(async (_p: string, init: { body: string }) => ({
+  merchantFetch.mockImplementation(async (_path: string, init: { body: string }) => ({
     ok: true,
     status: 200,
     data: JSON.parse(init.body),
@@ -47,8 +47,8 @@ describe("SH-E1 setStoreOpen", () => {
   });
   it("skenario gagal-aksi -> error tanpa memanggil server", async () => {
     getScenario.mockResolvedValue("gagal-aksi");
-    const r = await setStoreOpen(false);
-    expect("error" in r && r.error.message).toBeTruthy();
+    const result = await setStoreOpen(false);
+    expect("error" in result && result.error.message).toBeTruthy();
     expect(merchantFetch).not.toHaveBeenCalled();
   });
 });

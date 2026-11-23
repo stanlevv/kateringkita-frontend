@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, CircleX, ExternalLink, KeyRound, Loader2, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
-import { hapusPenyediaAi, tambahPenyediaAi, ubahPenyediaAi, ujiPenyediaAi } from "@/app/actions/admin/ai";
+import { deleteAiProvider, createAiProvider, updateAiProvider, testAiProvider } from "@/app/actions/admin/ai";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { cx, fokus } from "@/app/components/ui/cx";
@@ -41,8 +41,8 @@ function Formulir({ awal, onSelesai }: { awal: AiProvider | null; onSelesai: () 
     const isi = { label, model, priority: Number(prioritas), ...(kunci.trim() ? { api_key: kunci.trim() } : {}) };
     const r = await callAction(() =>
       awal
-        ? ubahPenyediaAi(awal.id, isi)
-        : tambahPenyediaAi({ ...isi, provider: jenis, api_key: kunci.trim(), is_active: true }),
+        ? updateAiProvider(awal.id, isi)
+        : createAiProvider({ ...isi, provider: jenis, api_key: kunci.trim(), is_active: true }),
     );
     setKirim(false);
     if ("error" in r) {
@@ -175,14 +175,14 @@ export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
   const [uji, setUji] = useState<Record<number, AiTestResult | "memuat">>({});
 
   async function aktif(p: AiProvider, v: boolean) {
-    const r = await callAction(() => ubahPenyediaAi(p.id, { is_active: v }));
+    const r = await callAction(() => updateAiProvider(p.id, { is_active: v }));
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
     router.refresh();
   }
 
   async function cek(p: AiProvider) {
     setUji((u) => ({ ...u, [p.id]: "memuat" }));
-    const r = await callAction(() => ujiPenyediaAi(p.id));
+    const r = await callAction(() => testAiProvider(p.id));
     setUji((u) => ({ ...u, [p.id]: "data" in r ? r.data : { ok: false, message: r.error.message } }));
     router.refresh();
   }
@@ -338,7 +338,7 @@ export function PenyediaAiPanel({ data }: { data: AiProviderList }) {
           const p = hapus;
           setHapus(null);
           if (!p) return;
-          const r = await callAction(() => hapusPenyediaAi(p.id));
+          const r = await callAction(() => deleteAiProvider(p.id));
           if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
           toast({ tone: "success", message: `${p.label} dihapus` });
           router.refresh();

@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/banner", () => ({
-  simpanBannerToko: vi.fn(),
-  hapusBannerToko: vi.fn().mockResolvedValue({ data: { id: 1 } }),
+  saveMerchantBanner: vi.fn(),
+  deleteMerchantBanner: vi.fn().mockResolvedValue({ data: { id: 1 } }),
 }));
 vi.mock("@/lib/upload", () => ({ uploadPhoto: vi.fn() }));
 import type { Banner } from "@/types/banner";

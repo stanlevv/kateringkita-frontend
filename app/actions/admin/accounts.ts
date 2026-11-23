@@ -7,35 +7,35 @@ import { requireAdmin } from "@/services/auth.service";
 import type { AdminWithPassword, AdminAccount } from "@/types/admin";
 import type { ActionResult } from "@/types/api";
 
-const LEVEL: AdminLevel[] = ["super", "ops", "support"];
-const idOk = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
-const tidakValid = () => errorResult("VALIDATION_ERROR", "Data tidak valid.");
+const ADMIN_LEVELS: AdminLevel[] = ["super", "ops", "support"];
+const isValidId = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
+const invalidDataError = () => errorResult("VALIDATION_ERROR", "Data tidak valid.");
 
 // Fase 1 — khusus admin super. Sandi sementara hanya ada di respons ini; tampilkan sekali lalu buang.
-export async function buatAdmin(input: {
+export async function createAdmin(input: {
   full_name: string;
   phone: string;
   admin_level: AdminLevel;
 }): Promise<ActionResult<AdminWithPassword>> {
   await requireAdmin("super");
-  const full_name = String(input?.full_name ?? "").trim();
+  const fullName = String(input?.full_name ?? "").trim();
   const phone = String(input?.phone ?? "").trim();
-  const masalah: Record<string, string> = {};
-  if (full_name.length < 1 || full_name.length > 150) masalah.full_name = "Nama 1–150 karakter.";
-  if (!/^08\d{8,11}$/.test(phone)) masalah.phone = "Nomor HP harus diawali 08 dan 10–13 digit.";
-  if (!LEVEL.includes(input?.admin_level)) masalah.admin_level = "Pilih tingkat admin.";
-  if (Object.keys(masalah).length) return fieldErrorResult(masalah, "Periksa kembali isian.");
+  const errors: Record<string, string> = {};
+  if (fullName.length < 1 || fullName.length > 150) errors.full_name = "Nama 1–150 karakter.";
+  if (!/^08\d{8,11}$/.test(phone)) errors.phone = "Nomor HP harus diawali 08 dan 10–13 digit.";
+  if (!ADMIN_LEVELS.includes(input?.admin_level)) errors.admin_level = "Pilih tingkat admin.";
+  if (Object.keys(errors).length) return fieldErrorResult(errors, "Periksa kembali isian.");
   return toResult(
     await adminFetch<AdminWithPassword>("/admins", {
       method: "POST",
-      body: JSON.stringify({ full_name, phone, admin_level: input.admin_level }),
+      body: JSON.stringify({ full_name: fullName, phone, admin_level: input.admin_level }),
     }),
   );
 }
 
-export async function ubahLevelAdmin(id: number, level: AdminLevel): Promise<ActionResult<AdminAccount>> {
+export async function updateAdminLevel(id: number, level: AdminLevel): Promise<ActionResult<AdminAccount>> {
   await requireAdmin("super");
-  if (!idOk(id) || !LEVEL.includes(level)) return tidakValid();
+  if (!isValidId(id) || !ADMIN_LEVELS.includes(level)) return invalidDataError();
   return toResult(
     await adminFetch<AdminAccount>(`/admins/${id}/level`, {
       method: "PATCH",
@@ -44,16 +44,16 @@ export async function ubahLevelAdmin(id: number, level: AdminLevel): Promise<Act
   );
 }
 
-export async function setAktifAdmin(id: number, aktif: boolean): Promise<ActionResult<AdminAccount>> {
+export async function setAdminActive(id: number, active: boolean): Promise<ActionResult<AdminAccount>> {
   await requireAdmin("super");
-  if (!idOk(id) || typeof aktif !== "boolean") return tidakValid();
+  if (!isValidId(id) || typeof active !== "boolean") return invalidDataError();
   return toResult(
-    await adminFetch<AdminAccount>(`/admins/${id}/${aktif ? "activate" : "deactivate"}`, { method: "POST" }),
+    await adminFetch<AdminAccount>(`/admins/${id}/${active ? "activate" : "deactivate"}`, { method: "POST" }),
   );
 }
 
-export async function resetSandiAdmin(id: number): Promise<ActionResult<AdminWithPassword>> {
+export async function resetAdminPassword(id: number): Promise<ActionResult<AdminWithPassword>> {
   await requireAdmin("super");
-  if (!idOk(id)) return tidakValid();
+  if (!isValidId(id)) return invalidDataError();
   return toResult(await adminFetch<AdminWithPassword>(`/admins/${id}/reset-password`, { method: "POST" }));
 }

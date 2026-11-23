@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { catatPencairan } from "@/app/actions/pencairan";
+import { recordPayout } from "@/app/actions/payouts";
 import { Button } from "@/app/components/ui/Button";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
@@ -32,7 +32,7 @@ export function CatatPencairan({ saldo, asOf }: { saldo: MerchantBalance; asOf: 
     if (sibuk) return;
     setSibuk(true);
     const h = await callAction(() =>
-      catatPencairan({
+      recordPayout({
         merchant_id: saldo.merchant_id,
         amount: saldo.amount,
         until: asOf,

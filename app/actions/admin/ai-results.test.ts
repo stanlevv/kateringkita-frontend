@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
-vi.mock("@/services/auth.service", () => ({ requireAdmin: (...a: unknown[]) => requireAdmin(...a) }));
-vi.mock("@/services/api", async (orig) => ({
-  ...(await orig<typeof import("@/services/api")>()),
-  adminFetch: (...a: unknown[]) => adminFetch(...a),
+vi.mock("@/services/auth.service", () => ({ requireAdmin: (...args: unknown[]) => requireAdmin(...args) }));
+vi.mock("@/services/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/api")>()),
+  adminFetch: (...args: unknown[]) => adminFetch(...args),
 }));
-import { verifikasiHasilAi } from "./hasilAi";
+import { verifyAiResult } from "./ai-results";
 
 beforeEach(() => {
   requireAdmin.mockReset().mockResolvedValue({});
@@ -16,13 +16,13 @@ beforeEach(() => {
 
 describe("verifikasiHasilAi", () => {
   it("hanya super & ops; setujui dengan catatan opsional yang dipangkas", async () => {
-    expect(await verifikasiHasilAi(5, "disetujui", "  Angka sesuai  ")).toEqual({ data: null });
+    expect(await verifyAiResult(5, "disetujui", "  Angka sesuai  ")).toEqual({ data: null });
     expect(requireAdmin).toHaveBeenCalledWith("super", "ops");
     expect(adminFetch).toHaveBeenCalledWith("/hasil-ai/5", {
       method: "PATCH",
       body: JSON.stringify({ status: "disetujui", catatan: "Angka sesuai" }),
     });
-    await verifikasiHasilAi(6, "disetujui", "   ");
+    await verifyAiResult(6, "disetujui", "   ");
     expect(adminFetch).toHaveBeenLastCalledWith("/hasil-ai/6", {
       method: "PATCH",
       body: JSON.stringify({ status: "disetujui" }),
@@ -30,8 +30,8 @@ describe("verifikasiHasilAi", () => {
   });
 
   it("tolak wajib alasan 3–300 karakter", async () => {
-    for (const c of [undefined, "", "ab", "x".repeat(301)]) {
-      expect(await verifikasiHasilAi(5, "ditolak", c)).toEqual({
+    for (const note of [undefined, "", "ab", "x".repeat(301)]) {
+      expect(await verifyAiResult(5, "ditolak", note)).toEqual({
         error: {
           code: "VALIDATION_ERROR",
           message: "Periksa kembali catatan.",
@@ -40,18 +40,18 @@ describe("verifikasiHasilAi", () => {
       });
     }
     expect(adminFetch).not.toHaveBeenCalled();
-    expect(await verifikasiHasilAi(5, "ditolak", "Menu tidak sesuai")).toEqual({ data: null });
+    expect(await verifyAiResult(5, "ditolak", "Menu tidak sesuai")).toEqual({ data: null });
   });
 
   it("id atau status tidak valid -> galat tanpa panggilan", async () => {
-    for (const [id, st] of [
+    for (const [id, status] of [
       [0, "disetujui"],
       [1.5, "disetujui"],
       ["5", "disetujui"],
       [5, "menunggu"],
       [5, "hapus"],
     ] as const) {
-      expect(await verifikasiHasilAi(id as number, st as "disetujui")).toMatchObject({
+      expect(await verifyAiResult(id as number, status as "disetujui")).toMatchObject({
         error: { code: "VALIDATION_ERROR" },
       });
     }
@@ -64,7 +64,7 @@ describe("verifikasiHasilAi", () => {
       status: 404,
       error: { code: "NOT_FOUND", message: "Hasil AI tidak ditemukan." },
     });
-    expect(await verifikasiHasilAi(9, "disetujui")).toMatchObject({
+    expect(await verifyAiResult(9, "disetujui")).toMatchObject({
       error: { code: "NOT_FOUND", message: "Hasil AI tidak ditemukan." },
     });
   });

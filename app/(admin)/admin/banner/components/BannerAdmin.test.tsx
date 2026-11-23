@@ -3,12 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
-const tinjauBannerAdmin = vi.fn();
+const reviewAdminBanner = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/admin/banner", () => ({
-  tinjauBannerAdmin: (...a: unknown[]) => tinjauBannerAdmin(...a),
-  buatBannerAdmin: vi.fn(),
-  mintaUnggahAdmin: vi.fn(),
+  reviewAdminBanner: (...a: unknown[]) => reviewAdminBanner(...a),
+  createAdminBanner: vi.fn(),
+  requestAdminUpload: vi.fn(),
 }));
 vi.mock("@/lib/upload", () => ({ uploadPhoto: vi.fn() }));
 import { Toaster } from "@/app/components/ui/Toast";
@@ -36,7 +36,7 @@ const b = (p: Partial<Banner>): Banner => ({
 
 beforeEach(() => {
   refresh.mockReset();
-  tinjauBannerAdmin.mockReset().mockResolvedValue({ data: { id: 1 } });
+  reviewAdminBanner.mockReset().mockResolvedValue({ data: { id: 1 } });
 });
 
 describe("BannerAdmin", () => {
@@ -50,9 +50,9 @@ describe("BannerAdmin", () => {
     const k = within(screen.getByRole("article"));
     expect(k.getByText("Dapur Siti")).toBeInTheDocument();
     await userEvent.click(k.getByRole("button", { name: "Setujui" }));
-    expect(tinjauBannerAdmin).not.toHaveBeenCalled(); // AUD-35: lewat konfirmasi dulu
+    expect(reviewAdminBanner).not.toHaveBeenCalled(); // AUD-35: lewat konfirmasi dulu
     await userEvent.click(screen.getByRole("button", { name: "Ya, setujui" }));
-    expect(tinjauBannerAdmin).toHaveBeenCalledWith(1, { status: "disetujui" });
+    expect(reviewAdminBanner).toHaveBeenCalledWith(1, { status: "disetujui" });
     expect(await screen.findByText("Banner disetujui.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
   });
@@ -67,10 +67,10 @@ describe("BannerAdmin", () => {
     const k = within(screen.getByRole("article"));
     await userEvent.click(k.getByRole("button", { name: "Tolak" }));
     expect(k.getByText("Tulis alasan penolakan (3–300 karakter).")).toBeInTheDocument();
-    expect(tinjauBannerAdmin).not.toHaveBeenCalled();
+    expect(reviewAdminBanner).not.toHaveBeenCalled();
     await userEvent.type(k.getByLabelText(/Alasan penolakan/), "Gambar buram");
     await userEvent.click(k.getByRole("button", { name: "Tolak" }));
-    expect(tinjauBannerAdmin).toHaveBeenCalledWith(1, { status: "ditolak", catatan: "Gambar buram" });
+    expect(reviewAdminBanner).toHaveBeenCalledWith(1, { status: "ditolak", catatan: "Gambar buram" });
   });
 
   it("banner tayang: Nonaktifkan; support hanya melihat; tombol buat banner platform", async () => {

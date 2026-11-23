@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, ImageOff, Megaphone } from "lucide-react";
-import { tandaiSemuaDibaca } from "@/app/actions/notifikasi";
+import { markAllNotificationsRead } from "@/app/actions/notifications";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { cx } from "@/app/components/ui/cx";
@@ -30,7 +30,7 @@ export function DaftarNotifikasi({
   useEffect(() => {
     if (unread === 0 || sudah.current) return;
     sudah.current = true;
-    void tandaiSemuaDibaca().then((r) => {
+    void markAllNotificationsRead().then((r) => {
       if ("data" in r) router.refresh();
     });
   }, [unread, router]);

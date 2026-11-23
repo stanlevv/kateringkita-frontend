@@ -3,13 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
-const setAktifAdmin = vi.fn();
+const setAdminActive = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, replace: vi.fn(), push: vi.fn() }) }));
-vi.mock("@/app/actions/admin/akun", () => ({
-  buatAdmin: vi.fn(),
-  resetSandiAdmin: vi.fn(),
-  ubahLevelAdmin: vi.fn(),
-  setAktifAdmin: (...a: unknown[]) => setAktifAdmin(...a),
+vi.mock("@/app/actions/admin/accounts", () => ({
+  createAdmin: vi.fn(),
+  resetAdminPassword: vi.fn(),
+  updateAdminLevel: vi.fn(),
+  setAdminActive: (...a: unknown[]) => setAdminActive(...a),
 }));
 import type { AdminAccount } from "@/types/admin";
 import { AdminTable } from "./AdminTable";
@@ -28,7 +28,7 @@ const nonaktif: AdminAccount = {
 
 beforeEach(() => {
   refresh.mockReset();
-  setAktifAdmin.mockReset().mockResolvedValue({ data: { ...nonaktif, is_active: true } });
+  setAdminActive.mockReset().mockResolvedValue({ data: { ...nonaktif, is_active: true } });
 });
 
 // AUD-35: mengaktifkan lagi admin nonaktif (sandi lama ikut aktif) tidak boleh jalan dengan sekali klik
@@ -36,10 +36,10 @@ describe("AdminTable", () => {
   it("Aktifkan meminta konfirmasi dulu", async () => {
     render(<AdminTable rows={[nonaktif]} sayaId={1} />);
     await userEvent.click(screen.getByRole("button", { name: "Aktifkan Rina" }));
-    expect(setAktifAdmin).not.toHaveBeenCalled();
+    expect(setAdminActive).not.toHaveBeenCalled();
     const dlg = within(screen.getByRole("dialog", { name: "Aktifkan admin?" }));
     await userEvent.click(dlg.getByRole("button", { name: "Ya, aktifkan" }));
-    expect(setAktifAdmin).toHaveBeenCalledWith(5, true);
+    expect(setAdminActive).toHaveBeenCalledWith(5, true);
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 });

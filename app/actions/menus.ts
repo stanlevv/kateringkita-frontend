@@ -8,31 +8,35 @@ import { getScenario } from "@/lib/scenario";
 import type { ActionResult } from "@/types/api";
 import type { MerchantMenu } from "@/types/menu";
 
-const idMenu = (id: unknown) => typeof id === "number" && Number.isInteger(id) && id > 0;
-const tidakAda = () => errorResult("NOT_FOUND", "Menu tidak ditemukan.");
+const isValidMenuId = (id: unknown) => typeof id === "number" && Number.isInteger(id) && id > 0;
+const menuNotFound = () => errorResult("NOT_FOUND", "Menu tidak ditemukan.");
 
 export async function adjustQuota(
   menuId: number,
-  ubah: { delta: number } | { quota_today: number },
+  change: { delta: number } | { quota_today: number },
 ): Promise<ActionResult<MerchantMenu>> {
   await requireMerchant();
-  const o = (typeof ubah === "object" && ubah !== null ? ubah : {}) as Record<string, unknown>;
-  if (!idMenu(menuId) || !(typeof o.delta === "number" || typeof o.quota_today === "number")) {
+  const changeFields = (typeof change === "object" && change !== null ? change : {}) as Record<string, unknown>;
+  if (
+    !isValidMenuId(menuId) ||
+    !(typeof changeFields.delta === "number" || typeof changeFields.quota_today === "number")
+  ) {
     return errorResult("VALIDATION_ERROR", "Data kuota tidak valid.");
   }
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Kuota belum tersimpan. Coba lagi.");
-  if (s === "konflik") return errorResult("CONFLICT", "Kuota sudah diubah di tempat lain. Muat ulang lalu coba lagi.");
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Kuota belum tersimpan. Coba lagi.");
+  if (scenario === "konflik")
+    return errorResult("CONFLICT", "Kuota sudah diubah di tempat lain. Muat ulang lalu coba lagi.");
   return toResult(
-    await merchantFetch<MerchantMenu>(`/menus/${menuId}/quota`, { method: "PATCH", body: JSON.stringify(ubah) }),
+    await merchantFetch<MerchantMenu>(`/menus/${menuId}/quota`, { method: "PATCH", body: JSON.stringify(change) }),
   );
 }
 
 export async function setMenuActive(menuId: number, isActive: boolean): Promise<ActionResult<MerchantMenu>> {
   await requireMerchant();
-  if (!idMenu(menuId)) return tidakAda();
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Menu belum diubah. Coba lagi.");
+  if (!isValidMenuId(menuId)) return menuNotFound();
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Menu belum diubah. Coba lagi.");
   return toResult(
     await merchantFetch<MerchantMenu>(`/menus/${menuId}`, {
       method: "PATCH",
@@ -43,23 +47,26 @@ export async function setMenuActive(menuId: number, isActive: boolean): Promise<
 
 export async function saveMenu(id: number | null, input: unknown): Promise<ActionResult<MerchantMenu>> {
   await requireMerchant();
-  if (id !== null && !idMenu(id)) return tidakAda();
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Menu belum tersimpan. Coba lagi.");
+  if (id !== null && !isValidMenuId(id)) return menuNotFound();
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Menu belum tersimpan. Coba lagi.");
 
-  const r = menuFormSchema.safeParse(input);
-  if (!r.success) {
+  const parsed = menuFormSchema.safeParse(input);
+  if (!parsed.success) {
     const fields: Record<string, string[]> = {};
-    for (const i of r.error.issues) (fields[i.path.join(".")] ??= []).push(i.message);
+    for (const issue of parsed.error.issues) (fields[issue.path.join(".")] ??= []).push(issue.message);
     return { error: { code: "VALIDATION_ERROR", message: "Periksa kembali isian menu.", fields } };
   }
   const path = id === null ? "/menus" : `/menus/${id}`;
   return toResult(
-    await merchantFetch<MerchantMenu>(path, { method: id === null ? "POST" : "PATCH", body: JSON.stringify(r.data) }),
+    await merchantFetch<MerchantMenu>(path, {
+      method: id === null ? "POST" : "PATCH",
+      body: JSON.stringify(parsed.data),
+    }),
   );
 }
 
-export async function requestUpload(berkas: {
+export async function requestUpload(file: {
   purpose: "menu" | "logo" | "banner" | "cover";
   content_type: string;
   size: number;
@@ -69,7 +76,7 @@ export async function requestUpload(berkas: {
   return toResult(
     await merchantFetch<{ upload_url: string; public_url: string; expires_at: string }>("/uploads", {
       method: "POST",
-      body: JSON.stringify(berkas),
+      body: JSON.stringify(file),
     }),
   );
 }

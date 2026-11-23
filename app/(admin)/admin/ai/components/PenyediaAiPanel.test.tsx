@@ -4,14 +4,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AiProviderList, AiProvider } from "@/types/ai";
 
 const refresh = vi.fn();
-const tambahPenyediaAi = vi.fn();
-const ubahPenyediaAi = vi.fn();
+const createAiProvider = vi.fn();
+const updateAiProvider = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/app/actions/admin/ai", () => ({
-  tambahPenyediaAi: (...a: unknown[]) => tambahPenyediaAi(...a),
-  ubahPenyediaAi: (...a: unknown[]) => ubahPenyediaAi(...a),
-  hapusPenyediaAi: vi.fn(),
-  ujiPenyediaAi: vi.fn(),
+  createAiProvider: (...a: unknown[]) => createAiProvider(...a),
+  updateAiProvider: (...a: unknown[]) => updateAiProvider(...a),
+  deleteAiProvider: vi.fn(),
+  testAiProvider: vi.fn(),
 }));
 
 import { PenyediaAiPanel } from "./PenyediaAiPanel";
@@ -65,8 +65,8 @@ describe("halaman admin AI", () => {
 
   it("ubah tanpa mengisi key → key tidak dikirim; tambah → penyedia & key dikirim", async () => {
     const u = userEvent.setup();
-    ubahPenyediaAi.mockResolvedValue({ data: p({}) });
-    tambahPenyediaAi.mockResolvedValue({ data: p({ id: 9 }) });
+    updateAiProvider.mockResolvedValue({ data: p({}) });
+    createAiProvider.mockResolvedValue({ data: p({ id: 9 }) });
     render(<PenyediaAiPanel data={data} />);
 
     await u.click(
@@ -79,7 +79,7 @@ describe("halaman admin AI", () => {
     await u.clear(within(ubah).getByLabelText(/Prioritas/));
     await u.type(within(ubah).getByLabelText(/Prioritas/), "5");
     await u.click(within(ubah).getByRole("button", { name: "Simpan perubahan" }));
-    expect(ubahPenyediaAi).toHaveBeenCalledWith(1, {
+    expect(updateAiProvider).toHaveBeenCalledWith(1, {
       label: "Groq gratis",
       model: "llama-3.3-70b-versatile",
       priority: 5,
@@ -91,7 +91,7 @@ describe("halaman admin AI", () => {
     await u.click(within(tambah).getByRole("radio", { name: "Groq" }));
     await u.type(within(tambah).getByLabelText(/API key/), "gsk_kunci_1234567890");
     await u.click(within(tambah).getByRole("button", { name: "Tambah penyedia" }));
-    expect(tambahPenyediaAi).toHaveBeenCalledWith({
+    expect(createAiProvider).toHaveBeenCalledWith({
       label: "Groq",
       model: "llama-3.3-70b-versatile",
       priority: 100,

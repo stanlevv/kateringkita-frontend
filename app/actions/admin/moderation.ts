@@ -6,41 +6,48 @@ import { requireAdmin } from "@/services/auth.service";
 import type { ModerationAction, ModerationMenu, ModerationReview } from "@/types/admin";
 import type { ActionResult } from "@/types/api";
 
-const JENIS: Record<ModerationAction, "reviews" | "menus"> = {
+const TARGET_BY_ACTION: Record<ModerationAction, "reviews" | "menus"> = {
   hide: "reviews",
   unhide: "reviews",
   takedown: "menus",
   restore: "menus",
 };
-const DENGAN_ALASAN: ModerationAction[] = ["hide", "takedown"];
+const ACTIONS_NEEDING_REASON: ModerationAction[] = ["hide", "takedown"];
 
 // F19 — sembunyikan/tampilkan ulasan, turunkan/pulihkan menu. Alasan 1–500 karakter wajib untuk hide & takedown.
-export async function moderasi(
+export async function moderate(
   id: number,
-  aksi: ModerationAction,
-  alasan?: string,
+  action: ModerationAction,
+  rawReason?: string,
 ): Promise<ActionResult<ModerationReview | ModerationMenu>> {
   await requireAdmin();
-  if (!Number.isInteger(id) || id <= 0 || !Object.hasOwn(JENIS, aksi))
+  if (!Number.isInteger(id) || id <= 0 || !Object.hasOwn(TARGET_BY_ACTION, action))
     return errorResult("VALIDATION_ERROR", "Data moderasi tidak valid.");
   let body: string | undefined;
-  if (DENGAN_ALASAN.includes(aksi)) {
-    const reason = typeof alasan === "string" ? alasan.trim() : "";
+  if (ACTIONS_NEEDING_REASON.includes(action)) {
+    const reason = typeof rawReason === "string" ? rawReason.trim() : "";
     if (reason.length < 1 || reason.length > 500)
       return fieldErrorResult({ reason: "Alasan wajib diisi, maksimal 500 karakter." }, "Periksa kembali alasan.");
     body = JSON.stringify({ reason });
   }
   return toResult(
-    await adminFetch<ModerationReview | ModerationMenu>(`/${JENIS[aksi]}/${id}/${aksi}`, { method: "POST", body }),
+    await adminFetch<ModerationReview | ModerationMenu>(`/${TARGET_BY_ACTION[action]}/${id}/${action}`, {
+      method: "POST",
+      body,
+    }),
   );
 }
 
 // Hapus satu foto menu (utama atau tambahan) tanpa menurunkan menunya; alasan wajib seperti takedown
-export async function hapusFotoMenu(id: number, url: string, alasan: string): Promise<ActionResult<ModerationMenu>> {
+export async function deleteMenuPhoto(
+  id: number,
+  url: string,
+  rawReason: string,
+): Promise<ActionResult<ModerationMenu>> {
   await requireAdmin();
   if (!Number.isInteger(id) || id <= 0 || typeof url !== "string" || !url || url.length > 500)
     return errorResult("VALIDATION_ERROR", "Data moderasi tidak valid.");
-  const reason = typeof alasan === "string" ? alasan.trim() : "";
+  const reason = typeof rawReason === "string" ? rawReason.trim() : "";
   if (reason.length < 1 || reason.length > 500)
     return fieldErrorResult({ reason: "Alasan wajib diisi, maksimal 500 karakter." }, "Periksa kembali alasan.");
   return toResult(

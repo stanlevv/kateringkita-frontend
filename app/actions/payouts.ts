@@ -6,12 +6,13 @@ import type { ActionResult } from "@/types/api";
 import type { Payout, MyPayouts } from "@/types/payout";
 
 // F26 pencairan dana. Validasi isi (dan cek ulang kata sandi) ada di backend; aksi ini hanya meneruskan field yang dikenal.
-const objek = (v: unknown) => (typeof v === "object" && v !== null ? (v as Record<string, unknown>) : {});
+const asObject = (value: unknown) =>
+  typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 
 // ---- penjual ----
-export async function saveRekening(input: unknown): Promise<ActionResult<MyPayouts>> {
+export async function saveBankAccount(input: unknown): Promise<ActionResult<MyPayouts>> {
   await requireMerchant();
-  const { bank, account_number, account_name, password } = objek(input);
+  const { bank, account_number, account_name, password } = asObject(input);
   return toResult(
     await merchantFetch<MyPayouts>("/payout-account", {
       method: "PUT",
@@ -23,9 +24,9 @@ export async function saveRekening(input: unknown): Promise<ActionResult<MyPayou
 // ---- admin super ----
 /** `until` = as_of daftar saldo yang sedang dilihat, `account_updated_at` = versi rekening yang tampil;
  *  saldo atau rekening yang berubah sejak itu ditolak backend (409). */
-export async function catatPencairan(input: unknown): Promise<ActionResult<Payout>> {
+export async function recordPayout(input: unknown): Promise<ActionResult<Payout>> {
   await requireAdmin("super");
-  const { merchant_id, amount, until, reference, note, account_updated_at } = objek(input);
+  const { merchant_id, amount, until, reference, note, account_updated_at } = asObject(input);
   return toResult(
     await adminFetch<Payout>("/payouts", {
       method: "POST",
@@ -34,7 +35,7 @@ export async function catatPencairan(input: unknown): Promise<ActionResult<Payou
   );
 }
 
-export async function tandaiRefund(
+export async function markRefundPaid(
   code: string,
   reference: string,
 ): Promise<ActionResult<{ code: string; amount: number; reference: string }>> {

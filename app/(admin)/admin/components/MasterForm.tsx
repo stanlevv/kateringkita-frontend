@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { simpanMaster } from "@/app/actions/admin/master";
+import { saveMaster } from "@/app/actions/admin/master";
 import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
@@ -38,7 +38,7 @@ export function MasterForm({
     if (Object.keys(lokal).length > 0) return setDicoba(true);
     if (menyimpan) return;
     setMenyimpan(true);
-    const r = await callAction(() => simpanMaster(tab.kind, item?.id ?? null, input));
+    const r = await callAction(() => saveMaster(tab.kind, item?.id ?? null, input));
     setMenyimpan(false);
     if ("error" in r) {
       if (r.error.code === "CONFLICT") {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageIcon, Plus } from "lucide-react";
-import { hapusBannerToko, simpanBannerToko } from "@/app/actions/banner";
+import { deleteMerchantBanner, saveMerchantBanner } from "@/app/actions/banner";
 import { BannerForm } from "@/app/components/banner/BannerForm";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
@@ -24,7 +24,7 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
   const adaAktif = banners.some((b) => isBannerActive(b, now));
 
   async function hapus(b: Banner) {
-    const r = await callAction(() => hapusBannerToko(b.id));
+    const r = await callAction(() => deleteMerchantBanner(b.id));
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: "Banner dihapus." });
     router.refresh();
@@ -98,7 +98,7 @@ export function BannerToko({ banners, vouchers }: { banners: Banner[]; vouchers:
             mode="toko"
             banner={form === "baru" ? null : form}
             vouchers={vouchers}
-            simpan={simpanBannerToko}
+            simpan={saveMerchantBanner}
             onClose={() => setForm(null)}
             onSaved={() => {
               setForm(null);

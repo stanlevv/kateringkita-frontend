@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Download, Printer, RefreshCw } from "lucide-react";
 import { callAction } from "@/lib/action";
-import { setDineIn, tambahMeja, ubahMeja } from "@/app/actions/meja";
+import { setDineIn, createTable, updateTable } from "@/app/actions/table";
 import { gambarQr, QrMeja } from "@/app/components/meja/QrMeja";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -43,7 +43,7 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
   async function tambah(e: FormEvent) {
     e.preventDefault();
     setSibuk(true);
-    const r = await callAction(() => tambahMeja(label));
+    const r = await callAction(() => createTable(label));
     setSibuk(false);
     if ("error" in r) {
       setGalat(r.error.fields?.label?.[0] ?? r.error.message);
@@ -55,7 +55,7 @@ export function PesanMeja({ aktifAwal, mejaAwal }: { aktifAwal: boolean; mejaAwa
   }
 
   async function ubah(m: Table, input: { is_active?: boolean; ganti_token?: true }) {
-    const r = await callAction(() => ubahMeja(m.id, input));
+    const r = await callAction(() => updateTable(m.id, input));
     if ("error" in r) {
       toast({ tone: "danger", message: r.error.message });
       return;

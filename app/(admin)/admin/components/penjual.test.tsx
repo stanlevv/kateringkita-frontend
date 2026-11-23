@@ -4,14 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
 const replace = vi.fn();
-const aksiPenjual = vi.fn();
+const applyMerchantAction = vi.fn();
 const url = vi.hoisted(() => ({ q: "status=pending" }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh, replace, push: vi.fn() }),
   usePathname: () => "/admin/penjual",
   useSearchParams: () => new URLSearchParams(url.q),
 }));
-vi.mock("@/app/actions/admin/merchants", () => ({ aksiPenjual: (...a: unknown[]) => aksiPenjual(...a) }));
+vi.mock("@/app/actions/admin/merchants", () => ({
+  applyMerchantAction: (...a: unknown[]) => applyMerchantAction(...a),
+}));
 import { Toaster } from "@/app/components/ui/Toast";
 import { StatusToko } from "@/app/components/StatusToko";
 import type { VerificationQueueItem, Checklist as C, AdminMerchantDetail, MerchantSummary } from "@/types/admin";
@@ -44,7 +46,7 @@ beforeEach(() => {
   refresh.mockReset();
   replace.mockReset();
   url.q = "status=pending";
-  aksiPenjual.mockReset().mockResolvedValue({ data: null });
+  applyMerchantAction.mockReset().mockResolvedValue({ data: null });
 });
 
 describe("antrean verifikasi", () => {
@@ -79,22 +81,22 @@ describe("antrean verifikasi", () => {
   it("checklist lengkap: Verifikasi tetap meminta konfirmasi", async () => {
     render(<VerificationQueue rows={[antrian({})]} />);
     await userEvent.click(screen.getByRole("button", { name: "Verifikasi" }));
-    expect(aksiPenjual).not.toHaveBeenCalled();
+    expect(applyMerchantAction).not.toHaveBeenCalled();
     const dlg = within(screen.getByRole("dialog", { name: "Verifikasi penjual" }));
     expect(
       dlg.getByText("Checklist lengkap. Verifikasi toko ini? Toko akan tampil untuk pembeli."),
     ).toBeInTheDocument();
     await userEvent.click(dlg.getByRole("button", { name: "Ya, verifikasi" }));
-    expect(aksiPenjual).toHaveBeenCalledWith(1, "verify", undefined);
+    expect(applyMerchantAction).toHaveBeenCalledWith(1, "verify", undefined);
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
   it("checklist belum lengkap: konfirmasi peringatan dulu", async () => {
     render(<VerificationQueue rows={[antrian({ checklist: { ...penuh, address: false } })]} />);
     await userEvent.click(screen.getByRole("button", { name: "Verifikasi" }));
-    expect(aksiPenjual).not.toHaveBeenCalled();
+    expect(applyMerchantAction).not.toHaveBeenCalled();
     expect(screen.getByText("Checklist belum lengkap. Tetap verifikasi?")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Tetap verifikasi" }));
-    expect(aksiPenjual).toHaveBeenCalledWith(1, "verify", undefined);
+    expect(applyMerchantAction).toHaveBeenCalledWith(1, "verify", undefined);
   });
   it("Tangguhkan: alasan wajib, ada penghitung /500, dikirim terpangkas", async () => {
     render(<VerificationQueue rows={[antrian({})]} />);
@@ -106,14 +108,14 @@ describe("antrean verifikasi", () => {
     fireEvent.change(dlg.getByRole("textbox"), { target: { value: "  Menu palsu " } });
     expect(dlg.getByText("13/500", { exact: false })).toBeInTheDocument();
     await userEvent.click(kirim);
-    expect(aksiPenjual).toHaveBeenCalledWith(1, "suspend", "Menu palsu");
+    expect(applyMerchantAction).toHaveBeenCalledWith(1, "suspend", "Menu palsu");
   });
   it("Minta perbaiki hanya untuk status menunggu", () => {
     render(<VerificationQueue rows={[antrian({}), antrian({ id: 2, verification_status: "needs_fix" })]} />);
     expect(screen.getAllByRole("button", { name: "Minta perbaiki" })).toHaveLength(1);
   });
   it("409: toast + refresh", async () => {
-    aksiPenjual.mockResolvedValue({ error: { code: "CONFLICT", message: "Status penjual sudah berubah." } });
+    applyMerchantAction.mockResolvedValue({ error: { code: "CONFLICT", message: "Status penjual sudah berubah." } });
     render(
       <>
         <Toaster />
@@ -165,7 +167,7 @@ const tombol = () => screen.queryAllByRole("button").map((b) => b.textContent);
 describe("dialog aksi", () => {
   const tahan = () => {
     let selesai!: (v: unknown) => void;
-    aksiPenjual.mockReturnValue(
+    applyMerchantAction.mockReturnValue(
       new Promise((r) => {
         selesai = r;
       }),
@@ -182,11 +184,11 @@ describe("dialog aksi", () => {
     await userEvent.click(kirim);
     expect(kirim).toBeDisabled();
     await userEvent.click(kirim);
-    expect(aksiPenjual).toHaveBeenCalledTimes(1);
+    expect(applyMerchantAction).toHaveBeenCalledTimes(1);
     await act(async () => selesai({ data: null }));
   });
   it("gagal: dialog tetap terbuka dengan alasan terisi; berhasil: menutup", async () => {
-    aksiPenjual.mockResolvedValueOnce({ error: { code: "INTERNAL_ERROR", message: "Gagal." } });
+    applyMerchantAction.mockResolvedValueOnce({ error: { code: "INTERNAL_ERROR", message: "Gagal." } });
     render(
       <>
         <Toaster />
@@ -208,11 +210,11 @@ describe("dialog aksi", () => {
   it("Aktifkan lagi meminta konfirmasi dulu", async () => {
     render(<MerchantDetail m={detail({ verification_status: "suspended" })} />);
     await userEvent.click(screen.getByRole("button", { name: "Aktifkan lagi" }));
-    expect(aksiPenjual).not.toHaveBeenCalled();
+    expect(applyMerchantAction).not.toHaveBeenCalled();
     const dlg = within(screen.getByRole("dialog", { name: "Aktifkan lagi toko" }));
     expect(dlg.getByText("Aktifkan lagi toko ini? Toko akan terlihat oleh pembeli.")).toBeInTheDocument();
     await userEvent.click(dlg.getByRole("button", { name: "Aktifkan lagi" }));
-    expect(aksiPenjual).toHaveBeenCalledWith(7, "reactivate", undefined);
+    expect(applyMerchantAction).toHaveBeenCalledWith(7, "reactivate", undefined);
   });
 });
 

@@ -8,24 +8,24 @@ import { getScenario } from "@/lib/scenario";
 import type { ActionResult } from "@/types/api";
 import type { Promo } from "@/types/promo";
 
-const idValid = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
-const argSalah = () => errorResult("VALIDATION_ERROR", "Data promo tidak valid.");
-const kodeDipakai = () => ({
+const isValidId = (id: unknown) => Number.isInteger(id) && (id as number) > 0;
+const invalidPromoError = () => errorResult("VALIDATION_ERROR", "Data promo tidak valid.");
+const codeTakenError = () => ({
   error: { code: "CONFLICT", message: "Kode sudah dipakai.", fields: { code: ["Kode sudah dipakai."] } },
 });
 
 // F12: POST /merchant/promos, PATCH /merchant/promos/:id. Validasi sama dengan backend (cekPromo); kuota vs terpakai dicek backend.
 export async function savePromo(id: number | null, input: unknown): Promise<ActionResult<Promo>> {
   await requireMerchant();
-  if (id !== null && !idValid(id)) return argSalah();
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Promo belum tersimpan. Coba lagi.");
+  if (id !== null && !isValidId(id)) return invalidPromoError();
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Promo belum tersimpan. Coba lagi.");
 
-  const masalah = validatePromo(input);
-  if (Object.keys(masalah).length > 0) {
-    return fieldErrorResult(masalah, "Periksa kembali isian promo.");
+  const errors = validatePromo(input);
+  if (Object.keys(errors).length > 0) {
+    return fieldErrorResult(errors, "Periksa kembali isian promo.");
   }
-  if (s === "konflik") return kodeDipakai(); // PR-E1
+  if (scenario === "konflik") return codeTakenError(); // PR-E1
   const body = JSON.stringify(parsePromo(input));
   return toResult(
     await merchantFetch<Promo>(id === null ? "/promos" : `/promos/${id}`, {
@@ -37,9 +37,9 @@ export async function savePromo(id: number | null, input: unknown): Promise<Acti
 
 export async function setPromoActive(id: number, isActive: boolean): Promise<ActionResult<Promo>> {
   await requireMerchant();
-  if (!idValid(id) || typeof isActive !== "boolean") return argSalah();
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Promo belum diubah. Coba lagi.");
+  if (!isValidId(id) || typeof isActive !== "boolean") return invalidPromoError();
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Promo belum diubah. Coba lagi.");
   return toResult(
     await merchantFetch<Promo>(`/promos/${id}`, { method: "PATCH", body: JSON.stringify({ is_active: isActive }) }),
   );
@@ -48,8 +48,8 @@ export async function setPromoActive(id: number, isActive: boolean): Promise<Act
 // PR-N3: backend menolak (409) promo yang sudah dipakai
 export async function deletePromo(id: number): Promise<ActionResult<{ id: number }>> {
   await requireMerchant();
-  if (!idValid(id)) return argSalah();
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Promo belum dihapus. Coba lagi.");
+  if (!isValidId(id)) return invalidPromoError();
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Promo belum dihapus. Coba lagi.");
   return toResult(await merchantFetch<{ id: number }>(`/promos/${id}`, { method: "DELETE" }));
 }

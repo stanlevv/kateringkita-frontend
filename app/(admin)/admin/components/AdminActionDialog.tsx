@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { aksiPenjual } from "@/app/actions/admin/merchants";
+import { applyMerchantAction } from "@/app/actions/admin/merchants";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Dialog } from "@/app/components/ui/Dialog";
@@ -76,7 +76,7 @@ export function AdminActionDialog({
   async function kirim(aksi: MerchantAction, alasan?: string) {
     if (sibuk) return;
     setSibuk(true);
-    const r = await callAction(() => aksiPenjual(id, aksi, alasan));
+    const r = await callAction(() => applyMerchantAction(id, aksi, alasan));
     setSibuk(false);
     if ("error" in r) {
       const konflik = r.error.code === "CONFLICT";

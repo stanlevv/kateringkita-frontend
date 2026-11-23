@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { Sparkles } from "lucide-react";
-import { tanyaAsisten } from "@/app/actions/asisten";
+import { askAssistant } from "@/app/actions/assistant";
 import { Banner } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
 import { Card } from "@/app/components/ui/Card";
@@ -37,7 +37,7 @@ export function AsistenPanel() {
     setQuestion(q);
     setGagal(null);
     start(async () => {
-      const r = await callAction(() => tanyaAsisten(q));
+      const r = await callAction(() => askAssistant(q));
       if ("data" in r) return setAnswer(r.data);
       // alasan per kolom dulu (mis. ditolak filter keamanan), lalu pesan umum
       setGagal(

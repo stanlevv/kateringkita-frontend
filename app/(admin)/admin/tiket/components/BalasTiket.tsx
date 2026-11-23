@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { balasTiket } from "@/app/actions/admin/tiket";
+import { replyToTicket } from "@/app/actions/admin/tickets";
 import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Textarea } from "@/app/components/ui/Input";
@@ -24,7 +24,7 @@ export function BalasTiket({ code }: { code: string }) {
     e.preventDefault();
     if (sibuk || !teks.trim()) return;
     setSibuk(true);
-    const r = await callAction(() => balasTiket(code, teks));
+    const r = await callAction(() => replyToTicket(code, teks));
     setSibuk(false);
     if ("error" in r) {
       if (r.error.code === "VALIDATION_ERROR") return setGalat(r.error.fields?.body?.[0] ?? r.error.message);

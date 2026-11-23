@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { simpanBiayaLayanan } from "@/app/actions/admin/promos";
+import { saveServiceFee } from "@/app/actions/admin/promos";
 import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
 import { Input } from "@/app/components/ui/Input";
@@ -26,7 +26,7 @@ export function ServiceFeeForm({ nilai }: { nilai: number }) {
     setGalat(undefined);
     if (n === nilai) return void toast({ tone: "info", message: "Tidak ada perubahan" });
     setMenyimpan(true);
-    const r = await callAction(() => simpanBiayaLayanan(n));
+    const r = await callAction(() => saveServiceFee(n));
     setMenyimpan(false);
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: "Biaya layanan disimpan" });

@@ -5,7 +5,7 @@ import { getSessionToken, requireMerchant } from "@/services/auth.service";
 import type { ActionResult } from "@/types/api";
 
 // Halaman Notifikasi dibuka → semua ditandai dibaca (POST /me/notifications/read { all: true })
-export async function tandaiSemuaDibaca(): Promise<ActionResult<{ unread_count: number }>> {
+export async function markAllNotificationsRead(): Promise<ActionResult<{ unread_count: number }>> {
   await requireMerchant();
   return toResult(
     await apiFetch<{ unread_count: number }>("/me/notifications/read", {

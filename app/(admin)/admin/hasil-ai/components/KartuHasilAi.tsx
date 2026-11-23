@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, Sparkles, XCircle, type LucideIcon } from "lucide-react";
-import { verifikasiHasilAi } from "@/app/actions/admin/hasilAi";
+import { verifyAiResult } from "@/app/actions/admin/ai-results";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { Field } from "@/app/components/ui/Field";
@@ -73,7 +73,7 @@ export function KartuHasilAi({ h, bolehUbah }: { h: AiResult; bolehUbah: boolean
     const isi = catatan.trim();
     if (status === "ditolak" && (isi.length < 3 || isi.length > 300)) return setGalat(ALASAN);
     setSibuk(status);
-    const r = await callAction(() => verifikasiHasilAi(h.id, status, isi));
+    const r = await callAction(() => verifyAiResult(h.id, status, isi));
     setSibuk(null);
     if ("error" in r) {
       if (r.error.code === "VALIDATION_ERROR" && r.error.fields?.catatan) return setGalat(r.error.fields.catatan[0]);

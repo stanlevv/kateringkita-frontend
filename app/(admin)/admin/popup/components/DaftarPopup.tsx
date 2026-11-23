@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarClock, CheckCircle2, EyeOff, Megaphone, Plus, type LucideIcon } from "lucide-react";
-import { mintaUnggahAdmin } from "@/app/actions/admin/banner";
-import { simpanPopup } from "@/app/actions/admin/popup";
+import { requestAdminUpload } from "@/app/actions/admin/banner";
+import { savePopup } from "@/app/actions/admin/popup";
 import { Badge } from "@/app/components/ui/Badge";
 import { Banner as Peringatan } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
@@ -49,7 +49,7 @@ function PopupForm({
   const [sibuk, setSibuk] = useState(false);
 
   async function pilihGambar(f: File) {
-    const r = await uploadPhoto(f, "popup", mintaUnggahAdmin);
+    const r = await uploadPhoto(f, "popup", requestAdminUpload);
     if ("error" in r) return setGalat((g) => ({ ...g, image_url: r.error.message }));
     setImage(r.data.public_url);
   }
@@ -59,7 +59,7 @@ function PopupForm({
     if (sibuk) return;
     setSibuk(true);
     const r = await callAction(() =>
-      simpanPopup(null, {
+      savePopup(null, {
         title: title.trim(),
         image_url: image,
         promo_id: promoId ? Number(promoId) : null,
@@ -156,7 +156,7 @@ export function DaftarPopup({
   const now = Date.now();
 
   async function setAktif(p: Popup, aktif: boolean) {
-    const r = await callAction(() => simpanPopup(p.id, { is_active: aktif }));
+    const r = await callAction(() => savePopup(p.id, { is_active: aktif }));
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     toast({ tone: "success", message: aktif ? "Pop-up diaktifkan." : "Pop-up dinonaktifkan." });
     router.refresh();

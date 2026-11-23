@@ -10,20 +10,20 @@ import type { MerchantProfile } from "@/types/profile";
 
 export async function saveProfile(input: unknown): Promise<ActionResult<MerchantProfile>> {
   await requireMerchant();
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Pengaturan belum tersimpan. Coba lagi.");
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Pengaturan belum tersimpan. Coba lagi.");
 
   // Form toko mengirim semua isian; templat WA mengirim wa_template saja.
-  const penuh = typeof input === "object" && input !== null && !("wa_template" in input);
-  const masalah = validateProfile(input, penuh);
-  if (Object.keys(masalah).length > 0) {
-    return fieldErrorResult(masalah, "Periksa kembali isian pengaturan.");
+  const isFullForm = typeof input === "object" && input !== null && !("wa_template" in input);
+  const errors = validateProfile(input, isFullForm);
+  if (Object.keys(errors).length > 0) {
+    return fieldErrorResult(errors, "Periksa kembali isian pengaturan.");
   }
 
   return toResult(
     await merchantFetch<MerchantProfile>("/profile", {
       method: "PATCH",
-      body: JSON.stringify(parseProfile(input, penuh)),
+      body: JSON.stringify(parseProfile(input, isFullForm)),
     }),
   );
 }

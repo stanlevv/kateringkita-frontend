@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowDown, ArrowUp, CircleCheck, Database, PowerOff } from "lucide-react";
-import { setAktifMaster, tukarUrutan } from "@/app/actions/admin/master";
+import { setMasterActive, swapSortOrder } from "@/app/actions/admin/master";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -31,7 +31,7 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
 
   async function aktifkan(i: MasterItem, aktif: boolean) {
     setSibuk(true);
-    const r = await callAction(() => setAktifMaster(tab.kind, i.id, aktif));
+    const r = await callAction(() => setMasterActive(tab.kind, i.id, aktif));
     setSibuk(false);
     setNonaktif(null);
     if ("error" in r) return toast({ tone: "danger", message: r.error.message }); // 409: nama toko ikut di pesan
@@ -51,7 +51,9 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
       sa = lo + (arah < 0 ? 2 : 1);
     } // sb = nilai baru item ini
     setSibuk(true);
-    const r = await callAction(() => tukarUrutan(tab.kind, { id: a.id, sort_order: sa }, { id: b.id, sort_order: sb }));
+    const r = await callAction(() =>
+      swapSortOrder(tab.kind, { id: a.id, sort_order: sa }, { id: b.id, sort_order: sb }),
+    );
     setSibuk(false);
     if ("error" in r) return toast({ tone: "danger", message: `Urutan belum berubah. ${r.error.message}` });
     router.refresh();

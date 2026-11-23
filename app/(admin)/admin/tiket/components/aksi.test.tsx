@@ -3,12 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
-const balasTiket = vi.fn();
-const tutupTiket = vi.fn();
+const replyToTicket = vi.fn();
+const closeTicket = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-vi.mock("@/app/actions/admin/tiket", () => ({
-  balasTiket: (...a: unknown[]) => balasTiket(...a),
-  tutupTiket: (...a: unknown[]) => tutupTiket(...a),
+vi.mock("@/app/actions/admin/tickets", () => ({
+  replyToTicket: (...a: unknown[]) => replyToTicket(...a),
+  closeTicket: (...a: unknown[]) => closeTicket(...a),
 }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { BalasTiket } from "./BalasTiket";
@@ -20,8 +20,8 @@ const kirim = () => screen.getByRole("button", { name: "Kirim balasan" });
 
 beforeEach(() => {
   refresh.mockReset();
-  balasTiket.mockReset().mockResolvedValue({ data: null });
-  tutupTiket.mockReset().mockResolvedValue({ data: null });
+  replyToTicket.mockReset().mockResolvedValue({ data: null });
+  closeTicket.mockReset().mockResolvedValue({ data: null });
 });
 
 describe("BalasTiket", () => {
@@ -38,7 +38,7 @@ describe("BalasTiket", () => {
     expect(screen.getByText("20/2000")).toBeInTheDocument();
     expect(isian()).toHaveAttribute("maxLength", "2000");
     await userEvent.click(kirim());
-    expect(balasTiket).toHaveBeenCalledWith(KODE, "VA Anda sudah lunas.");
+    expect(replyToTicket).toHaveBeenCalledWith(KODE, "VA Anda sudah lunas.");
     expect(await screen.findByText("Balasan terkirim. Pembeli mendapat notifikasi.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
     expect(isian()).toHaveValue("");
@@ -49,11 +49,11 @@ describe("BalasTiket", () => {
     fireEvent.change(isian(), { target: { value: "   " } });
     expect(kirim()).toBeDisabled();
     fireEvent.submit(isian().closest("form")!);
-    expect(balasTiket).not.toHaveBeenCalled();
+    expect(replyToTicket).not.toHaveBeenCalled();
   });
 
   it("galat validasi: pesan fields.body di bawah isian, teks tetap, tanpa muat ulang; mengetik menghapus galat", async () => {
-    balasTiket.mockResolvedValue({
+    replyToTicket.mockResolvedValue({
       error: { code: "VALIDATION_ERROR", message: "Data tidak valid.", fields: { body: ["Pesan 1–2000 karakter."] } },
     });
     render(<BalasTiket code={KODE} />);
@@ -68,7 +68,7 @@ describe("BalasTiket", () => {
   });
 
   it("galat validasi tanpa fields: error.message di bawah isian", async () => {
-    balasTiket.mockResolvedValue({ error: { code: "VALIDATION_ERROR", message: "Periksa kembali balasan." } });
+    replyToTicket.mockResolvedValue({ error: { code: "VALIDATION_ERROR", message: "Periksa kembali balasan." } });
     render(<BalasTiket code={KODE} />);
     fireEvent.change(isian(), { target: { value: "Halo" } });
     await userEvent.click(kirim());
@@ -76,7 +76,7 @@ describe("BalasTiket", () => {
   });
 
   it("tiket sudah ditutup (409): toast pesan backend + muat ulang", async () => {
-    balasTiket.mockResolvedValue({
+    replyToTicket.mockResolvedValue({
       error: { code: "TICKET_CLOSED", message: "Tiket sudah ditutup. Buat tiket baru bila masih perlu bantuan." },
     });
     render(
@@ -94,7 +94,7 @@ describe("BalasTiket", () => {
   });
 
   it("aksi melempar (jaringan): toast, teks tetap, tanpa muat ulang", async () => {
-    balasTiket.mockRejectedValue(new Error("fetch failed"));
+    replyToTicket.mockRejectedValue(new Error("fetch failed"));
     render(
       <>
         <Toaster />
@@ -110,7 +110,7 @@ describe("BalasTiket", () => {
 
   it("kirim ganda dicegah selama menunggu", async () => {
     let selesai!: (v: unknown) => void;
-    balasTiket.mockReturnValue(
+    replyToTicket.mockReturnValue(
       new Promise((r) => {
         selesai = r;
       }),
@@ -121,7 +121,7 @@ describe("BalasTiket", () => {
     const tombol = screen.getByRole("button", { name: "Mengirim…" });
     expect(tombol).toBeDisabled();
     fireEvent.submit(isian().closest("form")!);
-    expect(balasTiket).toHaveBeenCalledTimes(1);
+    expect(replyToTicket).toHaveBeenCalledTimes(1);
     await act(async () => selesai({ data: null }));
   });
 });
@@ -135,11 +135,11 @@ describe("TutupTiket", () => {
       </>,
     );
     await userEvent.click(screen.getByRole("button", { name: "Tutup tiket" }));
-    expect(tutupTiket).not.toHaveBeenCalled();
+    expect(closeTicket).not.toHaveBeenCalled();
     const dlg = within(screen.getByRole("dialog", { name: "Tutup tiket" }));
     expect(dlg.getByText(/tidak bisa membalas tiket ini lagi/)).toBeInTheDocument();
     await userEvent.click(dlg.getByRole("button", { name: "Tutup tiket" }));
-    expect(tutupTiket).toHaveBeenCalledWith(KODE);
+    expect(closeTicket).toHaveBeenCalledWith(KODE);
     expect(await screen.findByText(`Tiket ${KODE} ditutup.`)).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Tutup tiket" })).toBeNull());
@@ -152,11 +152,11 @@ describe("TutupTiket", () => {
       within(screen.getByRole("dialog", { name: "Tutup tiket" })).getByRole("button", { name: "Batal" }),
     );
     expect(screen.queryByRole("dialog", { name: "Tutup tiket" })).toBeNull();
-    expect(tutupTiket).not.toHaveBeenCalled();
+    expect(closeTicket).not.toHaveBeenCalled();
   });
 
   it("gagal: toast pesan backend, dialog tetap terbuka, tanpa muat ulang", async () => {
-    tutupTiket.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Gagal menutup tiket." } });
+    closeTicket.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Gagal menutup tiket." } });
     render(
       <>
         <Toaster />

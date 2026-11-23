@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Check, ChefHat, CircleX, Clock, PartyPopper, Utensils } from "lucide-react";
-import { bayarPesananMeja, statusPesananMeja } from "@/app/actions/meja";
+import { payTableOrder, getTableOrderStatus } from "@/app/actions/table";
 import { Button } from "@/app/components/ui/Button";
 import { cx, fokus } from "@/app/components/ui/cx";
 import { callAction } from "@/lib/action";
@@ -56,7 +56,7 @@ export function StatusPesanan({ code }: { code: string }) {
 
   const muat = useCallback(async () => {
     if (!tamu || akhir.current) return;
-    const r = await callAction(() => statusPesananMeja(code, tamu.tamu));
+    const r = await callAction(() => getTableOrderStatus(code, tamu.tamu));
     if ("error" in r) return setGalat(r.error.message);
     setGalat(null);
     setD(r.data);
@@ -85,9 +85,7 @@ export function StatusPesanan({ code }: { code: string }) {
     if (!tamu || !d) return;
     if (d.payment_url) return window.location.assign(d.payment_url);
     setMembayar(true);
-    const r = await callAction(() =>
-      bayarPesananMeja(code, tamu.tamu, `${window.location.origin}/meja/pesanan/${code}`),
-    );
+    const r = await callAction(() => payTableOrder(code, tamu.tamu, `${window.location.origin}/meja/pesanan/${code}`));
     if ("data" in r) return window.location.assign(r.data.payment_url);
     setMembayar(false);
     setGalat(r.error.message);

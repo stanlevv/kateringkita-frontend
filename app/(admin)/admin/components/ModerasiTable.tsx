@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, EyeOff, Flag, Star, X } from "lucide-react";
-import { hapusFotoMenu, moderasi } from "@/app/actions/admin/moderasi";
+import { deleteMenuPhoto, moderate } from "@/app/actions/admin/moderation";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -106,7 +106,7 @@ export function ModerasiTable(
   async function hapus(id: number, url: string, teks: string) {
     if (sibuk) return;
     setSibuk(true);
-    const r = await callAction(() => hapusFotoMenu(id, url, teks));
+    const r = await callAction(() => deleteMenuPhoto(id, url, teks));
     setSibuk(false);
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     setHapusFoto(null);
@@ -118,7 +118,7 @@ export function ModerasiTable(
   async function kirim(id: number, aksi: ModerationAction, teks?: string) {
     if (sibuk) return;
     setSibuk(true);
-    const r = await callAction(() => moderasi(id, aksi, teks));
+    const r = await callAction(() => moderate(id, aksi, teks));
     setSibuk(false);
     if ("error" in r) return toast({ tone: "danger", message: r.error.message });
     setDialog(null);

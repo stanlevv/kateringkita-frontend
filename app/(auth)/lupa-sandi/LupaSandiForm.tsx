@@ -3,7 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { mintaKodeReset, resetKataSandi, type AuthState } from "@/app/actions/auth";
+import { requestResetCode, resetPassword, type AuthState } from "@/app/actions/auth";
 import { Brand } from "@/app/components/shell/Brand";
 import { Banner } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
@@ -47,10 +47,10 @@ export default function LupaSandiForm() {
     if (Object.keys(e).length) return setKunci((k) => k + 1);
     start(async () => {
       if (langkah === "email") {
-        const res = await mintaKodeReset(nilai.email.trim());
+        const res = await requestResetCode(nilai.email.trim());
         return res.ok ? setLangkah("kode") : tampilkan(res);
       }
-      const res = await resetKataSandi({ email: nilai.email.trim(), code: nilai.code, password: nilai.password });
+      const res = await resetPassword({ email: nilai.email.trim(), code: nilai.code, password: nilai.password });
       return res.ok ? router.push("/login?reset=1") : tampilkan(res);
     });
   }

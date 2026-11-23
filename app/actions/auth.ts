@@ -9,65 +9,68 @@ import { SESSION_COOKIE, getSessionToken } from "@/services/auth.service";
 // code: UNAUTHENTICATED | VALIDATION_ERROR | RATE_LIMITED | NETWORK | CONFLICT (dari apiFetch) atau NOT_MERCHANT.
 export type AuthState = { error?: string; code?: string; fields?: Record<string, string[]>; ok?: boolean };
 
-const text = (form: FormData, name: string) => String(form.get(name) ?? "").trim();
+const readFormText = (form: FormData, name: string) => String(form.get(name) ?? "").trim();
 
 // F01-SEC-2: teruskan IP pengunjung ke API (dipercaya API hanya bersama rahasia internal)
 async function clientIpHeaders(): Promise<Record<string, string> | undefined> {
   const secret = process.env.INTERNAL_API_SECRET;
   if (!secret) return undefined;
-  const h = await headers();
-  const ip = h.get("x-real-ip")?.trim() || h.get("x-forwarded-for")?.split(",")[0].trim();
-  return { ...(ip ? { "X-Client-IP": ip } : {}), "X-Internal-Secret": secret };
+  const requestHeaders = await headers();
+  const clientIp =
+    requestHeaders.get("x-real-ip")?.trim() || requestHeaders.get("x-forwarded-for")?.split(",")[0].trim();
+  return { ...(clientIp ? { "X-Client-IP": clientIp } : {}), "X-Internal-Secret": secret };
 }
 
-export async function login(_prev: AuthState, form: FormData): Promise<AuthState> {
-  const res = await apiFetch<{ token: string; expires_at: string; user?: { role?: string } }>("/auth/login", {
+export async function login(_previousState: AuthState, form: FormData): Promise<AuthState> {
+  const response = await apiFetch<{ token: string; expires_at: string; user?: { role?: string } }>("/auth/login", {
     method: "POST",
     headers: await clientIpHeaders(),
     body: JSON.stringify({
-      identifier: text(form, "identifier"),
+      identifier: readFormText(form, "identifier"),
       password: String(form.get("password") ?? ""),
       client: "web",
     }),
   });
-  if (!res.ok || !res.data) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  if (!response.ok || !response.data)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
 
-  const role = res.data.user?.role;
+  const role = response.data.user?.role;
   if (role !== "merchant" && role !== "admin") {
-    await apiFetch("/auth/logout", { method: "POST", token: res.data.token }).catch(() => {});
+    await apiFetch("/auth/logout", { method: "POST", token: response.data.token }).catch(() => {});
     return { error: "Akun ini akun pembeli. Gunakan aplikasi KateringKita di ponsel.", code: "NOT_MERCHANT" };
   }
 
-  (await cookies()).set(SESSION_COOKIE, res.data.token, {
+  (await cookies()).set(SESSION_COOKIE, response.data.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    expires: new Date(res.data.expires_at),
+    expires: new Date(response.data.expires_at),
   });
   const next = String(form.get("next") ?? "");
   if (role === "admin") {
-    const to = safeNext(next, "/admin");
-    redirect(to === "/admin" || to.startsWith("/admin/") || to.startsWith("/admin?") ? to : "/admin");
+    const target = safeNext(next, "/admin");
+    redirect(target === "/admin" || target.startsWith("/admin/") || target.startsWith("/admin?") ? target : "/admin");
   }
-  const to = safeNext(next);
-  redirect(to.startsWith("/admin") ? "/dashboard" : to); // penjual tidak diarahkan ke area admin
+  const target = safeNext(next);
+  redirect(target.startsWith("/admin") ? "/dashboard" : target); // penjual tidak diarahkan ke area admin
 }
 
-export async function registerMerchant(_prev: AuthState, form: FormData): Promise<AuthState> {
-  const res = await apiFetch("/auth/merchant/register", {
+export async function registerMerchant(_previousState: AuthState, form: FormData): Promise<AuthState> {
+  const response = await apiFetch("/auth/merchant/register", {
     method: "POST",
     body: JSON.stringify({
-      full_name: text(form, "full_name"),
-      phone: text(form, "phone"),
-      email: text(form, "email"),
+      full_name: readFormText(form, "full_name"),
+      phone: readFormText(form, "phone"),
+      email: readFormText(form, "email"),
       password: String(form.get("password") ?? ""),
-      business_name: text(form, "business_name"),
+      business_name: readFormText(form, "business_name"),
       merchant_type_id: Number(form.get("merchant_type_id")),
-      address: text(form, "address"),
+      address: readFormText(form, "address"),
     }),
   });
-  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  if (!response.ok)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
   return { ok: true };
 }
 
@@ -79,22 +82,24 @@ export async function logout() {
 }
 
 // F11 lupa sandi: kode OTP dikirim ke email akun; jawaban API sama untuk email terdaftar atau tidak.
-export async function mintaKodeReset(email: string): Promise<AuthState> {
-  const res = await apiFetch("/auth/password/forgot", {
+export async function requestResetCode(email: string): Promise<AuthState> {
+  const response = await apiFetch("/auth/password/forgot", {
     method: "POST",
     headers: await clientIpHeaders(),
     body: JSON.stringify({ email }),
   });
-  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  if (!response.ok)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
   return { ok: true };
 }
 
-export async function resetKataSandi(input: { email: string; code: string; password: string }): Promise<AuthState> {
-  const res = await apiFetch("/auth/password/reset", {
+export async function resetPassword(input: { email: string; code: string; password: string }): Promise<AuthState> {
+  const response = await apiFetch("/auth/password/reset", {
     method: "POST",
     headers: await clientIpHeaders(),
     body: JSON.stringify(input),
   });
-  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  if (!response.ok)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
   return { ok: true };
 }

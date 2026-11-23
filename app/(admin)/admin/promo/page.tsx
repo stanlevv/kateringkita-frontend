@@ -1,4 +1,4 @@
-import { simpanPromoPlatform, setAktifPromoPlatform } from "@/app/actions/admin/promos";
+import { savePlatformPromo, setPlatformPromoActive } from "@/app/actions/admin/promos";
 import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
 import { CsContactForm } from "@/app/(admin)/admin/components/CsContactForm";
 import { PemeliharaanForm } from "@/app/(admin)/admin/components/PemeliharaanForm";
@@ -37,8 +37,8 @@ export default async function PromoPlatformPage() {
           admin
           promos={promos.ok && promos.data ? promos.data : []}
           galat={!promos.ok}
-          simpan={simpanPromoPlatform}
-          setAktifAksi={setAktifPromoPlatform}
+          simpan={savePlatformPromo}
+          setAktifAksi={setPlatformPromoActive}
         />
       </div>
     </PageHeader>

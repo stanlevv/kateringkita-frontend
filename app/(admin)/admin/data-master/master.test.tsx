@@ -17,21 +17,21 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/data-master",
   useSearchParams: () => new URLSearchParams(query),
 }));
-const tukarUrutan = vi.fn();
-const setAktifMaster = vi.fn();
-const simpanMaster = vi.fn();
+const swapSortOrder = vi.fn();
+const setMasterActive = vi.fn();
+const saveMaster = vi.fn();
 vi.mock("@/app/actions/admin/master", () => ({
-  tukarUrutan: (...a: unknown[]) => tukarUrutan(...a),
-  setAktifMaster: (...a: unknown[]) => setAktifMaster(...a),
-  simpanMaster: (...a: unknown[]) => simpanMaster(...a),
+  swapSortOrder: (...a: unknown[]) => swapSortOrder(...a),
+  setMasterActive: (...a: unknown[]) => setMasterActive(...a),
+  saveMaster: (...a: unknown[]) => saveMaster(...a),
 }));
-const simpanBiayaLayanan = vi.fn();
-const simpanPromoPlatform = vi.fn();
-const setAktifPromoPlatform = vi.fn();
+const saveServiceFee = vi.fn();
+const savePlatformPromo = vi.fn();
+const setPlatformPromoActive = vi.fn();
 vi.mock("@/app/actions/admin/promos", () => ({
-  simpanBiayaLayanan: (...a: unknown[]) => simpanBiayaLayanan(...a),
-  simpanPromoPlatform: (...a: unknown[]) => simpanPromoPlatform(...a),
-  setAktifPromoPlatform: (...a: unknown[]) => setAktifPromoPlatform(...a),
+  saveServiceFee: (...a: unknown[]) => saveServiceFee(...a),
+  savePlatformPromo: (...a: unknown[]) => savePlatformPromo(...a),
+  setPlatformPromoActive: (...a: unknown[]) => setPlatformPromoActive(...a),
 }));
 vi.mock("@/app/actions/promos", () => ({ savePromo: vi.fn(), setPromoActive: vi.fn(), deletePromo: vi.fn() }));
 import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
@@ -69,12 +69,12 @@ beforeEach(() => {
     adminFetch,
     replace,
     refresh,
-    tukarUrutan,
-    setAktifMaster,
-    simpanMaster,
-    simpanBiayaLayanan,
-    simpanPromoPlatform,
-    setAktifPromoPlatform,
+    swapSortOrder,
+    setMasterActive,
+    saveMaster,
+    saveServiceFee,
+    savePlatformPromo,
+    setPlatformPromoActive,
   ])
     m.mockReset();
   requireAdmin.mockResolvedValue({ user: { admin_level: "super" } });
@@ -118,7 +118,7 @@ describe("halaman data master", () => {
   });
   it("naik/turun memanggil tukarUrutan dengan nilai tetangga; galat -> toast", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: kat });
-    tukarUrutan.mockResolvedValue({ data: null });
+    swapSortOrder.mockResolvedValue({ data: null });
     render(
       <>
         <Toaster />
@@ -127,26 +127,26 @@ describe("halaman data master", () => {
     );
     expect(screen.getByRole("button", { name: "Naikkan Nasi" })).toBeDisabled();
     await userEvent.click(screen.getByRole("button", { name: "Turunkan Nasi" }));
-    expect(tukarUrutan).toHaveBeenCalledWith("categories", { id: 1, sort_order: 1 }, { id: 2, sort_order: 2 });
+    expect(swapSortOrder).toHaveBeenCalledWith("categories", { id: 1, sort_order: 1 }, { id: 2, sort_order: 2 });
     await waitFor(() => expect(refresh).toHaveBeenCalled());
-    tukarUrutan.mockResolvedValue({ error: { code: "X", message: "Server sibuk." } });
+    swapSortOrder.mockResolvedValue({ error: { code: "X", message: "Server sibuk." } });
     await userEvent.click(screen.getByRole("button", { name: "Naikkan Kue" }));
     expect(await screen.findByText(/Urutan belum berubah/)).toBeInTheDocument();
   });
   it("nilai urutan kembar: pakai peringkat daftar sehingga urutan pasti berubah", async () => {
     const kembar = [0, 1, 2].map((i) => ({ id: i + 1, name: `K${i + 1}`, sort_order: 0, is_active: true }));
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: kembar });
-    tukarUrutan.mockResolvedValue({ data: null });
+    swapSortOrder.mockResolvedValue({ data: null });
     render(await DataMasterPage({ searchParams: Promise.resolve({}) }));
     await userEvent.click(screen.getByRole("button", { name: "Naikkan K2" }));
     // K2 naik ke posisi 1 (nilai 1), K1 turun ke posisi 2 (nilai 2); aksi menukar: K2 <- nilai K1, K1 <- nilai K2
-    expect(tukarUrutan).toHaveBeenLastCalledWith("categories", { id: 2, sort_order: 2 }, { id: 1, sort_order: 1 });
+    expect(swapSortOrder).toHaveBeenLastCalledWith("categories", { id: 2, sort_order: 2 }, { id: 1, sort_order: 1 });
     await userEvent.click(screen.getByRole("button", { name: "Turunkan K2" }));
-    expect(tukarUrutan).toHaveBeenLastCalledWith("categories", { id: 2, sort_order: 2 }, { id: 3, sort_order: 3 });
+    expect(swapSortOrder).toHaveBeenLastCalledWith("categories", { id: 2, sort_order: 2 }, { id: 3, sort_order: 3 });
   });
   it("nama kembar (409) ditandai juga di kolom nama", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: kat });
-    simpanMaster.mockResolvedValue({ error: { code: "CONFLICT", message: "Nama sudah dipakai." } });
+    saveMaster.mockResolvedValue({ error: { code: "CONFLICT", message: "Nama sudah dipakai." } });
     render(await DataMasterPage({ searchParams: Promise.resolve({}) }));
     await userEvent.click(screen.getByRole("button", { name: "Tambah kategori" }));
     await userEvent.type(screen.getByLabelText(/Nama/), "Nasi");
@@ -155,7 +155,7 @@ describe("halaman data master", () => {
   });
   it("nonaktifkan titik temu terakhir -> 409 menampilkan pesan dengan nama toko", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: titik });
-    setAktifMaster.mockResolvedValue({
+    setMasterActive.mockResolvedValue({
       error: { code: "CONFLICT", message: "Titik temu ini satu-satunya untuk toko: Dapur Ibu, Warung Sari." },
     });
     render(
@@ -166,22 +166,22 @@ describe("halaman data master", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Nonaktifkan Kantin A" }));
     await userEvent.click(screen.getByRole("button", { name: "Nonaktifkan" }));
-    expect(setAktifMaster).toHaveBeenCalledWith("pickup-points", 7, false);
+    expect(setMasterActive).toHaveBeenCalledWith("pickup-points", 7, false);
     expect(
       await screen.findByText("Titik temu ini satu-satunya untuk toko: Dapur Ibu, Warung Sari."),
     ).toBeInTheDocument();
   });
   it("form tambah: nama wajib di klien; ubah terisi awal", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: kat });
-    simpanMaster.mockResolvedValue({ data: kat[0] });
+    saveMaster.mockResolvedValue({ data: kat[0] });
     render(await DataMasterPage({ searchParams: Promise.resolve({}) }));
     await userEvent.click(screen.getByRole("button", { name: "Tambah kategori" }));
     await userEvent.click(screen.getByRole("button", { name: "Simpan" }));
     expect(await screen.findByText("Nama wajib diisi.")).toBeInTheDocument();
-    expect(simpanMaster).not.toHaveBeenCalled();
+    expect(saveMaster).not.toHaveBeenCalled();
     await userEvent.type(screen.getByLabelText(/Nama/), "Minuman");
     await userEvent.click(screen.getByRole("button", { name: "Simpan" }));
-    expect(simpanMaster).toHaveBeenCalledWith("categories", null, { name: "Minuman", icon: "" });
+    expect(saveMaster).toHaveBeenCalledWith("categories", null, { name: "Minuman", icon: "" });
   });
 });
 
@@ -198,14 +198,14 @@ describe("promo platform & biaya layanan", () => {
     expect(screen.getByRole("article", { name: "PLAT10" })).toBeInTheDocument();
   });
   it("mode admin: Hapus tersembunyi, kode tidak bisa diubah, memakai fungsi simpan admin", async () => {
-    simpanPromoPlatform.mockResolvedValue({ data: { ...promo, value: 20 } });
+    savePlatformPromo.mockResolvedValue({ data: { ...promo, value: 20 } });
     render(
       <PromoList
         admin
         promos={[promo]}
         galat={false}
-        simpan={simpanPromoPlatform}
-        setAktifAksi={setAktifPromoPlatform}
+        simpan={savePlatformPromo}
+        setAktifAksi={setPlatformPromoActive}
       />,
     );
     expect(screen.queryByRole("button", { name: /Hapus/ })).toBeNull();
@@ -213,28 +213,28 @@ describe("promo platform & biaya layanan", () => {
     expect(screen.getByLabelText(/Kode promo/)).toHaveAttribute("readonly");
     await userEvent.click(screen.getByRole("button", { name: "Simpan promo" }));
     await waitFor(() =>
-      expect(simpanPromoPlatform).toHaveBeenCalledWith(
+      expect(savePlatformPromo).toHaveBeenCalledWith(
         3,
         expect.objectContaining({ code: "PLAT10", type: "percent", value: 10 }),
       ),
     );
-    const input = simpanPromoPlatform.mock.calls[0][1];
+    const input = savePlatformPromo.mock.calls[0][1];
     expect(input.starts_at).toMatch(/Z$/);
   });
   it("mode admin: form tanpa saklar Promo aktif; mode penjual tetap punya", async () => {
     const { PromoForm } = await import("@/app/components/promo/PromoForm");
-    const { rerender } = render(<PromoForm admin onSaved={vi.fn()} onClose={vi.fn()} simpan={simpanPromoPlatform} />);
+    const { rerender } = render(<PromoForm admin onSaved={vi.fn()} onClose={vi.fn()} simpan={savePlatformPromo} />);
     expect(screen.queryByRole("switch", { name: "Promo aktif" })).toBeNull();
     rerender(<PromoForm onSaved={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getByRole("switch", { name: "Promo aktif" })).toBeInTheDocument();
   });
   it("mode admin: validasi form identik (nilai 0 ditolak sebelum memanggil server)", async () => {
-    render(<PromoList admin promos={[]} galat={false} simpan={simpanPromoPlatform} />);
+    render(<PromoList admin promos={[]} galat={false} simpan={savePlatformPromo} />);
     await userEvent.click(screen.getAllByRole("button", { name: "Buat promo" })[0]);
     await userEvent.type(screen.getByLabelText(/Kode promo/), "AB");
     await userEvent.click(screen.getByRole("button", { name: "Simpan promo" }));
     expect(await screen.findAllByText(/Kode 3–30 huruf besar atau angka/)).not.toHaveLength(0);
-    expect(simpanPromoPlatform).not.toHaveBeenCalled();
+    expect(savePlatformPromo).not.toHaveBeenCalled();
   });
   it("biaya: negatif/pecahan ditolak, sama -> Tidak ada perubahan, valid -> simpan", async () => {
     render(
@@ -256,12 +256,12 @@ describe("promo platform & biaya layanan", () => {
     await userEvent.type(input, "2000");
     await userEvent.click(screen.getByRole("button", { name: "Simpan" }));
     expect(await screen.findByText("Tidak ada perubahan")).toBeInTheDocument();
-    expect(simpanBiayaLayanan).not.toHaveBeenCalled();
-    simpanBiayaLayanan.mockResolvedValue({ data: { service_fee: 3000 } });
+    expect(saveServiceFee).not.toHaveBeenCalled();
+    saveServiceFee.mockResolvedValue({ data: { service_fee: 3000 } });
     await userEvent.clear(input);
     await userEvent.type(input, "3000");
     await userEvent.click(screen.getByRole("button", { name: "Simpan" }));
-    await waitFor(() => expect(simpanBiayaLayanan).toHaveBeenCalledWith(3000));
+    await waitFor(() => expect(saveServiceFee).toHaveBeenCalledWith(3000));
     expect(await screen.findByText("Biaya layanan disimpan")).toBeInTheDocument();
   });
 });

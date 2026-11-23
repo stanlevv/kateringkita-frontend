@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { simpanPemeliharaan } from "@/app/actions/admin/promos";
+import { saveMaintenance } from "@/app/actions/admin/promos";
 import { Banner } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -23,7 +23,7 @@ export function PemeliharaanForm({ nilai }: { nilai: Maintenance }) {
   async function simpan(aktif: boolean) {
     if (pesan.trim().length > 200) return setGalat("Pesan maksimal 200 karakter.");
     setMenyimpan(true);
-    const r = await callAction(() => simpanPemeliharaan(aktif, pesan));
+    const r = await callAction(() => saveMaintenance(aktif, pesan));
     setMenyimpan(false);
     setKonfirmasi(false);
     if ("error" in r) return void toast({ tone: "danger", message: r.error.message });

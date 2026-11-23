@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { kirimPengumuman, type Penerima } from "@/app/actions/admin/pengumuman";
+import { sendAnnouncement, type AnnouncementAudience } from "@/app/actions/admin/announcements";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Field } from "@/app/components/ui/Field";
@@ -9,7 +9,7 @@ import { Input, Select, Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
 import { callAction } from "@/lib/action";
 
-const LABEL: Record<Penerima, string> = {
+const LABEL: Record<AnnouncementAudience, string> = {
   all: "Semua pembeli dan penjual",
   customer: "Semua pembeli",
   merchant: "Semua penjual",
@@ -17,7 +17,7 @@ const LABEL: Record<Penerima, string> = {
 
 /** Broadcast pengumuman ke notifikasi aplikasi; dikonfirmasi dulu karena tidak bisa ditarik kembali. */
 export function PengumumanForm() {
-  const [nilai, setNilai] = useState<{ audience: Penerima; title: string; body: string }>({
+  const [nilai, setNilai] = useState<{ audience: AnnouncementAudience; title: string; body: string }>({
     audience: "customer",
     title: "",
     body: "",
@@ -37,7 +37,7 @@ export function PengumumanForm() {
 
   async function kirim() {
     setSibuk(true);
-    const r = await callAction(() => kirimPengumuman(nilai));
+    const r = await callAction(() => sendAnnouncement(nilai));
     setSibuk(false);
     setKonfirmasi(false);
     if ("error" in r) {
@@ -58,9 +58,9 @@ export function PengumumanForm() {
       <Field label="Penerima" id="audience">
         <Select
           value={nilai.audience}
-          onChange={(e) => setNilai((p) => ({ ...p, audience: e.target.value as Penerima }))}
+          onChange={(e) => setNilai((p) => ({ ...p, audience: e.target.value as AnnouncementAudience }))}
         >
-          {(Object.keys(LABEL) as Penerima[]).map((k) => (
+          {(Object.keys(LABEL) as AnnouncementAudience[]).map((k) => (
             <option key={k} value={k}>
               {LABEL[k]}
             </option>

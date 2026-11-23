@@ -3,14 +3,14 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
 import { PengumumanForm } from "./PengumumanForm";
 
-const kirimPengumuman = vi.fn();
-vi.mock("@/app/actions/admin/pengumuman", () => ({ kirimPengumuman: (...a: unknown[]) => kirimPengumuman(...a) }));
+const sendAnnouncement = vi.fn();
+vi.mock("@/app/actions/admin/announcements", () => ({ sendAnnouncement: (...a: unknown[]) => sendAnnouncement(...a) }));
 
-beforeEach(() => kirimPengumuman.mockReset());
+beforeEach(() => sendAnnouncement.mockReset());
 
 describe("PengumumanForm", () => {
   it("kosong -> galat; terisi -> konfirmasi -> kirim -> toast jumlah penerima", async () => {
-    kirimPengumuman.mockResolvedValue({ data: { sent: 12 } });
+    sendAnnouncement.mockResolvedValue({ data: { sent: 12 } });
     render(
       <>
         <PengumumanForm />
@@ -26,7 +26,7 @@ describe("PengumumanForm", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Kirim" }));
     });
-    expect(kirimPengumuman).toHaveBeenCalledWith({ audience: "all", title: "Libur", body: "Kampus libur besok." });
+    expect(sendAnnouncement).toHaveBeenCalledWith({ audience: "all", title: "Libur", body: "Kampus libur besok." });
     expect(screen.getByText("Pengumuman terkirim ke 12 akun.")).toBeInTheDocument();
   });
 });

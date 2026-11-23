@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
     throw new Error("NEXT_NOT_FOUND");
   },
 }));
-vi.mock("@/app/actions/admin/tiket", () => ({ balasTiket: vi.fn(), tutupTiket: vi.fn() }));
+vi.mock("@/app/actions/admin/tickets", () => ({ replyToTicket: vi.fn(), closeTicket: vi.fn() }));
 import type { TicketDetail, TicketSummary } from "@/types/admin";
 import { TiketTable } from "./components/TiketTable";
 import TiketPage from "./page";

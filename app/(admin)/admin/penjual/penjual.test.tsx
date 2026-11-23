@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/penjual",
   useSearchParams: () => new URLSearchParams(),
 }));
-vi.mock("@/app/actions/admin/merchants", () => ({ aksiPenjual: vi.fn() }));
+vi.mock("@/app/actions/admin/merchants", () => ({ applyMerchantAction: vi.fn() }));
 import VerifikasiPage from "../verifikasi/page";
 import PenjualPage from "./page";
 import DetailPage from "./[id]/page";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { tutupTiket } from "@/app/actions/admin/tiket";
+import { closeTicket } from "@/app/actions/admin/tickets";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { toast } from "@/app/components/ui/Toast";
@@ -17,7 +17,7 @@ export function TutupTiket({ code }: { code: string }) {
   async function tutup() {
     if (sibuk) return;
     setSibuk(true);
-    const r = await callAction(() => tutupTiket(code));
+    const r = await callAction(() => closeTicket(code));
     setSibuk(false);
     if ("error" in r) {
       toast({ tone: "danger", message: r.error.message });

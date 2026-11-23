@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, KeyRound, PowerOff, UserCog } from "lucide-react";
-import { buatAdmin, resetSandiAdmin, setAktifAdmin, ubahLevelAdmin } from "@/app/actions/admin/akun";
+import { createAdmin, resetAdminPassword, setAdminActive, updateAdminLevel } from "@/app/actions/admin/accounts";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -49,7 +49,7 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminWithPassword) => vo
     e.preventDefault();
     if (menyimpan) return;
     setMenyimpan(true);
-    const r = await callAction(() => buatAdmin(v));
+    const r = await callAction(() => createAdmin(v));
     setMenyimpan(false);
     if ("error" in r) {
       if (r.error.fields) setGalat(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
@@ -178,7 +178,9 @@ export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: num
             aria-label={`Tingkat ${a.full_name}`}
             value={a.admin_level ?? ""}
             disabled={sibuk}
-            onChange={(e) => void jalankan(() => ubahLevelAdmin(a.id, e.target.value as AdminLevel), "Tingkat diubah")}
+            onChange={(e) =>
+              void jalankan(() => updateAdminLevel(a.id, e.target.value as AdminLevel), "Tingkat diubah")
+            }
           >
             {LEVEL.map((l) => (
               <option key={l} value={l}>
@@ -291,9 +293,9 @@ export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: num
         confirmLabel={KONFIRMASI[k?.aksi ?? "nonaktif"].tombol}
         onConfirm={() => {
           if (!k) return;
-          if (k.aksi === "nonaktif") void jalankan(() => setAktifAdmin(k.a.id, false), "Dinonaktifkan");
-          else if (k.aksi === "aktif") void jalankan(() => setAktifAdmin(k.a.id, true), "Diaktifkan");
-          else void jalankan(() => resetSandiAdmin(k.a.id), "Kata sandi direset").then((d) => d && setSandi(d));
+          if (k.aksi === "nonaktif") void jalankan(() => setAdminActive(k.a.id, false), "Dinonaktifkan");
+          else if (k.aksi === "aktif") void jalankan(() => setAdminActive(k.a.id, true), "Diaktifkan");
+          else void jalankan(() => resetAdminPassword(k.a.id), "Kata sandi direset").then((d) => d && setSandi(d));
         }}
       />
     </div>

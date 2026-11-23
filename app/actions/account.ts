@@ -15,21 +15,21 @@ export async function changePassword(input: {
   new_password: string;
 }): Promise<ActionResult<{ ok: true }>> {
   if (!(await getSession())) redirect("/login?alasan=sesi-habis");
-  const s = await getScenario();
-  if (s === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Kata sandi belum diganti. Coba lagi.");
+  const scenario = await getScenario();
+  if (scenario === "gagal-aksi") return errorResult("INTERNAL_ERROR", "Kata sandi belum diganti. Coba lagi.");
 
-  const masalah = validateFields(changePasswordSchema, input);
-  if (Object.keys(masalah).length > 0) {
-    return fieldErrorResult(masalah, "Periksa kembali isian kata sandi.");
+  const errors = validateFields(changePasswordSchema, input);
+  if (Object.keys(errors).length > 0) {
+    return fieldErrorResult(errors, "Periksa kembali isian kata sandi.");
   }
-  if (s === "konflik") {
+  if (scenario === "konflik") {
     return fieldErrorResult({ current_password: "Kata sandi lama salah." }, "Kata sandi lama salah.");
   }
-  const res = await apiFetch("/me/password", {
+  const response = await apiFetch("/me/password", {
     method: "PUT",
     token: await getSessionToken(),
     body: JSON.stringify({ current_password: input.current_password, new_password: input.new_password }),
   });
-  if (res.ok) return { data: { ok: true } };
-  return { error: res.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
+  if (response.ok) return { data: { ok: true } };
+  return { error: response.error ?? { code: "UNKNOWN", message: "Terjadi kesalahan. Coba lagi." } };
 }

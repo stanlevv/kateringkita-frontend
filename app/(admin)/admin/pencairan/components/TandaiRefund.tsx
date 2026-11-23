@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { tandaiRefund } from "@/app/actions/pencairan";
+import { markRefundPaid } from "@/app/actions/payouts";
 import { Button } from "@/app/components/ui/Button";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { Field } from "@/app/components/ui/Field";
@@ -24,7 +24,7 @@ export function TandaiRefund({ refund }: { refund: PendingRefund }) {
     e.preventDefault();
     if (sibuk) return;
     setSibuk(true);
-    const h = await callAction(() => tandaiRefund(refund.code, referensi));
+    const h = await callAction(() => markRefundPaid(refund.code, referensi));
     setSibuk(false);
     if ("error" in h) {
       if (h.error.fields?.reference) return setGalat(h.error.fields.reference[0]);

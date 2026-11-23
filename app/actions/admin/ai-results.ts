@@ -6,25 +6,25 @@ import { requireAdmin } from "@/services/auth.service";
 import type { ActionResult } from "@/types/api";
 
 // Rubrik AI: verifikasi manual hasil AI. Hanya super & ops (support hanya melihat); backend tetap penjaga utamanya.
-const ALASAN = "Tulis alasan penolakan (3–300 karakter).";
+const REJECTION_REASON_MESSAGE = "Tulis alasan penolakan (3–300 karakter).";
 
-export async function verifikasiHasilAi(
+export async function verifyAiResult(
   id: number,
   status: "disetujui" | "ditolak",
-  catatan?: string,
+  note?: string,
 ): Promise<ActionResult<null>> {
   await requireAdmin("super", "ops");
   if (!Number.isInteger(id) || id < 1) return errorResult("VALIDATION_ERROR", "Hasil AI tidak valid.");
   if (status !== "disetujui" && status !== "ditolak")
     return errorResult("VALIDATION_ERROR", "Pilih setujui atau tolak.");
-  const isi = typeof catatan === "string" ? catatan.trim() : "";
-  if (status === "ditolak" && (isi.length < 3 || isi.length > 300))
-    return fieldErrorResult({ catatan: ALASAN }, "Periksa kembali catatan.");
-  if (isi.length > 300)
+  const trimmedNote = typeof note === "string" ? note.trim() : "";
+  if (status === "ditolak" && (trimmedNote.length < 3 || trimmedNote.length > 300))
+    return fieldErrorResult({ catatan: REJECTION_REASON_MESSAGE }, "Periksa kembali catatan.");
+  if (trimmedNote.length > 300)
     return fieldErrorResult({ catatan: "Catatan maksimal 300 karakter." }, "Periksa kembali catatan.");
-  const res = await adminFetch<null>(`/hasil-ai/${id}`, {
+  const response = await adminFetch<null>(`/hasil-ai/${id}`, {
     method: "PATCH",
-    body: JSON.stringify({ status, ...(isi ? { catatan: isi } : {}) }),
+    body: JSON.stringify({ status, ...(trimmedNote ? { catatan: trimmedNote } : {}) }),
   });
-  return res.ok ? { data: null } : toResult(res);
+  return response.ok ? { data: null } : toResult(response);
 }

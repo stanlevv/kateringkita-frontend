@@ -10,8 +10,8 @@ vi.mock("@/app/actions/profile", () => ({ saveProfile: (...a: unknown[]) => save
 const uploadPhoto = vi.fn();
 vi.mock("@/lib/upload", () => ({ uploadPhoto: (...a: unknown[]) => uploadPhoto(...a) }));
 vi.mock("@/app/actions/account", () => ({ changePassword: (...a: unknown[]) => changePassword(...a) }));
-const saveRekening = vi.fn();
-vi.mock("@/app/actions/pencairan", () => ({ saveRekening: (...a: unknown[]) => saveRekening(...a) }));
+const saveBankAccount = vi.fn();
+vi.mock("@/app/actions/payouts", () => ({ saveBankAccount: (...a: unknown[]) => saveBankAccount(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { pickupPoints } from "@/lib/fixtures/meta";
 import { myPayouts } from "@/lib/fixtures/payouts";
@@ -39,7 +39,7 @@ beforeEach(() => {
   saveProfile.mockReset();
   changePassword.mockReset();
   refresh.mockReset();
-  saveRekening.mockReset();
+  saveBankAccount.mockReset();
   saveProfile.mockResolvedValue({ data: profile() });
   Element.prototype.scrollIntoView = vi.fn();
 });
@@ -425,7 +425,7 @@ describe("Akun", () => {
 describe("F26 rekening pencairan (di luar form utama, tersimpan langsung)", () => {
   const kosong = { ...myPayouts(), account: null, payouts: [] };
   it("belum ada rekening: form tampil, saldo & bagian toko dijelaskan, simpan tidak membuat form utama kotor", async () => {
-    saveRekening.mockResolvedValue({ data: myPayouts() });
+    saveBankAccount.mockResolvedValue({ data: myPayouts() });
     tampil({ pencairan: kosong });
     const form = screen.getByRole("form", { name: "Rekening pencairan" });
     expect(screen.getByText("Rp 58.000")).toBeInTheDocument();
@@ -435,7 +435,7 @@ describe("F26 rekening pencairan (di luar form utama, tersimpan langsung)", () =
     await userEvent.type(within(form).getByLabelText(/Nama pemilik rekening/), "Diego Pratama");
     await userEvent.type(within(form).getByLabelText(/Kata sandi akun/), "rahasia123");
     await userEvent.click(within(form).getByRole("button", { name: "Simpan rekening" }));
-    expect(saveRekening).toHaveBeenCalledWith({
+    expect(saveBankAccount).toHaveBeenCalledWith({
       bank: "bca",
       account_number: "0123456789",
       account_name: "Diego Pratama",
@@ -446,7 +446,7 @@ describe("F26 rekening pencairan (di luar form utama, tersimpan langsung)", () =
     expect(bar()).not.toBeInTheDocument();
   });
   it("galat field dari backend (sandi salah) tampil di kolomnya", async () => {
-    saveRekening.mockResolvedValue({
+    saveBankAccount.mockResolvedValue({
       error: { code: "VALIDATION_ERROR", message: "Data tidak valid.", fields: { password: ["Kata sandi salah."] } },
     });
     tampil({ pencairan: myPayouts() });

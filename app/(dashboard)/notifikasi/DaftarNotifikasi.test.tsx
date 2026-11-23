@@ -2,9 +2,9 @@ import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
-const tandaiSemuaDibaca = vi.fn();
+const markAllNotificationsRead = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-vi.mock("@/app/actions/notifikasi", () => ({ tandaiSemuaDibaca: () => tandaiSemuaDibaca() }));
+vi.mock("@/app/actions/notifications", () => ({ markAllNotificationsRead: () => markAllNotificationsRead() }));
 import { DaftarNotifikasi } from "./DaftarNotifikasi";
 import type { AppNotification } from "@/types/notification";
 
@@ -21,8 +21,8 @@ const n = (o: Partial<AppNotification>): AppNotification => ({
 
 beforeEach(() => {
   refresh.mockReset();
-  tandaiSemuaDibaca.mockReset();
-  tandaiSemuaDibaca.mockResolvedValue({ data: { unread_count: 0 } });
+  markAllNotificationsRead.mockReset();
+  markAllNotificationsRead.mockResolvedValue({ data: { unread_count: 0 } });
 });
 
 describe("DaftarNotifikasi", () => {
@@ -49,7 +49,7 @@ describe("DaftarNotifikasi", () => {
     expect(screen.getByText("Foto menu dihapus admin")).toBeInTheDocument();
     expect(screen.getByText(/Foto buram/)).toBeInTheDocument();
     expect(screen.getAllByText(/Belum dibaca/)).toHaveLength(1);
-    expect(tandaiSemuaDibaca).toHaveBeenCalledTimes(1);
+    expect(markAllNotificationsRead).toHaveBeenCalledTimes(1);
     expect(refresh).toHaveBeenCalled();
   });
   it("tanpa yang belum dibaca: tidak memanggil server; kosong → empty state", async () => {
@@ -57,6 +57,6 @@ describe("DaftarNotifikasi", () => {
       render(<DaftarNotifikasi rows={[]} total={0} page={1} unread={0} />);
     });
     expect(screen.getByText("Belum ada notifikasi")).toBeInTheDocument();
-    expect(tandaiSemuaDibaca).not.toHaveBeenCalled();
+    expect(markAllNotificationsRead).not.toHaveBeenCalled();
   });
 });

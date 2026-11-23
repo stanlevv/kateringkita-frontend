@@ -9,22 +9,22 @@ import type { MerchantProfile } from "@/types/profile";
 // F21 pesan dari meja. Validasi isi ada di backend; aksi ini hanya meneruskan.
 
 // ---- penjual ----
-export async function setDineIn(aktif: boolean): Promise<ActionResult<MerchantProfile>> {
+export async function setDineIn(enabled: boolean): Promise<ActionResult<MerchantProfile>> {
   await requireMerchant();
   return toResult(
     await merchantFetch<MerchantProfile>("/profile", {
       method: "PATCH",
-      body: JSON.stringify({ dine_in_enabled: aktif }),
+      body: JSON.stringify({ dine_in_enabled: enabled }),
     }),
   );
 }
 
-export async function tambahMeja(label: string): Promise<ActionResult<Table>> {
+export async function createTable(label: string): Promise<ActionResult<Table>> {
   await requireMerchant();
   return toResult(await merchantFetch<Table>("/tables", { method: "POST", body: JSON.stringify({ label }) }));
 }
 
-export async function ubahMeja(
+export async function updateTable(
   id: number,
   input: { label?: string; is_active?: boolean; ganti_token?: true },
 ): Promise<ActionResult<Table>> {
@@ -33,9 +33,9 @@ export async function ubahMeja(
 }
 
 // ---- tamu (tanpa login) ----
-const tamu = (token: string) => ({ "X-Guest-Token": token });
+const guestHeaders = (token: string) => ({ "X-Guest-Token": token });
 
-export async function pesanDariMeja(
+export async function createTableOrder(
   token: string,
   input: unknown,
 ): Promise<ActionResult<TableOrder & { guest_token: string }>> {
@@ -44,20 +44,20 @@ export async function pesanDariMeja(
   );
 }
 
-export async function statusPesananMeja(code: string, token: string): Promise<ActionResult<TableOrder>> {
-  return toResult(await apiFetch(`/guest/orders/${encodeURIComponent(code)}`, { headers: tamu(token) }));
+export async function getTableOrderStatus(code: string, token: string): Promise<ActionResult<TableOrder>> {
+  return toResult(await apiFetch(`/guest/orders/${encodeURIComponent(code)}`, { headers: guestHeaders(token) }));
 }
 
-export async function bayarPesananMeja(
+export async function payTableOrder(
   code: string,
   token: string,
-  kembali: string,
+  returnUrl: string,
 ): Promise<ActionResult<{ payment_url: string }>> {
   return toResult(
     await apiFetch(`/guest/orders/${encodeURIComponent(code)}/pay`, {
       method: "POST",
-      headers: tamu(token),
-      body: JSON.stringify({ kembali }),
+      headers: guestHeaders(token),
+      body: JSON.stringify({ kembali: returnUrl }),
     }),
   );
 }

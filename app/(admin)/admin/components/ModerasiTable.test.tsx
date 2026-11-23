@@ -4,12 +4,12 @@ import { Toaster } from "@/app/components/ui/Toast";
 import { ModerasiTable } from "./ModerasiTable";
 import type { ModerationMenu, ModerationReview } from "@/types/admin";
 
-const moderasi = vi.fn();
-const hapusFotoMenu = vi.fn();
+const moderate = vi.fn();
+const deleteMenuPhoto = vi.fn();
 const refresh = vi.fn();
-vi.mock("@/app/actions/admin/moderasi", () => ({
-  moderasi: (...a: unknown[]) => moderasi(...a),
-  hapusFotoMenu: (...a: unknown[]) => hapusFotoMenu(...a),
+vi.mock("@/app/actions/admin/moderation", () => ({
+  moderate: (...a: unknown[]) => moderate(...a),
+  deleteMenuPhoto: (...a: unknown[]) => deleteMenuPhoto(...a),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 
@@ -40,10 +40,10 @@ const menu: ModerationMenu = {
 };
 
 beforeEach(() => {
-  moderasi.mockReset();
-  hapusFotoMenu.mockReset();
+  moderate.mockReset();
+  deleteMenuPhoto.mockReset();
   refresh.mockReset();
-  moderasi.mockResolvedValue({ data: {} });
+  moderate.mockResolvedValue({ data: {} });
 });
 
 describe("F19 ModerasiTable", () => {
@@ -62,7 +62,7 @@ describe("F19 ModerasiTable", () => {
     await act(async () => {
       fireEvent.click(kirim);
     });
-    expect(moderasi).toHaveBeenCalledWith(5, "hide", "Spam");
+    expect(moderate).toHaveBeenCalledWith(5, "hide", "Spam");
     expect(refresh).toHaveBeenCalled();
     expect(screen.getByText("Ulasan disembunyikan.")).toBeInTheDocument();
   });
@@ -78,11 +78,11 @@ describe("F19 ModerasiTable", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Pulihkan" }));
     });
-    expect(moderasi).not.toHaveBeenCalled();
+    expect(moderate).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Ya, pulihkan" }));
     });
-    expect(moderasi).toHaveBeenCalledWith(9, "restore", undefined);
+    expect(moderate).toHaveBeenCalledWith(9, "restore", undefined);
   });
   it("kolom Foto: foto utama lalu foto tambahan, tiap foto membuka ukuran penuh; tanpa foto → teks", () => {
     const g = ["https://foto.test/b.jpg", "https://foto.test/c.jpg"];
@@ -98,7 +98,7 @@ describe("F19 ModerasiTable", () => {
     expect(screen.getByText("Tanpa foto")).toBeInTheDocument();
   });
   it("hapus satu foto: dialog alasan wajib, kirim url + alasan, lalu refresh", async () => {
-    hapusFotoMenu.mockResolvedValue({ data: { ...menu } });
+    deleteMenuPhoto.mockResolvedValue({ data: { ...menu } });
     render(
       <>
         <ModerasiTable
@@ -117,7 +117,7 @@ describe("F19 ModerasiTable", () => {
     await act(async () => {
       fireEvent.click(tombol);
     });
-    expect(hapusFotoMenu).toHaveBeenCalledWith(9, "https://foto.test/b.jpg", "Bukan makanan");
+    expect(deleteMenuPhoto).toHaveBeenCalledWith(9, "https://foto.test/b.jpg", "Bukan makanan");
     expect(refresh).toHaveBeenCalled();
     expect(screen.getByText("Foto dihapus dari menu.")).toBeInTheDocument();
   });

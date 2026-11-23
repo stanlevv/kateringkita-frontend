@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TableOrder } from "@/types/table";
 
-const statusPesananMeja = vi.fn();
-vi.mock("@/app/actions/meja", () => ({
-  statusPesananMeja: (...a: unknown[]) => statusPesananMeja(...a),
-  bayarPesananMeja: vi.fn(),
+const getTableOrderStatus = vi.fn();
+vi.mock("@/app/actions/table", () => ({
+  getTableOrderStatus: (...a: unknown[]) => getTableOrderStatus(...a),
+  payTableOrder: vi.fn(),
 }));
 
 import { StatusPesanan } from "./StatusPesanan";
@@ -36,20 +36,20 @@ describe("status pesanan meja", () => {
   it("tanpa token tamu di perangkat ini → tidak memanggil server", () => {
     render(<StatusPesanan code="KK-1" />);
     expect(screen.getByText("Pesanan tidak bisa dibuka di sini")).toBeInTheDocument();
-    expect(statusPesananMeja).not.toHaveBeenCalled();
+    expect(getTableOrderStatus).not.toHaveBeenCalled();
   });
 
   it("menunggu bayar: hitung mundur & tombol bayar; dikonfirmasi: langkah pembayaran tercentang", async () => {
     localStorage.setItem("kk-tamu:KK-1", JSON.stringify({ tamu: "tamu-1", meja: "t0k3n" }));
-    statusPesananMeja.mockResolvedValueOnce({ data: pesanan() });
+    getTableOrderStatus.mockResolvedValueOnce({ data: pesanan() });
     const { unmount } = render(<StatusPesanan code="KK-1" />);
     expect(await screen.findByText("Menunggu pembayaran")).toBeInTheDocument();
     expect(screen.getByText("Bayar dalam 02:05")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Bayar Rp 30.000" })).toBeInTheDocument();
-    expect(statusPesananMeja).toHaveBeenCalledWith("KK-1", "tamu-1");
+    expect(getTableOrderStatus).toHaveBeenCalledWith("KK-1", "tamu-1");
     unmount();
 
-    statusPesananMeja.mockResolvedValueOnce({
+    getTableOrderStatus.mockResolvedValueOnce({
       data: pesanan({ status: "confirmed", payment_status: "paid", payment_url: null }),
     });
     render(<StatusPesanan code="KK-1" />);
@@ -60,7 +60,7 @@ describe("status pesanan meja", () => {
 
   it("selesai: kelima langkah tercentang, tidak ada langkah bernomor", async () => {
     localStorage.setItem("kk-tamu:KK-1", JSON.stringify({ tamu: "tamu-1", meja: "t0k3n" }));
-    statusPesananMeja.mockResolvedValueOnce({
+    getTableOrderStatus.mockResolvedValueOnce({
       data: pesanan({ status: "completed", payment_status: "paid", payment_url: null }),
     });
     render(<StatusPesanan code="KK-1" />);

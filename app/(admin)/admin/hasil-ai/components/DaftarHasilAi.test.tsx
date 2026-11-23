@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
-vi.mock("@/app/actions/admin/hasilAi", () => ({ verifikasiHasilAi: vi.fn() }));
+vi.mock("@/app/actions/admin/ai-results", () => ({ verifyAiResult: vi.fn() }));
 import type { AiResult } from "@/types/ai-result";
 import { parseAiResultTab } from "@/lib/ai-result";
 import { DaftarHasilAi } from "./DaftarHasilAi";

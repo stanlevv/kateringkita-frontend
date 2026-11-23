@@ -4,12 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TableMenu } from "@/types/table";
 
 const push = vi.fn();
-const pesanDariMeja = vi.fn();
-const bayarPesananMeja = vi.fn();
+const createTableOrder = vi.fn();
+const payTableOrder = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace: vi.fn() }) }));
-vi.mock("@/app/actions/meja", () => ({
-  pesanDariMeja: (...a: unknown[]) => pesanDariMeja(...a),
-  bayarPesananMeja: (...a: unknown[]) => bayarPesananMeja(...a),
+vi.mock("@/app/actions/table", () => ({
+  createTableOrder: (...a: unknown[]) => createTableOrder(...a),
+  payTableOrder: (...a: unknown[]) => payTableOrder(...a),
 }));
 
 import { MenuMejaApp } from "./MenuMejaApp";
@@ -83,8 +83,8 @@ describe("menu pesan dari meja", () => {
     const u = userEvent.setup();
     const assign = vi.fn();
     vi.stubGlobal("location", { ...window.location, origin: "http://localhost:3000", assign });
-    pesanDariMeja.mockResolvedValue({ data: { code: "KK-1", guest_token: "tamu-1" } });
-    bayarPesananMeja.mockResolvedValue({ data: { payment_url: "https://app.sandbox.midtrans.com/snap/x" } });
+    createTableOrder.mockResolvedValue({ data: { code: "KK-1", guest_token: "tamu-1" } });
+    payTableOrder.mockResolvedValue({ data: { payment_url: "https://app.sandbox.midtrans.com/snap/x" } });
     render(<MenuMejaApp token="t0k3n" data={data} />);
 
     await u.click(screen.getByRole("button", { name: "Tambah Nasi Ayam" }));
@@ -102,7 +102,7 @@ describe("menu pesan dari meja", () => {
     await u.type(within(keranjang).getByLabelText(/Nama pemesan/), "Andi");
     await u.click(within(keranjang).getByRole("button", { name: "Pesan & bayar" }));
 
-    expect(pesanDariMeja).toHaveBeenCalledWith("t0k3n", {
+    expect(createTableOrder).toHaveBeenCalledWith("t0k3n", {
       items: [
         { menu_id: 1, qty: 2, option_ids: [] },
         { menu_id: 2, qty: 1, option_ids: [9] },
@@ -111,7 +111,7 @@ describe("menu pesan dari meja", () => {
       customer_phone: null,
       note: null,
     });
-    expect(bayarPesananMeja).toHaveBeenCalledWith("KK-1", "tamu-1", "http://localhost:3000/meja/pesanan/KK-1");
+    expect(payTableOrder).toHaveBeenCalledWith("KK-1", "tamu-1", "http://localhost:3000/meja/pesanan/KK-1");
     expect(assign).toHaveBeenCalledWith("https://app.sandbox.midtrans.com/snap/x");
     expect(JSON.parse(localStorage.getItem("kk-tamu:KK-1")!)).toEqual({ tamu: "tamu-1", meja: "t0k3n" });
   });
@@ -120,9 +120,9 @@ describe("menu pesan dari meja", () => {
     const u = userEvent.setup();
     const assign = vi.fn();
     vi.stubGlobal("location", { ...window.location, origin: "http://localhost:3000", assign });
-    pesanDariMeja.mockResolvedValue({ data: { code: "KK-2", guest_token: "tamu-2" } });
+    createTableOrder.mockResolvedValue({ data: { code: "KK-2", guest_token: "tamu-2" } });
     let bayar!: (v: unknown) => void;
-    bayarPesananMeja.mockReturnValue(
+    payTableOrder.mockReturnValue(
       new Promise((r) => {
         bayar = r;
       }),
@@ -135,7 +135,7 @@ describe("menu pesan dari meja", () => {
     await u.type(within(keranjang).getByLabelText(/Nama pemesan/), "Andi");
     await u.click(within(keranjang).getByRole("button", { name: "Pesan & bayar" }));
 
-    expect(bayarPesananMeja).toHaveBeenCalled();
+    expect(payTableOrder).toHaveBeenCalled();
     expect(within(keranjang).getByText("Nasi Ayam")).toBeInTheDocument();
     expect(within(keranjang).queryByText("Rp 0")).not.toBeInTheDocument();
     expect(localStorage.getItem("kk-keranjang:t0k3n")).not.toBeNull();

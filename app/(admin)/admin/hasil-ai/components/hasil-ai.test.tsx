@@ -3,13 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
-const verifikasiHasilAi = vi.fn();
+const verifyAiResult = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh, push: vi.fn() }),
   usePathname: () => "/admin/hasil-ai",
   useSearchParams: () => new URLSearchParams(),
 }));
-vi.mock("@/app/actions/admin/hasilAi", () => ({ verifikasiHasilAi: (...a: unknown[]) => verifikasiHasilAi(...a) }));
+vi.mock("@/app/actions/admin/ai-results", () => ({ verifyAiResult: (...a: unknown[]) => verifyAiResult(...a) }));
 import { Toaster } from "@/app/components/ui/Toast";
 import type { AiResult } from "@/types/ai-result";
 import { KartuHasilAi } from "./KartuHasilAi";
@@ -49,7 +49,7 @@ const REKOMENDASI: AiResult = {
 
 beforeEach(() => {
   refresh.mockReset();
-  verifikasiHasilAi.mockReset().mockResolvedValue({ data: null });
+  verifyAiResult.mockReset().mockResolvedValue({ data: null });
 });
 
 describe("KartuHasilAi", () => {
@@ -94,7 +94,7 @@ describe("verifikasi", () => {
       </>,
     );
     await userEvent.click(screen.getByRole("button", { name: "Setujui" }));
-    expect(verifikasiHasilAi).toHaveBeenCalledWith(5, "disetujui", "");
+    expect(verifyAiResult).toHaveBeenCalledWith(5, "disetujui", "");
     expect(await screen.findByText("Hasil AI disetujui.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
   });
@@ -108,15 +108,15 @@ describe("verifikasi", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Tolak" }));
     expect(screen.getByText("Tulis alasan penolakan (3–300 karakter).")).toBeInTheDocument();
-    expect(verifikasiHasilAi).not.toHaveBeenCalled();
+    expect(verifyAiResult).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText(/Catatan verifikasi/), { target: { value: "Angka HPP salah" } });
     await userEvent.click(screen.getByRole("button", { name: "Tolak" }));
-    expect(verifikasiHasilAi).toHaveBeenCalledWith(5, "ditolak", "Angka HPP salah");
+    expect(verifyAiResult).toHaveBeenCalledWith(5, "ditolak", "Angka HPP salah");
     expect(await screen.findByText("Hasil AI ditolak.")).toBeInTheDocument();
   });
 
   it("galat server tampil sebagai toast, tanpa muat ulang", async () => {
-    verifikasiHasilAi.mockResolvedValue({ error: { code: "NOT_FOUND", message: "Hasil AI tidak ditemukan." } });
+    verifyAiResult.mockResolvedValue({ error: { code: "NOT_FOUND", message: "Hasil AI tidak ditemukan." } });
     render(
       <>
         <Toaster />

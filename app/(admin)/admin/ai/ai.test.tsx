@@ -14,10 +14,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/ai",
 }));
 vi.mock("@/app/actions/admin/ai", () => ({
-  tambahPenyediaAi: vi.fn(),
-  ubahPenyediaAi: vi.fn(),
-  hapusPenyediaAi: vi.fn(),
-  ujiPenyediaAi: vi.fn(),
+  createAiProvider: vi.fn(),
+  updateAiProvider: vi.fn(),
+  deleteAiProvider: vi.fn(),
+  testAiProvider: vi.fn(),
 }));
 import AdminAiPage from "./page";
 
