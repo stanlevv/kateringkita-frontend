@@ -9,10 +9,10 @@ import type { AdminMerchantDetail } from "@/types/admin";
 import { requireAdmin } from "@/services/auth.service";
 
 // A-05 — Detail penjual.
-export default async function PenjualDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MerchantDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const tidakAda = (
+  const merchantNotFound = (
     <EmptyState
       icon={SearchX}
       title="Penjual tidak ditemukan"
@@ -24,10 +24,10 @@ export default async function PenjualDetailPage({ params }: { params: Promise<{ 
       }
     />
   );
-  if (!/^[1-9]\d{0,9}$/.test(id)) return tidakAda;
-  const res = await adminFetch<AdminMerchantDetail>(`/merchants/${id}`);
-  if (res.status === 404) return tidakAda;
-  if (!res.ok || !res.data)
+  if (!/^[1-9]\d{0,9}$/.test(id)) return merchantNotFound;
+  const response = await adminFetch<AdminMerchantDetail>(`/merchants/${id}`);
+  if (response.status === 404) return merchantNotFound;
+  if (!response.ok || !response.data)
     return (
       <LoadError
         title="Penjual belum bisa dimuat"
@@ -36,14 +36,14 @@ export default async function PenjualDetailPage({ params }: { params: Promise<{ 
     );
   return (
     <PageHeader
-      title={res.data.business_name}
+      title={response.data.business_name}
       actions={
         <LinkButton href="/admin/penjual" variant="secondary">
           Semua penjual
         </LinkButton>
       }
     >
-      <MerchantDetail m={res.data} />
+      <MerchantDetail merchant={response.data} />
     </PageHeader>
   );
 }

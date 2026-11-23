@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ModerasiTable } from "@/app/(admin)/admin/components/ModerationTable";
+import { ModerationTable } from "@/app/(admin)/admin/components/ModerationTable";
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { cx, focusRing } from "@/app/components/ui/cx";
@@ -10,44 +10,44 @@ import { requireAdmin } from "@/services/auth.service";
 import type { ModerationMenu, PageMeta, ModerationReview } from "@/types/admin";
 
 const LIMIT = 20;
-const JENIS = { ulasan: { label: "Ulasan", path: "/reviews" }, menu: { label: "Menu", path: "/menus" } } as const;
-const STATUS = { "": "Semua", active: "Normal", moderated: "Dimoderasi" } as const;
-type Jenis = keyof typeof JENIS;
+const KINDS = { ulasan: { label: "Ulasan", path: "/reviews" }, menu: { label: "Menu", path: "/menus" } } as const;
+const STATUS_FILTERS = { "": "Semua", active: "Normal", moderated: "Dimoderasi" } as const;
+type ModerationKind = keyof typeof KINDS;
 
-const pil = (aktif: boolean) =>
+const pillClass = (active: boolean) =>
   cx(
     "inline-flex min-h-11 items-center rounded-md border px-4 font-medium",
     focusRing,
-    aktif ? "border-primary bg-primary text-surface" : "border-line-strong bg-surface text-ink hover:bg-subtle",
+    active ? "border-primary bg-primary text-surface" : "border-line-strong bg-surface text-ink hover:bg-subtle",
   );
 
 // F19 — moderasi ulasan & menu. Filter di URL; suspend toko ada di halaman Penjual.
-export default async function ModerasiPage({
+export default async function ModerationPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   await requireAdmin();
-  const sp = await searchParams;
-  const jenis: Jenis = sp.jenis === "menu" ? "menu" : "ulasan";
-  const status = sp.status === "active" || sp.status === "moderated" ? sp.status : "";
-  const cari = sp.q?.trim() ?? "";
-  const n = Number(sp.page);
-  const page = Number.isInteger(n) && n >= 1 && n <= 100_000 ? n : 1;
-  const url = (o: { jenis?: Jenis; status?: string; page?: number }) => {
-    const q = new URLSearchParams({ jenis: o.jenis ?? jenis });
-    const st = o.status ?? status;
-    if (st) q.set("status", st);
-    if (cari && !o.jenis) q.set("q", cari);
-    if (o.page && o.page > 1) q.set("page", String(o.page));
-    return `/admin/moderasi?${q}`;
+  const params = await searchParams;
+  const kind: ModerationKind = params.jenis === "menu" ? "menu" : "ulasan";
+  const status = params.status === "active" || params.status === "moderated" ? params.status : "";
+  const search = params.q?.trim() ?? "";
+  const pageParam = Number(params.page);
+  const page = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 100_000 ? pageParam : 1;
+  const moderationUrl = (options: { kind?: ModerationKind; status?: string; page?: number }) => {
+    const urlParams = new URLSearchParams({ jenis: options.kind ?? kind });
+    const statusValue = options.status ?? status;
+    if (statusValue) urlParams.set("status", statusValue);
+    if (search && !options.kind) urlParams.set("q", search);
+    if (options.page && options.page > 1) urlParams.set("page", String(options.page));
+    return `/admin/moderasi?${urlParams}`;
   };
 
-  const q = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
-  if (status) q.set("status", status);
-  if (cari) q.set("q", cari);
-  const res = await adminFetch<ModerationReview[] | ModerationMenu[]>(`${JENIS[jenis].path}?${q}`);
-  const meta = res.meta as PageMeta | undefined;
+  const apiQuery = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
+  if (status) apiQuery.set("status", status);
+  if (search) apiQuery.set("q", search);
+  const response = await adminFetch<ModerationReview[] | ModerationMenu[]>(`${KINDS[kind].path}?${apiQuery}`);
+  const meta = response.meta as PageMeta | undefined;
 
   return (
     <PageHeader
@@ -56,54 +56,54 @@ export default async function ModerasiPage({
     >
       <div className="flex flex-col gap-4">
         <nav aria-label="Jenis moderasi" className="flex flex-wrap gap-2">
-          {(Object.keys(JENIS) as Jenis[]).map((j) => (
+          {(Object.keys(KINDS) as ModerationKind[]).map((kindKey) => (
             <Link
-              key={j}
-              href={url({ jenis: j, status: "" })}
-              aria-current={j === jenis ? "page" : undefined}
-              className={pil(j === jenis)}
+              key={kindKey}
+              href={moderationUrl({ kind: kindKey, status: "" })}
+              aria-current={kindKey === kind ? "page" : undefined}
+              className={pillClass(kindKey === kind)}
             >
-              {JENIS[j].label}
+              {KINDS[kindKey].label}
             </Link>
           ))}
         </nav>
         <div className="flex flex-wrap items-end gap-3">
           <nav aria-label="Filter status" className="flex flex-wrap gap-2">
-            {Object.entries(STATUS).map(([k, label]) => (
+            {Object.entries(STATUS_FILTERS).map(([statusKey, label]) => (
               <Link
-                key={k}
-                href={url({ status: k })}
-                aria-current={k === status ? "true" : undefined}
-                className={pil(k === status)}
+                key={statusKey}
+                href={moderationUrl({ status: statusKey })}
+                aria-current={statusKey === status ? "true" : undefined}
+                className={pillClass(statusKey === status)}
               >
                 {label}
               </Link>
             ))}
           </nav>
           <form action="/admin/moderasi" className="flex gap-2">
-            <input type="hidden" name="jenis" value={jenis} />
+            <input type="hidden" name="jenis" value={kind} />
             {status && <input type="hidden" name="status" value={status} />}
             <Input
               type="search"
               name="q"
-              defaultValue={cari}
-              aria-label={jenis === "ulasan" ? "Cari komentar, menu, atau toko" : "Cari menu atau toko"}
+              defaultValue={search}
+              aria-label={kind === "ulasan" ? "Cari komentar, menu, atau toko" : "Cari menu atau toko"}
               placeholder="Cari…"
             />
           </form>
         </div>
-        {res.ok && res.data ? (
+        {response.ok && response.data ? (
           <>
-            {jenis === "ulasan" ? (
-              <ModerasiTable jenis="ulasan" rows={res.data as ModerationReview[]} />
+            {kind === "ulasan" ? (
+              <ModerationTable kind="ulasan" rows={response.data as ModerationReview[]} />
             ) : (
-              <ModerasiTable jenis="menu" rows={res.data as ModerationMenu[]} />
+              <ModerationTable kind="menu" rows={response.data as ModerationMenu[]} />
             )}
             <Pagination
               page={page}
-              total={meta?.total ?? res.data.length}
+              total={meta?.total ?? response.data.length}
               limit={LIMIT}
-              hrefFor={(p) => url({ page: p })}
+              hrefFor={(pageNumber) => moderationUrl({ page: pageNumber })}
             />
           </>
         ) : (

@@ -12,55 +12,55 @@ import { validateServiceFee } from "@/services/admin-master.service";
 import { formatRupiah } from "@/lib/format";
 
 /** A-04 — biaya layanan per pesanan. */
-export function ServiceFeeForm({ nilai }: { nilai: number }) {
+export function ServiceFeeForm({ currentFee }: { currentFee: number }) {
   const router = useRouter();
-  const [teks, setTeks] = useState(String(nilai));
-  const [galat, setGalat] = useState<string>();
-  const [menyimpan, setMenyimpan] = useState(false);
+  const [text, setText] = useState(String(currentFee));
+  const [error, setError] = useState<string>();
+  const [saving, setSaving] = useState(false);
 
-  async function kirim(e: React.FormEvent) {
-    e.preventDefault();
-    const n = teks.trim() === "" ? NaN : Number(teks);
-    const masalah = validateServiceFee(n);
-    if (masalah) return setGalat(masalah);
-    setGalat(undefined);
-    if (n === nilai) return void toast({ tone: "info", message: "Tidak ada perubahan" });
-    setMenyimpan(true);
-    const r = await callAction(() => saveServiceFee(n));
-    setMenyimpan(false);
-    if ("error" in r) return void toast({ tone: "danger", message: r.error.message });
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const fee = text.trim() === "" ? NaN : Number(text);
+    const problem = validateServiceFee(fee);
+    if (problem) return setError(problem);
+    setError(undefined);
+    if (fee === currentFee) return void toast({ tone: "info", message: "Tidak ada perubahan" });
+    setSaving(true);
+    const result = await callAction(() => saveServiceFee(fee));
+    setSaving(false);
+    if ("error" in result) return void toast({ tone: "danger", message: result.error.message });
     toast({ tone: "success", message: "Biaya layanan disimpan" });
     router.refresh();
   }
 
   return (
     <form
-      onSubmit={kirim}
+      onSubmit={submit}
       noValidate
       aria-label="Biaya layanan"
       className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4"
     >
       <h2 className="text-lg font-semibold text-ink">Biaya layanan</h2>
       <p className="text-ink-muted">
-        Saat ini <span className="font-mono font-semibold text-ink">{formatRupiah(nilai)}</span> per pesanan.
+        Saat ini <span className="font-mono font-semibold text-ink">{formatRupiah(currentFee)}</span> per pesanan.
       </p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="sm:w-64">
-          <Field label="Biaya baru (Rp)" id="biaya" help="Bilangan bulat 0–100.000." error={galat}>
+          <Field label="Biaya baru (Rp)" id="biaya" help="Bilangan bulat 0–100.000." error={error}>
             <Input
               type="number"
               inputMode="numeric"
               min={0}
               step={1}
-              value={teks}
-              onChange={(e) => {
-                setGalat(undefined);
-                setTeks(e.target.value);
+              value={text}
+              onChange={(event) => {
+                setError(undefined);
+                setText(event.target.value);
               }}
             />
           </Field>
         </div>
-        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">
+        <Button type="submit" loading={saving} loadingText="Menyimpan…">
           Simpan
         </Button>
       </div>

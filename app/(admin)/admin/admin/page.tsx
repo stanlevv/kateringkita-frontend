@@ -6,18 +6,21 @@ import type { AdminAccount } from "@/types/admin";
 import { AdminTable } from "./components/AdminTable";
 
 // Fase 1: kelola akun admin (khusus super). Tingkat lain mendapat 404.
-export default async function KelolaAdminPage() {
+export default async function ManageAdminsPage() {
   const { user } = await requireAdmin("super");
-  const res = await adminFetch<AdminAccount[]>("/admins");
+  const response = await adminFetch<AdminAccount[]>("/admins");
   return (
     <PageHeader
       title="Kelola admin"
       description="Tambah admin, atur tingkat akses, nonaktifkan, atau reset kata sandi. Semua perubahan tercatat di Log."
     >
-      {res.ok && res.data ? (
-        <AdminTable rows={res.data} sayaId={Number(user.id)} />
+      {response.ok && response.data ? (
+        <AdminTable rows={response.data} currentAdminId={Number(user.id)} />
       ) : (
-        <LoadError title="Daftar admin belum bisa dimuat" body={res.error?.message ?? "Coba muat ulang halaman."} />
+        <LoadError
+          title="Daftar admin belum bisa dimuat"
+          body={response.error?.message ?? "Coba muat ulang halaman."}
+        />
       )}
     </PageHeader>
   );

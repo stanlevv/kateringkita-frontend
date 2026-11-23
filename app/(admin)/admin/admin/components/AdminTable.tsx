@@ -19,69 +19,83 @@ import { formatTime, formatDate } from "@/lib/format";
 import type { AdminWithPassword, AdminAccount } from "@/types/admin";
 import type { ActionResult } from "@/types/api";
 
-const LEVEL = Object.keys(LEVEL_LABELS) as AdminLevel[];
+const LEVELS = Object.keys(LEVEL_LABELS) as AdminLevel[];
 
 // AUD-35: setiap aksi akun lewat konfirmasi; "Aktifkan" tanpa konfirmasi bisa dipicu clickjacking dua kali klik
-const KONFIRMASI = {
+const CONFIRMATIONS = {
   reset: {
-    judul: "Reset kata sandi?",
-    tombol: "Reset sandi",
-    isi: (n: string) => `${n} dikeluarkan dari semua perangkat dan harus masuk dengan kata sandi sementara baru.`,
+    title: "Reset kata sandi?",
+    confirmLabel: "Reset sandi",
+    body: (name: string) =>
+      `${name} dikeluarkan dari semua perangkat dan harus masuk dengan kata sandi sementara baru.`,
   },
-  nonaktif: {
-    judul: "Nonaktifkan admin?",
-    tombol: "Nonaktifkan",
-    isi: (n: string) => `${n} tidak bisa masuk lagi dan dikeluarkan dari semua perangkat.`,
+  deactivate: {
+    title: "Nonaktifkan admin?",
+    confirmLabel: "Nonaktifkan",
+    body: (name: string) => `${name} tidak bisa masuk lagi dan dikeluarkan dari semua perangkat.`,
   },
-  aktif: {
-    judul: "Aktifkan admin?",
-    tombol: "Ya, aktifkan",
-    isi: (n: string) => `${n} bisa masuk lagi dengan kata sandinya yang lama.`,
+  activate: {
+    title: "Aktifkan admin?",
+    confirmLabel: "Ya, aktifkan",
+    body: (name: string) => `${name} bisa masuk lagi dengan kata sandinya yang lama.`,
   },
 };
 
-function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminWithPassword) => void; onClose: () => void }) {
-  const [v, setV] = useState({ full_name: "", phone: "", admin_level: "ops" as AdminLevel });
-  const [galat, setGalat] = useState<Record<string, string>>({});
-  const [menyimpan, setMenyimpan] = useState(false);
+function AdminForm({ onSaved, onClose }: { onSaved: (createdAdmin: AdminWithPassword) => void; onClose: () => void }) {
+  const [values, setValues] = useState({ full_name: "", phone: "", admin_level: "ops" as AdminLevel });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  async function kirim(e: React.FormEvent) {
-    e.preventDefault();
-    if (menyimpan) return;
-    setMenyimpan(true);
-    const r = await callAction(() => createAdmin(v));
-    setMenyimpan(false);
-    if ("error" in r) {
-      if (r.error.fields) setGalat(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
-      toast({ tone: "danger", message: r.error.message });
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    const result = await callAction(() => createAdmin(values));
+    setSaving(false);
+    if ("error" in result) {
+      if (result.error.fields)
+        setErrors(
+          Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
+        );
+      toast({ tone: "danger", message: result.error.message });
       return;
     }
-    onSaved(r.data);
+    onSaved(result.data);
   }
-  const set = (k: keyof typeof v, nilai: string) => {
-    setGalat({});
-    setV((p) => ({ ...p, [k]: nilai }));
+  const setField = (field: keyof typeof values, value: string) => {
+    setErrors({});
+    setValues((previous) => ({ ...previous, [field]: value }));
   };
 
   return (
-    <form onSubmit={kirim} noValidate className="flex flex-col gap-4">
-      <Field label="Nama lengkap" id="fa-full_name" required error={galat.full_name}>
-        <Input value={v.full_name} maxLength={150} onChange={(e) => set("full_name", e.target.value)} autoFocus />
+    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <Field label="Nama lengkap" id="fa-full_name" required error={errors.full_name}>
+        <Input
+          value={values.full_name}
+          maxLength={150}
+          onChange={(event) => setField("full_name", event.target.value)}
+          autoFocus
+        />
       </Field>
-      <Field label="Nomor HP" id="fa-phone" required help="Dipakai untuk masuk. Diawali 08." error={galat.phone}>
-        <Input inputMode="numeric" value={v.phone} maxLength={13} onChange={(e) => set("phone", e.target.value)} />
+      <Field label="Nomor HP" id="fa-phone" required help="Dipakai untuk masuk. Diawali 08." error={errors.phone}>
+        <Input
+          inputMode="numeric"
+          value={values.phone}
+          maxLength={13}
+          onChange={(event) => setField("phone", event.target.value)}
+        />
       </Field>
       <Field
         label="Tingkat"
         id="fa-admin_level"
         required
-        help={LEVEL_DESCRIPTIONS[v.admin_level]}
-        error={galat.admin_level}
+        help={LEVEL_DESCRIPTIONS[values.admin_level]}
+        error={errors.admin_level}
       >
-        <Select value={v.admin_level} onChange={(e) => set("admin_level", e.target.value)}>
-          {LEVEL.map((l) => (
-            <option key={l} value={l}>
-              {LEVEL_LABELS[l]}
+        <Select value={values.admin_level} onChange={(event) => setField("admin_level", event.target.value)}>
+          {LEVELS.map((level) => (
+            <option key={level} value={level}>
+              {LEVEL_LABELS[level]}
             </option>
           ))}
         </Select>
@@ -90,7 +104,7 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminWithPassword) => vo
         <Button variant="secondary" onClick={onClose}>
           Batal
         </Button>
-        <Button type="submit" loading={menyimpan} loadingText="Membuat…">
+        <Button type="submit" loading={saving} loadingText="Membuat…">
           Buat akun
         </Button>
       </div>
@@ -99,7 +113,7 @@ function FormAdmin({ onSaved, onClose }: { onSaved: (r: AdminWithPassword) => vo
 }
 
 // Sandi sementara tampil sekali; tidak bisa dilihat lagi setelah dialog ditutup.
-function SandiSementara({ data, onClose }: { data: AdminWithPassword; onClose: () => void }) {
+function TemporaryPasswordNotice({ data, onClose }: { data: AdminWithPassword; onClose: () => void }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-ink">
@@ -133,58 +147,60 @@ function SandiSementara({ data, onClose }: { data: AdminWithPassword; onClose: (
 }
 
 /** Fase 1 — kelola akun admin (khusus super). Akun sendiri tidak bisa diubah di sini. */
-export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: number }) {
+export function AdminTable({ rows, currentAdminId }: { rows: AdminAccount[]; currentAdminId: number }) {
   const router = useRouter();
-  const [form, setForm] = useState(false);
-  const [sandi, setSandi] = useState<AdminWithPassword | null>(null);
-  const [konfirmasi, setKonfirmasi] = useState<{ a: AdminAccount; aksi: keyof typeof KONFIRMASI } | null>(null);
-  const [sibuk, setSibuk] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [credentials, setCredentials] = useState<AdminWithPassword | null>(null);
+  const [confirmation, setConfirmation] = useState<{ admin: AdminAccount; action: keyof typeof CONFIRMATIONS } | null>(
+    null,
+  );
+  const [busy, setBusy] = useState(false);
 
-  async function jalankan<T>(fn: () => Promise<ActionResult<T>>, pesan: string) {
-    setSibuk(true);
-    const r = await callAction(fn);
-    setSibuk(false);
-    setKonfirmasi(null);
-    if ("error" in r) {
-      toast({ tone: "danger", message: r.error.message });
+  async function runAction<T>(request: () => Promise<ActionResult<T>>, successMessage: string) {
+    setBusy(true);
+    const result = await callAction(request);
+    setBusy(false);
+    setConfirmation(null);
+    if ("error" in result) {
+      toast({ tone: "danger", message: result.error.message });
       return null;
     }
-    toast({ tone: "success", message: pesan });
+    toast({ tone: "success", message: successMessage });
     router.refresh();
-    return r.data;
+    return result.data;
   }
 
-  const kolom: Column<AdminAccount>[] = [
+  const columns: Column<AdminAccount>[] = [
     {
       key: "nama",
       header: "Admin",
       wrap: true,
-      cell: (a) => (
+      cell: (admin) => (
         <div>
-          <span className="font-semibold">{a.full_name}</span>
-          {a.id === sayaId && <span className="text-ink-muted"> (Anda)</span>}
-          <div className="text-sm text-ink-muted">{a.phone}</div>
+          <span className="font-semibold">{admin.full_name}</span>
+          {admin.id === currentAdminId && <span className="text-ink-muted"> (Anda)</span>}
+          <div className="text-sm text-ink-muted">{admin.phone}</div>
         </div>
       ),
     },
     {
       key: "level",
       header: "Tingkat",
-      cell: (a) =>
-        a.id === sayaId || !a.is_active ? (
-          <span>{a.admin_level ? LEVEL_LABELS[a.admin_level] : "-"}</span>
+      cell: (admin) =>
+        admin.id === currentAdminId || !admin.is_active ? (
+          <span>{admin.admin_level ? LEVEL_LABELS[admin.admin_level] : "-"}</span>
         ) : (
           <Select
-            aria-label={`Tingkat ${a.full_name}`}
-            value={a.admin_level ?? ""}
-            disabled={sibuk}
-            onChange={(e) =>
-              void jalankan(() => updateAdminLevel(a.id, e.target.value as AdminLevel), "Tingkat diubah")
+            aria-label={`Tingkat ${admin.full_name}`}
+            value={admin.admin_level ?? ""}
+            disabled={busy}
+            onChange={(event) =>
+              void runAction(() => updateAdminLevel(admin.id, event.target.value as AdminLevel), "Tingkat diubah")
             }
           >
-            {LEVEL.map((l) => (
-              <option key={l} value={l}>
-                {LEVEL_LABELS[l]}
+            {LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {LEVEL_LABELS[level]}
               </option>
             ))}
           </Select>
@@ -193,12 +209,12 @@ export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: num
     {
       key: "status",
       header: "Status",
-      cell: (a) =>
-        !a.is_active ? (
+      cell: (admin) =>
+        !admin.is_active ? (
           <Badge tone="neutral" icon={PowerOff}>
             Nonaktif
           </Badge>
-        ) : a.must_change_password ? (
+        ) : admin.must_change_password ? (
           <Badge tone="warning" icon={KeyRound}>
             Belum ganti sandi
           </Badge>
@@ -211,29 +227,30 @@ export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: num
     {
       key: "masuk",
       header: "Terakhir masuk",
-      cell: (a) => (a.last_login_at ? `${formatDate(a.last_login_at)} ${formatTime(a.last_login_at)}` : "Belum pernah"),
+      cell: (admin) =>
+        admin.last_login_at ? `${formatDate(admin.last_login_at)} ${formatTime(admin.last_login_at)}` : "Belum pernah",
     },
     {
       key: "aksi",
       header: "Aksi",
-      cell: (a) =>
-        a.id === sayaId ? (
+      cell: (admin) =>
+        admin.id === currentAdminId ? (
           <span className="text-sm text-ink-muted">Ubah di Pengaturan akun</span>
         ) : (
           <div className="flex items-center gap-2">
-            {a.is_active ? (
+            {admin.is_active ? (
               <>
                 <Button
                   variant="secondary"
-                  aria-label={`Reset sandi ${a.full_name}`}
-                  onClick={() => setKonfirmasi({ a, aksi: "reset" })}
+                  aria-label={`Reset sandi ${admin.full_name}`}
+                  onClick={() => setConfirmation({ admin, action: "reset" })}
                 >
                   Reset sandi
                 </Button>
                 <Button
                   variant="secondary"
-                  aria-label={`Nonaktifkan ${a.full_name}`}
-                  onClick={() => setKonfirmasi({ a, aksi: "nonaktif" })}
+                  aria-label={`Nonaktifkan ${admin.full_name}`}
+                  onClick={() => setConfirmation({ admin, action: "deactivate" })}
                 >
                   Nonaktifkan
                 </Button>
@@ -241,9 +258,9 @@ export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: num
             ) : (
               <Button
                 variant="secondary"
-                aria-label={`Aktifkan ${a.full_name}`}
-                disabled={sibuk}
-                onClick={() => setKonfirmasi({ a, aksi: "aktif" })}
+                aria-label={`Aktifkan ${admin.full_name}`}
+                disabled={busy}
+                onClick={() => setConfirmation({ admin, action: "activate" })}
               >
                 Aktifkan
               </Button>
@@ -253,8 +270,8 @@ export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: num
     },
   ];
 
-  const tambah = <Button onClick={() => setForm(true)}>Tambah admin</Button>;
-  const k = konfirmasi;
+  const addButton = <Button onClick={() => setFormOpen(true)}>Tambah admin</Button>;
+  const activeConfirmation = confirmation;
   return (
     <div className="flex flex-col gap-4">
       {rows.length === 0 ? (
@@ -262,40 +279,45 @@ export function AdminTable({ rows, sayaId }: { rows: AdminAccount[]; sayaId: num
           icon={UserCog}
           title="Belum ada admin"
           body="Tambahkan admin agar panel bisa dikelola bersama."
-          action={tambah}
+          action={addButton}
         />
       ) : (
         <>
-          <div>{tambah}</div>
-          <DataTable caption="Akun admin" columns={kolom} rows={rows} rowKey={(a) => String(a.id)} />
+          <div>{addButton}</div>
+          <DataTable caption="Akun admin" columns={columns} rows={rows} rowKey={(admin) => String(admin.id)} />
         </>
       )}
-      <Dialog open={form} onClose={() => setForm(false)} title="Tambah admin">
-        <FormAdmin
-          onClose={() => setForm(false)}
-          onSaved={(r) => {
-            setForm(false);
-            setSandi(r);
+      <Dialog open={formOpen} onClose={() => setFormOpen(false)} title="Tambah admin">
+        <AdminForm
+          onClose={() => setFormOpen(false)}
+          onSaved={(createdAdmin) => {
+            setFormOpen(false);
+            setCredentials(createdAdmin);
             router.refresh();
           }}
         />
       </Dialog>
-      <Dialog open={!!sandi} onClose={() => setSandi(null)} title="Akun admin siap">
-        {sandi && <SandiSementara data={sandi} onClose={() => setSandi(null)} />}
+      <Dialog open={!!credentials} onClose={() => setCredentials(null)} title="Akun admin siap">
+        {credentials && <TemporaryPasswordNotice data={credentials} onClose={() => setCredentials(null)} />}
       </Dialog>
       <ConfirmDialog
-        open={!!k}
-        onClose={() => setKonfirmasi(null)}
-        tone={k?.aksi === "aktif" ? "primary" : "danger"}
-        busy={sibuk}
-        title={KONFIRMASI[k?.aksi ?? "nonaktif"].judul}
-        body={KONFIRMASI[k?.aksi ?? "nonaktif"].isi(k?.a.full_name ?? "")}
-        confirmLabel={KONFIRMASI[k?.aksi ?? "nonaktif"].tombol}
+        open={!!activeConfirmation}
+        onClose={() => setConfirmation(null)}
+        tone={activeConfirmation?.action === "activate" ? "primary" : "danger"}
+        busy={busy}
+        title={CONFIRMATIONS[activeConfirmation?.action ?? "deactivate"].title}
+        body={CONFIRMATIONS[activeConfirmation?.action ?? "deactivate"].body(activeConfirmation?.admin.full_name ?? "")}
+        confirmLabel={CONFIRMATIONS[activeConfirmation?.action ?? "deactivate"].confirmLabel}
         onConfirm={() => {
-          if (!k) return;
-          if (k.aksi === "nonaktif") void jalankan(() => setAdminActive(k.a.id, false), "Dinonaktifkan");
-          else if (k.aksi === "aktif") void jalankan(() => setAdminActive(k.a.id, true), "Diaktifkan");
-          else void jalankan(() => resetAdminPassword(k.a.id), "Kata sandi direset").then((d) => d && setSandi(d));
+          if (!activeConfirmation) return;
+          if (activeConfirmation.action === "deactivate")
+            void runAction(() => setAdminActive(activeConfirmation.admin.id, false), "Dinonaktifkan");
+          else if (activeConfirmation.action === "activate")
+            void runAction(() => setAdminActive(activeConfirmation.admin.id, true), "Diaktifkan");
+          else
+            void runAction(() => resetAdminPassword(activeConfirmation.admin.id), "Kata sandi direset").then(
+              (newCredentials) => newCredentials && setCredentials(newCredentials),
+            );
         }}
       />
     </div>

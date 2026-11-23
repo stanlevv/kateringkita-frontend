@@ -13,31 +13,31 @@ import { getFinanceSummary } from "@/services/admin-finance.service";
 import { requireAdmin } from "@/services/auth.service";
 import type { FinanceSummary } from "@/types/admin";
 
-type Baris = FinanceSummary["rows"][number];
-const rp = (k: keyof Baris) => (b: Baris) => formatRupiah(Number(b[k]));
-const KOLOM: Column<Baris>[] = [
-  { key: "toko", header: "Toko", cell: (b) => <span className="font-medium">{b.business_name}</span> },
-  { key: "pesanan", header: "Pesanan", align: "right", cell: (b) => b.orders },
-  { key: "subtotal", header: "Subtotal", align: "right", cell: rp("subtotal") },
-  { key: "diskon-toko", header: "Diskon toko", align: "right", cell: rp("discount_merchant") },
-  { key: "diskon-platform", header: "Diskon platform", align: "right", cell: rp("discount_platform") },
-  { key: "biaya", header: "Biaya layanan", align: "right", cell: rp("service_fee") },
-  { key: "total", header: "Total dibayar", align: "right", cell: rp("total") },
-  { key: "toko-net", header: "Hak toko", align: "right", cell: rp("merchant_net") },
+type FinanceRow = FinanceSummary["rows"][number];
+const rupiahCell = (field: keyof FinanceRow) => (row: FinanceRow) => formatRupiah(Number(row[field]));
+const COLUMNS: Column<FinanceRow>[] = [
+  { key: "toko", header: "Toko", cell: (row) => <span className="font-medium">{row.business_name}</span> },
+  { key: "pesanan", header: "Pesanan", align: "right", cell: (row) => row.orders },
+  { key: "subtotal", header: "Subtotal", align: "right", cell: rupiahCell("subtotal") },
+  { key: "diskon-toko", header: "Diskon toko", align: "right", cell: rupiahCell("discount_merchant") },
+  { key: "diskon-platform", header: "Diskon platform", align: "right", cell: rupiahCell("discount_platform") },
+  { key: "biaya", header: "Biaya layanan", align: "right", cell: rupiahCell("service_fee") },
+  { key: "total", header: "Total dibayar", align: "right", cell: rupiahCell("total") },
+  { key: "toko-net", header: "Hak toko", align: "right", cell: rupiahCell("merchant_net") },
 ];
 
 // F20 — rekap keuangan platform per toko (pesanan selesai). Rentang di URL: ?dari&sampai.
-export default async function KeuanganPage({
+export default async function FinancePage({
   searchParams,
 }: {
   searchParams: Promise<{ dari?: string; sampai?: string }>;
 }) {
   await requireAdmin("super");
-  const sp = await searchParams;
-  const hariIni = todayWib();
-  const { from: dari, to: sampai, error: galat } = parseRange(sp.dari, sp.sampai, hariIni);
-  const res = await getFinanceSummary({ from: dari, to: sampai });
-  const unduh = cx(
+  const params = await searchParams;
+  const today = todayWib();
+  const { from: startDate, to: endDate, error: rangeError } = parseRange(params.dari, params.sampai, today);
+  const response = await getFinanceSummary({ from: startDate, to: endDate });
+  const downloadClass = cx(
     "inline-flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface px-4 font-medium text-ink hover:bg-subtle",
     focusRing,
   );
@@ -45,8 +45,14 @@ export default async function KeuanganPage({
   return (
     <PageHeader title="Keuangan" description="Omzet, diskon, dan biaya layanan dari pesanan selesai, per toko.">
       <div className="flex flex-col gap-6">
-        <RangePicker key={`${dari}|${sampai}|${galat}`} from={dari} to={sampai} today={hariIni} error={galat} />
-        {"error" in res ? (
+        <RangePicker
+          key={`${startDate}|${endDate}|${rangeError}`}
+          from={startDate}
+          to={endDate}
+          today={today}
+          error={rangeError}
+        />
+        {"error" in response ? (
           <LoadError
             title="Rekap keuangan belum bisa dimuat"
             body="Terjadi kesalahan saat mengambil data. Periksa koneksi lalu coba lagi."
@@ -57,39 +63,43 @@ export default async function KeuanganPage({
               <KpiCard
                 label="Total dibayar pembeli"
                 icon={ReceiptText}
-                value={formatRupiah(res.data.totals.total)}
-                hint={`${res.data.totals.orders} pesanan selesai`}
+                value={formatRupiah(response.data.totals.total)}
+                hint={`${response.data.totals.orders} pesanan selesai`}
               />
               <KpiCard
                 label="Hak toko"
                 icon={Store}
-                value={formatRupiah(res.data.totals.merchant_net)}
+                value={formatRupiah(response.data.totals.merchant_net)}
                 hint="Subtotal dikurangi diskon promo toko"
               />
               <KpiCard
                 label="Pendapatan platform"
                 icon={Landmark}
-                value={formatRupiah(res.data.totals.platform_net)}
+                value={formatRupiah(response.data.totals.platform_net)}
                 hint="Biaya layanan dikurangi diskon promo platform"
               />
               <KpiCard
                 label="Diskon promo"
                 icon={Tag}
-                value={formatRupiah(res.data.totals.discount_merchant + res.data.totals.discount_platform)}
-                hint={`Toko ${formatRupiah(res.data.totals.discount_merchant)} · Platform ${formatRupiah(res.data.totals.discount_platform)}`}
+                value={formatRupiah(response.data.totals.discount_merchant + response.data.totals.discount_platform)}
+                hint={`Toko ${formatRupiah(response.data.totals.discount_merchant)} · Platform ${formatRupiah(response.data.totals.discount_platform)}`}
               />
             </div>
             <Card className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-ink">Per toko</h2>
-                {res.data.rows.length > 0 && (
-                  <a href={`/api/admin/keuangan/csv?dari=${dari}&sampai=${sampai}`} download className={unduh}>
+                {response.data.rows.length > 0 && (
+                  <a
+                    href={`/api/admin/keuangan/csv?dari=${startDate}&sampai=${endDate}`}
+                    download
+                    className={downloadClass}
+                  >
                     <Download aria-hidden className="size-4" />
                     Unduh CSV
                   </a>
                 )}
               </div>
-              {res.data.rows.length === 0 ? (
+              {response.data.rows.length === 0 ? (
                 <EmptyState
                   icon={ReceiptText}
                   title="Belum ada pesanan selesai di rentang ini"
@@ -98,9 +108,9 @@ export default async function KeuanganPage({
               ) : (
                 <DataTable
                   caption="Rekap keuangan per toko"
-                  columns={KOLOM}
-                  rows={res.data.rows}
-                  rowKey={(b) => String(b.merchant_id)}
+                  columns={COLUMNS}
+                  rows={response.data.rows}
+                  rowKey={(row) => String(row.merchant_id)}
                 />
               )}
             </Card>

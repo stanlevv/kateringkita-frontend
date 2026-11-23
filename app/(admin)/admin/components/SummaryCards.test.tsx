@@ -27,7 +27,7 @@ const data: AdminSummary = {
 describe("kartu ringkasan", () => {
   it("menaut ke layar terkait", () => {
     render(<SummaryCards data={data} />);
-    const href = (nama: RegExp) => screen.getByRole("link", { name: nama }).getAttribute("href");
+    const href = (name: RegExp) => screen.getByRole("link", { name }).getAttribute("href");
     expect(href(/Menunggu verifikasi/)).toBe("/admin/verifikasi");
     expect(href(/Perlu perbaikan/)).toBe("/admin/verifikasi");
     expect(href(/Aktif/)).toBe("/admin/penjual?status=verified");
@@ -39,9 +39,9 @@ describe("kartu ringkasan", () => {
     render(<SummaryCards data={data} />);
     expect(screen.getByText("Rp 1.250.000")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Menunggu verifikasi/ })).toHaveTextContent("4");
-    const pesanan = screen.getByRole("region", { name: "Pesanan hari ini" });
-    expect(within(pesanan).getByText("Selesai").closest("li")).toHaveTextContent("9");
-    expect(within(pesanan).getByText("Siap diambil").closest("li")).toHaveTextContent("3");
+    const ordersRegion = screen.getByRole("region", { name: "Pesanan hari ini" });
+    expect(within(ordersRegion).getByText("Selesai").closest("li")).toHaveTextContent("9");
+    expect(within(ordersRegion).getByText("Siap diambil").closest("li")).toHaveTextContent("3");
     expect(screen.getByText(/segera kedaluwarsa/i).parentElement).toHaveTextContent("3");
     expect(screen.getByText("Verifikasi penjual")).toBeInTheDocument();
     expect(screen.getByText(/Dina/)).toBeInTheDocument();

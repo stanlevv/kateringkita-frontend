@@ -6,7 +6,7 @@ import type { VerificationQueueItem } from "@/types/admin";
 import { formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { StatusVerifikasi } from "./VerificationStatus";
+import { VerificationStatus } from "./VerificationStatus";
 
 /** A-05 — antrean verifikasi, terlama dulu (urutan dari backend). */
 export function VerificationQueue({ rows }: { rows: VerificationQueueItem[] }) {
@@ -20,34 +20,38 @@ export function VerificationQueue({ rows }: { rows: VerificationQueueItem[] }) {
     );
   return (
     <ul className="flex flex-col gap-4">
-      {rows.map((m) => (
-        <li key={m.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4">
+      {rows.map((merchant) => (
+        <li key={merchant.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Link
-              href={`/admin/penjual/${m.id}`}
+              href={`/admin/penjual/${merchant.id}`}
               className="text-lg font-semibold text-primary underline-offset-2 hover:underline"
             >
-              {m.business_name}
+              {merchant.business_name}
             </Link>
             <span className="flex flex-wrap items-center gap-2">
-              {m.updated_after_note && (
+              {merchant.updated_after_note && (
                 <span className="rounded-md bg-info-bg px-2 py-1 text-sm font-medium text-info">
                   Diperbarui penjual
                 </span>
               )}
-              <StatusVerifikasi status={m.verification_status} />
+              <VerificationStatus status={merchant.verification_status} />
             </span>
           </div>
           <p className="text-sm text-ink-muted">
-            {m.owner_name} ·{" "}
-            <a href={whatsappLink(m.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
-              {formatPhone(m.wa_number)}
+            {merchant.owner_name} ·{" "}
+            <a href={whatsappLink(merchant.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
+              {formatPhone(merchant.wa_number)}
             </a>{" "}
-            · Daftar {formatDate(m.created_at)}
+            · Daftar {formatDate(merchant.created_at)}
           </p>
-          {m.verification_note && <p className="text-sm">Catatan admin: {m.verification_note}</p>}
-          <Checklist checklist={m.checklist} />
-          <AdminActionDialog id={m.id} status={m.verification_status} lengkap={isChecklistComplete(m.checklist)} />
+          {merchant.verification_note && <p className="text-sm">Catatan admin: {merchant.verification_note}</p>}
+          <Checklist checklist={merchant.checklist} />
+          <AdminActionDialog
+            id={merchant.id}
+            status={merchant.verification_status}
+            checklistComplete={isChecklistComplete(merchant.checklist)}
+          />
         </li>
       ))}
     </ul>

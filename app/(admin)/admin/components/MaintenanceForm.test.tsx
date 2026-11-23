@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { PemeliharaanForm } from "./MaintenanceForm";
+import { MaintenanceForm } from "./MaintenanceForm";
 
 const saveMaintenance = vi.fn();
 const refresh = vi.fn();
-vi.mock("@/app/actions/admin/promos", () => ({ saveMaintenance: (...a: unknown[]) => saveMaintenance(...a) }));
+vi.mock("@/app/actions/admin/promos", () => ({ saveMaintenance: (...args: unknown[]) => saveMaintenance(...args) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 
 beforeEach(() => {
@@ -13,12 +13,12 @@ beforeEach(() => {
   refresh.mockReset();
 });
 
-describe("PemeliharaanForm (F27)", () => {
+describe("MaintenanceForm (mode pemeliharaan)", () => {
   it("mati: nyalakan wajib konfirmasi, mengirim pesan, lalu refresh", async () => {
     saveMaintenance.mockResolvedValue({ data: { maintenance: { aktif: true, pesan: "Sampai 14.00" } } });
     render(
       <>
-        <PemeliharaanForm nilai={{ aktif: false, pesan: null }} />
+        <MaintenanceForm maintenance={{ aktif: false, pesan: null }} />
         <Toaster />
       </>,
     );
@@ -40,7 +40,7 @@ describe("PemeliharaanForm (F27)", () => {
     });
     render(
       <>
-        <PemeliharaanForm nilai={{ aktif: true, pesan: "Sampai 14.00" }} />
+        <MaintenanceForm maintenance={{ aktif: true, pesan: "Sampai 14.00" }} />
         <Toaster />
       </>,
     );

@@ -24,58 +24,62 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
-  const tab = MASTER_TABS.find((t) => t.id === tabId) ?? MASTER_TABS[0];
-  const [form, setForm] = useState<"baru" | MasterItem | null>(null);
-  const [nonaktif, setNonaktif] = useState<MasterItem | null>(null);
-  const [sibuk, setSibuk] = useState(false);
+  const tab = MASTER_TABS.find((masterTab) => masterTab.id === tabId) ?? MASTER_TABS[0];
+  const [form, setForm] = useState<"new" | MasterItem | null>(null);
+  const [deactivating, setDeactivating] = useState<MasterItem | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  async function aktifkan(i: MasterItem, aktif: boolean) {
-    setSibuk(true);
-    const r = await callAction(() => setMasterActive(tab.kind, i.id, aktif));
-    setSibuk(false);
-    setNonaktif(null);
-    if ("error" in r) return toast({ tone: "danger", message: r.error.message }); // 409: nama toko ikut di pesan
-    toast({ tone: "success", message: aktif ? "Diaktifkan" : "Dinonaktifkan" });
+  async function setActive(item: MasterItem, active: boolean) {
+    setBusy(true);
+    const result = await callAction(() => setMasterActive(tab.kind, item.id, active));
+    setBusy(false);
+    setDeactivating(null);
+    if ("error" in result) return toast({ tone: "danger", message: result.error.message }); // 409: nama toko ikut di pesan
+    toast({ tone: "success", message: active ? "Diaktifkan" : "Dinonaktifkan" });
     router.refresh();
   }
 
-  async function geser(idx: number, arah: -1 | 1) {
-    const a = rows[idx],
-      b = rows[idx + arah];
-    let sa = a.sort_order ?? 0,
-      sb = b.sort_order ?? 0;
+  async function move(index: number, direction: -1 | 1) {
+    const current = rows[index],
+      neighbor = rows[index + direction];
+    let currentOrder = current.sort_order ?? 0,
+      neighborOrder = neighbor.sort_order ?? 0;
     // Nilai kembar: tak ada yang bisa ditukar, jadi pakai peringkat daftar (1-based) agar urutan pasti berubah.
-    if (sa === sb) {
-      const lo = Math.min(idx, idx + arah);
-      sb = lo + (arah < 0 ? 1 : 2);
-      sa = lo + (arah < 0 ? 2 : 1);
+    if (currentOrder === neighborOrder) {
+      const lowerIndex = Math.min(index, index + direction);
+      neighborOrder = lowerIndex + (direction < 0 ? 1 : 2);
+      currentOrder = lowerIndex + (direction < 0 ? 2 : 1);
     } // sb = nilai baru item ini
-    setSibuk(true);
-    const r = await callAction(() =>
-      swapSortOrder(tab.kind, { id: a.id, sort_order: sa }, { id: b.id, sort_order: sb }),
+    setBusy(true);
+    const result = await callAction(() =>
+      swapSortOrder(
+        tab.kind,
+        { id: current.id, sort_order: currentOrder },
+        { id: neighbor.id, sort_order: neighborOrder },
+      ),
     );
-    setSibuk(false);
-    if ("error" in r) return toast({ tone: "danger", message: `Urutan belum berubah. ${r.error.message}` });
+    setBusy(false);
+    if ("error" in result) return toast({ tone: "danger", message: `Urutan belum berubah. ${result.error.message}` });
     router.refresh();
   }
 
-  const kolom: Column<MasterItem>[] = [
-    { key: "name", header: "Nama", cell: (i) => <span className="font-semibold">{i.name}</span> },
+  const columns: Column<MasterItem>[] = [
+    { key: "name", header: "Nama", cell: (item) => <span className="font-semibold">{item.name}</span> },
     ...(tab.extraField
       ? [
           {
             key: tab.extraField,
             header: tab.extraFieldLabel!,
             wrap: true,
-            cell: (i: MasterItem) => i[tab.extraField!] || "-",
+            cell: (item: MasterItem) => item[tab.extraField!] || "-",
           },
         ]
       : []),
     {
       key: "status",
       header: "Status",
-      cell: (i) =>
-        i.is_active ? (
+      cell: (item) =>
+        item.is_active ? (
           <Badge tone="success" icon={CircleCheck}>
             Aktif
           </Badge>
@@ -88,39 +92,39 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
     {
       key: "aksi",
       header: "Aksi",
-      cell: (i) => {
-        const idx = rows.indexOf(i);
+      cell: (item) => {
+        const index = rows.indexOf(item);
         return (
           <div className="flex items-center gap-2">
             {tab.sortable && (
               <>
                 <IconButton
                   icon={ArrowUp}
-                  label={`Naikkan ${i.name}`}
-                  disabled={sibuk || idx === 0}
-                  onClick={() => void geser(idx, -1)}
+                  label={`Naikkan ${item.name}`}
+                  disabled={busy || index === 0}
+                  onClick={() => void move(index, -1)}
                 />
                 <IconButton
                   icon={ArrowDown}
-                  label={`Turunkan ${i.name}`}
-                  disabled={sibuk || idx === rows.length - 1}
-                  onClick={() => void geser(idx, 1)}
+                  label={`Turunkan ${item.name}`}
+                  disabled={busy || index === rows.length - 1}
+                  onClick={() => void move(index, 1)}
                 />
               </>
             )}
-            <Button variant="secondary" aria-label={`Ubah ${i.name}`} onClick={() => setForm(i)}>
+            <Button variant="secondary" aria-label={`Ubah ${item.name}`} onClick={() => setForm(item)}>
               Ubah
             </Button>
-            {i.is_active ? (
-              <Button variant="secondary" aria-label={`Nonaktifkan ${i.name}`} onClick={() => setNonaktif(i)}>
+            {item.is_active ? (
+              <Button variant="secondary" aria-label={`Nonaktifkan ${item.name}`} onClick={() => setDeactivating(item)}>
                 Nonaktifkan
               </Button>
             ) : (
               <Button
                 variant="secondary"
-                aria-label={`Aktifkan ${i.name}`}
-                disabled={sibuk}
-                onClick={() => void aktifkan(i, true)}
+                aria-label={`Aktifkan ${item.name}`}
+                disabled={busy}
+                onClick={() => void setActive(item, true)}
               >
                 Aktifkan
               </Button>
@@ -131,12 +135,12 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
     },
   ];
 
-  const tambah = <Button onClick={() => setForm("baru")}>Tambah {tab.unitName}</Button>;
+  const addButton = <Button onClick={() => setForm("new")}>Tambah {tab.unitName}</Button>;
   return (
     <div className="flex flex-col gap-4">
       <Tabs
         label="Jenis data master"
-        tabs={MASTER_TABS.map((t) => ({ id: t.id, label: t.label }))}
+        tabs={MASTER_TABS.map((masterTab) => ({ id: masterTab.id, label: masterTab.label }))}
         value={tab.id}
         onChange={(id) =>
           router.replace(buildUrl(path, params.toString(), { tab: id }, [MASTER_TABS[0].id]), { scroll: false })
@@ -147,23 +151,23 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
           icon={Database}
           title={`Belum ada ${tab.unitName}`}
           body="Tambahkan data pertama agar bisa dipilih penjual."
-          action={tambah}
+          action={addButton}
         />
       ) : (
         <>
-          <div>{tambah}</div>
-          <DataTable caption={tab.label} columns={kolom} rows={rows} rowKey={(i) => String(i.id)} />
+          <div>{addButton}</div>
+          <DataTable caption={tab.label} columns={columns} rows={rows} rowKey={(item) => String(item.id)} />
         </>
       )}
       <Dialog
         open={form !== null}
         onClose={() => setForm(null)}
-        title={form === "baru" ? `Tambah ${tab.unitName}` : `Ubah ${tab.unitName}`}
+        title={form === "new" ? `Tambah ${tab.unitName}` : `Ubah ${tab.unitName}`}
       >
         <MasterForm
-          key={form === "baru" || form === null ? "baru" : form.id}
+          key={form === "new" || form === null ? "new" : form.id}
           tab={tab}
-          item={form === "baru" ? null : form}
+          item={form === "new" ? null : form}
           onClose={() => setForm(null)}
           onSaved={() => {
             setForm(null);
@@ -172,14 +176,14 @@ export function MasterTable({ tabId, rows }: { tabId: string; rows: MasterItem[]
         />
       </Dialog>
       <ConfirmDialog
-        open={!!nonaktif}
-        onClose={() => setNonaktif(null)}
+        open={!!deactivating}
+        onClose={() => setDeactivating(null)}
         tone="danger"
-        busy={sibuk}
+        busy={busy}
         title={`Nonaktifkan ${tab.unitName}?`}
-        body={`${nonaktif?.name ?? ""} tidak bisa dipilih lagi. Data yang sudah memakainya tidak berubah.`}
+        body={`${deactivating?.name ?? ""} tidak bisa dipilih lagi. Data yang sudah memakainya tidak berubah.`}
         confirmLabel="Nonaktifkan"
-        onConfirm={() => void aktifkan(nonaktif!, false)}
+        onConfirm={() => void setActive(deactivating!, false)}
       />
     </div>
   );

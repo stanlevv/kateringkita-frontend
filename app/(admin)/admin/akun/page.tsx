@@ -4,7 +4,7 @@ import { LEVEL_LABELS, type AdminLevel } from "@/lib/admin-level";
 import { requireAdmin } from "@/services/auth.service";
 
 // Fase 1: akun admin sendiri (ganti sandi). Nama/nomor diubah oleh admin super lain bila perlu.
-export default async function AkunAdminPage() {
+export default async function AdminAccountPage() {
   const { user } = await requireAdmin();
   const level = LEVEL_LABELS[user.admin_level as AdminLevel] ?? "-";
   return (

@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({
 import { AuditTable } from "./AuditTable";
 import type { AuditLog } from "@/types/admin";
 
-const log = (o: Partial<AuditLog>): AuditLog => ({
+const log = (overrides: Partial<AuditLog>): AuditLog => ({
   id: 1,
   admin_user_id: 1,
   admin_name: "Dina",
@@ -20,7 +20,7 @@ const log = (o: Partial<AuditLog>): AuditLog => ({
   before: { verification_status: "verified" },
   after: { verification_status: "suspended" },
   created_at: "2026-10-31T03:15:00.000Z",
-  ...o,
+  ...overrides,
 });
 
 describe("tabel log", () => {

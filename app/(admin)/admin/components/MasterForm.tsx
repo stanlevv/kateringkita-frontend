@@ -22,33 +22,35 @@ export function MasterForm({
   onSaved: () => void;
   onClose: () => void;
 }) {
-  const kolom = tab.extraField;
+  const extraField = tab.extraField;
   const [name, setName] = useState(item?.name ?? "");
-  const [extra, setExtra] = useState((kolom && item?.[kolom]) || "");
-  const [dicoba, setDicoba] = useState(false);
-  const [server, setServer] = useState<Record<string, string>>({});
-  const [menyimpan, setMenyimpan] = useState(false);
+  const [extra, setExtra] = useState((extraField && item?.[extraField]) || "");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  const input = { name, ...(kolom ? { [kolom]: extra } : {}) };
-  const lokal = validateMaster(tab.kind, input);
-  const galat = (k: string) => (dicoba ? (lokal[k] ?? server[k]) : undefined);
+  const input = { name, ...(extraField ? { [extraField]: extra } : {}) };
+  const localErrors = validateMaster(tab.kind, input);
+  const errorFor = (field: string) => (submitAttempted ? (localErrors[field] ?? serverErrors[field]) : undefined);
 
-  async function kirim(e: React.FormEvent) {
-    e.preventDefault();
-    if (Object.keys(lokal).length > 0) return setDicoba(true);
-    if (menyimpan) return;
-    setMenyimpan(true);
-    const r = await callAction(() => saveMaster(tab.kind, item?.id ?? null, input));
-    setMenyimpan(false);
-    if ("error" in r) {
-      if (r.error.code === "CONFLICT") {
-        setServer({ name: r.error.message });
-        setDicoba(true);
-      } else if (r.error.fields) {
-        setServer(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
-        setDicoba(true);
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (Object.keys(localErrors).length > 0) return setSubmitAttempted(true);
+    if (saving) return;
+    setSaving(true);
+    const result = await callAction(() => saveMaster(tab.kind, item?.id ?? null, input));
+    setSaving(false);
+    if ("error" in result) {
+      if (result.error.code === "CONFLICT") {
+        setServerErrors({ name: result.error.message });
+        setSubmitAttempted(true);
+      } else if (result.error.fields) {
+        setServerErrors(
+          Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
+        );
+        setSubmitAttempted(true);
       }
-      toast({ tone: "danger", message: r.error.message }); // 409 nama kembar: pesan backend apa adanya
+      toast({ tone: "danger", message: result.error.message }); // 409 nama kembar: pesan backend apa adanya
       return;
     }
     toast({ tone: "success", message: item ? "Perubahan disimpan" : "Data ditambahkan" });
@@ -56,31 +58,31 @@ export function MasterForm({
   }
 
   return (
-    <form onSubmit={kirim} noValidate className="flex flex-col gap-4">
-      <Field label="Nama" id="mf-name" required error={galat("name")}>
+    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <Field label="Nama" id="mf-name" required error={errorFor("name")}>
         <Input
           value={name}
           maxLength={tab.nameMax}
-          onChange={(e) => {
-            setServer({});
-            setName(e.target.value);
+          onChange={(event) => {
+            setServerErrors({});
+            setName(event.target.value);
           }}
           autoFocus
         />
       </Field>
-      {kolom && (
+      {extraField && (
         <Field
           label={tab.extraFieldLabel!}
-          id={`mf-${kolom}`}
-          help={kolom === "icon" ? "Nama ikon, boleh dikosongkan." : "Boleh dikosongkan."}
-          error={galat(kolom)}
+          id={`mf-${extraField}`}
+          help={extraField === "icon" ? "Nama ikon, boleh dikosongkan." : "Boleh dikosongkan."}
+          error={errorFor(extraField)}
         >
           <Input
             value={extra}
             maxLength={tab.extraFieldMax}
-            onChange={(e) => {
-              setServer({});
-              setExtra(e.target.value);
+            onChange={(event) => {
+              setServerErrors({});
+              setExtra(event.target.value);
             }}
           />
         </Field>
@@ -89,7 +91,7 @@ export function MasterForm({
         <Button variant="secondary" onClick={onClose}>
           Batal
         </Button>
-        <Button type="submit" loading={menyimpan} loadingText="Menyimpan…">
+        <Button type="submit" loading={saving} loadingText="Menyimpan…">
           Simpan
         </Button>
       </div>

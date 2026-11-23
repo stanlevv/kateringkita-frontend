@@ -11,41 +11,41 @@ export function LogFilters() {
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
-  const ubah = (k: string) => (e: { target: { value: string } }) =>
-    router.replace(buildUrl(path, params.toString(), { [k]: e.target.value, page: "" }), { scroll: false });
+  const updateParam = (paramName: string) => (event: { target: { value: string } }) =>
+    router.replace(buildUrl(path, params.toString(), { [paramName]: event.target.value, page: "" }), { scroll: false });
 
   return (
     <form
       role="search"
       aria-label="Filter log"
-      onSubmit={(e) => e.preventDefault()}
+      onSubmit={(event) => event.preventDefault()}
       className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
     >
       <Field label="Aksi">
-        <Select value={params.get("action") ?? ""} onChange={ubah("action")}>
+        <Select value={params.get("action") ?? ""} onChange={updateParam("action")}>
           <option value="">Semua aksi</option>
-          {LOG_ACTIONS.map(([k, l]) => (
-            <option key={k} value={k}>
-              {l}
+          {LOG_ACTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
             </option>
           ))}
         </Select>
       </Field>
       <Field label="Jenis target">
-        <Select value={params.get("target_type") ?? ""} onChange={ubah("target_type")}>
+        <Select value={params.get("target_type") ?? ""} onChange={updateParam("target_type")}>
           <option value="">Semua target</option>
-          {LOG_TARGETS.map(([k, l]) => (
-            <option key={k} value={k}>
-              {l}
+          {LOG_TARGETS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
             </option>
           ))}
         </Select>
       </Field>
       <Field label="Dari tanggal">
-        <Input type="date" value={params.get("from") ?? ""} onChange={ubah("from")} />
+        <Input type="date" value={params.get("from") ?? ""} onChange={updateParam("from")} />
       </Field>
       <Field label="Sampai tanggal">
-        <Input type="date" value={params.get("to") ?? ""} onChange={ubah("to")} />
+        <Input type="date" value={params.get("to") ?? ""} onChange={updateParam("to")} />
       </Field>
     </form>
   );

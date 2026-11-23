@@ -1,19 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { ModerasiTable } from "./ModerationTable";
+import { ModerationTable } from "./ModerationTable";
 import type { ModerationMenu, ModerationReview } from "@/types/admin";
 
 const moderate = vi.fn();
 const deleteMenuPhoto = vi.fn();
 const refresh = vi.fn();
 vi.mock("@/app/actions/admin/moderation", () => ({
-  moderate: (...a: unknown[]) => moderate(...a),
-  deleteMenuPhoto: (...a: unknown[]) => deleteMenuPhoto(...a),
+  moderate: (...args: unknown[]) => moderate(...args),
+  deleteMenuPhoto: (...args: unknown[]) => deleteMenuPhoto(...args),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 
-const ulasan: ModerationReview = {
+const review: ModerationReview = {
   id: 5,
   rating: 1,
   comment: "Spam judi",
@@ -46,21 +46,21 @@ beforeEach(() => {
   moderate.mockResolvedValue({ data: {} });
 });
 
-describe("F19 ModerasiTable", () => {
+describe("ModerationTable (moderasi ulasan dan menu)", () => {
   it("sembunyikan ulasan: dialog alasan, tombol mati sampai diisi, lalu refresh", async () => {
     render(
       <>
-        <ModerasiTable jenis="ulasan" rows={[ulasan]} />
+        <ModerationTable kind="ulasan" rows={[review]} />
         <Toaster />
       </>,
     );
     expect(screen.getByText("Tampil")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sembunyikan" }));
-    const kirim = screen.getAllByRole("button", { name: "Sembunyikan" }).at(-1)!;
-    expect(kirim).toBeDisabled();
+    const submitButton = screen.getAllByRole("button", { name: "Sembunyikan" }).at(-1)!;
+    expect(submitButton).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/Alasan/), { target: { value: " Spam " } });
     await act(async () => {
-      fireEvent.click(kirim);
+      fireEvent.click(submitButton);
     });
     expect(moderate).toHaveBeenCalledWith(5, "hide", "Spam");
     expect(refresh).toHaveBeenCalled();
@@ -70,7 +70,7 @@ describe("F19 ModerasiTable", () => {
   it("menu diturunkan: alasan tampil, pulihkan lewat konfirmasi", async () => {
     render(
       <>
-        <ModerasiTable jenis="menu" rows={[menu]} />
+        <ModerationTable kind="menu" rows={[menu]} />
         <Toaster />
       </>,
     );
@@ -85,24 +85,24 @@ describe("F19 ModerasiTable", () => {
     expect(moderate).toHaveBeenCalledWith(9, "restore", undefined);
   });
   it("kolom Foto: foto utama lalu foto tambahan, tiap foto membuka ukuran penuh; tanpa foto → teks", () => {
-    const g = ["https://foto.test/b.jpg", "https://foto.test/c.jpg"];
+    const gallery = ["https://foto.test/b.jpg", "https://foto.test/c.jpg"];
     const { unmount } = render(
-      <ModerasiTable jenis="menu" rows={[{ ...menu, image_url: "https://foto.test/a.jpg", gallery: g }]} />,
+      <ModerationTable kind="menu" rows={[{ ...menu, image_url: "https://foto.test/a.jpg", gallery }]} />,
     );
     const links = screen.getAllByRole("link", { name: /Buka foto/ });
-    expect(links.map((l) => l.getAttribute("href"))).toEqual(["https://foto.test/a.jpg", ...g]);
+    expect(links.map((link) => link.getAttribute("href"))).toEqual(["https://foto.test/a.jpg", ...gallery]);
     expect(links[0]).toHaveAccessibleName("Buka foto 1 Es Teh (utama)");
     expect(links[0]).toHaveAttribute("target", "_blank");
     unmount();
-    render(<ModerasiTable jenis="menu" rows={[menu]} />);
+    render(<ModerationTable kind="menu" rows={[menu]} />);
     expect(screen.getByText("Tanpa foto")).toBeInTheDocument();
   });
   it("hapus satu foto: dialog alasan wajib, kirim url + alasan, lalu refresh", async () => {
     deleteMenuPhoto.mockResolvedValue({ data: { ...menu } });
     render(
       <>
-        <ModerasiTable
-          jenis="menu"
+        <ModerationTable
+          kind="menu"
           rows={[{ ...menu, image_url: "https://foto.test/a.jpg", gallery: ["https://foto.test/b.jpg"] }]}
         />
         <Toaster />
@@ -111,18 +111,18 @@ describe("F19 ModerasiTable", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Hapus foto 2 Es Teh" }));
     });
-    const tombol = screen.getByRole("button", { name: "Hapus foto" });
-    expect(tombol).toBeDisabled();
+    const deleteButton = screen.getByRole("button", { name: "Hapus foto" });
+    expect(deleteButton).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/Alasan/), { target: { value: " Bukan makanan " } });
     await act(async () => {
-      fireEvent.click(tombol);
+      fireEvent.click(deleteButton);
     });
     expect(deleteMenuPhoto).toHaveBeenCalledWith(9, "https://foto.test/b.jpg", "Bukan makanan");
     expect(refresh).toHaveBeenCalled();
     expect(screen.getByText("Foto dihapus dari menu.")).toBeInTheDocument();
   });
   it("kosong -> empty state", () => {
-    render(<ModerasiTable jenis="menu" rows={[]} />);
+    render(<ModerationTable kind="menu" rows={[]} />);
     expect(screen.getByText("Tidak ada data")).toBeInTheDocument();
   });
 });

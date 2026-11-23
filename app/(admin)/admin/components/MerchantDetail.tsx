@@ -5,90 +5,101 @@ import type { AdminMerchantDetail } from "@/types/admin";
 import { formatTime, formatDate, formatPhone } from "@/lib/format";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { Checklist } from "./Checklist";
-import { StatusVerifikasi } from "./VerificationStatus";
+import { VerificationStatus } from "./VerificationStatus";
 
-const Baris = ({ k, children }: { k: string; children: React.ReactNode }) => (
+const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-col sm:flex-row sm:gap-4">
-    <dt className="w-40 shrink-0 text-ink-muted">{k}</dt>
+    <dt className="w-40 shrink-0 text-ink-muted">{label}</dt>
     <dd className="min-w-0 break-words">{children}</dd>
   </div>
 );
-const Kartu = ({ judul, children }: { judul: string; children: React.ReactNode }) => (
+const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="rounded-lg border border-line bg-surface p-4">
-    <h2 className="mb-3 text-lg font-semibold">{judul}</h2>
+    <h2 className="mb-3 text-lg font-semibold">{title}</h2>
     {children}
   </section>
 );
 
 /** A-05 — profil lengkap penjual, checklist, aksi sesuai status, dan log toko. */
-export function MerchantDetail({ m }: { m: AdminMerchantDetail }) {
+export function MerchantDetail({ merchant }: { merchant: AdminMerchantDetail }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <StatusVerifikasi status={m.verification_status} />
-        <AdminActionDialog id={m.id} status={m.verification_status} lengkap={isChecklistComplete(m.checklist)} />
+        <VerificationStatus status={merchant.verification_status} />
+        <AdminActionDialog
+          id={merchant.id}
+          status={merchant.verification_status}
+          checklistComplete={isChecklistComplete(merchant.checklist)}
+        />
       </div>
-      {m.verification_status === "needs_fix" && m.verification_note && <p>Catatan admin: {m.verification_note}</p>}
-      {m.verification_status === "suspended" && m.suspended_reason && <p>Alasan penangguhan: {m.suspended_reason}</p>}
+      {merchant.verification_status === "needs_fix" && merchant.verification_note && (
+        <p>Catatan admin: {merchant.verification_note}</p>
+      )}
+      {merchant.verification_status === "suspended" && merchant.suspended_reason && (
+        <p>Alasan penangguhan: {merchant.suspended_reason}</p>
+      )}
 
-      <Kartu judul="Profil toko">
+      <SectionCard title="Profil toko">
         <dl className="flex flex-col gap-2">
-          <Baris k="Nama toko">{m.business_name}</Baris>
-          <Baris k="Jenis usaha">{m.merchant_type_name}</Baris>
-          <Baris k="Jumlah menu">{m.menu_count} menu aktif</Baris>
-          <Baris k="Alamat">{m.address}</Baris>
-          <Baris k="WhatsApp">
-            <a href={whatsappLink(m.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
-              {formatPhone(m.wa_number)}
+          <DetailRow label="Nama toko">{merchant.business_name}</DetailRow>
+          <DetailRow label="Jenis usaha">{merchant.merchant_type_name}</DetailRow>
+          <DetailRow label="Jumlah menu">{merchant.menu_count} menu aktif</DetailRow>
+          <DetailRow label="Alamat">{merchant.address}</DetailRow>
+          <DetailRow label="WhatsApp">
+            <a href={whatsappLink(merchant.wa_number)} target="_blank" rel="noopener noreferrer" className="underline">
+              {formatPhone(merchant.wa_number)}
             </a>
-          </Baris>
-          <Baris k="Jam buka">
-            {m.open_time.slice(0, 5)} – {m.close_time.slice(0, 5)}
-          </Baris>
-          <Baris k="Dapur">{m.is_open ? "Buka" : "Tutup"}</Baris>
-          <Baris k="Titik temu">
-            {m.pickup_points.length ? m.pickup_points.map((p) => p.name).join(", ") : "Belum ada"}
-          </Baris>
+          </DetailRow>
+          <DetailRow label="Jam buka">
+            {merchant.open_time.slice(0, 5)} – {merchant.close_time.slice(0, 5)}
+          </DetailRow>
+          <DetailRow label="Dapur">{merchant.is_open ? "Buka" : "Tutup"}</DetailRow>
+          <DetailRow label="Titik temu">
+            {merchant.pickup_points.length ? merchant.pickup_points.map((point) => point.name).join(", ") : "Belum ada"}
+          </DetailRow>
         </dl>
-      </Kartu>
-      <Kartu judul="Pemilik">
+      </SectionCard>
+      <SectionCard title="Pemilik">
         <dl className="flex flex-col gap-2">
-          <Baris k="Nama">{m.owner.full_name}</Baris>
-          <Baris k="Telepon">{formatPhone(m.owner.phone)}</Baris>
-          <Baris k="Email">{m.owner.email ?? "—"}</Baris>
+          <DetailRow label="Nama">{merchant.owner.full_name}</DetailRow>
+          <DetailRow label="Telepon">{formatPhone(merchant.owner.phone)}</DetailRow>
+          <DetailRow label="Email">{merchant.owner.email ?? "—"}</DetailRow>
         </dl>
-      </Kartu>
-      <Kartu judul="Checklist">
-        <Checklist checklist={m.checklist} />
-      </Kartu>
-      <Kartu judul="Log toko">
-        {m.recent_logs.length === 0 ? (
+      </SectionCard>
+      <SectionCard title="Checklist">
+        <Checklist checklist={merchant.checklist} />
+      </SectionCard>
+      <SectionCard title="Log toko">
+        {merchant.recent_logs.length === 0 ? (
           <p className="text-ink-muted">Belum ada aksi admin untuk toko ini.</p>
         ) : (
           <ul className="flex flex-col gap-3">
-            {m.recent_logs.map((l) => (
-              <li key={l.id} className="text-sm">
+            {merchant.recent_logs.map((log) => (
+              <li key={log.id} className="text-sm">
                 <p className="font-medium">
-                  {actionLabel(l.action)} · {l.admin_name}
+                  {actionLabel(log.action)} · {log.admin_name}
                 </p>
                 <p className="text-ink-muted">
-                  {formatDate(l.created_at)}, {formatTime(l.created_at)}
-                  {l.reason ? ` · ${l.reason}` : ""}
+                  {formatDate(log.created_at)}, {formatTime(log.created_at)}
+                  {log.reason ? ` · ${log.reason}` : ""}
                 </p>
-                {listChanges(l.before, l.after).map((p) => (
-                  <p key={p.field} className="text-ink-muted">{`${p.field}: ${p.before} → ${p.after}`}</p>
+                {listChanges(log.before, log.after).map((change) => (
+                  <p
+                    key={change.field}
+                    className="text-ink-muted"
+                  >{`${change.field}: ${change.before} → ${change.after}`}</p>
                 ))}
               </li>
             ))}
           </ul>
         )}
         <Link
-          href={`/admin/log?target_type=merchant&target_id=${m.id}`}
+          href={`/admin/log?target_type=merchant&target_id=${merchant.id}`}
           className="mt-3 inline-flex min-h-11 items-center text-primary underline"
         >
           Lihat semua log toko ini
         </Link>
-      </Kartu>
+      </SectionCard>
     </div>
   );
 }

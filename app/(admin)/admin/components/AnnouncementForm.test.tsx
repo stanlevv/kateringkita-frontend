@@ -1,19 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Toaster } from "@/app/components/ui/Toast";
-import { PengumumanForm } from "./AnnouncementForm";
+import { AnnouncementForm } from "./AnnouncementForm";
 
 const sendAnnouncement = vi.fn();
-vi.mock("@/app/actions/admin/announcements", () => ({ sendAnnouncement: (...a: unknown[]) => sendAnnouncement(...a) }));
+vi.mock("@/app/actions/admin/announcements", () => ({
+  sendAnnouncement: (...args: unknown[]) => sendAnnouncement(...args),
+}));
 
 beforeEach(() => sendAnnouncement.mockReset());
 
-describe("PengumumanForm", () => {
+describe("AnnouncementForm", () => {
   it("kosong -> galat; terisi -> konfirmasi -> kirim -> toast jumlah penerima", async () => {
     sendAnnouncement.mockResolvedValue({ data: { sent: 12 } });
     render(
       <>
-        <PengumumanForm />
+        <AnnouncementForm />
         <Toaster />
       </>,
     );

@@ -17,11 +17,11 @@ export default function Loading() {
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-6 w-20" />
         </div>
-        {[5, 3, 2].map((n, i) => (
+        {[5, 3, 2].map((rowCount, i) => (
           <div key={i} className="rounded-lg border border-line bg-surface p-4">
             <SkeletonText size="lg" width="w-32" className="mb-3" />
             <div className="flex flex-col gap-2">
-              {Array.from({ length: n }, (_, j) => (
+              {Array.from({ length: rowCount }, (_, j) => (
                 <div key={j} className="flex flex-col sm:flex-row sm:gap-4">
                   <SkeletonText width="w-24" className="w-40 shrink-0" />
                   <SkeletonText width="w-48" />

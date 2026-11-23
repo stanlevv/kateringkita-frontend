@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const requireAdmin = vi.fn();
 const adminFetch = vi.fn();
 vi.mock("@/services/auth.service", () => ({ requireAdmin: () => requireAdmin() }));
-vi.mock("@/services/api", async (orig) => ({
-  ...(await orig<typeof import("@/services/api")>()),
-  adminFetch: (...a: unknown[]) => adminFetch(...a),
+vi.mock("@/services/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/api")>()),
+  adminFetch: (...args: unknown[]) => adminFetch(...args),
 }));
 vi.mock("next/navigation", () => ({
   usePathname: () => "/admin",
@@ -19,7 +19,7 @@ import AdminLayout from "./layout";
 import AdminPage from "./page";
 import LogPage from "./log/page";
 
-const ringkasan = {
+const summary = {
   orders_today: { holding: 0, confirmed: 0, cooking: 0, ready: 0, completed: 1, cancelled: 0, expired: 0 },
   revenue_today: 0,
   merchants: { pending: 1, needs_fix: 0, verified: 0, suspended: 0, open_now: 0 },
@@ -40,10 +40,10 @@ describe("shell admin", () => {
     render(await AdminLayout({ children: <p>isi</p> }));
     expect(requireAdmin).toHaveBeenCalledTimes(1);
     const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
-    const tautan = within(nav)
+    const links = within(nav)
       .getAllByRole("link")
-      .map((a) => [a.textContent, a.getAttribute("href")]);
-    expect(tautan).toEqual([
+      .map((link) => [link.textContent, link.getAttribute("href")]);
+    expect(links).toEqual([
       ["Ringkasan", "/admin"],
       ["Verifikasi", "/admin/verifikasi"],
       ["Penjual", "/admin/penjual"],
@@ -78,11 +78,11 @@ describe("shell admin", () => {
     const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
     const href = within(nav)
       .getAllByRole("link")
-      .map((a) => a.getAttribute("href"));
+      .map((link) => link.getAttribute("href"));
     expect(href).toContain("/admin/moderasi");
     expect(href).toContain("/admin/tiket");
-    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"])
-      expect(href).not.toContain(h);
+    for (const path of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"])
+      expect(href).not.toContain(path);
   });
 
   it("tingkat support: menu Tiket ada (pekerjaan utama support); menu khusus super tetap disembunyikan", async () => {
@@ -95,9 +95,9 @@ describe("shell admin", () => {
     expect(within(nav).getByRole("link", { name: "Tiket" })).toHaveAttribute("href", "/admin/tiket");
     const href = within(nav)
       .getAllByRole("link")
-      .map((a) => a.getAttribute("href"));
-    for (const h of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"])
-      expect(href).not.toContain(h);
+      .map((link) => link.getAttribute("href"));
+    for (const path of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"])
+      expect(href).not.toContain(path);
   });
 
   it("sandi sementara: isi halaman diganti formulir ganti sandi", async () => {
@@ -113,13 +113,13 @@ describe("shell admin", () => {
 
 describe("halaman ringkasan", () => {
   it("memanggil requireAdmin sendiri dan merender kartu", async () => {
-    adminFetch.mockResolvedValue({ ok: true, status: 200, data: ringkasan });
+    adminFetch.mockResolvedValue({ ok: true, status: 200, data: summary });
     render(await AdminPage());
     expect(requireAdmin).toHaveBeenCalledTimes(1);
     expect(adminFetch).toHaveBeenCalledWith("/summary");
     expect(screen.getByRole("link", { name: /Menunggu verifikasi/ })).toHaveAttribute("href", "/admin/verifikasi");
   });
-  it("G-1 gagal: pesan + Coba lagi", async () => {
+  it("gagal memuat ringkasan: pesan + Coba lagi", async () => {
     adminFetch.mockResolvedValue({ ok: false, status: 500, error: { code: "X", message: "x" } });
     render(await AdminPage());
     expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe("halaman ringkasan", () => {
 });
 
 describe("halaman log", () => {
-  const baris = {
+  const logRow = {
     id: 1,
     admin_user_id: 1,
     admin_name: "Dina",
@@ -141,7 +141,7 @@ describe("halaman log", () => {
     created_at: "2026-10-31T03:00:00.000Z",
   };
   it("requireAdmin + filter URL diteruskan ke backend + berisi", async () => {
-    adminFetch.mockResolvedValue({ ok: true, status: 200, data: [baris], meta: { page: 2, limit: 20, total: 21 } });
+    adminFetch.mockResolvedValue({ ok: true, status: 200, data: [logRow], meta: { page: 2, limit: 20, total: 21 } });
     render(
       await LogPage({
         searchParams: Promise.resolve({
@@ -163,8 +163,8 @@ describe("halaman log", () => {
   });
   it("page tidak valid atau terlalu besar menjadi 1", async () => {
     adminFetch.mockResolvedValue({ ok: true, status: 200, data: [], meta: { page: 1, limit: 20, total: 0 } });
-    for (const p of ["abc", "99999999999", "-3", "1.5", "0"]) {
-      render(await LogPage({ searchParams: Promise.resolve({ page: p }) }));
+    for (const pageParam of ["abc", "99999999999", "-3", "1.5", "0"]) {
+      render(await LogPage({ searchParams: Promise.resolve({ page: pageParam }) }));
       expect(adminFetch).toHaveBeenLastCalledWith("/audit-logs?page=1&limit=20");
     }
   });

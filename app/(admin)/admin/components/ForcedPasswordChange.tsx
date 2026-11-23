@@ -5,7 +5,7 @@ import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 
 // Fase 1: admin baru / sandi direset masuk dengan sandi sementara. Setelah diganti, panel dimuat ulang.
-export function GantiSandiWajib() {
+export function ForcedPasswordChange() {
   const router = useRouter();
   return (
     <PageHeader

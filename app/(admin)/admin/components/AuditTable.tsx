@@ -11,23 +11,27 @@ import type { AuditLog } from "@/types/admin";
 import { formatTime, formatDate } from "@/lib/format";
 import { buildUrl } from "@/lib/url";
 
-const KOLOM: Column<AuditLog>[] = [
-  { key: "waktu", header: "Waktu (WIB)", cell: (l) => `${formatDate(l.created_at)}, ${formatTime(l.created_at)}` },
-  { key: "admin", header: "Admin", cell: (l) => l.admin_name },
-  { key: "aksi", header: "Aksi", cell: (l) => actionLabel(l.action) },
-  { key: "target", header: "Target", cell: (l) => targetLabel(l.target_type, l.target_id) },
-  { key: "alasan", header: "Alasan", wrap: true, cell: (l) => l.reason ?? "—" },
+const COLUMNS: Column<AuditLog>[] = [
+  {
+    key: "waktu",
+    header: "Waktu (WIB)",
+    cell: (log) => `${formatDate(log.created_at)}, ${formatTime(log.created_at)}`,
+  },
+  { key: "admin", header: "Admin", cell: (log) => log.admin_name },
+  { key: "aksi", header: "Aksi", cell: (log) => actionLabel(log.action) },
+  { key: "target", header: "Target", cell: (log) => targetLabel(log.target_type, log.target_id) },
+  { key: "alasan", header: "Alasan", wrap: true, cell: (log) => log.reason ?? "—" },
   {
     key: "perubahan",
     header: "Perubahan",
     wrap: true,
-    cell: (l) => {
-      const p = listChanges(l.before, l.after);
-      if (p.length === 0) return "—";
+    cell: (log) => {
+      const changes = listChanges(log.before, log.after);
+      if (changes.length === 0) return "—";
       return (
         <ul>
-          {p.map((x) => (
-            <li key={x.field}>{`${x.field}: ${x.before} → ${x.after}`}</li>
+          {changes.map((change) => (
+            <li key={change.field}>{`${change.field}: ${change.before} → ${change.after}`}</li>
           ))}
         </ul>
       );
@@ -80,12 +84,12 @@ export function AuditTable({
   }
   return (
     <div className="flex flex-col gap-4">
-      <DataTable caption="Log aksi admin" columns={KOLOM} rows={rows} rowKey={(l) => String(l.id)} />
+      <DataTable caption="Log aksi admin" columns={COLUMNS} rows={rows} rowKey={(log) => String(log.id)} />
       <Pagination
         page={page}
         total={total}
         limit={LIMIT_LOG}
-        hrefFor={(p) => buildUrl(path, params.toString(), { page: String(p) }, ["1"])}
+        hrefFor={(pageNumber) => buildUrl(path, params.toString(), { page: String(pageNumber) }, ["1"])}
       />
     </div>
   );

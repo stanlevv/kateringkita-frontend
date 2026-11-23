@@ -14,26 +14,30 @@ import { LIMIT_MERCHANTS, VERIFICATION_STATUSES } from "@/services/admin-merchan
 import type { MerchantSummary } from "@/types/admin";
 import { formatPhone } from "@/lib/format";
 import { buildUrl } from "@/lib/url";
-import { StatusVerifikasi } from "./VerificationStatus";
+import { VerificationStatus } from "./VerificationStatus";
 
-const detail = (m: MerchantSummary) => `/admin/penjual/${m.id}`;
-const buka = (m: MerchantSummary) => (m.is_open ? "Buka" : "Tutup");
+const detailHref = (merchant: MerchantSummary) => `/admin/penjual/${merchant.id}`;
+const openLabel = (merchant: MerchantSummary) => (merchant.is_open ? "Buka" : "Tutup");
 
-const KOLOM: Column<MerchantSummary>[] = [
+const COLUMNS: Column<MerchantSummary>[] = [
   {
     key: "toko",
     header: "Toko",
-    cell: (m) => (
-      <Link href={detail(m)} className="font-semibold text-primary underline-offset-2 hover:underline">
-        {m.business_name}
+    cell: (merchant) => (
+      <Link href={detailHref(merchant)} className="font-semibold text-primary underline-offset-2 hover:underline">
+        {merchant.business_name}
       </Link>
     ),
   },
-  { key: "pemilik", header: "Pemilik", cell: (m) => m.owner_name },
-  { key: "wa", header: "WhatsApp", cell: (m) => <span className="font-mono">{formatPhone(m.wa_number)}</span> },
-  { key: "status", header: "Status", cell: (m) => <StatusVerifikasi status={m.verification_status} /> },
-  { key: "buka", header: "Dapur", cell: buka },
-  { key: "menu", header: "Menu aktif", align: "right", cell: (m) => m.menu_count },
+  { key: "pemilik", header: "Pemilik", cell: (merchant) => merchant.owner_name },
+  {
+    key: "wa",
+    header: "WhatsApp",
+    cell: (merchant) => <span className="font-mono">{formatPhone(merchant.wa_number)}</span>,
+  },
+  { key: "status", header: "Status", cell: (merchant) => <VerificationStatus status={merchant.verification_status} /> },
+  { key: "buka", header: "Dapur", cell: openLabel },
+  { key: "menu", header: "Menu aktif", align: "right", cell: (merchant) => merchant.menu_count },
 ];
 
 /** A-05 — daftar penjual. Pencarian (ditunda), filter, dan halaman tinggal di URL. */
@@ -41,51 +45,51 @@ export function MerchantTable({
   rows,
   page,
   total,
-  tersaring,
+  filtered,
 }: {
   rows: MerchantSummary[];
   page: number;
   total: number;
-  tersaring: boolean;
+  filtered: boolean;
 }) {
   const router = useRouter();
   const path = usePathname();
   const params = useSearchParams();
-  const q = params.get("q") ?? "";
-  const [teks, setTeks] = useState(q);
+  const query = params.get("q") ?? "";
+  const [searchText, setSearchText] = useState(query);
   // Nilai terbaru untuk timer; state di closure bisa basi saat timer berjalan.
-  const terbaru = useRef({ params: params.toString(), teks });
+  const latest = useRef({ params: params.toString(), searchText });
   useEffect(() => {
-    terbaru.current = { params: params.toString(), teks };
+    latest.current = { params: params.toString(), searchText };
   });
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const batalkanTimer = () => {
+  const cancelTimer = () => {
     clearTimeout(timer.current);
     timer.current = undefined;
   };
-  useEffect(() => batalkanTimer, []);
+  useEffect(() => cancelTimer, []);
 
   // Tautan/Back/Hapus filter mengubah ?q= dari luar: samakan kotak cari, kecuali pengguna sedang mengetik.
   useEffect(() => {
-    if (!timer.current && terbaru.current.teks.trim() !== q) setTeks(q);
-  }, [q]);
+    if (!timer.current && latest.current.searchText.trim() !== query) setSearchText(query);
+  }, [query]);
 
-  function ke(ubahan: Record<string, string>) {
-    batalkanTimer();
+  function navigate(changes: Record<string, string>) {
+    cancelTimer();
     // Filter lain membawa ketikan q yang belum sempat dikirim.
-    const semua = "q" in ubahan ? ubahan : { ...ubahan, q: terbaru.current.teks.trim() };
-    router.replace(buildUrl(path, terbaru.current.params, { ...semua, page: "" }), { scroll: false });
+    const allChanges = "q" in changes ? changes : { ...changes, q: latest.current.searchText.trim() };
+    router.replace(buildUrl(path, latest.current.params, { ...allChanges, page: "" }), { scroll: false });
   }
 
-  function ketik(v: string) {
-    setTeks(v);
-    batalkanTimer();
-    timer.current = setTimeout(() => ke({ q: v.trim() }), 400);
+  function typeSearch(value: string) {
+    setSearchText(value);
+    cancelTimer();
+    timer.current = setTimeout(() => navigate({ q: value.trim() }), 400);
   }
 
-  function hapusFilter() {
-    batalkanTimer();
-    setTeks("");
+  function clearFilters() {
+    cancelTimer();
+    setSearchText("");
     router.replace(path, { scroll: false });
   }
 
@@ -101,8 +105,8 @@ export function MerchantTable({
             type="search"
             aria-label="Cari toko atau WhatsApp"
             placeholder="Cari nama toko atau nomor WhatsApp"
-            value={teks}
-            onChange={(e) => ketik(e.target.value)}
+            value={searchText}
+            onChange={(event) => typeSearch(event.target.value)}
             className="pl-10"
           />
         </div>
@@ -110,20 +114,24 @@ export function MerchantTable({
           Status
           <Select
             value={params.get("status") ?? ""}
-            onChange={(e) => ke({ status: e.target.value })}
+            onChange={(event) => navigate({ status: event.target.value })}
             className="md:w-48"
           >
             <option value="">Semua</option>
-            {Object.entries(VERIFICATION_STATUSES).map(([k, s]) => (
-              <option key={k} value={k}>
-                {s.label}
+            {Object.entries(VERIFICATION_STATUSES).map(([status, view]) => (
+              <option key={status} value={status}>
+                {view.label}
               </option>
             ))}
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm text-ink-muted">
           Dapur
-          <Select value={params.get("open") ?? ""} onChange={(e) => ke({ open: e.target.value })} className="md:w-40">
+          <Select
+            value={params.get("open") ?? ""}
+            onChange={(event) => navigate({ open: event.target.value })}
+            className="md:w-40"
+          >
             <option value="">Semua</option>
             <option value="1">Buka</option>
             <option value="0">Tutup</option>
@@ -132,13 +140,13 @@ export function MerchantTable({
       </div>
 
       {rows.length === 0 ? (
-        tersaring || page > 1 ? (
+        filtered || page > 1 ? (
           <EmptyState
             icon={SearchX}
             title="Penjual tidak ditemukan"
             body="Tidak ada penjual yang cocok dengan filter ini."
             action={
-              <Button variant="secondary" onClick={hapusFilter}>
+              <Button variant="secondary" onClick={clearFilters}>
                 Hapus filter
               </Button>
             }
@@ -151,27 +159,27 @@ export function MerchantTable({
           <div className="hidden lg:block">
             <DataTable
               caption="Daftar penjual"
-              columns={KOLOM}
+              columns={COLUMNS}
               rows={rows}
-              rowKey={(m) => String(m.id)}
-              onRowClick={(m) => router.push(detail(m))}
+              rowKey={(merchant) => String(merchant.id)}
+              onRowClick={(merchant) => router.push(detailHref(merchant))}
             />
           </div>
           <ul className="flex flex-col gap-3 lg:hidden">
-            {rows.map((m) => (
-              <li key={m.id}>
+            {rows.map((merchant) => (
+              <li key={merchant.id}>
                 <Link
-                  href={detail(m)}
+                  href={detailHref(merchant)}
                   className="flex min-h-11 flex-col gap-2 rounded-lg border border-line bg-surface p-4 focus-visible:ring-2 focus-visible:ring-focus"
                 >
-                  <span className="font-semibold text-ink">{m.business_name}</span>
+                  <span className="font-semibold text-ink">{merchant.business_name}</span>
                   <span className="text-sm text-ink-muted">
-                    {m.owner_name} · {formatPhone(m.wa_number)}
+                    {merchant.owner_name} · {formatPhone(merchant.wa_number)}
                   </span>
                   <span className="flex flex-wrap items-center justify-between gap-2">
-                    <StatusVerifikasi status={m.verification_status} />
+                    <VerificationStatus status={merchant.verification_status} />
                     <span className="text-sm text-ink-muted">
-                      Dapur {buka(m).toLowerCase()} · {m.menu_count} menu aktif
+                      Dapur {openLabel(merchant).toLowerCase()} · {merchant.menu_count} menu aktif
                     </span>
                   </span>
                 </Link>
@@ -182,7 +190,7 @@ export function MerchantTable({
             page={page}
             total={total}
             limit={LIMIT_MERCHANTS}
-            hrefFor={(p) => buildUrl(path, params.toString(), { page: String(p) }, ["1"])}
+            hrefFor={(pageNumber) => buildUrl(path, params.toString(), { page: String(pageNumber) }, ["1"])}
           />
         </>
       )}

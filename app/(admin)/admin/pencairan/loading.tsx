@@ -10,10 +10,10 @@ export default function Loading() {
       description="Transfer bagian toko dari pembayaran Virtual Account dan online, lalu catat di sini. Kembalikan dana pesanan batal yang sudah dibayar."
     >
       <div className="flex flex-col gap-6">
-        {[4, 3, 3].map((baris, i) => (
+        {[4, 3, 3].map((rowCount, i) => (
           <Card key={i} className="flex flex-col gap-4">
             <SkeletonText size="lg" width="w-40" />
-            <SkeletonTable rows={baris} columns={6} />
+            <SkeletonTable rows={rowCount} columns={6} />
           </Card>
         ))}
       </div>

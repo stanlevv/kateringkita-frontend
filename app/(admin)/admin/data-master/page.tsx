@@ -8,22 +8,22 @@ import type { MasterItem } from "@/types/admin";
 import { requireAdmin } from "@/services/auth.service";
 
 // A-01…A-03 — Data master. Tab aktif di URL (?tab=); nilai tak dikenal jatuh ke Kategori.
-export default async function DataMasterPage({
+export default async function MasterDataPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   await requireAdmin();
   const tab = tabById((await searchParams).tab);
-  const res = await adminFetch<MasterItem[]>(`/master/${tab.kind}`);
+  const response = await adminFetch<MasterItem[]>(`/master/${tab.kind}`);
   return (
     <PageHeader
       title="Data master"
       description="Kategori menu, titik temu, dan jenis usaha. Data tidak dihapus, hanya dinonaktifkan."
     >
-      {res.ok && res.data ? (
+      {response.ok && response.data ? (
         <Suspense>
-          <MasterTable tabId={tab.id} rows={res.data} />
+          <MasterTable tabId={tab.id} rows={response.data} />
         </Suspense>
       ) : (
         <LoadError

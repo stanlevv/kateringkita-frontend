@@ -10,7 +10,7 @@ import type { AdminSummary, AdminOrderStatus } from "@/types/admin";
 import { formatTime, formatRupiah, formatDate } from "@/lib/format";
 import { statusView, type DisplayStatus } from "@/lib/order-status";
 
-const STATUS: [AdminOrderStatus, DisplayStatus][] = [
+const ORDER_STATUSES: [AdminOrderStatus, DisplayStatus][] = [
   ["holding", "menunggu-konfirmasi"],
   ["confirmed", "confirmed"],
   ["cooking", "cooking"],
@@ -20,7 +20,7 @@ const STATUS: [AdminOrderStatus, DisplayStatus][] = [
   ["expired", "expired"],
 ];
 
-const PENJUAL: { key: keyof AdminSummary["merchants"]; label: string; href: string; icon: LucideIcon }[] = [
+const MERCHANT_TILES: { key: keyof AdminSummary["merchants"]; label: string; href: string; icon: LucideIcon }[] = [
   { key: "pending", label: "Menunggu verifikasi", href: "/admin/verifikasi", icon: Hourglass },
   { key: "needs_fix", label: "Perlu perbaikan", href: "/admin/verifikasi", icon: Wrench },
   { key: "verified", label: "Aktif", href: "/admin/penjual?status=verified", icon: CheckCircle2 },
@@ -28,7 +28,7 @@ const PENJUAL: { key: keyof AdminSummary["merchants"]; label: string; href: stri
   { key: "open_now", label: "Buka sekarang", href: "/admin/penjual?status=verified&open=1", icon: Store },
 ];
 
-const tautan = `block rounded-lg ${focusRing}`;
+const TILE_LINK_CLASS = `block rounded-lg ${focusRing}`;
 
 export function SummaryCards({ data }: { data: AdminSummary }) {
   return (
@@ -38,12 +38,12 @@ export function SummaryCards({ data }: { data: AdminSummary }) {
           <Card>
             <h2 className="text-lg font-semibold text-ink">Pesanan hari ini</h2>
             <ul className="mt-3 flex flex-col gap-2">
-              {STATUS.map(([key, tampil]) => {
-                const v = statusView[tampil];
+              {ORDER_STATUSES.map(([key, displayStatus]) => {
+                const view = statusView[displayStatus];
                 return (
                   <li key={key} className="flex items-center justify-between gap-3">
-                    <Badge tone={v.tone} icon={v.icon}>
-                      {v.label}
+                    <Badge tone={view.tone} icon={view.icon}>
+                      {view.label}
                     </Badge>
                     <span className="font-mono text-lg font-semibold text-ink">{data.orders_today[key]}</span>
                   </li>
@@ -71,9 +71,9 @@ export function SummaryCards({ data }: { data: AdminSummary }) {
       <section aria-label="Penjual">
         <h2 className="mb-3 text-lg font-semibold text-ink">Penjual</h2>
         <ul className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-          {PENJUAL.map(({ key, label, href, icon }) => (
+          {MERCHANT_TILES.map(({ key, label, href, icon }) => (
             <li key={key}>
-              <Link href={href} className={tautan}>
+              <Link href={href} className={TILE_LINK_CLASS}>
                 <KpiCard icon={icon} label={label} value={data.merchants[key]} />
               </Link>
             </li>
@@ -97,12 +97,12 @@ export function SummaryCards({ data }: { data: AdminSummary }) {
             <p className="mt-3 text-ink-muted">Belum ada aksi admin.</p>
           ) : (
             <ul className="mt-3 flex flex-col divide-y divide-line">
-              {data.recent_logs.map((l) => (
-                <li key={l.id} className="py-2">
-                  <p className="font-medium text-ink">{actionLabel(l.action)}</p>
-                  <p className="text-sm text-ink-muted">{targetLabel(l.target_type, l.target_id)}</p>
+              {data.recent_logs.map((log) => (
+                <li key={log.id} className="py-2">
+                  <p className="font-medium text-ink">{actionLabel(log.action)}</p>
+                  <p className="text-sm text-ink-muted">{targetLabel(log.target_type, log.target_id)}</p>
                   <p className="text-sm text-ink-muted">
-                    {l.admin_name} · {formatDate(l.created_at)}, {formatTime(l.created_at)} WIB
+                    {log.admin_name} · {formatDate(log.created_at)}, {formatTime(log.created_at)} WIB
                   </p>
                 </li>
               ))}

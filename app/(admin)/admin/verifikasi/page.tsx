@@ -6,16 +6,16 @@ import type { VerificationQueueItem } from "@/types/admin";
 import { requireAdmin } from "@/services/auth.service";
 
 // A-05 — Antrean verifikasi penjual.
-export default async function VerifikasiPage() {
+export default async function VerificationPage() {
   await requireAdmin();
-  const res = await adminFetch<VerificationQueueItem[]>("/verification-queue");
+  const response = await adminFetch<VerificationQueueItem[]>("/verification-queue");
   return (
     <PageHeader
       title="Verifikasi penjual"
       description="Periksa toko baru atau yang sudah diperbaiki. Yang paling lama menunggu ada di atas."
     >
-      {res.ok && res.data ? (
-        <VerificationQueue rows={res.data} />
+      {response.ok && response.data ? (
+        <VerificationQueue rows={response.data} />
       ) : (
         <LoadError
           title="Antrean belum bisa dimuat"
