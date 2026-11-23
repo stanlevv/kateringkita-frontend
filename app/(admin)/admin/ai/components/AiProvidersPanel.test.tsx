@@ -1,3 +1,5 @@
+// Test AiProvidersPanel: status siap/istirahat/nonaktif, API key hanya 4 karakter terakhir, galat terakhir, serta isi
+// yang dikirim saat mengubah (tanpa key bila tidak diisi) dan menambah penyedia. Server action diganti tiruan (mock).
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";

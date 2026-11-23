@@ -1,3 +1,7 @@
+// Komponen AiUsagePanel: bagian "Pemakaian" di /admin/ai. Menampilkan ringkasan panggilan AI, panggilan gagal,
+// pemakaian token, dan rata-rata waktu respons, lalu grafik token per hari dan tabel per penyedia, per fitur, serta
+// daftar gagal terakhir. Token = satuan potongan teks yang dihitung penyedia AI untuk masukan dan jawabannya; angka di
+// sini sesuai laporan penyedia. Data dari GET /admin/ai-usage (diambil page.tsx). Server component tanpa state.
 import Link from "next/link";
 import { Activity, CircleX, Coins, Timer } from "lucide-react";
 import { BarChart } from "@/app/components/ui/BarChart";
@@ -6,12 +10,15 @@ import { cx, focusRing } from "@/app/components/ui/cx";
 import { formatTime, formatDate } from "@/lib/format";
 import type { AiFeature, AiUsage } from "@/types/ai";
 
+/** Pilihan rentang pemakaian dalam hari; sama dengan nilai ?hari= yang diterima page.tsx. */
 export const AI_USAGE_RANGES = [7, 30] as const;
+// Nama fitur AI untuk manusia; kuncinya nilai `fitur` dari backend.
 const FEATURE_LABELS: Record<AiFeature, string> = {
   asisten: "Asisten toko",
   rekomendasi: "Rekomendasi pembeli",
   uji: "Uji koneksi",
 };
+// Format angka dan waktu untuk tabel: pemisah ribuan Indonesia, persen bulat, milidetik, tanggal tanpa tahun.
 const formatNumber = (value: number) => value.toLocaleString("id-ID");
 const percent = (part: number, whole: number) => `${whole ? Math.round((part / whole) * 100) : 0}%`;
 const formatMs = (value: number | null) => (value === null ? "-" : `${formatNumber(value)} ms`);
@@ -20,6 +27,13 @@ const formatDateTime = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`
 const headerCellClass = "px-3 py-2 font-medium";
 const bodyCellClass = "px-3 py-2";
 
+/**
+ * Tabel sederhana berjudul untuk satu sudut pemakaian.
+ * @param props.title judul tabel
+ * @param props.columns judul kolom
+ * @param props.children baris tabel (tr)
+ * @returns judul dan tabel
+ */
 function UsageTable({ title, columns, children }: { title: string; columns: string[]; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
@@ -42,7 +56,12 @@ function UsageTable({ title, columns, children }: { title: string; columns: stri
   );
 }
 
-// F25: pemakaian AI (semua fitur) — panggilan, gagal, token, latensi; per hari, per penyedia, per fitur, gagal terakhir
+/**
+ * Pemakaian AI semua fitur: panggilan, gagal, token, dan waktu respons; per hari, per penyedia, per fitur, dan gagal
+ * terakhir. Tabel hanya tampil bila sudah ada pemakaian di rentang ini.
+ * @param props.data laporan pemakaian dari backend untuk 7 atau 30 hari
+ * @returns section Pemakaian
+ */
 export function AiUsagePanel({ data }: { data: AiUsage }) {
   const summary = data.ringkas;
   const dayCount = data.per_hari.length;

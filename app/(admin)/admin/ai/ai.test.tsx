@@ -1,3 +1,5 @@
+// Test halaman /admin/ai bagian pemakaian: rentang ?hari= diteruskan ke backend, KPI, grafik token per hari, tabel per
+// penyedia/fitur/gagal, keadaan kosong, dan gagal muat yang tidak menyembunyikan penyedia. Backend diganti tiruan.
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AiUsage } from "@/types/ai";

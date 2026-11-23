@@ -1,3 +1,8 @@
+// Komponen AiProvidersPanel: bagian penyedia AI di /admin/ai. Menjelaskan cara kerja urutan fallback, lalu menampilkan
+// daftar penyedia sesuai prioritas dengan status (siap, istirahat, nonaktif), sakelar aktif, uji koneksi, ubah, dan
+// hapus. Uji koneksi = mengirim satu permintaan kecil ke penyedia untuk memastikan API key dan modelnya bekerja.
+// Data dari GET /admin/ai-providers (diambil page.tsx); perubahan lewat server action di app/actions/admin/ai.ts.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, dialog, dan router.
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -17,9 +22,18 @@ import { callAction } from "@/lib/action";
 import { formatTime, formatDate } from "@/lib/format";
 import type { AiProviderList, AiTestResult, AiProviderType, AiProvider } from "@/types/ai";
 
+// Waktu lengkap tanpa "WIB", mis. "13 Nov 2026, 09.55".
 const formatDateTime = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`;
 
+/**
+ * Formulir tambah atau ubah penyedia AI di dalam dialog. Saat mengubah, jenis penyedia dikunci dan API key boleh
+ * dikosongkan (key lama tetap dipakai).
+ * @param props.initial penyedia yang diubah, atau null untuk menambah
+ * @param props.onDone dipanggil setelah tersimpan
+ * @returns form
+ */
 function ProviderForm({ initial, onDone }: { initial: AiProvider | null; onDone: () => void }) {
+  // 1. Isian awal: dari penyedia yang diubah, atau Gemini dengan contoh model pertamanya.
   const [providerType, setProviderType] = useState<AiProviderType>(initial?.provider ?? "gemini");
   const [label, setLabel] = useState(initial?.label ?? AI_PROVIDER_INFO.gemini.name);
   const [model, setModel] = useState(initial?.model ?? AI_PROVIDER_INFO.gemini.exampleModels[0]);
@@ -29,22 +43,27 @@ function ProviderForm({ initial, onDone }: { initial: AiProvider | null; onDone:
   const [submitting, setSubmitting] = useState(false);
   const info = AI_PROVIDER_INFO[providerType];
 
+  // 2. Ganti jenis penyedia: nama dan model ikut diisi dengan bawaan jenis itu.
   function selectProvider(type: AiProviderType) {
     setProviderType(type);
     setLabel(AI_PROVIDER_INFO[type].name);
     setModel(AI_PROVIDER_INFO[type].exampleModels[0]);
   }
 
+  // 3. Simpan.
   async function save(event: FormEvent) {
+    // 1. Susun isian; API key hanya ikut bila diisi.
     event.preventDefault();
     setSubmitting(true);
     const values = { label, model, priority: Number(priority), ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}) };
+    // 2. Ubah (PATCH) bila ada penyedia awal; tambah (POST) penyedia baru dalam keadaan aktif.
     const result = await callAction(() =>
       initial
         ? updateAiProvider(initial.id, values)
         : createAiProvider({ ...values, provider: providerType, api_key: apiKey.trim(), is_active: true }),
     );
     setSubmitting(false);
+    // 3. Gagal: galat per isian tampil di bawah isiannya; galat tanpa isian jadi toast.
     if ("error" in result) {
       setErrors(
         Object.fromEntries(Object.entries(result.error.fields ?? {}).map(([field, messages]) => [field, messages[0]])),
@@ -52,6 +71,7 @@ function ProviderForm({ initial, onDone }: { initial: AiProvider | null; onDone:
       if (!result.error.fields) toast({ tone: "danger", message: result.error.message });
       return;
     }
+    // 4. Berhasil: toast lalu beri tahu pemanggil (dialog ditutup dan data dimuat ulang).
     toast({ tone: "success", message: initial ? "Penyedia AI disimpan" : "Penyedia AI ditambahkan" });
     onDone();
   }
@@ -163,6 +183,12 @@ function ProviderForm({ initial, onDone }: { initial: AiProvider | null; onDone:
   );
 }
 
+/**
+ * Label status penyedia. "Istirahat" berarti backend mengistirahatkan penyedia sementara setelah gagal, sampai jam
+ * yang ditulis; selama itu penyedia berikutnya yang dicoba.
+ * @param props.provider penyedia AI
+ * @returns span berwarna
+ */
 function StatusChip({ provider }: { provider: AiProvider }) {
   const status = aiProviderStatus(provider);
   if (status.kind === "nonaktif")
@@ -178,18 +204,27 @@ function StatusChip({ provider }: { provider: AiProvider }) {
   );
 }
 
+/**
+ * Panel penyedia AI: cara kerja, cadangan terakhir (GEMINI_API_KEY di server), dan daftar penyedia beserta aksinya.
+ * @param props.data daftar penyedia (sudah urut prioritas) dan info cadangan dari backend
+ * @returns panel penyedia beserta dialog tambah/ubah dan konfirmasi hapus
+ */
 export function AiProvidersPanel({ data }: { data: AiProviderList }) {
+  // 1. State dialog formulir (null = tertutup), penyedia yang akan dihapus, dan hasil uji koneksi per id penyedia.
   const router = useRouter();
   const [form, setForm] = useState<{ initial: AiProvider | null } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AiProvider | null>(null);
   const [testResults, setTestResults] = useState<Record<number, AiTestResult | "loading">>({});
 
+  // 2. Sakelar aktif: simpan langsung, lalu muat ulang data halaman.
   async function toggleActive(provider: AiProvider, active: boolean) {
     const result = await callAction(() => updateAiProvider(provider.id, { is_active: active }));
     if ("error" in result) return void toast({ tone: "danger", message: result.error.message });
     router.refresh();
   }
 
+  // 3. Uji koneksi: tandai "loading", simpan hasilnya (berhasil atau pesan galat), lalu muat ulang agar status
+  //    terakhir berhasil/error ikut diperbarui.
   async function runTest(provider: AiProvider) {
     setTestResults((previous) => ({ ...previous, [provider.id]: "loading" }));
     const result = await callAction(() => testAiProvider(provider.id));

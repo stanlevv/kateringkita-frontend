@@ -1,3 +1,8 @@
+// Halaman /admin/ai (gerbang AI): pemakaian AI dan daftar penyedia AI. Penyedia AI = layanan model bahasa (mis. Google
+// Gemini, Groq) yang dipakai asisten toko dan rekomendasi pembeli, masing-masing dengan API key gratis milik sendiri.
+// Urutan fallback: backend mencoba penyedia aktif dari prioritas terkecil; bila satu kena batas atau error, penyedia
+// berikutnya dicoba. Server component: membaca searchParams (?hari=7|30), mengambil data lewat
+// services/admin-ai.service.ts (GET /admin/ai-providers dan /admin/ai-usage). Hanya admin super.
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { getAiUsage, getAiProviders } from "@/services/admin-ai.service";
@@ -5,7 +10,11 @@ import { requireAdmin } from "@/services/auth.service";
 import { AiUsagePanel } from "./components/AiUsagePanel";
 import { AiProvidersPanel } from "./components/AiProvidersPanel";
 
-// F22 penyedia AI (gratis) dengan fallback otomatis + F25 pemakaian (token, panggilan, gagal). ?hari=7|30
+/**
+ * Halaman AI. Pemakaian dan penyedia dimuat bersamaan; bila salah satu gagal, bagian lain tetap tampil.
+ * @param props.searchParams parameter URL: `hari` ("30" untuk 30 hari; selain itu 7 hari)
+ * @returns PageHeader berisi AiUsagePanel dan AiProvidersPanel (atau LoadError per bagian)
+ */
 export default async function AdminAiPage({
   searchParams,
 }: {

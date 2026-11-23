@@ -1,7 +1,12 @@
+// Kerangka memuat /admin/ai. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonCard, SkeletonPills, SkeletonTable, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// Pemakaian (judul + pilihan 7/30 hari + tabel) lalu panel penyedia. Bentuk umum: halaman ini masih sering berubah.
+/**
+ * Kerangka pemakaian (judul + pilihan 7/30 hari + tabel) lalu panel penyedia. Bentuknya umum saja karena halaman ini
+ * masih sering berubah.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame
