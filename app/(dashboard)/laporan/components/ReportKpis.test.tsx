@@ -1,3 +1,5 @@
+// Test ReportKpis: capaian target dan bilah progres dari API, bilah dijepit 100%, tautan Atur target saat target 0,
+// dan omzet 0 tetap tampil.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ReportKpis } from "./ReportKpis";

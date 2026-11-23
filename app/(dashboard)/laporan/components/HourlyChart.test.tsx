@@ -1,3 +1,5 @@
+// Test HourlyChart: satu batang per jam yang bisa difokus, tabel sr-only, tooltip, subjudul rentang banyak hari,
+// pembungkus gulir di layar sempit, dan pesan kosong.
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { HourlyChart } from "./HourlyChart";

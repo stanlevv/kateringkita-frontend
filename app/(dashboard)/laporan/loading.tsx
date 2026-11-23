@@ -1,3 +1,4 @@
+// Kerangka memuat /laporan. loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import {
   Skeleton,
@@ -9,7 +10,10 @@ import {
 } from "@/app/components/ui/Skeleton";
 import { Card } from "@/app/components/ui/Card";
 
-// Pemilih rentang, 4 KPI, grafik per jam (rasio SVG 640:240), buku transaksi.
+/**
+ * Kerangka laporan: pemilih rentang, 4 KPI, grafik per jam (rasio SVG 640:240), lalu buku transaksi.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Laporan" description="Omzet, modal bahan, dan laba bersih toko Anda.">

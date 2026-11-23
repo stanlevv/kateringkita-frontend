@@ -1,3 +1,7 @@
+// Komponen TransactionTable: buku transaksi /laporan (satu baris per menu dalam pesanan selesai) dengan paginasi
+// lewat URL dan tombol Unduh CSV. Baris sudah dipotong per halaman oleh page.tsx; CSV diambil dari route
+// /api/laporan/csv. CSV = berkas teks berpemisah koma yang bisa dibuka di Excel.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -14,16 +18,20 @@ import { LIMIT_TRANSACTIONS } from "@/lib/report";
 import type { PaymentMethod } from "@/types/order";
 import type { Transaction } from "@/types/report";
 
+/** Nama metode bayar untuk ditampilkan (kunci = nilai payment_method dari API). */
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   qris: "QRIS toko",
   va: "Virtual Account",
   cod: "Tunai",
   online: "Bayar online",
 };
+/** Laba satu baris transaksi: total dikurangi HPP. */
 const profit = (transaction: Transaction) => transaction.total - transaction.hpp_total;
+/** Waktu pesanan selesai (bukan waktu dibuat), mis. "31 Okt 2026, 11.42". */
 const completedTime = (transaction: Transaction) =>
   `${formatDate(transaction.completed_at)}, ${formatTime(transaction.completed_at)}`;
 
+/** Kolom tabel di layar lebar; `key` tiap kolom dipakai DataTable sebagai kunci. */
 const COLUMNS: Column<Transaction>[] = [
   {
     key: "kode",
@@ -39,7 +47,15 @@ const COLUMNS: Column<Transaction>[] = [
   { key: "metode", header: "Metode", cell: (transaction) => PAYMENT_METHOD_LABELS[transaction.payment_method] },
 ];
 
-/** LP-N3 (halaman sudah dipotong server), LP-N4/E2 unduh CSV, LP-S1. */
+/**
+ * Kartu "Buku transaksi". Di layar ≥ 1024 px tampil sebagai tabel, di layar lebih kecil sebagai kartu bertumpuk.
+ * @param props.rows baris transaksi untuk halaman ini
+ * @param props.total jumlah semua baris dalam rentang (untuk paginasi)
+ * @param props.page halaman sekarang
+ * @param props.startDate tanggal awal rentang (YYYY-MM-DD)
+ * @param props.endDate tanggal akhir rentang (YYYY-MM-DD)
+ * @returns Card berisi tombol unduh, tabel atau kartu, dan paginasi
+ */
 export function TransactionTable({
   rows,
   total,
@@ -56,11 +72,13 @@ export function TransactionTable({
   const router = useRouter();
   const [downloading, setDownloading] = useState(false);
 
+  /** Mengunduh CSV rentang ini; sesi habis dan galat server ditampilkan sebagai toast. */
   async function downloadCsv() {
+    // 1. Minta CSV ke route API web (cookie sesi ikut terkirim otomatis).
     setDownloading(true);
     try {
       const response = await fetch(`/api/laporan/csv?dari=${startDate}&sampai=${endDate}`);
-      // Sesi habis: proxy mengalihkan ke halaman masuk (HTML, status 200) atau rute menjawab 401.
+      // 2. Sesi habis: proxy mengalihkan ke halaman masuk (HTML, status 200) atau rute menjawab 401.
       if (response.redirected || response.status === 401) {
         const loginUrl = `/login?next=${encodeURIComponent(`/laporan?dari=${startDate}&sampai=${endDate}`)}`;
         toast({
@@ -70,10 +88,12 @@ export function TransactionTable({
         });
         return;
       }
+      // 3. Bukan CSV (galat server): pakai pesan dari server bila ada.
       if (!response.ok || !response.headers.get("content-type")?.startsWith("text/csv")) {
         const serverMessage = ((await response.json().catch(() => null)) as { message?: string } | null)?.message;
         throw new Error(serverMessage);
       }
+      // 4. Simpan berkas lewat tautan sementara ke blob (isi berkas di memori peramban), lalu lepas blob-nya.
       const link = document.createElement("a");
       link.href = URL.createObjectURL(await response.blob());
       link.download = `laporan-${startDate}-${endDate}.csv`;

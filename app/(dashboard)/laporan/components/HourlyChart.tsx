@@ -1,3 +1,7 @@
+// Komponen HourlyChart: grafik batang penjualan per jam di /laporan. Titik per jam datang dari halaman (backend
+// GET /merchant/reports/hourly, atau dijumlahkan dari transaksi bila rentangnya lebih dari satu hari).
+// Grafik digambar sendiri dengan SVG (gambar vektor di dalam HTML), tanpa pustaka grafik.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -6,21 +10,33 @@ import { Card } from "@/app/components/ui/Card";
 import { formatRupiah } from "@/lib/format";
 import type { HourlyPoint } from "@/types/report";
 
+// Ukuran kanvas SVG dan jarak tepi (ruang label sumbu di kiri dan label jam di bawah), dalam satuan viewBox.
 const WIDTH = 640,
   HEIGHT = 240,
   PADDING_LEFT = 88,
   PADDING_RIGHT = 8,
   PADDING_TOP = 24,
   PADDING_BOTTOM = 36;
+/** Jam sebagai teks "HH.00", mis. 9 -> "09.00". */
 const formatHour = (hour: number) => `${String(hour).padStart(2, "0")}.00`;
 
-// Batas atas sumbu: 1, 2, atau 5 kali pangkat sepuluh.
+/**
+ * Batas atas sumbu agar angka sumbu bulat: 1, 2, 5, atau 10 kali pangkat sepuluh dari nilai.
+ * @param value omzet tertinggi
+ * @returns batas atas sumbu, mis. 508.000 -> 1.000.000
+ */
 function roundUpAxisMax(value: number) {
   const power = 10 ** Math.floor(Math.log10(value));
   return ([1, 2, 5, 10].find((multiplier) => multiplier * power >= value) ?? 10) * power;
 }
 
-/** LP-N2 (D6). Batang SVG buatan sendiri; tiap batang bisa difokus, ada tooltip dan tabel untuk pembaca layar. */
+/**
+ * Kartu "Penjualan per jam". Tiap batang bisa difokus dengan Tab dan menampilkan tooltip; ada juga tabel tersembunyi
+ * (sr-only) berisi angka yang sama untuk pembaca layar.
+ * @param props.points titik per jam (jam, jumlah pesanan, porsi, omzet)
+ * @param props.days jumlah hari dalam rentang; lebih dari 1 mengubah subjudul menjadi "dijumlahkan"
+ * @returns Card berisi grafik, atau pesan kosong bila belum ada penjualan
+ */
 export function HourlyChart({ points, days }: { points: HourlyPoint[]; days: number }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const isEmpty = points.length === 0 || points.every((point) => point.revenue === 0);
@@ -48,6 +64,13 @@ export function HourlyChart({ points, days }: { points: HourlyPoint[]; days: num
   );
 }
 
+/**
+ * Isi grafik: garis bantu, batang per jam, tooltip batang aktif, dan tabel untuk pembaca layar.
+ * @param props.points titik per jam
+ * @param props.activeIndex indeks batang yang disorot (hover atau fokus), null bila tidak ada
+ * @param props.setActiveIndex pengubah batang aktif
+ * @returns grafik SVG dan tabel sr-only
+ */
 function HourlyBars({
   points,
   activeIndex,
@@ -57,12 +80,14 @@ function HourlyBars({
   activeIndex: number | null;
   setActiveIndex: (i: number | null) => void;
 }) {
+  // 1. Skala: tiap jam mendapat slot selebar sama; tinggi batang sebanding omzet terhadap batas atas sumbu.
   const axisMax = roundUpAxisMax(Math.max(...points.map((point) => point.revenue)));
   const slotWidth = (WIDTH - PADDING_LEFT - PADDING_RIGHT) / points.length;
   const plotHeight = HEIGHT - PADDING_TOP - PADDING_BOTTOM;
   const barWidth = Math.min(56, slotWidth * 0.6);
   const barCenterX = (i: number) => PADDING_LEFT + slotWidth * i + slotWidth / 2;
   const valueToY = (value: number) => PADDING_TOP + plotHeight * (1 - value / axisMax);
+  // 2. Titik yang sedang disorot (hover atau fokus) untuk tooltip.
   const activePoint = activeIndex === null ? null : points[activeIndex];
 
   return (

@@ -1,3 +1,5 @@
+// Test TransactionTable: kolom dan baris, waktu selesai (WIB), paginasi lewat URL, keadaan kosong, dan unduh CSV
+// (berhasil, gagal + Coba lagi, sesi habis, 400/401). fetch dan router dipalsukan.
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
