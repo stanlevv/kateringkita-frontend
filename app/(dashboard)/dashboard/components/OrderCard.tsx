@@ -14,7 +14,7 @@ import { cx } from "@/app/components/ui/cx";
 import { formatTime, formatRupiah, formatPhone } from "@/lib/format";
 import { orderStatusView, actionTexts, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
-import { ChatWaLink, RejectButton } from "@/app/components/orders/action-error";
+import { ChatWaLink, RejectButton } from "@/app/components/orders/OrderActionParts";
 
 /** Detik menjadi "mm:ss". */
 const formatCountdown = (seconds: number) =>

@@ -18,7 +18,7 @@ import { cx } from "@/app/components/ui/cx";
 import { formatTime, formatRupiah, formatDate, formatPhone, wibDate } from "@/lib/format";
 import { orderStatusView, actionTexts, successText, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
-import { ChatWaLink, actionErrorView, OutOfStockDialog, RejectButton } from "./action-error";
+import { ChatWaLink, actionErrorView, OutOfStockDialog, RejectButton } from "./OrderActionParts";
 import { RejectDialog } from "./RejectDialog";
 import { StatusTimeline } from "./StatusTimeline";
 
@@ -62,9 +62,9 @@ function OrderActions({ order }: { order: MerchantOrder }) {
       // 3. Gagal: buka kunci, lalu tampilkan galat; hanya CONFLICT yang perlu memuat ulang data.
       setSending(null);
       const errorView = actionErrorView(result.error.code, action, result.error.message);
-      if (errorView.kind === "stok") setOutOfStockOpen(true);
+      if (errorView.kind === "outOfStock") setOutOfStockOpen(true);
       else toast({ tone: errorView.tone, message: errorView.message });
-      if (errorView.kind === "stok" || !errorView.reload) return;
+      if (errorView.kind === "outOfStock" || !errorView.reload) return;
     }
     // 4. Muat ulang data server (router.refresh) agar status baru tampil.
     router.refresh();

@@ -1,7 +1,7 @@
-// Test action-error: tautan Chat WA dan cara menampilkan galat CONFLICT dari orderAction.
+// Test OrderActionParts: tautan Chat WA dan cara menampilkan galat CONFLICT dari orderAction.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ChatWaLink } from "./action-error";
+import { ChatWaLink } from "./OrderActionParts";
 
 describe("M-04, M-11 ChatWaLink", () => {
   it("menuju route handler dengan kode ter-encode, tab baru, ≥ 44 px", () => {
@@ -16,7 +16,7 @@ describe("M-04, M-11 ChatWaLink", () => {
 
 describe("actionErrorView CONFLICT", () => {
   it("memakai pesan dari server, fallback ke teks tetap", async () => {
-    const { actionErrorView } = await import("./action-error");
+    const { actionErrorView } = await import("./OrderActionParts");
     expect(actionErrorView("CONFLICT", "confirm", "Batas waktu pesanan sudah habis.")).toMatchObject({
       kind: "toast",
       message: "Batas waktu pesanan sudah habis.",

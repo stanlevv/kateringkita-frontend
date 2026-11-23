@@ -13,14 +13,14 @@ import { actionTexts, type OrderAction } from "@/lib/order-status";
  * @param code kode galat dari backend
  * @param action aksi yang gagal (confirm, cook, ready, complete, reject)
  * @param message pesan galat dari server (dipakai untuk CONFLICT)
- * @returns `{ kind: "stok" }`, atau `{ kind: "toast", tone, message, reload }` (`reload` = perlu muat ulang data)
+ * @returns `{ kind: "outOfStock" }`, atau `{ kind: "toast", tone, message, reload }` (`reload` = perlu muat ulang data)
  */
 export function actionErrorView(
   code: string,
   action: OrderAction,
   message?: string,
-): { kind: "stok" } | { kind: "toast"; tone: "warning" | "danger"; message: string; reload: boolean } {
-  if (code === "OUT_OF_STOCK") return { kind: "stok" };
+): { kind: "outOfStock" } | { kind: "toast"; tone: "warning" | "danger"; message: string; reload: boolean } {
+  if (code === "OUT_OF_STOCK") return { kind: "outOfStock" };
   if (code === "CONFLICT")
     return { kind: "toast", tone: "warning", message: message || "Pesanan sudah berubah status", reload: true };
   return { kind: "toast", tone: "danger", message: actionTexts[action].failure, reload: false };

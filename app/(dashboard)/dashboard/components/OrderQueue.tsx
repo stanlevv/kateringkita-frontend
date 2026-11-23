@@ -24,7 +24,7 @@ import {
 import { nextStatus, actionTexts, successText, type OrderAction } from "@/lib/order-status";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
-import { actionErrorView, OutOfStockDialog } from "@/app/components/orders/action-error";
+import { actionErrorView, OutOfStockDialog } from "@/app/components/orders/OrderActionParts";
 import { OrderCard } from "./OrderCard";
 import { OrderSlipDrawer } from "./OrderSlipDrawer";
 import { RejectDialog } from "@/app/components/orders/RejectDialog";
@@ -115,7 +115,7 @@ export function OrderQueue({
     // 3. Gagal: batalkan tampilan optimistis lalu tampilkan galat (dialog stok atau toast).
     onOptimisticChange(code, undefined); // kartu kembali ke tab semula
     const errorView = actionErrorView(result.error.code, pendingAction.action, result.error.message);
-    if (errorView.kind === "stok") setOutOfStockOrder(pendingAction.order);
+    if (errorView.kind === "outOfStock") setOutOfStockOrder(pendingAction.order);
     else {
       toast({ tone: errorView.tone, message: errorView.message });
       if (errorView.reload) onRefresh();
