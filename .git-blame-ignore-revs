@@ -16,3 +16,7 @@ e277ee5b67b3a015376192f723e6ed73747b5392
 4114a7501926b02179728ab7491fee88bcdfa52a
 # refactor(web-ui): ganti sisa prop test Stepper ke bahasa Inggris (F28)
 3de9cc5dcf22d1f1ef0ad9b5d310754315072157
+# refactor(web-penjual): ganti nama file komponen dashboard penjual ke bahasa Inggris (F28)
+93dc2f9b10d94c0f397ea468270b4b42e4ca0834
+# refactor(web-penjual): nama kode bahasa Inggris yang jelas (F28)
+e29a4d9f53928edf53a0ed0ea42e0fb89f3cbb03
