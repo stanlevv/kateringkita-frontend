@@ -24,6 +24,7 @@ Dipakai aplikasi mobile, Midtrans, database, atau pengguna:
 - **Ekspor khusus Next:** `default`, `GET`/`POST`/dan sejenisnya, `metadata`, `generateMetadata`, `config`, `dynamic`, `revalidate`.
 - **Teks untuk manusia:** teks UI, pesan error ke pengguna, deskripsi `it(...)`/`describe(...)`, komentar. Semuanya tetap bahasa Indonesia, karena aturan proyek DS-09 mewajibkan teks Indonesia dan komentar Indonesia lazim untuk tim lokal.
 - **Kunci kontrak** yang dibaca pihak lain: kunci JSON API, nama field form, parameter query (`?dari=`, `?bintang=`), nama cookie, kunci dan bentuk data localStorage, serta nilai string yang tersimpan di sana. Semua properti di `types/**` mencerminkan JSON backend, jadi tetap. Properti objek **internal** (hanya dipakai di dalam kode web, tidak dikirim ke atau diterima dari luar) boleh diganti ke bahasa Inggris lewat alat rename, mis. `{ omzet, kapasitas }` menjadi `{ revenue, capacity }`.
+- **Dibaca test backend:** path `lib/wa-template.ts` dan konstanta `TEMPLATE_BAWAAN` tidak di-rename, karena test backend (`merchant-orders-wa.test.ts`) membaca file itu langsung dari repo web.
 
 ## Glosarium
 
