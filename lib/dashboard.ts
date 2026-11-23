@@ -1,5 +1,5 @@
 // Logika murni (tanpa React) untuk dashboard penjual: antrean pesanan per tab, stok menu, penggabungan data
-// hasil polling, dan angka KPI hari ini. Dipakai komponen app/(dashboard)/dashboard dan route /api/dashboard/sinkron.
+// hasil polling (dashboard meminta perubahan ke server setiap beberapa detik), dan angka KPI hari ini. Dipakai komponen app/(dashboard)/dashboard dan route /api/dashboard/sinkron.
 
 import { toWibClock, wibDate } from "./format";
 import { nextStatus, type OrderAction } from "./order-status";
@@ -77,6 +77,7 @@ export function holdSecondsLeft(order: MerchantOrder, now: number): number | nul
  * Server akan menyusul mengubah statusnya; perubahan itu masuk lewat polling.
  * @param orders pesanan
  * @param now waktu sekarang dalam milidetik
+ * @returns daftar pesanan; yang waktu tahannya habis berstatus "expired"
  */
 export function applyHoldExpiry(orders: MerchantOrder[], now: number): MerchantOrder[] {
   return orders.map((order) => (holdSecondsLeft(order, now) === 0 ? { ...order, status: "expired" } : order));
@@ -137,6 +138,7 @@ export function queueForTab(orders: MerchantOrder[], tab: QueueTab, now: number)
 /**
  * Menghitung jumlah pesanan di tiap tab antrean (angka di samping nama tab).
  * @param orders semua pesanan antrean
+ * @returns jumlah pesanan per tab
  */
 export function countQueueTabs(orders: MerchantOrder[]): Record<QueueTab, number> {
   const countStatus = (status: MerchantOrder["status"]) => orders.filter((order) => order.status === status).length;
@@ -153,6 +155,7 @@ export type StockLevel = "habis" | "menipis" | "aman";
 /**
  * Menentukan tingkat stok: habis (0), menipis (1–3), atau aman (lebih dari 3).
  * @param menu menu (cukup `available`)
+ * @returns "habis", "menipis", atau "aman"
  */
 export const menuStockLevel = (menu: Pick<MerchantMenu, "available">): StockLevel =>
   menu.available <= 0 ? "habis" : menu.available <= 3 ? "menipis" : "aman";
@@ -161,6 +164,7 @@ const STOCK_RANK: Record<StockLevel, number> = { habis: 0, menipis: 1, aman: 2 }
 /**
  * Mengurutkan menu aktif untuk panel kuota: habis dulu, lalu menipis, lalu aman. Menu nonaktif tidak ikut.
  * @param menus semua menu penjual
+ * @returns menu aktif yang sudah diurutkan
  */
 export const sortMenusByStock = (menus: MerchantMenu[]) =>
   menus
@@ -169,7 +173,7 @@ export const sortMenusByStock = (menus: MerchantMenu[]) =>
 
 /**
  * Menggabungkan pesanan hasil polling ke daftar yang sudah ada, per kode pesanan.
- * Data masuk menang bila `updated_at`-nya sama atau lebih baru. Bila tidak ada yang berubah,
+ * Data masuk menang bila `updated_at`-nya lebih baru, atau sama tetapi statusnya berbeda. Bila tidak ada yang berubah,
  * daftar lama dikembalikan apa adanya agar React tidak merender ulang.
  * @param current daftar yang sedang tampil
  * @param incoming pesanan yang berubah dari server

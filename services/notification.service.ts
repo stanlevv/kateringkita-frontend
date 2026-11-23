@@ -35,6 +35,7 @@ export async function getNotifications(
 
 /**
  * Jumlah notifikasi belum dibaca untuk badge sidebar. Bila gagal dianggap 0 (sama seperti `getNeedsActionCount`).
+ * @returns jumlah notifikasi belum dibaca
  */
 export async function getUnreadNotificationCount(): Promise<number> {
   const scenario = await getScenario();

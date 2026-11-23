@@ -73,13 +73,16 @@ export type MasterInput = { name: string; icon?: string; description?: string };
  * @returns pesan per field; objek kosong bila valid
  */
 export function validateMaster(kind: string, input: unknown): Record<string, string> {
+  // 1. Cari aturan tab untuk jenis data ini; jenis tidak dikenal langsung ditolak.
   const tab = tabByKind(kind);
   const data = (typeof input === "object" && input !== null ? input : {}) as Record<string, unknown>;
   const errors: Record<string, string> = {};
   if (!tab) return { name: "Jenis data tidak dikenal." };
+  // 2. Nama wajib dan tidak melewati batas panjang.
   const name = typeof data.name === "string" ? data.name.trim() : "";
   if (!name) errors.name = "Nama wajib diisi.";
   else if (name.length > tab.nameMax) errors.name = `Nama maksimal ${tab.nameMax} karakter.`;
+  // 3. Field tambahan (ikon atau deskripsi) harus teks dan tidak melewati batas panjang.
   if (tab.extraField && data[tab.extraField] != null) {
     const value = data[tab.extraField];
     if (typeof value !== "string") errors[tab.extraField] = `${tab.extraFieldLabel} tidak valid.`;
@@ -93,6 +96,7 @@ export function validateMaster(kind: string, input: unknown): Record<string, str
  * Menyusun body ke backend: hanya field milik jenis ini, sudah dirapikan. Panggil setelah `validateMaster` kosong.
  * @param kind jenis data
  * @param input isian
+ * @returns body JSON untuk backend
  */
 export function toMasterBody(kind: string, input: MasterInput): Record<string, string | null> {
   const tab = tabByKind(kind)!;

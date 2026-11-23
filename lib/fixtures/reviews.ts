@@ -19,7 +19,10 @@ const COMMENTS: (string | null)[] = [
 ];
 const RATING = [5, 5, 4, 5, 3, 5, 4, 5, 2, 5, 4, 5, 5, 4, 3, 5, 4, 5, 5, 4];
 
-/** Daftar ulasan contoh. */
+/**
+ * Daftar ulasan contoh.
+ * @returns daftar ulasan contoh
+ */
 export const reviews = (): Review[] => {
   const menuList = menus();
   return RATING.map((rating, i) => {

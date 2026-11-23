@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-// authService asli, tanpa cookie: proxy.ts tidak mencakup /api, jadi tiap handler menjaga dirinya sendiri.
+// services/auth.service.ts asli, tanpa cookie: proxy.ts tidak mencakup /api, jadi tiap handler menjaga dirinya sendiri.
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 vi.mock("next/navigation", () => ({
   redirect: (u: string) => {

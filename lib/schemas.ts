@@ -110,14 +110,17 @@ export const menuFormSchema = menuFormObject.check(crossFieldRules());
 function crossFieldRules() {
   const rules = z.superRefine((data: z.infer<typeof menuFormObject>, context) => {
     if (typeof data !== "object" || data === null) return; // input server action bisa apa saja; galat tipe sudah dilaporkan
+    // 1. Harga jual harus di atas HPP.
     if (Number.isFinite(data.price) && Number.isFinite(data.hpp) && data.price <= data.hpp)
       context.addIssue({
         code: "custom",
         path: ["price"],
         message: `Harga jual harus lebih besar dari HPP (${formatRupiah(data.hpp)}).`,
       });
+    // 2. Menu pre-order harus punya 1–7 hari pemesanan.
     if (data.is_preorder && !(data.preorder_days >= 1 && data.preorder_days <= 7))
       context.addIssue({ code: "custom", path: ["preorder_days"], message: "Hari pre-order harus 1 sampai 7." });
+    // 3. Nama opsi tidak boleh kembar (huruf besar/kecil diabaikan).
     const seenNames = new Set<string>();
     (Array.isArray(data.options) ? data.options : []).forEach((option, i) => {
       const name = typeof option?.name === "string" ? option.name.trim().toLowerCase() : "";
@@ -126,6 +129,7 @@ function crossFieldRules() {
       seenNames.add(name);
     });
   });
+  // 4. Paksa aturan ini tetap dijalankan walau field lain sudah salah.
   rules._zod.def.when = () => true;
   return rules;
 }
@@ -177,8 +181,9 @@ const partialProfileSchema = z
  * @returns pesan per field; objek kosong bila valid
  */
 export function validateProfile(value: unknown, full = true): Record<string, string> {
+  // 1. Periksa tiap field dengan schema (lengkap atau sebagian).
   const errors = validateFields(full ? fullProfileSchema : partialProfileSchema, value);
-  // Aturan antar-jam dicek terpisah agar tetap muncul walau field lain salah.
+  // 2. Aturan antar-jam dicek terpisah agar tetap muncul walau field lain salah.
   const input = value as { open_time?: unknown; close_time?: unknown } | null;
   if (
     typeof input?.open_time === "string" &&
@@ -196,6 +201,7 @@ export function validateProfile(value: unknown, full = true): Record<string, str
  * Mengambil hanya field profil yang boleh diubah, sudah dirapikan (spasi di ujung dibuang). Panggil setelah `validateProfile` kosong.
  * @param value isian
  * @param full true bila isian lengkap
+ * @returns field profil yang sudah dirapikan, siap dikirim ke backend
  * @throws galat zod bila isian tidak valid
  */
 export function parseProfile(value: unknown, full = true) {
@@ -242,12 +248,15 @@ const promoFormSchema = z.object({
  * @returns pesan per field; objek kosong bila valid
  */
 export function validatePromo(value: unknown, usedCount = 0): Record<string, string> {
+  // 1. Periksa tiap field dengan schema.
   const errors = validateFields(promoFormSchema, value);
   const input = (typeof value === "object" && value !== null ? value : {}) as Record<string, unknown>;
+  // 2. Nilai potongan minimal 1; persen paling banyak 100.
   if (input.type !== "free_service_fee" && !errors.value && typeof input.value === "number") {
     if (input.value < 1) errors.value = "Nilai minimal 1.";
     else if (input.type === "percent" && input.value > 100) errors.value = "Persen maksimal 100.";
   }
+  // 3. Kuota tidak boleh di bawah yang sudah terpakai, dan waktu selesai harus setelah mulai.
   if (typeof input.quota === "number" && !errors.quota && input.quota < usedCount)
     errors.quota = `Kuota tidak boleh di bawah yang sudah terpakai (${usedCount}).`;
   if (!errors.starts_at && !errors.ends_at && Date.parse(String(input.ends_at)) <= Date.parse(String(input.starts_at)))
@@ -259,6 +268,7 @@ export function validatePromo(value: unknown, usedCount = 0): Record<string, str
  * Mengambil hanya field promo yang boleh diubah: kode jadi huruf kapital, nilai dan maks potongan disesuaikan jenis promo.
  * Panggil setelah `validatePromo` kosong.
  * @param value isian
+ * @returns field promo yang sudah dirapikan, siap dikirim ke backend
  * @throws galat zod bila isian tidak valid
  */
 export function parsePromo(value: unknown) {

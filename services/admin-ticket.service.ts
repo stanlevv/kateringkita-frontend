@@ -11,6 +11,8 @@ export const LIMIT_TICKETS = 20;
 /**
  * Mengecek bentuk kode tiket di URL (mis. `TK-YYYYMMDD-XXXX`, paling panjang 20 karakter).
  * Pemeriksaan longgar; backend tetap penentu tiket itu ada atau tidak.
+ * @param code nilai dari URL
+ * @returns true bila bentuknya seperti kode tiket
  */
 export const isValidTicketCode = (code: unknown): code is string =>
   typeof code === "string" && /^[A-Za-z0-9-]{1,20}$/.test(code);
@@ -27,7 +29,11 @@ export const TICKET_CATEGORIES: Record<TicketCategory, string> = {
   aplikasi: "Aplikasi",
   lainnya: "Lainnya",
 };
-/** Label kategori tiket; kategori tidak dikenal ditampilkan apa adanya. */
+/**
+ * Label kategori tiket; kategori tidak dikenal ditampilkan apa adanya.
+ * @param category kode kategori
+ * @returns label kategori
+ */
 export const categoryLabel = (category: string) => TICKET_CATEGORIES[category as TicketCategory] ?? category;
 
 /** Label, warna, dan ikon tiap status tiket. */
@@ -46,7 +52,11 @@ export const TICKET_TABS: { id: TicketTab; label: string }[] = [
   { id: "closed", label: "Ditutup" },
   { id: "semua", label: "Semua" },
 ];
-/** Membaca tab dari URL; nilai tidak dikenal menjadi "open". */
+/**
+ * Membaca tab dari URL; nilai tidak dikenal menjadi "open".
+ * @param value nilai mentah dari searchParams
+ * @returns id tab yang sah
+ */
 export const parseTicketTab = (value: unknown): TicketTab => TICKET_TABS.find((tab) => tab.id === value)?.id ?? "open";
 
 /** Label pengirim pesan tiket. */
@@ -68,6 +78,7 @@ const ORDER_DISPLAY_STATUS: Partial<Record<AdminOrderStatus, DisplayStatus>> = {
  * Label status pesanan yang terkait dengan tiket.
  * "holding" diberi label netral karena bisa berarti menunggu konfirmasi atau menunggu pembayaran (data pembayaran tidak ikut dikirim).
  * @param status status pesanan dari backend
+ * @returns label, warna, dan ikon
  */
 export function ticketOrderStatus(status: string): { label: string; tone: Tone; icon: LucideIcon } {
   if (status === "holding") return { label: "Belum dikonfirmasi", tone: "warning", icon: Hourglass };

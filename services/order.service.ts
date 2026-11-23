@@ -30,15 +30,18 @@ export type OrderListFilter = { status?: OrderStatus; date?: string; q?: string;
 export async function getOrders(
   filter: OrderListFilter = {},
 ): Promise<DataResult<{ rows: MerchantOrder[]; total: number }>> {
+  // 1. Skenario pratinjau bisa memaksa gagal atau kosong tanpa memanggil backend.
   const scenario = await getScenario();
   if (scenario === "gagal-muat") return LOAD_FAILED;
   if (scenario === "kosong" || scenario === "penjual-baru") return { data: { rows: [], total: 0 } };
+  // 2. Susun query dari penyaring yang diisi saja.
   const params = new URLSearchParams();
   if (filter.status) params.set("status", filter.status);
   if (filter.date) params.set("date", filter.date);
   if (filter.q) params.set("q", filter.q);
   if (filter.page) params.set("page", String(filter.page));
   params.set("limit", String(LIMIT_ORDERS));
+  // 3. Panggil backend; total diambil dari `meta` paginasi.
   const response = await merchantFetch<MerchantOrder[]>(`/orders?${params}`);
   return response.ok && response.data
     ? { data: { rows: response.data, total: totalFromMeta(response.meta) } }
@@ -71,7 +74,7 @@ export const getQueue = cache(async (): Promise<DataResult<MerchantOrder[]>> => 
 });
 
 /**
- * Mengambil pesanan yang berubah sejak waktu tertentu (dipakai polling dashboard).
+ * Mengambil pesanan yang berubah sejak waktu tertentu (dipakai polling dashboard: permintaan berkala setiap beberapa detik).
  * Halaman berikutnya diambil dengan `updated_at` terbesar, bukan nomor halaman, paling banyak 5 kali agar tidak berputar terus.
  * Kode yang muncul dua kali memakai versi terakhir.
  * @param since waktu ISO; hanya pesanan dengan `updated_at` setelah ini
@@ -102,7 +105,10 @@ export async function getChangedOrders(since: string): Promise<DataResult<Mercha
   return { data: [...byCode.values()] };
 }
 
-/** Jumlah pesanan menunggu dan terkonfirmasi untuk badge sidebar. Bila gagal dianggap 0. */
+/**
+ * Jumlah pesanan menunggu dan terkonfirmasi untuk badge sidebar. Bila gagal dianggap 0.
+ * @returns jumlah pesanan yang perlu ditindak
+ */
 export async function getNeedsActionCount(): Promise<number> {
   const scenario = await getScenario();
   if (scenario === "gagal-muat" || scenario === "kosong" || scenario === "penjual-baru") return 0;

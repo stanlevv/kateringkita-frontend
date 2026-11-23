@@ -22,6 +22,7 @@ const isValidDate = (date: string) =>
  * Menghitung jumlah hari dalam rentang, tanggal awal dan akhir ikut dihitung.
  * @param from tanggal awal (YYYY-MM-DD)
  * @param to tanggal akhir (YYYY-MM-DD)
+ * @returns jumlah hari (minimal 1 bila awal = akhir)
  */
 export const countDays = (from: string, to: string) => Math.round((dayStartMs(to) - dayStartMs(from)) / 86400e3) + 1;
 
@@ -71,6 +72,7 @@ export function parseRange(from: string | undefined, to: string | undefined, tod
  * Tanggal (YYYY-MM-DD) sekian hari sebelum tanggal tertentu.
  * @param date tanggal acuan
  * @param days jumlah hari mundur
+ * @returns tanggal YYYY-MM-DD
  */
 export const daysBefore = (date: string, days: number) =>
   new Date(dayStartMs(date) - days * 86400e3).toISOString().slice(0, 10);
@@ -82,9 +84,11 @@ export const daysBefore = (date: string, days: number) =>
  * @returns angka per jam: jumlah pesanan, porsi, dan omzet
  */
 export function groupByHour(transactions: Transaction[]): HourlyPoint[] {
+  // 1. Siapkan wadah per jam dan catatan pesanan yang sudah dihitung.
   const byHour = new Map<number, HourlyPoint>();
   const countedOrders = new Set<string>();
   for (const transaction of transactions) {
+    // 2. Tambahkan tiap transaksi ke jamnya; satu kode pesanan dihitung sekali per jam.
     const hour = wibHour(transaction.completed_at);
     const point = byHour.get(hour) ?? { hour, orders: 0, portions: 0, revenue: 0 };
     if (!countedOrders.has(`${hour}|${transaction.code}`)) {
@@ -95,6 +99,7 @@ export function groupByHour(transactions: Transaction[]): HourlyPoint[] {
     point.revenue += transaction.total;
     byHour.set(hour, point);
   }
+  // 3. Urutkan dari jam terkecil.
   return [...byHour.values()].sort((first, second) => first.hour - second.hour);
 }
 
@@ -116,6 +121,7 @@ export const csvCell = toCsvCell;
  * @returns teks CSV dengan akhir baris CRLF
  */
 export function createTransactionsCsv(transactions: Transaction[]): string {
+  // 1. Satu baris CSV per transaksi; teks dibuat aman dengan toCsvCell, laba = omzet - HPP.
   const rows = transactions.map((transaction) =>
     [
       toCsvCell(transaction.code),
@@ -128,5 +134,6 @@ export function createTransactionsCsv(transactions: Transaction[]): string {
       toCsvCell(transaction.payment_method),
     ].join(","),
   );
+  // 2. Tambahkan baris judul kolom di atas, akhir baris CRLF.
   return ["kode,waktu,menu,qty,omzet,hpp,laba,metode", ...rows].join("\r\n") + "\r\n";
 }

@@ -30,6 +30,7 @@ const toQuery = (params: Record<string, string>) => new URLSearchParams(params).
 
 /**
  * Mengambil ringkasan laporan untuk rentang tanggal.
+ * @param range tanggal `from` dan `to`
  * @returns `{ data }` atau `{ error }`
  */
 export const getReportSummary = ({ from, to }: ReportRange) =>
@@ -39,6 +40,7 @@ export const getReportSummary = ({ from, to }: ReportRange) =>
 
 /**
  * Mengambil angka penjualan per jam untuk satu tanggal.
+ * @param query tanggal (`date`, YYYY-MM-DD)
  * @returns `{ data }` atau `{ error }`
  */
 export const getHourly = ({ date }: { date: string }) =>
@@ -48,6 +50,7 @@ export const getHourly = ({ date }: { date: string }) =>
 
 /**
  * Mengambil transaksi selesai dalam rentang tanggal.
+ * @param range tanggal `from` dan `to`
  * @returns `{ data }` atau `{ error }`
  */
 export const getTransactions = ({ from, to }: ReportRange) =>

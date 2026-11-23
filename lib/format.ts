@@ -7,27 +7,34 @@ const WIB_OFFSET_MS = 7 * 3600e3;
 /**
  * Membuat Date yang bila dibaca dengan getUTC*() menghasilkan jam dinding WIB (waktu digeser +7 jam).
  * @param timestamp waktu dalam milidetik
+ * @returns Date yang sudah digeser ke WIB (baca dengan getUTC*)
  */
 export const toWibClock = (timestamp: number) => new Date(timestamp + WIB_OFFSET_MS);
 
 /**
  * Mengambil tanggal WIB ("2026-10-31") dari waktu ISO.
  * @param iso waktu ISO-8601
+ * @returns tanggal YYYY-MM-DD
  */
 export const wibDate = (iso: string) => toWibClock(Date.parse(iso)).toISOString().slice(0, 10);
 
-/** Tanggal hari ini dalam WIB, format YYYY-MM-DD. */
+/**
+ * Tanggal hari ini dalam WIB, format YYYY-MM-DD.
+ * @returns tanggal YYYY-MM-DD
+ */
 export const todayWib = () => toWibClock(Date.now()).toISOString().slice(0, 10);
 
 /**
  * Jam (0–23, WIB) dari waktu ISO.
  * @param iso waktu ISO-8601
+ * @returns jam 0–23
  */
 export const wibHour = (iso: string) => toWibClock(Date.parse(iso)).getUTCHours();
 
 /**
  * Menulis angka sebagai rupiah, mis. "Rp 25.000" (dibulatkan ke rupiah terdekat).
  * @param amount jumlah rupiah
+ * @returns teks rupiah, mis. "Rp 25.000"
  */
 export function formatRupiah(amount: number): string {
   return `Rp ${Math.round(amount).toLocaleString("id-ID")}`;
@@ -36,6 +43,7 @@ export function formatRupiah(amount: number): string {
 /**
  * Menulis jam WIB, mis. "11.42".
  * @param iso waktu ISO-8601
+ * @returns jam dan menit, mis. "11.42"
  */
 export function formatTime(iso: string): string {
   const parts = new Intl.DateTimeFormat("id-ID", {
@@ -53,6 +61,7 @@ const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Se
 /**
  * Menulis tanggal WIB, mis. "31 Okt 2026".
  * @param iso waktu ISO-8601
+ * @returns tanggal, mis. "31 Okt 2026"
  */
 export function formatDate(iso: string): string {
   const clock = toWibClock(Date.parse(iso));
@@ -65,6 +74,7 @@ export function formatDate(iso: string): string {
  * (kalau berbeda, React memberi peringatan hydration mismatch).
  * @param iso waktu ISO-8601
  * @param now waktu acuan dalam milidetik
+ * @returns teks waktu relatif
  */
 export function formatRelativeTime(iso: string, now: number): string {
   const minutes = Math.floor((now - Date.parse(iso)) / 60_000);
@@ -78,6 +88,7 @@ export function formatRelativeTime(iso: string, now: number): string {
 /**
  * Menulis nomor telepon menjadi "0812-3456-7890". Awalan 62 diubah jadi 0; nomor yang terlalu pendek dikembalikan apa adanya.
  * @param raw nomor mentah
+ * @returns nomor yang sudah diberi tanda hubung
  */
 export function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "").replace(/^62/, "0");
@@ -88,6 +99,7 @@ export function formatPhone(raw: string): string {
 /**
  * Mengubah waktu ISO (UTC) menjadi isian input datetime-local dalam WIB, mis. "2026-10-31T09:00".
  * @param iso waktu ISO-8601
+ * @returns isian input datetime-local, mis. "2026-10-31T09:00"
  */
 export function isoToWibInput(iso: string): string {
   return toWibClock(Date.parse(iso)).toISOString().slice(0, 16);

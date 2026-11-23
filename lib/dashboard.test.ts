@@ -105,7 +105,7 @@ describe("tab antrean (brief §3)", () => {
   it("jumlah tab Perlu tindakan sama dengan perluTindakan() (KPI & sidebar)", () => {
     const j = countQueueTabs(list);
     expect(j.tindakan).toBe(countNeedsAction(list));
-    // Daftar tetap memuat holding VA/online yang menunggu pembayaran; angka hanya yang perlu tindakan penjual
+    // Daftar tetap memuat holding VA (virtual account)/online yang menunggu pembayaran; angka hanya yang perlu tindakan penjual
     expect(j.tindakan).toBe(
       queueForTab(list, "tindakan", later).filter((order) => countNeedsAction([order]) === 1).length,
     );

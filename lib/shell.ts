@@ -6,8 +6,10 @@ import type { MerchantOrder } from "@/types/order";
 
 /**
  * Menghitung pesanan yang menunggu tindakan penjual: menunggu konfirmasi ditambah sudah dikonfirmasi.
- * Pesanan VA/online yang belum lunas tidak dihitung, karena Midtrans menerimanya otomatis begitu lunas.
+ * Pesanan VA (virtual account) atau online yang belum lunas tidak dihitung, karena Midtrans (layanan pembayaran)
+ * menerimanya otomatis begitu lunas.
  * @param orders pesanan (cukup status dan data pembayaran)
+ * @returns jumlah pesanan yang perlu ditindak
  */
 export function countNeedsAction(
   orders: Pick<MerchantOrder, "status" | "payment_method" | "payment_status">[],
@@ -27,6 +29,7 @@ const toMinutes = (time: string) => {
  * @param timestamp waktu dalam milidetik
  * @param openTime jam buka "HH:MM"
  * @param closeTime jam tutup "HH:MM"
+ * @returns true bila toko sedang di luar jam buka
  */
 export function isOutsideOpenHours(timestamp: number, openTime: string, closeTime: string): boolean {
   const clock = toWibClock(timestamp);
@@ -40,7 +43,12 @@ export function isOutsideOpenHours(timestamp: number, openTime: string, closeTim
   return !isOpen;
 }
 
-/** Menulis jam buka, mis. "07:00","16:00" menjadi "07.00–16.00". */
+/**
+ * Menulis jam buka, mis. "07:00","16:00" menjadi "07.00–16.00".
+ * @param openTime jam buka "HH:MM"
+ * @param closeTime jam tutup "HH:MM"
+ * @returns teks jam buka
+ */
 export const openHoursLabel = (openTime: string, closeTime: string) =>
   `${openTime.replace(":", ".")}–${closeTime.replace(":", ".")}`;
 
@@ -49,6 +57,7 @@ const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 /**
  * Menulis hari dan jam WIB, mis. "Sab, 31 Okt · 11.42 WIB".
  * @param timestamp waktu dalam milidetik
+ * @returns teks hari dan jam
  */
 export function formatDayTime(timestamp: number): string {
   const iso = new Date(timestamp).toISOString();
@@ -59,6 +68,7 @@ export function formatDayTime(timestamp: number): string {
 /**
  * Mengambil inisial nama (paling banyak 2 huruf), mis. "Dapur Diego" menjadi "DD"; "?" bila nama kosong.
  * @param name nama
+ * @returns inisial huruf besar
  */
 export function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
@@ -79,5 +89,6 @@ export type SidebarMode = "lebar" | "ringkas";
 /**
  * Membaca mode sidebar dari nilai cookie; selain "ringkas" dianggap "lebar".
  * @param value nilai cookie
+ * @returns "lebar" atau "ringkas"
  */
 export const parseSidebarMode = (value: string | undefined): SidebarMode => (value === "ringkas" ? "ringkas" : "lebar");

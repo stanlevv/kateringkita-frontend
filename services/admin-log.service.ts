@@ -76,6 +76,7 @@ export const LOG_TARGETS: [string, string][] = [
  * Menulis target log, mis. "Penjual #12".
  * @param type jenis target
  * @param id id target
+ * @returns label target
  */
 export function targetLabel(type: string, id: string): string {
   if (type === "settings") return id === "service_fee" ? "Biaya layanan" : "Pengaturan";

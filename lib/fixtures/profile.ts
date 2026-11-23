@@ -3,7 +3,10 @@
 import type { MerchantProfile } from "@/types/profile";
 import { merchantTypes } from "./meta";
 
-/** Profil toko contoh. */
+/**
+ * Profil toko contoh.
+ * @returns profil toko contoh
+ */
 export const profile = (): MerchantProfile => ({
   business_name: "Dapur Diego",
   description: "Katering nasi box dan kudapan harian untuk mahasiswa dan dosen Vokasi UB.",

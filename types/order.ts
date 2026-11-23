@@ -8,7 +8,8 @@ import type { PickupPoint } from "@/types/meta";
  */
 export type OrderStatus = "holding" | "confirmed" | "cooking" | "ready" | "completed" | "cancelled" | "expired";
 /**
- * Cara bayar. `online` = halaman bayar Midtrans; `qris` = QRIS statis toko yang sudah tidak dipakai, hanya ada di riwayat lama.
+ * Cara bayar. `va` = virtual account (transfer ke nomor rekening khusus pesanan); `online` = halaman bayar Midtrans
+ * (layanan pembayaran yang dipakai aplikasi); `qris` = QRIS statis toko yang sudah tidak dipakai, hanya ada di riwayat lama.
  */
 export type PaymentMethod = "cod" | "qris" | "va" | "online";
 /** Status pembayaran, sama dengan kolom orders.payment_status di database. */

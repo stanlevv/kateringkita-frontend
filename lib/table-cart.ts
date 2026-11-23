@@ -10,17 +10,39 @@ export type CartLine = { key: string; menu: TableMenuItem; qty: number; options:
 /** Bentuk baris keranjang yang disimpan di localStorage dan dikirim saat memesan. */
 export type SavedCartLine = { menu_id: number; qty: number; option_ids: number[] };
 
-/** Membuat kunci unik baris keranjang dari id menu dan id opsi (urutan opsi tidak berpengaruh). */
+/**
+ * Membuat kunci unik baris keranjang dari id menu dan id opsi (urutan opsi tidak berpengaruh).
+ * @param menuId id menu
+ * @param optionIds id opsi yang dipilih
+ * @returns kunci, mis. "12:3,5"
+ */
 export const cartLineKey = (menuId: number, optionIds: number[]) =>
   `${menuId}:${[...optionIds].sort((first, second) => first - second).join(",")}`;
-/** Harga satu porsi: harga menu ditambah harga semua opsi. */
+/**
+ * Harga satu porsi: harga menu ditambah harga semua opsi.
+ * @param line baris keranjang (cukup menu dan opsi)
+ * @returns harga satu porsi dalam rupiah
+ */
 export const unitPrice = (line: Pick<CartLine, "menu" | "options">) =>
   line.menu.price + line.options.reduce((sum, option) => sum + option.extra_price, 0);
-/** Total harga seluruh keranjang. */
+/**
+ * Total harga seluruh keranjang.
+ * @param lines isi keranjang
+ * @returns total harga dalam rupiah
+ */
 export const cartTotal = (lines: CartLine[]) => lines.reduce((sum, line) => sum + unitPrice(line) * line.qty, 0);
-/** Jumlah porsi di keranjang. */
+/**
+ * Jumlah porsi di keranjang.
+ * @param lines isi keranjang
+ * @returns jumlah porsi
+ */
 export const countItems = (lines: CartLine[]) => lines.reduce((sum, line) => sum + line.qty, 0);
-/** Jumlah porsi satu menu di keranjang, dari semua barisnya. */
+/**
+ * Jumlah porsi satu menu di keranjang, dari semua barisnya.
+ * @param lines isi keranjang
+ * @param menuId id menu
+ * @returns jumlah porsi menu itu
+ */
 export const menuQty = (lines: CartLine[], menuId: number) =>
   lines.filter((line) => line.menu.id === menuId).reduce((sum, line) => sum + line.qty, 0);
 
@@ -60,7 +82,11 @@ export function updateQty(lines: CartLine[], key: string, qty: number): CartLine
   return lines.map((line) => (line === target ? { ...line, qty } : line));
 }
 
-/** Mengubah keranjang ke bentuk tersimpan (id menu, jumlah, id opsi). */
+/**
+ * Mengubah keranjang ke bentuk tersimpan (id menu, jumlah, id opsi).
+ * @param lines isi keranjang
+ * @returns baris dalam bentuk tersimpan
+ */
 export const toSavedLines = (lines: CartLine[]): SavedCartLine[] =>
   lines.map((line) => ({ menu_id: line.menu.id, qty: line.qty, option_ids: line.options.map((option) => option.id) }));
 
@@ -68,6 +94,7 @@ export const toSavedLines = (lines: CartLine[]): SavedCartLine[] =>
  * Memulihkan keranjang tersimpan berdasarkan menu terbaru; menu atau opsi yang sudah hilang atau habis dibuang.
  * @param savedLines keranjang dari localStorage
  * @param menus menu terbaru dari server
+ * @returns keranjang yang masih valid
  */
 export function restoreCart(savedLines: SavedCartLine[], menus: TableMenuItem[]): CartLine[] {
   let cart: CartLine[] = [];

@@ -2,7 +2,10 @@
 
 import type { MyPayouts } from "@/types/payout";
 
-/** Data pencairan contoh: rekening sudah terisi dan satu riwayat pencairan. */
+/**
+ * Data pencairan contoh: rekening sudah terisi dan satu riwayat pencairan.
+ * @returns data halaman pencairan contoh
+ */
 export const myPayouts = (): MyPayouts => ({
   banks: [
     { code: "bca", name: "BCA" },

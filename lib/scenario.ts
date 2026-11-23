@@ -43,6 +43,7 @@ const SCENARIO_IDS: readonly string[] = SCENARIOS.map((scenario) => scenario.id)
 /**
  * Mengecek apakah sebuah teks adalah id skenario yang dikenal.
  * @param value teks yang dicek
+ * @returns true bila id skenario dikenal
  */
 export function isScenario(value: string | null | undefined): value is Scenario {
   return !!value && SCENARIO_IDS.includes(value);

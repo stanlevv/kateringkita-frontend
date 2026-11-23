@@ -23,6 +23,7 @@ export function bannerStatus(banner: Banner, now: number): { label: string; tone
  * Mengecek apakah banner memakai jatah satu banner aktif per toko (menunggu atau disetujui dan belum berakhir).
  * @param banner data banner
  * @param now waktu sekarang dalam milidetik
+ * @returns true bila banner masih memakai jatah aktif
  */
 export const isBannerActive = (banner: Banner, now: number) =>
   (banner.status === "menunggu" || banner.status === "disetujui") && Date.parse(banner.ends_at) > now;
@@ -45,10 +46,12 @@ export type BannerInput = {
  */
 export function validateBanner(input: BannerInput): Record<string, string> {
   const errors: Record<string, string> = {};
+  // 1. Judul 3–80 karakter, gambar wajib, dan voucher wajib bila tujuannya promo.
   const title = input.title.trim();
   if (title.length < 3 || title.length > 80) errors.title = "Judul 3–80 karakter.";
   if (!input.image_url) errors.image_url = "Unggah gambar banner.";
   if (input.target === "promo" && !input.promo_id) errors.promo_id = "Pilih voucher.";
+  // 2. Waktu mulai dan selesai wajib diisi, dan selesai harus setelah mulai.
   const startsAt = Date.parse(input.starts_at);
   const endsAt = Date.parse(input.ends_at);
   if (Number.isNaN(startsAt)) errors.starts_at = "Waktu mulai wajib diisi.";

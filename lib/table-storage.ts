@@ -51,19 +51,36 @@ const notifyChange = () => window.dispatchEvent(new Event(CHANGE_EVENT));
  * Data tamu satu pesanan: token tamu dan token meja. Token tamu adalah satu-satunya kunci untuk melihat dan membayar pesanan ini.
  */
 export type GuestData = { tamu: string; meja: string };
-/** Membaca data tamu (teks mentah) untuk satu kode pesanan. */
+/**
+ * Membaca data tamu (teks mentah) untuk satu kode pesanan.
+ * @param code kode pesanan
+ * @returns teks JSON tersimpan, atau null
+ */
 export const readGuestRaw = (code: string) => readItem(`kk-tamu:${code}`);
-/** Mengubah teks mentah data tamu menjadi objek; null bila kosong atau rusak. */
+/**
+ * Mengubah teks mentah data tamu menjadi objek; null bila kosong atau rusak.
+ * @param raw teks dari `readGuestRaw`
+ * @returns data tamu, atau null
+ */
 export const parseGuest = (raw: string | null) => parseJson<GuestData | null>(raw, null);
-/** Menyimpan data tamu untuk satu kode pesanan. */
+/**
+ * Menyimpan data tamu untuk satu kode pesanan.
+ * @param code kode pesanan
+ * @param guest token tamu dan token meja
+ */
 export const saveGuest = (code: string, guest: GuestData) => writeItem(`kk-tamu:${code}`, JSON.stringify(guest));
 
 /**
  * Membaca keranjang (teks mentah) untuk satu meja.
  * @param table token meja
+ * @returns teks JSON tersimpan, atau null
  */
 export const readCartRaw = (table: string) => readItem(`kk-keranjang:${table}`);
-/** Mengubah teks mentah keranjang menjadi daftar baris; daftar kosong bila kosong atau rusak. */
+/**
+ * Mengubah teks mentah keranjang menjadi daftar baris; daftar kosong bila kosong atau rusak.
+ * @param raw teks dari `readCartRaw`
+ * @returns baris keranjang tersimpan
+ */
 export const parseCart = (raw: string | null) => parseJson<SavedCartLine[]>(raw, []);
 /**
  * Menyimpan keranjang satu meja (keranjang kosong berarti dihapus), lalu memberi tahu komponen yang mendengarkan.
@@ -75,12 +92,24 @@ export function saveCart(table: string, items: SavedCartLine[]) {
   notifyChange();
 }
 
-/** Membaca token meja yang terakhir dibuka. */
+/**
+ * Membaca token meja yang terakhir dibuka.
+ * @returns token meja, atau null
+ */
 export const readLastTable = () => parseJson<string | null>(readItem("kk-meja-terakhir"), null);
-/** Menyimpan token meja yang terakhir dibuka. */
+/**
+ * Menyimpan token meja yang terakhir dibuka.
+ * @param table token meja
+ */
 export const saveLastTable = (table: string) => writeItem("kk-meja-terakhir", JSON.stringify(table));
 
-/** Membaca nama tamu yang pernah diisi; "" bila belum ada. */
+/**
+ * Membaca nama tamu yang pernah diisi; "" bila belum ada.
+ * @returns nama tamu
+ */
 export const readGuestName = () => parseJson<string>(readItem("kk-nama-tamu"), "");
-/** Menyimpan nama tamu agar tidak perlu mengetik ulang. */
+/**
+ * Menyimpan nama tamu agar tidak perlu mengetik ulang.
+ * @param name nama tamu
+ */
 export const saveGuestName = (name: string) => writeItem("kk-nama-tamu", JSON.stringify(name));

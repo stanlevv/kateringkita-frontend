@@ -22,6 +22,7 @@ export const PROMO_STATUS: Record<PromoStatus, { label: string; tone: Tone; icon
  * Menentukan status voucher: nonaktif, terjadwal, berakhir, kuota habis, atau berjalan.
  * @param promo data voucher
  * @param now waktu acuan dalam milidetik (bawaan: sekarang)
+ * @returns status voucher
  */
 export function promoStatus(promo: Promo, now: number = Date.now()): PromoStatus {
   if (!promo.is_active) return "nonaktif";
@@ -34,6 +35,7 @@ export function promoStatus(promo: Promo, now: number = Date.now()): PromoStatus
 /**
  * Menulis jenis potongan voucher, mis. "Diskon 10% maks Rp 10.000", "Potongan Rp 5.000", atau "Gratis biaya layanan".
  * @param promo data voucher
+ * @returns teks jenis potongan
  */
 export function describePromoType(promo: Promo): string {
   if (promo.type === "percent")

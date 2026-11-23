@@ -31,7 +31,10 @@ const MENU_ROWS: MenuRow[] = [
   [12, "Es Jeruk Peras", 5, "400 ml", 9000, 4500, 30, 3, 0],
 ];
 
-/** Membuat daftar menu contoh baru (objek baru setiap dipanggil, jadi aman diubah di test). */
+/**
+ * Membuat daftar menu contoh baru (objek baru setiap dipanggil, jadi aman diubah di test).
+ * @returns 12 menu contoh
+ */
 export const menus = (): MerchantMenu[] => {
   const categoryList = categories();
   return MENU_ROWS.map(([id, name, categoryId, unit, price, hpp, quota, sold, held, options = []]) => ({

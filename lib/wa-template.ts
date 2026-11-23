@@ -44,6 +44,7 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
 /**
  * Mengisi nilai placeholder dari data pesanan (kode, nama, menu, total, tempat ambil, waktu ambil, cara bayar).
  * @param order pesanan
+ * @returns nilai per placeholder
  */
 export function templateValuesFromOrder(order: MerchantOrder): TemplateValues {
   return {
@@ -63,6 +64,7 @@ const PLACEHOLDER_PATTERN = /\{[^{}\n]+\}/g;
  * Mengganti placeholder yang dikenal dengan nilainya; placeholder tidak dikenal dibiarkan apa adanya.
  * @param text templat
  * @param values nilai pengganti
+ * @returns teks pesan siap kirim
  */
 export function renderTemplate(text: string, values: TemplateValues): string {
   return text.replace(PLACEHOLDER_PATTERN, (placeholder) => values[placeholder.slice(1, -1)] ?? placeholder);
@@ -73,6 +75,7 @@ const KNOWN_PLACEHOLDERS: readonly string[] = PLACEHOLDER.map((placeholder) => p
 /**
  * Mencari placeholder di templat yang tidak dikenal (tanpa duplikat).
  * @param text templat
+ * @returns nama placeholder yang tidak dikenal
  */
 export function findUnknownPlaceholders(text: string): string[] {
   return [

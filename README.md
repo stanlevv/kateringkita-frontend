@@ -55,7 +55,7 @@
 ```
 
 - **Perlindungan Token JWT:** Token otentikasi disimpan di cookie `httpOnly` (`kk_session`). Kode JavaScript di sisi peramban tidak pernah memiliki akses langsung ke JWT, mencegah kerentanan XSS (_Cross-Site Scripting_).
-- **Server-Side Data Fetching:** Komponen halaman mengambil data langsung dari API di tingkat server menggunakan modul layanan terisolasi (`services/merchantService.ts`, `services/adminService.ts`).
+- **Server-Side Data Fetching:** Komponen halaman mengambil data langsung dari API di tingkat server menggunakan modul layanan terisolasi (`services/<fitur>.service.ts`, mis. `services/order.service.ts` dan `services/admin-merchant.service.ts`).
 - **Route Guarding:** `proxy.ts` mengamankan rute terproteksi secara otomatis dengan mengarahkan pengguna tanpa otentikasi ke `/login?alasan=sesi-habis`.
 
 ---
@@ -92,7 +92,7 @@
 | `/lupa-sandi`                          | Reset kata sandi dengan kode OTP dari email                                                                                                                                | Publik                                  |
 | `/dashboard`                           | Live operational dashboard pesanan masuk toko                                                                                                                              | Merchant                                |
 | `/pesanan` & `/pesanan/[code]`         | Antrean dan rincian lengkap pesanan pelanggan                                                                                                                              | Merchant                                |
-| `/menu`, `/menu/baru`, `/menu/[id]`    | Manajemen katalog menu, harga, foto, dan kuota harian. Foto (≤ 20 MB) diperkecil di peramban jadi WebP ≤ 1600 px lalu diunggah langsung ke Cloudflare R2 (`lib/unggah.ts`) | Merchant                                |
+| `/menu`, `/menu/baru`, `/menu/[id]`    | Manajemen katalog menu, harga, foto, dan kuota harian. Foto (≤ 20 MB) diperkecil di peramban jadi WebP ≤ 1600 px lalu diunggah langsung ke Cloudflare R2 (`lib/upload.ts`) | Merchant                                |
 | `/laporan`                             | Dasbor keuangan, tren transaksi, dan ekspor CSV                                                                                                                            | Merchant                                |
 | `/pengaturan`                          | Profil toko, jam operasional, titik jemput, rekening & riwayat pencairan dana, dan pesan dari meja (sakelar, daftar meja, QR)                                              | Merchant                                |
 | `/cetak-qr`                            | Lembar QR semua meja aktif siap cetak (A4)                                                                                                                                 | Merchant                                |

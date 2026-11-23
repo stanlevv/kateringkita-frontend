@@ -81,6 +81,7 @@ export function toResult<T>(response: ApiResult<T>): ActionResult<T> {
  * Bila sesi habis (401), pengguna langsung dialihkan ke halaman masuk.
  * @param path path setelah /merchant, mis. "/orders"
  * @param init opsi fetch tanpa header
+ * @returns hasil `apiFetch` (tidak kembali bila sesi habis, karena langsung dialihkan)
  */
 export async function merchantFetch<T>(path: string, init: Omit<RequestInit, "headers"> = {}): Promise<ApiResult<T>> {
   const token = await getSessionToken();
@@ -94,6 +95,7 @@ export async function merchantFetch<T>(path: string, init: Omit<RequestInit, "he
  * Bila sesi habis (401), pengguna langsung dialihkan ke halaman masuk.
  * @param path path setelah /admin
  * @param init opsi fetch tanpa header
+ * @returns hasil `apiFetch` (tidak kembali bila sesi habis, karena langsung dialihkan)
  */
 export async function adminFetch<T>(path: string, init: Omit<RequestInit, "headers"> = {}): Promise<ApiResult<T>> {
   const token = await getSessionToken();

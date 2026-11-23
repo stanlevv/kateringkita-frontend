@@ -2,7 +2,10 @@
 
 import type { Category, MerchantType, PickupPoint } from "@/types/meta";
 
-/** Daftar kategori contoh. */
+/**
+ * Daftar kategori contoh.
+ * @returns daftar kategori
+ */
 export const categories = (): Category[] => [
   { id: 1, name: "Nasi Box", slug: "nasi-box" },
   { id: 2, name: "Ayam", slug: "ayam" },
@@ -13,14 +16,20 @@ export const categories = (): Category[] => [
   { id: 7, name: "Danusan", slug: "danusan" },
 ];
 
-/** Daftar titik temu contoh. */
+/**
+ * Daftar titik temu contoh.
+ * @returns daftar titik temu
+ */
 export const pickupPoints = (): PickupPoint[] => [
   { id: 1, name: "Gedung Vokasi UB (Lt. 2)" },
   { id: 2, name: "Kantin Vokasi UB" },
   { id: 3, name: "Gazebo Fakultas Ilmu Komputer" },
 ];
 
-/** Daftar jenis usaha contoh. */
+/**
+ * Daftar jenis usaha contoh.
+ * @returns daftar jenis usaha
+ */
 export const merchantTypes = (): MerchantType[] => [
   { id: 1, name: "Katering Nasi Box & Harian" },
   { id: 2, name: "Kudapan, Snack & Kue" },

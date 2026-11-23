@@ -33,6 +33,7 @@ const matchSearchAndCategory = (menus: MerchantMenu[], filter: Pick<MenuFilter, 
  * Menyaring menu berdasarkan pencarian, kategori, dan tab status sekaligus.
  * @param menus semua menu
  * @param filter isian penyaring
+ * @returns menu yang lolos penyaring
  */
 export const filterMenus = (menus: MerchantMenu[], filter: MenuFilter) =>
   matchSearchAndCategory(menus, filter).filter(matchesStatus[filter.status]);
@@ -41,6 +42,7 @@ export const filterMenus = (menus: MerchantMenu[], filter: MenuFilter) =>
  * Menghitung jumlah menu di tiap tab status (angka di samping nama tab).
  * Panggil dengan menu yang sudah disaring pencarian dan kategori, bukan yang sudah disaring tab.
  * @param menus menu yang akan dihitung
+ * @returns jumlah menu per tab status
  */
 export function countMenuTabs(menus: MerchantMenu[]): Record<MenuStatusFilter, number> {
   return Object.fromEntries(
@@ -57,6 +59,7 @@ export const filterBySearchAndCategory = matchSearchAndCategory;
 
 /**
  * Menghitung margin dalam persen dari harga jual dan HPP, dibulatkan.
+ * @param menu harga jual (`price`) dan HPP menu
  * @returns persen margin; 0 bila harga belum diisi
  */
 export const marginPercent = ({ price, hpp }: Pick<MerchantMenu, "price" | "hpp">) =>

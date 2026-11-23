@@ -9,6 +9,7 @@ export const LIMIT_REVIEWS = 10;
 /**
  * Menyamarkan nama pembeli untuk privasi, mis. "Rafli R." menjadi "Ra***".
  * @param name nama asli
+ * @returns nama tersamar
  */
 export function maskName(name: string): string {
   return `${name.trim().slice(0, 2)}***`;
@@ -21,6 +22,7 @@ const average = (reviews: Review[]) =>
 /**
  * Meringkas ulasan: jumlah, rata-rata bintang (1 desimal), dan sebaran jumlah ulasan per bintang 5 sampai 1.
  * @param reviews semua ulasan
+ * @returns `{ total, average, distribution }`
  */
 export function summarizeReviews(reviews: Review[]) {
   return {
@@ -37,6 +39,7 @@ export function summarizeReviews(reviews: Review[]) {
  * Meringkas ulasan per menu: semua menu toko ditambah menu yang hanya muncul di ulasan (mis. menu sudah dihapus), urut nama.
  * @param reviews semua ulasan
  * @param menus menu toko (id dan nama)
+ * @returns satu baris per menu: id, nama, rata-rata, dan jumlah ulasan
  */
 export function summarizeByMenu(reviews: Review[], menus: { id: number; name: string }[]) {
   const menuNames = new Map(menus.map((menu) => [menu.id, menu.name]));
@@ -70,6 +73,7 @@ export function filterReviews(reviews: Review[], filter: { menu?: number; stars?
 /**
  * Membuat alamat halaman Ulasan untuk penyaring tertentu (parameter URL tetap `menu`, `bintang`, `page`).
  * @param filter menu, bintang, dan halaman
+ * @returns alamat, mis. "/ulasan?bintang=5"
  */
 export function reviewsUrl(filter: { menu?: number; stars?: number; page?: number }): string {
   return buildUrl("/ulasan", "", {

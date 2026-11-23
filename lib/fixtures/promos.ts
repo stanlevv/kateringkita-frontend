@@ -3,7 +3,10 @@
 import type { Promo } from "@/types/promo";
 import { daysFromNow, daysAgo } from "./time";
 
-/** Daftar voucher contoh. */
+/**
+ * Daftar voucher contoh.
+ * @returns daftar voucher contoh
+ */
 export const promos = (): Promo[] => [
   {
     id: 1,

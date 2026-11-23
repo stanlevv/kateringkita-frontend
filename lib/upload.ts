@@ -34,7 +34,7 @@ const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) 
 /**
  * Memperkecil dan menyandikan ulang foto di browser (WebP; cadangan JPEG/PNG).
  * Semua <Image> memakai `unoptimized`, jadi pembeli mengunduh berkas ini apa adanya. Sandi ulang juga membuang
- * data EXIF (termasuk lokasi GPS) karena penyimpanan R2 bisa dibuka publik.
+ * data EXIF (info tambahan dari kamera, termasuk lokasi GPS) karena penyimpanan R2 bisa dibuka publik.
  * @param file foto asli
  * @param purpose kegunaan foto, menentukan ukuran maksimal dan warna latar
  * @returns foto hasil perkecil, atau berkas asli bila browser gagal membaca/menyandikan

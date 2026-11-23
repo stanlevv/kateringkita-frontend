@@ -39,7 +39,8 @@ export const statusView: Record<DisplayStatus, StatusView> = {
     primaryLabel: "Konfirmasi",
     secondary: ["reject", "chat-wa"],
   },
-  // Pembayaran VA/online dikonfirmasi Midtrans; pesanan diterima otomatis begitu lunas, penjual tidak perlu memeriksa manual
+  // Pembayaran VA (virtual account, transfer ke nomor rekening khusus pesanan) atau online dikonfirmasi Midtrans
+  // (layanan pembayaran yang dipakai aplikasi); pesanan diterima otomatis begitu lunas, penjual tidak perlu memeriksa manual
   "menunggu-bayar": {
     label: "Menunggu pembayaran",
     tone: "warning",
@@ -94,6 +95,7 @@ type StatusFields = Pick<MerchantOrder, "status" | "payment_method" | "payment_s
  * Pesanan "holding" yang dibayar online dan belum lunas menjadi "menunggu-bayar";
  * pembayaran online dikonfirmasi otomatis oleh Midtrans, bukan oleh penjual.
  * @param order pesanan (cukup status dan data pembayaran)
+ * @returns status tampilan
  */
 export function displayStatus(order: StatusFields): DisplayStatus {
   if (order.status === "holding") {
@@ -109,6 +111,7 @@ type WithTable = Partial<Pick<MerchantOrder, "table">>;
 /**
  * Mengambil tampilan status untuk satu pesanan. Pesanan dari meja memakai label "Siap diantar" alih-alih "Siap diambil".
  * @param order pesanan (status, pembayaran, dan meja bila ada)
+ * @returns label, warna, ikon, dan tombol untuk pesanan ini
  */
 export function orderStatusView(order: StatusFields & WithTable): StatusView {
   const view = statusView[displayStatus(order)];
@@ -124,6 +127,7 @@ export function orderStatusView(order: StatusFields & WithTable): StatusView {
  * Akhir pesan toast setelah aksi berhasil, mis. "siap diantar" untuk pesanan meja.
  * @param action aksi yang berhasil
  * @param order pesanan (cukup data meja)
+ * @returns potongan teks untuk akhir toast
  */
 export const successText = (action: OrderAction, order: WithTable) =>
   action === "ready" && order.table ? "siap diantar" : actionTexts[action].success;
@@ -131,6 +135,7 @@ export const successText = (action: OrderAction, order: WithTable) =>
 /**
  * Label tahap "siap" di riwayat status: "Siap diantar" untuk pesanan meja, "Siap diambil" untuk titik temu.
  * @param order pesanan (cukup data meja)
+ * @returns "Siap diantar" atau "Siap diambil"
  */
 export const readyStepLabel = (order: WithTable) => (order.table ? READY_FOR_TABLE : "Siap diambil");
 

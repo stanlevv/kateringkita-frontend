@@ -221,6 +221,7 @@ const SPEC: Spec[] = [
 ];
 
 function buildOrder(spec: Spec): MerchantOrder {
+  // 1. Susun item pesanan dari menu contoh (harga satuan = harga menu + opsi).
   const menuList = menus();
   const pickupPoint = pickupPoints().find((point) => point.id === (spec.pickupPointId ?? 1))!;
   const items = spec.items.map(([id, qty, optionIndex]) => {
@@ -229,11 +230,13 @@ function buildOrder(spec: Spec): MerchantOrder {
     const unit = menu.price + options.reduce((sum, option) => sum + option.extra_price, 0);
     return { menu_id: id, menu_name: menu.name, qty, unit_price: unit, options, line_total: unit * qty };
   });
+  // 2. Hitung subtotal dan waktu tiap tahap, mundur dari umur pesanan.
   const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
   const createdAt = minutesAgo(spec.ageMinutes);
   const afterMinutes = (minutes: number) => minutesAgo(Math.max(0, spec.ageMinutes - minutes));
   const isPastConfirmation = ["confirmed", "cooking", "ready", "completed"].includes(spec.status);
   const holding = spec.status === "holding";
+  // 3. Rakit objek pesanan dengan bentuk yang sama seperti jawaban backend.
   return {
     code: spec.code,
     status: spec.status,
@@ -264,10 +267,16 @@ function buildOrder(spec: Spec): MerchantOrder {
   };
 }
 
-/** Membuat daftar pesanan contoh. */
+/**
+ * Membuat daftar pesanan contoh.
+ * @returns daftar pesanan contoh
+ */
 export const orders = (): MerchantOrder[] => SPEC.map(buildOrder);
 
-/** Membuat satu pesanan tambahan yang masuk tepat saat ini (dipakai skenario "pesanan-baru"). */
+/**
+ * Membuat satu pesanan tambahan yang masuk tepat saat ini (dipakai skenario "pesanan-baru").
+ * @returns satu pesanan "holding" yang dibuat sekarang
+ */
 export const newOrder = (): MerchantOrder =>
   buildOrder({
     code: `${CODE_PREFIX}S6ZA`,

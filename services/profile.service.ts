@@ -16,10 +16,13 @@ import type { MerchantProfile } from "@/types/profile";
  * @returns `{ data }` atau `{ error }`
  */
 export const getProfile = cache(async (): Promise<DataResult<MerchantProfile>> => {
+  // 1. Skenario pratinjau bisa memaksa gagal atau kosong tanpa memanggil backend.
   const scenario = await getScenario();
   if (scenario === "gagal-muat") return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
+  // 2. Ambil profil dari backend.
   const result = toResult(await merchantFetch<MerchantProfile>("/profile"));
   if ("error" in result) return result;
+  // 3. Ubah salinan profil sesuai skenario pratinjau (dapur tutup, penjual baru, di luar jam buka).
   const profile = { ...result.data };
   if (scenario === "dapur-tutup") profile.is_open = false;
   if (scenario === "penjual-baru") profile.pickup_point_ids = [];

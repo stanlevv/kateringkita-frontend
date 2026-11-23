@@ -31,12 +31,17 @@ export const ALLOWED_ACTIONS: Record<VerificationStatus, MerchantAction[]> = {
   suspended: ["reactivate"],
 };
 
-/** Mengecek apakah semua butir checklist terpenuhi. */
+/**
+ * Mengecek apakah semua butir checklist terpenuhi.
+ * @param checklist checklist kesiapan toko
+ * @returns true bila semua butir terpenuhi
+ */
 export const isChecklistComplete = (checklist: Checklist) => Object.values(checklist).every(Boolean);
 
 /**
  * Membuat tautan wa.me dari nomor WA (awalan 0 atau 62 dinormalkan).
  * @param waNumber nomor WA penjual
+ * @returns tautan https://wa.me/62…
  */
 export const whatsappLink = (waNumber: string) =>
   `https://wa.me/62${waNumber.replace(/\D/g, "").replace(/^(62|0)/, "")}`;
