@@ -53,8 +53,8 @@ const orderSchema = z
     cancel_reason: z.string().nullable(),
   })
   .refine((order) => order.subtotal - order.discount + order.service_fee === order.total, "total")
-  .refine((order) => order.items.reduce((sum, i) => sum + i.line_total, 0) === order.subtotal, "subtotal")
-  .refine((order) => order.items.every((i) => i.line_total >= i.unit_price * i.qty), "line_total")
+  .refine((order) => order.items.reduce((sum, item) => sum + item.line_total, 0) === order.subtotal, "subtotal")
+  .refine((order) => order.items.every((item) => item.line_total >= item.unit_price * item.qty), "line_total")
   .refine((order) => (order.status === "holding") === (order.hold_until !== null), "hold_until hanya untuk holding")
   .refine(
     (order) => (order.status === "cancelled" || order.status === "expired") === (order.cancel_reason !== null),

@@ -143,7 +143,7 @@ function crossFieldRules() {
 export function validateFields(schema: z.ZodType, value: unknown): Record<string, string> {
   const result = schema.safeParse(value);
   const errors: Record<string, string> = {};
-  if (!result.success) for (const i of result.error.issues) errors[i.path.join(".")] ??= i.message;
+  if (!result.success) for (const issue of result.error.issues) errors[issue.path.join(".")] ??= issue.message;
   return errors;
 }
 

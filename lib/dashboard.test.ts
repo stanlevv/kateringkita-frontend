@@ -103,15 +103,15 @@ describe("tab antrean (brief §3)", () => {
     expect(holdUntil).toEqual([...holdUntil].sort((first, second) => first - second));
   });
   it("jumlah tab Perlu tindakan sama dengan perluTindakan() (KPI & sidebar)", () => {
-    const j = countQueueTabs(list);
-    expect(j.tindakan).toBe(countNeedsAction(list));
+    const tabCounts = countQueueTabs(list);
+    expect(tabCounts.tindakan).toBe(countNeedsAction(list));
     // Daftar tetap memuat holding VA (virtual account)/online yang menunggu pembayaran; angka hanya yang perlu tindakan penjual
-    expect(j.tindakan).toBe(
+    expect(tabCounts.tindakan).toBe(
       queueForTab(list, "tindakan", later).filter((order) => countNeedsAction([order]) === 1).length,
     );
-    expect(j.dimasak).toBe(list.filter((order) => order.status === "cooking").length);
-    expect(j.siap).toBe(list.filter((order) => order.status === "ready").length);
-    expect(j.semua).toBe(list.length);
+    expect(tabCounts.dimasak).toBe(list.filter((order) => order.status === "cooking").length);
+    expect(tabCounts.siap).toBe(list.filter((order) => order.status === "ready").length);
+    expect(tabCounts.semua).toBe(list.length);
   });
   it("Semua hari ini: terbaru dulu", () => {
     const createdTimes = queueForTab(list, "semua", later).map((order) => Date.parse(order.created_at));
