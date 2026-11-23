@@ -23,9 +23,9 @@ const pesanGagal: Record<string, string> = {
   NOT_MERCHANT: TEKS_PEMBELI,
 };
 
-type Props = { next?: string; alasan?: "sesi-habis" | "bukan-penjual"; registered?: boolean; reset?: boolean };
+type Props = { next?: string; alasan?: "sesi-habis" | "bukan-penjual"; registered?: boolean; reset?: boolean; pemeliharaan?: string };
 
-export default function LoginForm({ next, alasan, registered, reset }: Props) {
+export default function LoginForm({ next, alasan, registered, reset, pemeliharaan }: Props) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [lihat, setLihat] = useState(false);
@@ -92,6 +92,7 @@ export default function LoginForm({ next, alasan, registered, reset }: Props) {
         <h1 className="font-display text-2xl font-bold">Masuk ke dashboard</h1>
         <p className="mt-1 text-ink-muted">Kelola menu, kuota, dan pesanan toko Anda.</p>
         <form onSubmit={kirim} noValidate className="mt-6 flex flex-col gap-4">
+          {pemeliharaan && <Banner tone="warning">{pemeliharaan}</Banner>}
           {pesanGagalTampil ? <Banner tone="danger">{pesanGagalTampil}</Banner> : konteks}
           <ErrorSummary errors={ringkasan} focusKey={kunci} />
           <Field label="Email atau nomor WA" required error={errors.identifier} id={ID_FIELD.identifier}>

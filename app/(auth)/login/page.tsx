@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/services/authService";
+import { getPemeliharaan } from "@/services/metaService";
+import { PESAN_PEMELIHARAAN } from "@/app/components/Pemeliharaan";
 import LoginForm from "./LoginForm";
 
 // canonical tanpa ?next=… supaya varian URL login tidak dianggap halaman berbeda.
@@ -18,12 +20,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const session = await getSession().catch(() => null);
   if (session?.user.role === "merchant") redirect("/dashboard");
   if (session?.user.role === "admin") redirect("/admin");
+  const pemeliharaan = await getPemeliharaan();
   return (
     <LoginForm
       next={next}
       alasan={alasan === "sesi-habis" || alasan === "bukan-penjual" ? alasan : undefined}
       registered={registered === "1"}
       reset={reset === "1"}
+      pemeliharaan={pemeliharaan.aktif ? (pemeliharaan.pesan ?? PESAN_PEMELIHARAAN) : undefined}
     />
   );
 }

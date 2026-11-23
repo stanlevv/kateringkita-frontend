@@ -5,7 +5,7 @@ vi.mock("@/services/authService", () => ({ requireAdmin: () => requireAdmin() })
 const adminFetch = vi.fn();
 vi.mock("@/services/api", async (orig) => ({ ...(await orig<typeof import("@/services/api")>()), adminFetch: (...a: unknown[]) => adminFetch(...a) }));
 import { kirimPengumuman } from "./pengumuman";
-import { simpanKontakCs } from "./promos";
+import { simpanKontakCs, simpanPemeliharaan } from "./promos";
 
 beforeEach(() => { adminFetch.mockReset(); requireAdmin.mockClear(); });
 
@@ -32,6 +32,18 @@ describe("simpanKontakCs", () => {
     expect(await simpanKontakCs("")).toEqual({ data: { cs_whatsapp: null } });
     adminFetch.mockClear();
     expect(await simpanKontakCs("12345")).toMatchObject({ error: { fields: { wa_number: expect.any(Array) } } });
+    expect(adminFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("simpanPemeliharaan (F27)", () => {
+  it("PUT /admin/settings/maintenance dengan pesan dirapikan; pesan >200 ditolak tanpa API", async () => {
+    adminFetch.mockResolvedValue({ ok: true, status: 200, data: { maintenance: { aktif: true, pesan: "Sampai 14.00" } } });
+    expect(await simpanPemeliharaan(true, " Sampai 14.00 ")).toEqual({ data: { maintenance: { aktif: true, pesan: "Sampai 14.00" } } });
+    expect(adminFetch).toHaveBeenCalledWith("/settings/maintenance", { method: "PUT", body: JSON.stringify({ aktif: true, pesan: "Sampai 14.00" }) });
+    expect(requireAdmin).toHaveBeenCalled();
+    adminFetch.mockReset();
+    expect(await simpanPemeliharaan(true, "x".repeat(201))).toMatchObject({ error: { fields: { pesan: expect.any(Array) } } });
     expect(adminFetch).not.toHaveBeenCalled();
   });
 });
