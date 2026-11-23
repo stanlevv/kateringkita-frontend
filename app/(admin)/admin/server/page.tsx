@@ -1,3 +1,8 @@
+// Halaman /admin/server: status server dan log request bermasalah. Bagian atas menampilkan kondisi backend (jumlah error
+// 5xx dan request lambat 24 jam terakhir, koneksi database, lama server menyala), lalu grafik masalah per jam. Bagian
+// bawah berisi log: setiap error 5xx (galat di sisi server) dan request lambat (lebih dari 2 detik) dicatat backend dan
+// disimpan 30 hari. Server component: membaca searchParams (?level=&q=&page=), mengambil data lewat
+// services/admin-server.service.ts (GET /admin/server-status dan /admin/server-logs). Hanya admin super.
 import { Suspense } from "react";
 import { CircleX, Clock, Database, Server } from "lucide-react";
 import { LoadError } from "@/app/components/LoadError";
@@ -12,6 +17,7 @@ import type { ServerLog } from "@/types/server";
 import { ServerLogFilters } from "./components/ServerLogFilters";
 import { HourlyIssuesChart } from "./components/HourlyIssuesChart";
 
+// Lama server menyala dari detik menjadi "1 hr 1 j 1 mnt"; hari dan jam yang nol tidak ditulis.
 const formatUptime = (seconds: number) => {
   const days = Math.floor(seconds / 86400),
     hours = Math.floor((seconds % 86400) / 3600),
@@ -19,6 +25,11 @@ const formatUptime = (seconds: number) => {
   return [days && `${days} hr`, hours && `${hours} j`, `${minutes} mnt`].filter(Boolean).join(" ");
 };
 
+/**
+ * Label jenis log: Error (merah) atau Lambat (kuning).
+ * @param props.level jenis log dari backend ("error" atau "slow")
+ * @returns span berwarna dengan ikon
+ */
 function LevelBadge({ level }: { level: ServerLog["level"] }) {
   return level === "error" ? (
     <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
@@ -33,23 +44,33 @@ function LevelBadge({ level }: { level: ServerLog["level"] }) {
   );
 }
 
-// F23: kondisi server, masalah per jam, dan log error 5xx & request lambat (30 hari)
+/**
+ * Halaman server: kondisi server, masalah per jam, dan log error 5xx & request lambat (30 hari). Status dan log dimuat
+ * bersamaan; bila salah satu gagal, bagian lain tetap tampil.
+ * @param props.searchParams parameter URL: `level` ("error" atau "slow"), `q` (request ID atau path), `page`
+ * @returns PageHeader berisi KPI, grafik per jam, penyaring, dan tabel log
+ */
 export default async function ServerPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
+  // 1. Hanya admin super; baca parameter URL.
   await requireAdmin("super");
   const params = await searchParams;
+  // 2. Saring nilai URL: level selain error/slow dibuang, kata cari dipotong 128 karakter.
   const apiQuery = new URLSearchParams();
   if (params.level === "error" || params.level === "slow") apiQuery.set("level", params.level);
   if (params.q) apiQuery.set("q", params.q.slice(0, 128));
+  // 3. Nomor halaman harus bilangan bulat 1–100.000; selain itu dianggap halaman 1.
   const pageParam = Number(params.page);
   const page = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 100_000 ? pageParam : 1;
+  // 4. Tautan paginasi membawa penyaring yang sama (dibuat sebelum page/limit ditambahkan ke query).
   const hrefFor = (pageNumber: number) =>
     `/admin/server?${new URLSearchParams({ ...Object.fromEntries(apiQuery), page: String(pageNumber) })}`;
   apiQuery.set("page", String(page));
   apiQuery.set("limit", String(LIMIT_SERVER_LOGS));
+  // 5. Ambil status dan satu halaman log bersamaan; total untuk paginasi ada di `meta`.
   const [status, log] = await Promise.all([getServerStatus(), getServerLogs(apiQuery)]);
   const total = (log.meta as { total?: number } | undefined)?.total ?? log.data?.length ?? 0;
 

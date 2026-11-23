@@ -1,7 +1,11 @@
+// Kerangka memuat /admin/log. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { SkeletonField, SkeletonTable } from "@/app/components/ui/Skeleton";
 
-// LogFilters (4 isian) lalu tabel log.
+/**
+ * Kerangka LogFilters (4 isian) lalu tabel log.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Log aksi admin" description="Setiap perubahan oleh admin tercatat di sini. Hanya untuk dibaca.">

@@ -1,8 +1,13 @@
+// Kerangka memuat /admin/server. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
 import { PageFrame } from "@/app/components/shell/PageFrame";
 import { Card } from "@/app/components/ui/Card";
 import { SkeletonFilter, SkeletonChart, SkeletonKpi, SkeletonTable, SkeletonText } from "@/app/components/ui/Skeleton";
 
-// 4 KPI, grafik per jam (BarChart: 24 batang, area 160 px di bawah ruang tooltip 40 px), lalu log (filter + tabel).
+/**
+ * Kerangka 4 KPI, grafik per jam (BarChart: 24 batang, area 160 px di bawah ruang tooltip 40 px), lalu log (penyaring +
+ * tabel).
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
     <PageFrame title="Server" description="Kondisi backend, error 5xx, dan request lambat. Log disimpan 30 hari.">

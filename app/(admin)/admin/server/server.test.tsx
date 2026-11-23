@@ -1,3 +1,5 @@
+// Test halaman /admin/server: penyaring URL yang sah diteruskan ke backend, KPI dan log tampil, status atau log yang
+// gagal tidak saling menyembunyikan; serta HourlyIssuesChart (legenda, tooltip batang, tabel, 24 jam bersih).
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

@@ -1,3 +1,6 @@
+// Komponen ServerLogFilters: penyaring log di /admin/server, berisi pilihan jenis (Semua, Error 5xx, Lambat) dan kotak
+// cari request ID atau path. Tombol Cari mengganti URL (?level=&q=) sehingga page.tsx memuat ulang log yang cocok.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state dan router.
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -6,13 +9,19 @@ import { Search } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Input, Select } from "@/app/components/ui/Input";
 
-// Filter di URL (?level=&q=) agar bisa dibagikan, mis. tautan ke satu request ID
+/**
+ * Penyaring log server. Penyaring ada di URL agar bisa dibagikan, mis. tautan ke satu request ID. Mencari selalu
+ * kembali ke halaman 1.
+ * @returns form pencarian
+ */
 export function ServerLogFilters() {
+  // 1. Isian awal diambil dari URL sekarang.
   const router = useRouter();
   const searchParams = useSearchParams();
   const [level, setLevel] = useState(searchParams.get("level") ?? "");
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
 
+  // 2. Kirim: susun URL baru hanya dari isian yang terisi.
   function submit(event: FormEvent) {
     event.preventDefault();
     const params = new URLSearchParams();

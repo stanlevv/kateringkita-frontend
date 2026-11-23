@@ -1,18 +1,26 @@
+// Komponen HourlyIssuesChart: grafik batang "Masalah per jam" di /admin/server. Tiap batang = satu jam WIB dalam
+// 24 jam terakhir, berisi jumlah error 5xx dan request lambat. Data dari `per_jam` di GET /admin/server-status
+// (diambil page.tsx). Tanpa masalah sama sekali, grafik diganti pesan hijau.
+// "use client": seri grafik membawa komponen ikon (fungsi), dan fungsi tidak bisa dikirim dari server component.
 "use client";
 
-// Klien: seri membawa komponen ikon (fungsi), tidak bisa dikirim dari Server Component
 import { CircleCheck, CircleX, Clock } from "lucide-react";
 import { BarChart } from "@/app/components/ui/BarChart";
 import { formatTime } from "@/lib/format";
 import type { HourlyServerStats } from "@/types/server";
 
-// Warna status tetap (skill dataviz: critical & warning). Kuning < 3:1 di latar terang → selalu berpasangan ikon + label + tabel.
+// Dua seri grafik; `key` sama dengan nama field di data backend (error, lambat). Warna status tetap (merah untuk
+// kritis, kuning untuk peringatan). Kuning kontrasnya < 3:1 di latar terang, jadi selalu berpasangan ikon + label + tabel.
 const SERIES = [
   { key: "error", name: "Error 5xx", shortName: "error", color: "#d03b3b", icon: CircleX },
   { key: "lambat", name: "Lambat > 2 dtk", shortName: "lambat", color: "#fab219", icon: Clock },
 ];
 
-/** Error 5xx (bawah) dan request lambat (atas) per jam, 24 jam terakhir. */
+/**
+ * Error 5xx (bawah) dan request lambat (atas) per jam, 24 jam terakhir.
+ * @param props.data jumlah masalah per jam dari backend (24 butir)
+ * @returns BarChart
+ */
 export function HourlyIssuesChart({ data }: { data: HourlyServerStats[] }) {
   return (
     <BarChart
