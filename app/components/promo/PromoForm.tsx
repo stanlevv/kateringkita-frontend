@@ -1,3 +1,6 @@
+// Komponen PromoForm: isi dialog buat/ubah voucher di /promo (promo toko) dan /admin/promo (promo platform).
+// Disimpan lewat server action savePromo (app/actions/promos.ts) atau aksi admin yang dikirim lewat prop saveAction.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -14,6 +17,7 @@ import { validatePromo } from "@/lib/schemas";
 import type { ActionResult } from "@/types/api";
 import type { Promo } from "@/types/promo";
 
+/** Nama isian untuk ringkasan galat (kunci = nama field API). */
 const FIELD_LABELS: Record<string, string> = {
   code: "Kode promo",
   description: "Deskripsi",
@@ -26,9 +30,12 @@ const FIELD_LABELS: Record<string, string> = {
   starts_at: "Mulai",
   ends_at: "Selesai",
 };
+/** Teks isian menjadi angka; isian kosong menjadi NaN supaya validasi menganggapnya belum diisi. */
 const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
+/** Teks isian opsional menjadi angka; isian kosong menjadi null (tanpa batas). */
 const toOptionalNumber = (text: string) => (text.trim() === "" ? null : Number(text));
 
+/** Isi formulir; angka sebagai teks isian, waktu sebagai isian datetime-local WIB (`starts`, `ends`). */
 type PromoFormValues = {
   code: string;
   description: string;
@@ -44,8 +51,15 @@ type PromoFormValues = {
   is_public: boolean;
 };
 
+/**
+ * Isi awal formulir: dari voucher (mode ubah) atau nilai bawaan (persen, aktif, tampil, berlaku 30 hari).
+ * @param promo voucher yang diubah, kosong = voucher baru
+ * @returns isi formulir
+ */
 const toFormValues = (promo?: Promo | null): PromoFormValues => {
+  // 1. Waktu sekarang sebagai bawaan waktu mulai.
   const nowIso = new Date().toISOString();
+  // 2. Salin nilai voucher, atau pakai nilai bawaan.
   return {
     code: promo?.code ?? "",
     description: promo?.description ?? "",
@@ -62,7 +76,16 @@ const toFormValues = (promo?: Promo | null): PromoFormValues => {
   };
 };
 
-/** M-13, PR-N2/N3/E1/E2: isi dialog buat/ubah promo. `promo` ada = mode ubah. */
+/**
+ * Formulir voucher dengan ringkasan galat. Jenis "gratis biaya layanan" hanya untuk admin (biaya layanan milik
+ * platform), kecuali voucher toko lama yang sudah berjenis itu.
+ * @param props.promo voucher yang diubah; kosong = mode buat
+ * @param props.onSaved dipanggil dengan voucher hasil simpan
+ * @param props.onClose dipanggil saat tombol Batal ditekan
+ * @param props.saveAction server action penyimpan; bawaan savePromo (penjual)
+ * @param props.admin mode admin: kode tidak bisa diubah setelah dibuat, sakelar aktif disembunyikan
+ * @returns elemen form
+ */
 export function PromoForm({
   promo,
   onSaved,
@@ -76,6 +99,7 @@ export function PromoForm({
   saveAction?: (id: number | null, input: unknown) => Promise<ActionResult<Promo>>;
   admin?: boolean;
 }) {
+  // 1. State isian, isian disentuh, sudah dicoba kirim, kunci fokus ringkasan galat, galat server, dan status simpan.
   const [values, setValues] = useState<PromoFormValues>(() => toFormValues(promo));
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -83,12 +107,15 @@ export function PromoForm({
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  // 2. Pengubah isian; setiap perubahan menghapus galat server lama.
   const setField = <K extends keyof PromoFormValues>(field: K, value: PromoFormValues[K]) => {
     setServerErrors({});
     setValues((previous) => ({ ...previous, [field]: value }));
   };
   const blurHandler = (field: string) => () => setTouched((previous) => new Set(previous).add(field));
 
+  // 3. Data yang dikirim (nama field = kontrak API), galat validasi, dan ringkasannya. Maks potongan hanya untuk jenis
+  //    persen; nilai untuk gratis biaya layanan selalu 0.
   const isPercent = values.type === "percent";
   const input = {
     code: values.code,
@@ -114,20 +141,23 @@ export function PromoForm({
       }))
     : [];
 
+  // 4. Kirim formulir.
   async function submit(event: React.FormEvent) {
+    // 1. Masih ada galat: tampilkan ringkasan dan pindahkan fokus ke sana.
     event.preventDefault();
     if (Object.keys(clientErrors).length > 0) {
       setSubmitAttempted(true);
       setErrorFocusKey((count) => count + 1);
       return;
     }
+    // 2. Kirim sekali saja.
     if (saving) return;
     setSaving(true);
     const result = await callAction(() => saveAction(promo?.id ?? null, input));
     setSaving(false);
     if ("error" in result) {
       if (result.error.fields) {
-        // PR-E1
+        // 3. Galat per isian dari server (mis. kode sudah dipakai, 409) ditampilkan di isiannya dan di ringkasan.
         setServerErrors(
           Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
         );
@@ -138,6 +168,7 @@ export function PromoForm({
       }
       return;
     }
+    // 4. Berhasil.
     toast({ tone: "success", message: "Promo disimpan" });
     onSaved(result.data);
   }
@@ -177,7 +208,7 @@ export function PromoForm({
         >
           <option value="percent">Persen</option>
           <option value="fixed">Potongan Rupiah</option>
-          {/* C2: biaya layanan milik platform — hanya admin, atau promo toko lama yang sudah berjenis ini */}
+          {/* Biaya layanan milik platform, jadi hanya admin; kecuali promo toko lama yang sudah berjenis ini */}
           {(admin || promo?.type === "free_service_fee") && (
             <option value="free_service_fee">Gratis biaya layanan</option>
           )}

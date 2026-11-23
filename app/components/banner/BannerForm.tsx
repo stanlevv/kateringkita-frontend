@@ -1,3 +1,7 @@
+// Komponen BannerForm: formulir banner beranda aplikasi pembeli, dipakai di dua tempat: /banner (penjual mengajukan
+// banner tokonya) dan /admin/banner (admin membuat banner platform). Gambar diunggah langsung dari peramban
+// (lib/upload.ts); penyimpanan dikerjakan server action yang dikirim pemanggil lewat prop saveAction.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -12,11 +16,21 @@ import { uploadPhoto } from "@/lib/upload";
 import type { ActionResult } from "@/types/api";
 import type { Banner, VoucherOption } from "@/types/banner";
 
+/** Server action peminta URL unggah (parameter ke-3 uploadPhoto); admin memakai versinya sendiri. */
 type UploadRequester = Parameters<typeof uploadPhoto>[2];
 
 /**
- * Form banner beranda. `toko`: penjual mengajukan (tujuan halaman toko / voucher tokonya, butuh persetujuan admin).
- * `admin`: banner platform (tanpa tujuan / voucher, urutan tampil), langsung tayang.
+ * Formulir banner beranda. Mode `merchant`: penjual mengajukan banner dengan tujuan halaman toko atau voucher tokonya,
+ * tayang setelah disetujui admin. Mode `admin`: banner platform dengan tujuan voucher atau tanpa tujuan, ditambah
+ * urutan tampil, langsung tayang.
+ * @param props.mode `merchant` atau `admin`
+ * @param props.banner banner yang diubah; kosong = banner baru
+ * @param props.vouchers pilihan voucher untuk tujuan banner
+ * @param props.saveAction server action penyimpan (id null = buat baru)
+ * @param props.onSaved dipanggil setelah tersimpan
+ * @param props.onClose dipanggil saat tombol Batal ditekan
+ * @param props.requestUpload peminta URL unggah khusus admin (opsional)
+ * @returns elemen form
  */
 export function BannerForm({
   mode,
@@ -35,6 +49,8 @@ export function BannerForm({
   onClose: () => void;
   requestUpload?: UploadRequester;
 }) {
+  // 1. State isian (waktu dalam format isian datetime-local WIB), galat per isian, galat umum, dan status unggah/simpan.
+  //    Banner baru: tujuan bawaan halaman toko (penjual) atau tanpa tujuan (admin), tayang 7 hari mulai sekarang.
   const [title, setTitle] = useState(banner?.title ?? "");
   const [image, setImage] = useState(banner?.image_url ?? "");
   const [target, setTarget] = useState<string>(banner?.target ?? (mode === "merchant" ? "merchant" : "none"));
@@ -49,6 +65,7 @@ export function BannerForm({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // 2. Data yang dikirim (nama field = kontrak API); waktu diubah dari WIB ke ISO UTC. Urutan tampil hanya untuk admin.
   const input: BannerInput = {
     title: title.trim(),
     image_url: image,
@@ -59,6 +76,7 @@ export function BannerForm({
     ...(mode === "admin" ? { sort_order: Number(sortOrder) || 0 } : {}),
   };
 
+  // 3. Unggah gambar; berhasil = alamat gambar baru dan galat gambar dihapus.
   async function chooseImage(file: File) {
     setUploading(true);
     const result = await uploadPhoto(file, "banner", requestUpload);
@@ -68,12 +86,15 @@ export function BannerForm({
     setErrors((previous) => Object.fromEntries(Object.entries(previous).filter(([field]) => field !== "image_url")));
   }
 
+  // 4. Kirim formulir.
   async function submit(event: React.FormEvent) {
+    // 1. Validasi di peramban dulu; ada galat = tidak dikirim.
     event.preventDefault();
     const problems = validateBanner(input);
     setErrors(problems);
     setGeneralError(undefined);
     if (Object.keys(problems).length || saving) return;
+    // 2. Simpan; galat per isian dari server ke isiannya, galat lain ke banner galat umum.
     setSaving(true);
     const result = await saveAction(banner?.id ?? null, input);
     setSaving(false);

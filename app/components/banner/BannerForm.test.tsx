@@ -1,3 +1,5 @@
+// Test BannerForm: mode penjual (tujuan halaman toko atau voucher, isi kiriman), galat klien dan server, serta mode
+// admin (tanpa tujuan, urutan tampil, unggah lewat aksi admin). uploadPhoto dipalsukan (vi.mock).
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

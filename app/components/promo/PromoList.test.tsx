@@ -1,3 +1,5 @@
+// Test PromoList: isi kartu dan status, lencana Tersembunyi, kosong, gagal muat, aturan hapus, nonaktifkan + Batalkan,
+// aksi gagal, dan voucher baru di atas. Server action dipalsukan (vi.mock).
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

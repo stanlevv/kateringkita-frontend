@@ -1,3 +1,6 @@
+// Komponen PrinterDemo: animasi di halaman pembuka (/): printer struk mencetak empat pesanan contoh satu per satu
+// dan papan angka sisa porsi berkurang. Data contoh ditulis di sini, bukan dari backend.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,21 +13,31 @@ const ORDERS = [
   { code: "KK-2HXR", time: "07.47", name: "Ayu", qty: 1, pickup: "Gedung C, 12.10", payment: "Tunai" },
   { code: "KK-7TQE", time: "07.51", name: "Fajar", qty: 4, pickup: "Masjid Kampus, 11.45", payment: "VA" },
 ];
+// Menu contoh, harga satuan, dan porsi awal di papan.
 const ITEM_NAME = "Nasi Ayam Bakar",
   PRICE = 15000,
   TOTAL_PORTIONS = 40;
+// Jeda sebelum tiap struk dan lama satu struk tercetak (milidetik).
 const PAUSE_MS = 1400,
   PRINT_MS = 1600;
+/** Angka dengan pemisah ribuan gaya Indonesia, mis. 30000 -> "30.000". */
 const formatThousands = (amount: number) => amount.toLocaleString("id-ID");
 
-// Printer struk + papan sisa porsi: 4 pesanan tercetak lalu berhenti (tombol cetak lagi).
+/**
+ * Printer struk dan papan sisa porsi: 4 pesanan tercetak lalu berhenti, dengan tombol untuk mencetak lagi. Bila
+ * pengguna memilih gerak dikurangi (prefers-reduced-motion), keadaan akhir langsung ditampilkan tanpa animasi.
+ * @returns kolom printer
+ */
 export function PrinterDemo() {
+  // 1. Putaran animasi (naik = ulang dari awal), jumlah struk tercetak, status mencetak, dan sisa porsi.
   const [run, setRun] = useState(0);
   const [printed, setPrinted] = useState(0);
   const [printing, setPrinting] = useState(false);
   const [remaining, setRemaining] = useState(TOTAL_PORTIONS);
 
+  // 2. Jadwalkan animasi satu putaran; semua timer dibersihkan saat putaran berganti atau komponen dilepas.
   useEffect(() => {
+    // 1. Gerak dikurangi: langsung tampilkan keadaan akhir.
     const timers: number[] = [];
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       timers.push(
@@ -35,9 +48,11 @@ export function PrinterDemo() {
       );
       return () => timers.forEach(clearTimeout);
     }
+    // 2. Tiap pesanan: jeda, mulai cetak, lalu selesai cetak dan kurangi sisa porsi.
     let elapsedMs = 0,
       portionsLeft = TOTAL_PORTIONS;
     ORDERS.forEach((order, i) => {
+      // 1. Struk ke-i mulai tercetak setelah jeda.
       elapsedMs += PAUSE_MS;
       timers.push(
         window.setTimeout(() => {
@@ -45,6 +60,7 @@ export function PrinterDemo() {
           setPrinting(true);
         }, elapsedMs),
       );
+      // 2. Setelah tercetak, sisa porsi di papan berkurang.
       elapsedMs += PRINT_MS;
       portionsLeft -= order.qty;
       const remainingAfter = portionsLeft;
@@ -58,6 +74,7 @@ export function PrinterDemo() {
     return () => timers.forEach(clearTimeout);
   }, [run]);
 
+  // 3. Angka papan dua digit, tanda selesai (tombol cetak lagi), dan struk yang sudah tercetak.
   const digits = String(remaining).padStart(2, "0");
   const done = printed === ORDERS.length && !printing;
   const shown = ORDERS.slice(0, printed);
@@ -93,6 +110,7 @@ export function PrinterDemo() {
       </div>
       <div className={styles.feed}>
         {shown.map((order, i) => {
+          // 1. Struk terbaru di depan; struk lama bertumpuk ke bawah dan miring, lebih dari 2 lapis disembunyikan.
           const depth = shown.length - 1 - i;
           const style =
             depth === 0

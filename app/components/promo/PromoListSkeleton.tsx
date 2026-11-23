@@ -1,6 +1,11 @@
+// Komponen PromoListSkeleton: kerangka memuat untuk PromoList, dipakai loading.tsx di /promo dan /admin/promo.
 import { Skeleton, SkeletonText } from "@/app/components/ui/Skeleton";
 
-/** Kerangka PromoList (tombol "Buat promo" + grid kartu). Dipakai /promo dan /admin/promo. */
+/**
+ * Kerangka PromoList: tombol "Buat promo" dan grid kartu.
+ * @param props.cardCount jumlah kartu kerangka (bawaan 6)
+ * @returns kerangka
+ */
 export function PromoListSkeleton({ cardCount = 6 }: { cardCount?: number }) {
   return (
     <div className="flex flex-col gap-4">

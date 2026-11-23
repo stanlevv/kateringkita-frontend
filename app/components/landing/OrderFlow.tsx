@@ -1,10 +1,16 @@
+// Komponen OrderFlow: bagian "Cara kerja" di halaman pembuka (/). Saat pengunjung menggulir tiga ketukan cerita,
+// struk contoh di sampingnya berganti status (ditahan, diproses, siap diambil). Data contoh ditulis di sini, bukan
+// dari backend. IntersectionObserver = API peramban yang memberi tahu saat elemen masuk area layar.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import styles from "./landing.module.css";
 
+/** Tahap pesanan yang diperagakan (nama sama dengan status pesanan di aplikasi). */
 type Stage = "held" | "confirmed" | "ready";
 
+/** Tiga ketukan cerita: tahap, jam, judul, dan isi. */
 const BEATS: { stage: Stage; time: string; title: string; body: string }[] = [
   {
     stage: "held",
@@ -25,15 +31,23 @@ const BEATS: { stage: Stage; time: string; title: string; body: string }[] = [
     body: "Rani tahu jam dan titik temunya. Anda tidak perlu membalas chat satu per satu.",
   },
 ];
+/** Label status di struk per tahap. */
 const STAGE_LABELS: Record<Stage, string> = { held: "DITAHAN", confirmed: "DIPROSES", ready: "SIAP DIAMBIL" };
+/** Teks kaki struk untuk tahap selain ditahan: keterangan kecil dan jam. */
 const FOOTER_TEXT = { confirmed: ["Mulai dimasak", "07.45"], ready: ["Siap di Gedung C", "12.10"] };
 
-// Satu struk yang statusnya berganti mengikuti ketukan yang sedang dibaca (gulir).
+/**
+ * Satu struk yang statusnya berganti mengikuti ketukan yang sedang dibaca (gulir). Selama tahap ditahan, kaki struk
+ * menghitung mundur 5 menit (diulang); hitung mundur dimatikan bila pengguna memilih gerak dikurangi.
+ * @returns section "Cara kerja"
+ */
 export function OrderFlow() {
+  // 1. Tahap aktif, sisa detik hitung mundur, dan elemen tiap ketukan.
   const [stage, setStage] = useState<Stage>("held");
   const [secondsLeft, setSecondsLeft] = useState(300);
   const beatRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // 2. Ketukan yang berada di tengah layar (pita 10% tengah) menjadi tahap aktif.
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) =>
@@ -46,12 +60,14 @@ export function OrderFlow() {
     return () => observer.disconnect();
   }, []);
 
+  // 3. Hitung mundur hanya berjalan di tahap ditahan.
   useEffect(() => {
     if (stage !== "held" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const intervalId = window.setInterval(() => setSecondsLeft((seconds) => (seconds > 0 ? seconds - 1 : 300)), 1000);
     return () => clearInterval(intervalId);
   }, [stage]);
 
+  // 4. Teks kaki struk: hitung mundur (ditahan) atau keterangan tahap.
   const [footerCaption, footerValue] =
     stage === "held"
       ? ["Porsi dikunci selama", `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`]

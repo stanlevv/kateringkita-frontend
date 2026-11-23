@@ -1,3 +1,5 @@
+// Test PromoForm: kode huruf besar, galat per isian dan ringkasan, isian per jenis promo, opsi khusus admin, sakelar
+// tampil di halaman toko, isi kiriman, galat 409 dari server, dan mode ubah. savePromo dipalsukan (vi.mock).
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";

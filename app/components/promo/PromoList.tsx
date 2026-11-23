@@ -1,3 +1,7 @@
+// Komponen PromoList: kartu voucher dengan status, tombol ubah, aktif/nonaktif, dan hapus. Dipakai /promo (promo
+// toko) dan /admin/promo (promo platform). Perubahan dikirim lewat server action setPromoActive, deletePromo, dan
+// savePromo (app/actions/promos.ts), atau aksi admin yang dikirim lewat prop.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
@@ -17,7 +21,16 @@ import type { ActionResult } from "@/types/api";
 import type { Promo } from "@/types/promo";
 import { PromoForm } from "./PromoForm";
 
-/** PR-N1…N3, PR-S1. Perubahan lokal menang atas data server sampai muat ulang (D2); null = dihapus. */
+/**
+ * Daftar voucher. Hasil aksi disimpan di state lokal dan menang atas data server sampai halaman dimuat ulang, supaya
+ * kartu langsung berubah tanpa menunggu data baru. Voucher yang sudah dipakai tidak bisa dihapus, hanya dinonaktifkan.
+ * @param props.promos voucher dari backend
+ * @param props.loadFailed true = data gagal dimuat (tampil LoadError)
+ * @param props.admin mode admin (promo platform)
+ * @param props.saveAction penyimpan voucher (bawaan savePromo)
+ * @param props.setActiveAction pengubah aktif/nonaktif (bawaan setPromoActive)
+ * @returns tombol buat, grid kartu, dialog formulir, dan dialog konfirmasi hapus
+ */
 export function PromoList({
   promos,
   loadFailed,
@@ -27,17 +40,20 @@ export function PromoList({
 }: {
   promos: Promo[];
   loadFailed: boolean;
-  /** Mode admin (promo platform, D4): tanpa Hapus, kode tidak bisa diubah, aksi simpan/aktif dari admin. */
+  /** Mode admin (promo platform): tanpa Hapus, kode tidak bisa diubah, aksi simpan/aktif dari admin. */
   admin?: boolean;
   saveAction?: (id: number | null, input: unknown) => Promise<ActionResult<Promo>>;
   setActiveAction?: (id: number, active: boolean) => Promise<ActionResult<Promo>>;
 }) {
+  // 1. Perubahan lokal per id (null = dihapus), voucher baru, isi dialog ("new" = buat baru), dan voucher yang akan
+  //    dihapus. Jam dibekukan saat tampil supaya status kartu tidak berubah di tengah render.
   const [localChanges, setLocalChanges] = useState<Record<number, Promo | null>>({});
   const [newPromos, setNewPromos] = useState<Promo[]>([]);
   const [form, setForm] = useState<"new" | Promo | null>(null);
   const [promoToDelete, setPromoToDelete] = useState<Promo | null>(null);
   const [now] = useState(() => Date.now());
 
+  // 2. Data gagal dimuat.
   if (loadFailed)
     return (
       <LoadError
@@ -46,17 +62,22 @@ export function PromoList({
       />
     );
 
+  // 3. Daftar tampil: voucher baru di atas, perubahan lokal menimpa data server, yang dihapus dibuang.
   const visiblePromos = [...newPromos, ...promos].flatMap((promo) => {
     const current = promo.id in localChanges ? localChanges[promo.id] : promo;
     return current ? [current] : [];
   });
   const openCreateForm = () => setForm("new");
 
+  // 4. Aktif/nonaktif secara optimistis (tampilan berubah dulu, dikembalikan bila server gagal). Menonaktifkan
+  //    memberi toast dengan tombol Batalkan.
   async function setActive(promo: Promo, active: boolean) {
+    // 1. Ubah tampilan dulu, lalu kirim ke server.
     const applyLocal = (updated: Promo) => setLocalChanges((previous) => ({ ...previous, [promo.id]: updated }));
     applyLocal({ ...promo, is_active: active });
     const result = await callAction(() => (setActiveAction ?? setPromoActive)(promo.id, active));
     if ("error" in result) {
+      // 2. Gagal: kembalikan tampilan.
       applyLocal(promo);
       toast({ tone: "danger", message: result.error.message });
       return;
@@ -72,6 +93,7 @@ export function PromoList({
     );
   }
 
+  // 5. Hapus voucher (setelah dikonfirmasi di dialog).
   async function removePromo(promo: Promo) {
     const result = await callAction(() => deletePromo(promo.id));
     if ("error" in result) return toast({ tone: "danger", message: result.error.message });
@@ -79,6 +101,7 @@ export function PromoList({
     toast({ tone: "success", message: "Promo dihapus" });
   }
 
+  // 6. Hasil formulir: voucher baru masuk ke atas daftar, voucher yang diubah menimpa versi lama.
   function handleSaved(promo: Promo) {
     if (form === "new") setNewPromos((previous) => [promo, ...previous]);
     else setLocalChanges((previous) => ({ ...previous, [promo.id]: promo }));
