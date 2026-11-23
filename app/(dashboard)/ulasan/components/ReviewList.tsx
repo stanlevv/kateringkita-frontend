@@ -9,7 +9,7 @@ import { LIMIT_REVIEWS, maskName, reviewsUrl } from "@/lib/review";
 import type { Review } from "@/types/review";
 import { StarRating } from "./RatingSummary";
 
-type Filter = { menu?: number; bintang?: number };
+type Filter = { menu?: number; stars?: number };
 
 /** UL-N3, UL-S1: filter bintang (tautan), daftar ulasan, paginasi 10 lewat URL. */
 export function ReviewList({
@@ -41,7 +41,7 @@ export function ReviewList({
       <nav aria-label="Filter bintang" className="flex flex-wrap gap-2">
         <Link
           href={reviewsUrl({ menu: filter.menu })}
-          aria-current={filter.bintang === undefined ? "true" : undefined}
+          aria-current={filter.stars === undefined ? "true" : undefined}
           className={cx(chipClass, focusRing)}
         >
           Semua bintang
@@ -50,7 +50,7 @@ export function ReviewList({
           <Link
             key={starCount}
             href={reviewsUrl({ menu: filter.menu, stars: starCount })}
-            aria-current={filter.bintang === starCount ? "true" : undefined}
+            aria-current={filter.stars === starCount ? "true" : undefined}
             className={cx(chipClass, focusRing)}
           >
             {starCount} bintang

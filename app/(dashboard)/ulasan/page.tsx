@@ -30,10 +30,7 @@ export default async function ReviewsPage({
       </PageHeader>
     );
   }
-  const filter = {
-    menu: parseNumberParam(params.menu, 1, 999_999_999),
-    bintang: parseNumberParam(params.bintang, 1, 5),
-  };
+  const filter = { menu: parseNumberParam(params.menu, 1, 999_999_999), stars: parseNumberParam(params.bintang, 1, 5) };
   const { rows, total } = filterReviews(reviews.data, filter, 1);
   const currentPage = Math.min(parseNumberParam(params.page, 1, 99_999) ?? 1, Math.max(1, Math.ceil(total / 10)));
   const pageResult = currentPage === 1 ? { rows, total } : filterReviews(reviews.data, filter, currentPage);

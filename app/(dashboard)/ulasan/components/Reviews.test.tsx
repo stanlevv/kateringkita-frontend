@@ -53,7 +53,7 @@ describe("ReviewList (UL-N3, UL-S1)", () => {
     expect(screen.getByText("Ulasan muncul setelah pembeli menyelesaikan pesanan")).toBeInTheDocument();
   });
   it("tersaring tapi kosong -> tautan hapus filter", () => {
-    render(<ReviewList rows={[]} total={0} page={1} filter={{ bintang: 1 }} />);
+    render(<ReviewList rows={[]} total={0} page={1} filter={{ stars: 1 }} />);
     expect(screen.getByRole("link", { name: "Hapus filter" })).toHaveAttribute("href", "/ulasan");
   });
 });
