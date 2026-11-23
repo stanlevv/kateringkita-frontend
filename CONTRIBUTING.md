@@ -119,6 +119,17 @@ Wajib dipakai saat memberi nama baru. Mengikuti nama tabel DB dan peran PRD.
 | kaki (struk)           | footer                 | jeda (animasi)         | pause                   |
 | cetak                  | print                  | banner toko            | merchantBanner          |
 | metode bayar           | paymentMethod          | jumlah hari            | dayCount                |
+| konfirmasi             | confirmation           | sibuk                  | busy                    |
+| sedang menyimpan       | saving                 | sandi sementara        | temporaryPassword       |
+| wajib ganti sandi      | forcedPasswordChange   | kelola                 | manage                  |
+| tingkat (admin)        | level                  | riwayat                | history                 |
+| referensi (transfer)   | reference              | pengembalian dana      | refund                  |
+| dibatalkan oleh        | cancelledBy            | tetangga (urutan)      | neighbor                |
+| arah                   | direction              | kolom tambahan         | extraField              |
+| ubin                   | tile                   | pil (filter)           | pill                    |
+| tersaring              | filtered               | terbaru                | latest                  |
+| jenis (data)           | kind                   | masalah (isian)        | problem                 |
+| foto                   | photo                  | tampilan (status)      | view                    |
 
 Istilah yang belum ada di tabel: pilih padanan Inggris yang umum, lalu tambahkan ke tabel ini pada commit yang sama.
 
