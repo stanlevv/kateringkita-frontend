@@ -8,6 +8,7 @@ export type PublicMerchantSummary = {
   merchant_type: { id: number; name: string };
   rating_avg: number;
   rating_count: number;
+  menu_count: number;
 };
 
 /** Profil toko GET /merchants/:slug (tanpa alamat, WhatsApp, dan status verifikasi). */

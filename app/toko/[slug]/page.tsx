@@ -8,6 +8,7 @@ import { Star, UtensilsCrossed } from "lucide-react";
 import { JsonLd } from "@/app/components/JsonLd";
 import { Brand } from "@/app/components/shell/Brand";
 import { LinkButton } from "@/app/components/ui/LinkButton";
+import { areaSlug } from "@/lib/area";
 import { formatRupiah } from "@/lib/format";
 import { merchantJsonLd } from "@/lib/merchant-jsonld";
 import { BUYER_APP_URL, SITE_NAME } from "@/lib/site";
@@ -118,7 +119,12 @@ export default async function TokoPage({ params }: Props) {
             <ul className="mt-3 space-y-2">
               {profile.pickup_points.map((pp) => (
                 <li key={pp.id} className="rounded-md border border-line bg-surface p-3">
-                  <span className="font-semibold">{pp.name}</span>
+                  <Link
+                    href={`/area/${areaSlug(pp)}`}
+                    className="inline-flex min-h-11 items-center font-semibold text-primary underline"
+                  >
+                    {pp.name}
+                  </Link>
                   {pp.description && <span className="block text-sm text-ink-muted">{pp.description}</span>}
                 </li>
               ))}

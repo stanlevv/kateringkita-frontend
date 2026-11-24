@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 import { Brand } from "@/app/components/shell/Brand";
 import { connection } from "next/server";
+import { areaSlug } from "@/lib/area";
 import { SITE_NAME } from "@/lib/site";
 import { getPublicMerchants } from "@/services/catalog.service";
+import { getPickupPoints } from "@/services/meta.service";
 
 const WRAP = "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8";
 
@@ -30,7 +32,13 @@ export const metadata: Metadata = {
 export default async function DaftarTokoPage() {
   // Dirender per permintaan, bukan sekali saat build, supaya daftar toko selalu terbaru.
   await connection();
-  const res = await getPublicMerchants();
+  // Titik ambil bagian pelengkap: bila gagal dimuat, sembunyikan saja.
+  const [res, points] = await Promise.all([
+    getPublicMerchants(),
+    getPickupPoints()
+      .then((r) => ("data" in r ? r.data : []))
+      .catch(() => []),
+  ]);
   if ("error" in res) throw new Error(res.error.message);
   const merchants = res.data;
 
@@ -79,6 +87,23 @@ export default async function DaftarTokoPage() {
               </li>
             ))}
           </ul>
+        )}
+        {points.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-bold">Cari berdasarkan titik ambil</h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {points.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    href={`/area/${areaSlug(p)}`}
+                    className="inline-flex min-h-11 items-center rounded-lg border border-line bg-surface px-4 hover:border-primary"
+                  >
+                    {p.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
       </main>
     </>

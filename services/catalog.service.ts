@@ -9,10 +9,12 @@ import type { DataResult } from "@/types/api";
 
 /**
  * Mengambil daftar toko yang tampil di publik (urut nama, tanpa paginasi).
+ * @param pickupPointId bila diisi, hanya toko yang melayani titik ambil ini
  * @returns `{ data }` atau `{ error }`
  */
-export async function getPublicMerchants(): Promise<DataResult<PublicMerchantSummary[]>> {
-  return toResult(await apiFetch<PublicMerchantSummary[]>("/merchants"));
+export async function getPublicMerchants(pickupPointId?: number): Promise<DataResult<PublicMerchantSummary[]>> {
+  const query = pickupPointId === undefined ? "" : `?pickup_point_id=${pickupPointId}`;
+  return toResult(await apiFetch<PublicMerchantSummary[]>(`/merchants${query}`));
 }
 
 /**
@@ -25,10 +27,11 @@ export async function getMerchantBySlug(slug: string): Promise<DataResult<Mercha
 }
 
 /**
- * Mengambil menu satu toko (maks 100; menu toko tutup tetap ikut).
+ * Mengambil menu satu toko (default maks 100; menu toko tutup tetap ikut).
  * @param slug slug toko
+ * @param limit batas jumlah menu
  * @returns `{ data }` berupa daftar `MenuCard` (tanpa `meta`), atau `{ error }`
  */
-export async function getMerchantMenus(slug: string): Promise<DataResult<MenuCard[]>> {
-  return toResult(await apiFetch<MenuCard[]>(`/menus?merchant=${encodeURIComponent(slug)}&limit=100`));
+export async function getMerchantMenus(slug: string, limit = 100): Promise<DataResult<MenuCard[]>> {
+  return toResult(await apiFetch<MenuCard[]>(`/menus?merchant=${encodeURIComponent(slug)}&limit=${limit}`));
 }

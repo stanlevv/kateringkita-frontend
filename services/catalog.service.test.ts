@@ -19,6 +19,11 @@ describe("catalog.service", () => {
     expect(await getPublicMerchants()).toEqual({ data: [] });
     expect(mocked).toHaveBeenCalledWith("/merchants");
   });
+  it("getPublicMerchants(3) menyaring per titik ambil", async () => {
+    mocked.mockResolvedValue({ ok: true, status: 200, data: [] });
+    await getPublicMerchants(3);
+    expect(mocked).toHaveBeenCalledWith("/merchants?pickup_point_id=3");
+  });
   it("getMerchantBySlug memanggil /merchants/<slug>", async () => {
     mocked.mockResolvedValue({ ok: true, status: 200, data: { slug: "dapur-bu-sri" } as never });
     await getMerchantBySlug("dapur-bu-sri");
@@ -33,6 +38,11 @@ describe("catalog.service", () => {
     });
     expect(await getMerchantMenus("a b")).toEqual({ data: [{ id: 1 }] });
     expect(mocked).toHaveBeenCalledWith("/menus?merchant=a%20b&limit=100");
+  });
+  it("getMerchantMenus menerima batas limit", async () => {
+    mocked.mockResolvedValue({ ok: true, status: 200, data: [] as never, meta: { page: 1, limit: 3, total: 0 } });
+    await getMerchantMenus("a b", 3);
+    expect(mocked).toHaveBeenCalledWith("/menus?merchant=a%20b&limit=3");
   });
   it("meneruskan galat 404", async () => {
     mocked.mockResolvedValue({

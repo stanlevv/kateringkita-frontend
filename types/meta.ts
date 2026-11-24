@@ -3,7 +3,8 @@
 /** Kategori menu. */
 export type Category = { id: number; name: string; slug: string };
 /** Titik temu, yaitu tempat pembeli mengambil pesanan. */
-export type PickupPoint = { id: number; name: string };
+/** `description` hanya ada pada daftar titik ambil publik. */
+export type PickupPoint = { id: number; name: string; description?: string | null };
 /** Jenis usaha penjual. */
 export type MerchantType = { id: number; name: string };
 /** Status mode pemeliharaan dari admin: sedang aktif atau tidak, dan pesan untuk pengguna. */
