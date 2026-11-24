@@ -36,7 +36,8 @@ type InitialData = { orders: MerchantOrder[]; menus: MerchantMenu[]; loadedAt: n
  * terlihat lagi, saat koneksi kembali `online`, atau saat `refresh()` dipanggil.
  * @param initial pesanan, menu, dan jam server saat halaman dimuat
  * @returns `orders`, `menus`, `lastSyncedAt` (jam sinkron terakhir), `disconnected` (galat atau offline),
- *   `clockOffset` (selisih jam server − jam perangkat, ms), `receiveOrder`/`receiveMenu` (masukkan hasil aksi
+ *   `clockOffset` (selisih jam server − jam perangkat, ms), `unreadChats` (jumlah pesan chat belum dibaca dari sinkron
+ *   terakhir, atau null), `receiveOrder`/`receiveMenu` (masukkan hasil aksi
  *   pengguna langsung), dan `refresh` (segarkan sekarang)
  */
 export function useLiveDashboard(initial: InitialData) {
@@ -54,6 +55,8 @@ export function useLiveDashboard(initial: InitialData) {
   const [lastSyncedAt, setLastSyncedAt] = useState(initial.loadedAt);
   const [failed, setFailed] = useState(false);
   const [clockOffset, setClockOffset] = useState(0);
+  // Jumlah pesan chat belum dibaca dari sinkron terakhir; null sampai sinkron pertama membawanya.
+  const [unreadChats, setUnreadChats] = useState<number | null>(null);
   const online = useSyncExternalStore(
     subscribeOnline,
     () => navigator.onLine,
@@ -123,11 +126,14 @@ export function useLiveDashboard(initial: InitialData) {
           return;
         }
         if (!response.ok) throw new Error(String(response.status));
-        const { data } = (await response.json()) as { data: { orders: MerchantOrder[]; menus: MerchantMenu[] } };
+        const { data } = (await response.json()) as {
+          data: { orders: MerchantOrder[]; menus: MerchantMenu[]; unread_chats?: number };
+        };
         const receivedAt = Date.now();
         consecutiveErrors = 0;
         setOrders((currentOrders) => mergeOrders(currentOrders, data.orders));
         if (menuVersion.current === versionAtStart) setMenus(data.menus);
+        if (typeof data.unread_chats === "number") setUnreadChats(data.unread_chats);
         const offset = clockOffsetMs(data.orders, receivedAt);
         if (offset !== null) setClockOffset(offset);
         setLastSyncedAt(receivedAt);
@@ -187,6 +193,7 @@ export function useLiveDashboard(initial: InitialData) {
     lastSyncedAt,
     disconnected: failed || !online,
     clockOffset,
+    unreadChats,
     receiveOrder,
     receiveMenu,
     refresh,

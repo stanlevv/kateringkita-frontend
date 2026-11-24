@@ -17,6 +17,7 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
  * @param props.store status dapur, atau null bila gagal dimuat
  * @param props.badge jumlah pesanan perlu tindakan
  * @param props.unreadNotifications jumlah notifikasi belum dibaca
+ * @param props.unreadChats jumlah pesan pembeli belum dibaca di chat pesanan
  * @param props.admin panel admin (tanpa status dapur)
  * @param props.level tingkat admin untuk menyaring menu
  * @param props.mode "lebar" atau "ringkas" dari cookie
@@ -26,6 +27,7 @@ export function Sidebar({
   store,
   badge,
   unreadNotifications = 0,
+  unreadChats = 0,
   admin = false,
   level,
   mode = "lebar",
@@ -33,6 +35,7 @@ export function Sidebar({
   store: StoreInfo | null;
   badge: number;
   unreadNotifications?: number;
+  unreadChats?: number;
   admin?: boolean;
   level?: unknown;
   mode?: SidebarMode;
@@ -48,6 +51,7 @@ export function Sidebar({
             store={store}
             badge={badge}
             unreadNotifications={unreadNotifications}
+            unreadChats={unreadChats}
             admin={admin}
             level={level}
           />
@@ -55,7 +59,14 @@ export function Sidebar({
       }
     >
       <div className="flex-1">
-        <NavList rail badge={badge} unreadNotifications={unreadNotifications} admin={admin} level={level} />
+        <NavList
+          rail
+          badge={badge}
+          unreadNotifications={unreadNotifications}
+          unreadChats={unreadChats}
+          admin={admin}
+          level={level}
+        />
       </div>
       {!admin && (
         <div className="border-t border-line pt-3">

@@ -1,4 +1,4 @@
-// Test Sidebar penjual: jumlah grup dan tautan, badge, dan NavList hanya menerima prop sederhana.
+// Test Sidebar penjual: jumlah grup dan tautan, badge (pesanan, notifikasi, chat), dan NavList hanya menerima prop sederhana.
 // Modul Next.js dan server action dipalsukan (vi.mock) agar test tidak butuh server.
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -46,6 +46,14 @@ describe("sidebar", () => {
       </StoreStatusProvider>,
     );
     expect(screen.queryByText(/belum dibaca/)).not.toBeInTheDocument();
+  });
+  it("badge chat belum dibaca di Pesanan menampilkan total dari /merchant/chats/unread", () => {
+    render(
+      <StoreStatusProvider store={store}>
+        <Sidebar store={store} badge={0} unreadChats={5} />
+      </StoreStatusProvider>,
+    );
+    expect(screen.getByRole("link", { name: /Pesanan/ })).toHaveTextContent("5 chat belum dibaca");
   });
 });
 

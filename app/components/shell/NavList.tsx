@@ -14,6 +14,7 @@ import { MERCHANT_NAV, ADMIN_NAV } from "./nav";
  * Hanya berisi prop sederhana (angka/teks/boolean) karena dirender dari komponen server.
  * @param props.badge jumlah pesanan perlu tindakan
  * @param props.unreadNotifications jumlah notifikasi belum dibaca
+ * @param props.unreadChats jumlah pesan pembeli belum dibaca di chat pesanan
  * @param props.rail hanya ikon (tooltip lewat title) kecuali sidebar sedang lebar; tanpa `rail` selalu penuh (drawer)
  * @param props.onNavigate dipanggil saat tautan diklik (menutup drawer)
  * @param props.admin pakai menu admin
@@ -23,6 +24,7 @@ import { MERCHANT_NAV, ADMIN_NAV } from "./nav";
 export function NavList({
   badge = 0,
   unreadNotifications = 0,
+  unreadChats = 0,
   rail = false,
   onNavigate,
   admin = false,
@@ -30,6 +32,7 @@ export function NavList({
 }: {
   badge?: number;
   unreadNotifications?: number;
+  unreadChats?: number;
   rail?: boolean;
   onNavigate?: () => void;
   admin?: boolean;
@@ -57,7 +60,14 @@ export function NavList({
           <ul className="flex flex-col gap-1">
             {group.items.map(({ href, label, icon: Icon, badge: badgeKind, exact }) => {
               const active = path === href || (!exact && path.startsWith(`${href}/`));
-              const count = badgeKind === "notifications" ? unreadNotifications : badgeKind ? badge : 0;
+              const count =
+                badgeKind === "notifications"
+                  ? unreadNotifications
+                  : badgeKind === "chats"
+                    ? unreadChats
+                    : badgeKind
+                      ? badge
+                      : 0;
               return (
                 <li key={href}>
                   <Link
@@ -85,7 +95,12 @@ export function NavList({
                       >
                         <span aria-hidden>{count}</span>
                         <span className="sr-only">
-                          {count} {badgeKind === "notifications" ? "belum dibaca" : "perlu tindakan"}
+                          {count}{" "}
+                          {badgeKind === "notifications"
+                            ? "belum dibaca"
+                            : badgeKind === "chats"
+                              ? "chat belum dibaca"
+                              : "perlu tindakan"}
                         </span>
                       </span>
                     )}

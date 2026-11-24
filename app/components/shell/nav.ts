@@ -28,14 +28,15 @@ import {
 } from "lucide-react";
 
 /**
- * Satu menu. `badge`: true = jumlah pesanan perlu tindakan; "notifications" = notifikasi belum dibaca.
+ * Satu menu. `badge`: true = jumlah pesanan perlu tindakan; "notifications" = notifikasi belum dibaca;
+ * "chats" = pesan pembeli belum dibaca di chat pesanan.
  * `exact`: aktif hanya bila URL sama persis (bukan juga sub-halamannya).
  */
 export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-  badge?: boolean | "notifications";
+  badge?: boolean | "notifications" | "chats";
   exact?: boolean;
 };
 /** Satu kelompok menu dengan judul kecil di atasnya. */
@@ -77,7 +78,7 @@ export const MERCHANT_NAV: NavGroup[] = [
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, badge: true },
       { href: "/menu", label: "Menu & Stok", icon: BookOpen },
-      { href: "/pesanan", label: "Pesanan", icon: ClipboardList },
+      { href: "/pesanan", label: "Pesanan", icon: ClipboardList, badge: "chats" },
       { href: "/laporan", label: "Laporan", icon: BarChart3 },
     ],
   },

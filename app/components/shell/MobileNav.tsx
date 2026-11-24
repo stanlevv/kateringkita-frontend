@@ -17,6 +17,7 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
  * @param props.store status dapur (saklar ikut tampil di drawer penjual), atau null
  * @param props.badge jumlah pesanan perlu tindakan
  * @param props.unreadNotifications jumlah notifikasi belum dibaca
+ * @param props.unreadChats jumlah pesan pembeli belum dibaca di chat pesanan
  * @param props.admin panel admin
  * @param props.level tingkat admin untuk menyaring menu
  * @param props.rail tombol versi rail (drawer kiri)
@@ -26,6 +27,7 @@ export function MobileNav({
   store,
   badge,
   unreadNotifications = 0,
+  unreadChats = 0,
   admin = false,
   level,
   rail = false,
@@ -33,6 +35,7 @@ export function MobileNav({
   store: StoreInfo | null;
   badge: number;
   unreadNotifications?: number;
+  unreadChats?: number;
   admin?: boolean;
   level?: unknown;
   rail?: boolean;
@@ -52,6 +55,7 @@ export function MobileNav({
         <NavList
           badge={badge}
           unreadNotifications={unreadNotifications}
+          unreadChats={unreadChats}
           onNavigate={() => setOpen(false)}
           admin={admin}
           level={level}

@@ -88,7 +88,7 @@ function DashboardContent({
   loadFailed,
 }: DashboardData & { loadFailed: boolean }) {
   // 1. Data live (polling), status dapur bersama, dan jam lokal yang berdetak tiap detik.
-  const { orders, menus, lastSyncedAt, disconnected, clockOffset, receiveOrder, receiveMenu, refresh } =
+  const { orders, menus, lastSyncedAt, disconnected, clockOffset, unreadChats, receiveOrder, receiveMenu, refresh } =
     useLiveDashboard({ orders: initialOrders, menus: initialMenus, loadedAt });
   const { isOpen, openTime, closeTime } = useStoreStatus();
   const { changeStoreOpen, pending: storeOpenPending } = useStoreOpenToggle();
@@ -124,6 +124,14 @@ function DashboardContent({
     previousNeedsAction.current = needsAction;
     router.refresh();
   }, [needsAction, router]);
+  // 5b. Badge chat juga dihitung di layout: muat ulang saat jumlah dari sinkron berubah. Nilai pertama hanya dicatat.
+  const previousUnreadChats = useRef(unreadChats);
+  useEffect(() => {
+    if (unreadChats === null || previousUnreadChats.current === unreadChats) return;
+    const isFirstValue = previousUnreadChats.current === null;
+    previousUnreadChats.current = unreadChats;
+    if (!isFirstValue) router.refresh();
+  }, [unreadChats, router]);
   // 6. Lebar tablet? (server selalu menganggap bukan tablet.)
   const isTablet = useSyncExternalStore(
     subscribeTablet,

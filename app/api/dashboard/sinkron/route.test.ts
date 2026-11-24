@@ -1,5 +1,5 @@
 // Test route handler /api/dashboard/sinkron: `sejak` tidak sah -> 400 tanpa memanggil backend, sukses -> 200 tanpa cache,
-// galat backend -> 503, dan sesi diperiksa sebelum mengambil data. Services dipalsukan (vi.mock).
+// galat backend -> 503, jumlah chat belum dibaca ikut bila tersedia, dan sesi diperiksa sebelum mengambil data. Services dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
@@ -9,6 +9,8 @@ const getChangedOrders = vi.fn();
 vi.mock("@/services/order.service", () => ({ getChangedOrders: (since: string) => getChangedOrders(since) }));
 const getMenus = vi.fn();
 vi.mock("@/services/menu.service", () => ({ getMenus: () => getMenus() }));
+const getUnreadChats = vi.fn();
+vi.mock("@/services/order-chat.service", () => ({ getUnreadChats: () => getUnreadChats() }));
 import { GET } from "./route";
 
 const callRoute = (query: string) => GET(new NextRequest(`http://localhost/api/dashboard/sinkron${query}`));
@@ -18,6 +20,7 @@ beforeEach(() => {
   requireMerchant.mockReset().mockResolvedValue({});
   getChangedOrders.mockReset().mockResolvedValue({ data: [{ code: "A" }] });
   getMenus.mockReset().mockResolvedValue({ data: [{ id: 1 }] });
+  getUnreadChats.mockReset().mockResolvedValue({ data: { total: 3, orders: [] } });
 });
 
 describe("GET /api/dashboard/sinkron", () => {
@@ -31,11 +34,11 @@ describe("GET /api/dashboard/sinkron", () => {
       expect(getMenus).not.toHaveBeenCalled();
     },
   );
-  it("sukses -> 200 { data: { orders, menus } } + no-store", async () => {
+  it("sukses -> 200 { data: { orders, menus, unread_chats } } + no-store", async () => {
     const response = await callRoute(`?sejak=${encodeURIComponent(SINCE)}`);
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
-    expect(await response.json()).toEqual({ data: { orders: [{ code: "A" }], menus: [{ id: 1 }] } });
+    expect(await response.json()).toEqual({ data: { orders: [{ code: "A" }], menus: [{ id: 1 }], unread_chats: 3 } });
     expect(getChangedOrders).toHaveBeenCalledWith(SINCE);
   });
   it("getChangedOrders galat -> 503 { error }", async () => {
@@ -46,6 +49,12 @@ describe("GET /api/dashboard/sinkron", () => {
     expect(await response.json()).toEqual({
       error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." },
     });
+  });
+  it("jumlah chat gagal diambil -> tetap 200 tanpa unread_chats", async () => {
+    getUnreadChats.mockResolvedValue({ error: { code: "X", message: "x" } });
+    const response = await callRoute(`?sejak=${encodeURIComponent(SINCE)}`);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ data: { orders: [{ code: "A" }], menus: [{ id: 1 }] } });
   });
   it("getMenus galat -> 503", async () => {
     getMenus.mockResolvedValue({ error: { code: "X", message: "x" } });
