@@ -196,10 +196,12 @@ export function PopupList({
   canEdit: boolean;
   archived?: boolean;
 }) {
-  // 1. State dialog formulir ("new" = pop-up baru), pop-up yang menunggu konfirmasi arsip, dan waktu acuan status.
+  // 1. State dialog formulir ("new" = pop-up baru), pop-up yang menunggu konfirmasi arsip, tanda arsip/pulihkan sedang
+  //    dikirim (mencegah klik ganda), dan waktu acuan status.
   const router = useRouter();
   const [form, setForm] = useState<"new" | Popup | null>(null);
   const [popupToArchive, setPopupToArchive] = useState<Popup | null>(null);
+  const [archiving, setArchiving] = useState(false);
   // eslint-disable-next-line react-hooks/purity -- status tayang dihitung saat render
   const now = Date.now();
 
@@ -213,7 +215,9 @@ export function PopupList({
 
   // 3. Arsipkan atau pulihkan satu pop-up; pesan penolakan backend (mis. 409) tampil apa adanya.
   async function setPopupArchive(popup: Popup, archive: boolean) {
+    setArchiving(true);
     const result = await callAction(() => setPopupArchived(popup.id, archive));
+    setArchiving(false);
     if ("error" in result) return toast({ tone: "danger", message: result.error.message });
     toast({ tone: "success", message: archive ? "Pop-up diarsipkan." : "Pop-up dipulihkan." });
     router.refresh();
@@ -268,7 +272,11 @@ export function PopupList({
                   {canEdit && (
                     <div className="mt-auto flex flex-wrap justify-end gap-2">
                       {archived ? (
-                        <Button variant="secondary" onClick={() => void setPopupArchive(popup, false)}>
+                        <Button
+                          variant="secondary"
+                          disabled={archiving}
+                          onClick={() => void setPopupArchive(popup, false)}
+                        >
                           Pulihkan
                         </Button>
                       ) : (
@@ -279,7 +287,7 @@ export function PopupList({
                           <Button variant="secondary" onClick={() => void togglePopupActive(popup, !popup.is_active)}>
                             {popup.is_active ? "Nonaktifkan" : "Aktifkan"}
                           </Button>
-                          <Button variant="secondary" onClick={() => setPopupToArchive(popup)}>
+                          <Button variant="secondary" disabled={archiving} onClick={() => setPopupToArchive(popup)}>
                             Arsipkan
                           </Button>
                         </>

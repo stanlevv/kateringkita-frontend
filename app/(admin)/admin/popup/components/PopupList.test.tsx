@@ -181,4 +181,15 @@ describe("PopupList", () => {
     rerender(<PopupList popups={[makePopup({})]} vouchers={[]} canEdit={false} archived />);
     expect(screen.queryByRole("button", { name: "Pulihkan" })).not.toBeInTheDocument();
   });
+
+  it("Pulihkan nonaktif selama permintaan berjalan (cegah klik ganda)", async () => {
+    let finish: (value: unknown) => void = () => {};
+    setPopupArchived.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    render(<PopupList popups={[makePopup({})]} vouchers={[]} canEdit archived />);
+    await userEvent.click(screen.getByRole("button", { name: "Pulihkan" }));
+    expect(screen.getByRole("button", { name: "Pulihkan" })).toBeDisabled();
+    finish({ data: { id: 1 } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Pulihkan" })).toBeEnabled());
+    expect(setPopupArchived).toHaveBeenCalledTimes(1);
+  });
 });

@@ -65,11 +65,11 @@ export async function savePopup(id: number | null, input: Partial<PopupInput>): 
  * tidak tampil di aplikasi pembeli.
  * @param id id pop-up
  * @param archived true untuk mengarsipkan, false untuk memulihkan
- * @returns `{ data }` berisi pop-up terbaru; `{ error }` bila id tidak valid atau backend menolak (mis. 409 PROMO_ARCHIVED
- *   saat memulihkan pop-up yang vouchernya masih diarsipkan)
+ * @returns `{ data }` berisi pop-up terbaru; `{ error }` bila id atau `archived` tidak valid, atau backend menolak
+ *   (mis. 409 PROMO_ARCHIVED saat memulihkan pop-up yang vouchernya masih diarsipkan)
  */
 export async function setPopupArchived(id: number, archived: boolean): Promise<ActionResult<Popup>> {
   await requireAdmin("super", "ops");
-  if (!isValidId(id)) return errorResult("VALIDATION_ERROR", "Pop-up tidak valid.");
+  if (!isValidId(id) || typeof archived !== "boolean") return errorResult("VALIDATION_ERROR", "Pop-up tidak valid.");
   return toResult(await adminFetch<Popup>(`/popups/${id}/${archived ? "archive" : "restore"}`, { method: "POST" }));
 }

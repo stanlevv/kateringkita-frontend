@@ -50,7 +50,9 @@ export default async function PromoPlatformPage({
         )}
         <div className="flex flex-col gap-4">
           <ArchiveFilter path="/admin/promo" archived={archived} />
+          {/* key per filter: Link tidak me-remount halaman yang sama, jadi state lokal PromoList tidak boleh terbawa */}
           <PromoList
+            key={archived ? "arsip" : "aktif"}
             admin
             promos={promos.ok && promos.data ? promos.data : []}
             loadFailed={!promos.ok}

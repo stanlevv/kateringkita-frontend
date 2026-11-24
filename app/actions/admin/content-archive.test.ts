@@ -42,10 +42,15 @@ describe("arsip dan pulihkan konten", () => {
     for (const call of requireAdmin.mock.calls) expect(call).toEqual(["super", "ops"]);
   });
 
-  it("id tidak valid -> galat tanpa memanggil backend", async () => {
+  it("id atau archived tidak valid -> galat tanpa memanggil backend", async () => {
     expect(await setPopupArchived(0, true)).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
     expect(await setAdminBannerArchived(-1, true)).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
     expect(await setPlatformPromoArchived(1.5, true)).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
+    // Server action bisa dipanggil langsung dari luar, jadi `archived` bukan boolean juga ditolak.
+    const notBoolean = "true" as unknown as boolean;
+    expect(await setPopupArchived(3, notBoolean)).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
+    expect(await setAdminBannerArchived(3, notBoolean)).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
+    expect(await setPlatformPromoArchived(3, notBoolean)).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
     expect(adminFetch).not.toHaveBeenCalled();
   });
 

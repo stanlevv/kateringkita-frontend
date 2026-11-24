@@ -165,6 +165,17 @@ describe("PromoList", () => {
       expect(screen.queryByRole("button", { name: "Buat promo" })).toBeNull();
     });
 
+    it("Pulihkan nonaktif selama permintaan berjalan (cegah klik ganda)", async () => {
+      let finish: (value: unknown) => void = () => {};
+      archiveAction.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+      renderAdmin({ archived: true });
+      await userEvent.click(screen.getByRole("button", { name: "Pulihkan HEMAT10" }));
+      expect(screen.getByRole("button", { name: "Pulihkan SARAPAN5K" })).toBeDisabled();
+      finish({ data: allPromos[0] });
+      await waitFor(() => expect(screen.getByRole("button", { name: "Pulihkan SARAPAN5K" })).toBeEnabled());
+      expect(archiveAction).toHaveBeenCalledTimes(1);
+    });
+
     it("support: tanpa tombol buat, ubah, aktifkan, arsip, maupun pulihkan", () => {
       const { unmount } = renderAdmin({ canEdit: false });
       for (const name of [/Buat promo/, /^Ubah/, /^Nonaktifkan/, /^Aktifkan/, /^Arsipkan/])

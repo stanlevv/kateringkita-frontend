@@ -57,12 +57,12 @@ export async function updateAdminBannerContent(id: number | null, input: BannerI
  * tidak tampil di aplikasi pembeli.
  * @param id id banner
  * @param archived true untuk mengarsipkan, false untuk memulihkan
- * @returns `{ data }` berisi banner terbaru; `{ error }` bila id tidak valid atau backend menolak (mis. 409
- *   PROMO_ARCHIVED, atau toko yang sudah punya banner aktif)
+ * @returns `{ data }` berisi banner terbaru; `{ error }` bila id atau `archived` tidak valid, atau backend menolak
+ *   (mis. 409 PROMO_ARCHIVED, atau toko yang sudah punya banner aktif)
  */
 export async function setAdminBannerArchived(id: number, archived: boolean): Promise<ActionResult<Banner>> {
   await requireAdmin("super", "ops");
-  if (!isValidId(id)) return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
+  if (!isValidId(id) || typeof archived !== "boolean") return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
   return toResult(await adminFetch<Banner>(`/banners/${id}/${archived ? "archive" : "restore"}`, { method: "POST" }));
 }
 

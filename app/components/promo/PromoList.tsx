@@ -63,6 +63,7 @@ export function PromoList({
   const [form, setForm] = useState<"new" | Promo | null>(null);
   const [promoToDelete, setPromoToDelete] = useState<Promo | null>(null);
   const [promoToArchive, setPromoToArchive] = useState<Promo | null>(null);
+  const [archiving, setArchiving] = useState(false); // arsip/pulihkan sedang dikirim; mencegah klik ganda
   const [now] = useState(() => Date.now());
 
   // 2. Data gagal dimuat.
@@ -117,7 +118,9 @@ export function PromoList({
   // 6. Arsipkan atau pulihkan promo platform; berhasil = kartu pindah dari tampilan ini. Pesan penolakan backend
   //    (mis. 409 PROMO_IN_USE) tampil apa adanya.
   async function setPromoArchive(promo: Promo, archive: boolean) {
+    setArchiving(true);
     const result = await callAction(() => archiveAction!(promo.id, archive));
+    setArchiving(false);
     if ("error" in result) return toast({ tone: "danger", message: result.error.message });
     setLocalChanges((previous) => ({ ...previous, [promo.id]: null }));
     toast({ tone: "success", message: archive ? "Promo diarsipkan" : "Promo dipulihkan" });
@@ -215,6 +218,7 @@ export function PromoList({
                         <Button
                           variant="secondary"
                           aria-label={`Pulihkan ${promo.code}`}
+                          disabled={archiving}
                           onClick={() => void setPromoArchive(promo, false)}
                         >
                           <ArchiveRestore aria-hidden className="size-4" />
@@ -242,6 +246,7 @@ export function PromoList({
                               variant="ghost"
                               className="ml-auto"
                               aria-label={`Arsipkan ${promo.code}`}
+                              disabled={archiving}
                               onClick={() => setPromoToArchive(promo)}
                             >
                               <Archive aria-hidden className="size-4" />

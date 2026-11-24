@@ -63,12 +63,12 @@ export async function setPlatformPromoActive(id: number, active: boolean): Promi
  * dipakai pembeli, tetapi riwayat pesanan yang pernah memakainya tetap utuh. Hanya super dan ops.
  * @param id id promo platform
  * @param archived true untuk mengarsipkan, false untuk memulihkan
- * @returns `{ data }` berisi promo terbaru; `{ error }` bila id tidak valid atau backend menolak (mis. 409 PROMO_IN_USE
- *   bila promo masih dipasang di pop-up atau banner)
+ * @returns `{ data }` berisi promo terbaru; `{ error }` bila id atau `archived` tidak valid, atau backend menolak
+ *   (mis. 409 PROMO_IN_USE bila promo masih dipasang di pop-up atau banner)
  */
 export async function setPlatformPromoArchived(id: number, archived: boolean): Promise<ActionResult<Promo>> {
   await requireAdmin("super", "ops");
-  if (!isValidId(id)) return invalidPromoError();
+  if (!isValidId(id) || typeof archived !== "boolean") return invalidPromoError();
   return toResult(await adminFetch<Promo>(`/promos/${id}/${archived ? "archive" : "restore"}`, { method: "POST" }));
 }
 
