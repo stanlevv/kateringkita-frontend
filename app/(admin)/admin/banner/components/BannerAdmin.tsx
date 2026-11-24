@@ -32,6 +32,13 @@ import { withCurrentVoucher } from "@/lib/voucher-options";
 import type { Banner, VoucherOption } from "@/types/banner";
 
 // Pesan galat bila alasan penolakan terlalu pendek.
+/** Status persetujuan asal banner yang diarsipkan, untuk label kartu di tampilan Arsip. */
+const ORIGIN_STATUS_LABELS: Record<Banner["status"], string> = {
+  menunggu: "Menunggu",
+  disetujui: "Disetujui",
+  ditolak: "Ditolak",
+  nonaktif: "Nonaktif",
+};
 const REASON_HINT = "Tulis alasan penolakan (3–300 karakter).";
 
 /**
@@ -66,6 +73,8 @@ function BannerCard({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const statusView = bannerStatus(banner, now);
+  // Di tampilan Arsip, tambahkan status persetujuan asal agar admin tahu apa yang kembali saat dipulihkan.
+  const statusLabel = banner.archived_at ? `Diarsipkan · ${ORIGIN_STATUS_LABELS[banner.status]}` : statusView.label;
 
   // 2. Kirim tinjauan; "disetujui"/"ditolak"/"nonaktif" adalah nilai yang diterima backend.
   async function review(status: "disetujui" | "ditolak" | "nonaktif") {
@@ -118,7 +127,7 @@ function BannerCard({
           <p className="text-sm text-ink-muted">{banner.merchant?.business_name ?? "Platform KateringKita"}</p>
         </div>
         <Badge tone={statusView.tone} icon={statusView.icon}>
-          {statusView.label}
+          {statusLabel}
         </Badge>
       </div>
       <p className="text-sm text-ink-muted">

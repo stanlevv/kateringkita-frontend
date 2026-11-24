@@ -1,6 +1,6 @@
 // Test label log aktivitas admin dan daftar perubahan field.
 import { describe, expect, it } from "vitest";
-import { listChanges, actionLabel, LOG_ACTIONS } from "@/services/admin-log.service";
+import { listChanges, actionLabel, targetLabel, LOG_ACTIONS } from "@/services/admin-log.service";
 
 describe("label log", () => {
   it("memetakan aksi ke label Indonesia, tak dikenal apa adanya", () => {
@@ -14,6 +14,14 @@ describe("label log", () => {
     expect(actionLabel("banner.restore")).toBe("Pulihkan banner");
     expect(actionLabel("banner.update")).toBe("Ubah banner");
     expect(actionLabel("popup.archive")).toBe("Arsipkan pop-up");
+    expect(actionLabel("banner.create")).toBe("Tambah banner");
+    expect(actionLabel("banner.approve")).toBe("Setujui banner");
+    expect(actionLabel("banner.reject")).toBe("Tolak banner");
+    expect(actionLabel("banner.deactivate")).toBe("Nonaktifkan banner");
+    expect(actionLabel("popup.create")).toBe("Tambah pop-up");
+    expect(actionLabel("popup.update")).toBe("Ubah pop-up");
+    expect(targetLabel("banner", "5")).toBe("Banner #5");
+    expect(targetLabel("popup", "2")).toBe("Pop-up #2");
     expect(LOG_ACTIONS).toContainEqual(["popup.restore", "Pulihkan pop-up"]);
     expect(actionLabel("x.y")).toBe("x.y");
   });
