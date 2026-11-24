@@ -15,7 +15,7 @@ vi.mock("@/services/auth.service", () => ({ getSession: () => getSession(), getS
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 const apiFetch = vi.fn();
 vi.mock("@/services/api", () => ({ apiFetch: (...args: unknown[]) => apiFetch(...args) }));
-import { changePassword } from "./account";
+import { changePassword, sendEmailCode, updateAccount, verifyEmailCode } from "./account";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -65,5 +65,55 @@ describe("changePassword", () => {
     setScenario("gagal-aksi");
     const result = await changePassword(passwordInput);
     expect("error" in result && result.error.code).toBe("INTERNAL_ERROR");
+  });
+});
+
+describe("akun dan email", () => {
+  it("updateAccount: PATCH /me tanpa sandi bila kosong; isian salah ditolak tanpa backend", async () => {
+    apiFetch.mockResolvedValue({ ok: true, status: 200, data: { user: { full_name: "Diego" }, merchant: null } });
+    expect(await updateAccount({ full_name: " Diego ", phone: "081234567890", current_password: "" })).toEqual({
+      data: { user: { full_name: "Diego" }, merchant: null },
+    });
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/me",
+      expect.objectContaining({
+        method: "PATCH",
+        token: "tok",
+        body: JSON.stringify({ full_name: "Diego", phone: "081234567890" }),
+      }),
+    );
+    apiFetch.mockReset();
+    expect(await updateAccount({ full_name: "", phone: "12", current_password: "" })).toMatchObject({
+      error: { fields: { full_name: expect.any(Array), phone: expect.any(Array) } },
+    });
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("sendEmailCode: null = verifikasi email akun; ganti email dikirim huruf kecil bersama sandi", async () => {
+    apiFetch.mockResolvedValue({ ok: true, status: 200, data: { email: "d@x.id" } });
+    expect(await sendEmailCode(null)).toEqual({ data: { email: "d@x.id" } });
+    expect(apiFetch).toHaveBeenLastCalledWith("/me/email/otp", expect.objectContaining({ method: "POST", body: "{}" }));
+    await sendEmailCode({ email: " Baru@X.id ", current_password: "rahasia123" });
+    expect(apiFetch).toHaveBeenLastCalledWith(
+      "/me/email/otp",
+      expect.objectContaining({ body: JSON.stringify({ email: "baru@x.id", current_password: "rahasia123" }) }),
+    );
+    apiFetch.mockReset();
+    expect(await sendEmailCode({ email: "bukan-email", current_password: "" })).toMatchObject({
+      error: { fields: { email: expect.any(Array), current_password: expect.any(Array) } },
+    });
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("verifyEmailCode: kode 6 angka ke /me/email/verify; selain itu ditolak tanpa backend", async () => {
+    apiFetch.mockResolvedValue({ ok: true, status: 200, data: { user: { email_verified: true }, merchant: null } });
+    expect(await verifyEmailCode(" 123456 ")).toEqual({ data: { user: { email_verified: true }, merchant: null } });
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/me/email/verify",
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ code: "123456" }) }),
+    );
+    apiFetch.mockReset();
+    expect(await verifyEmailCode("12ab")).toMatchObject({ error: { fields: { code: ["Kode berisi 6 angka."] } } });
+    expect(apiFetch).not.toHaveBeenCalled();
   });
 });

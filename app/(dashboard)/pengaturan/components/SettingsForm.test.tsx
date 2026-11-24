@@ -21,7 +21,7 @@ import { myPayouts } from "@/lib/fixtures/payouts";
 import { profile } from "@/lib/fixtures/profile";
 import { SettingsForm } from "./SettingsForm";
 
-const user = { full_name: "Diego", phone: "081234567890", email: "d@x.id" };
+const user = { full_name: "Diego", phone: "081234567890", email: "d@x.id", email_verified: false };
 const renderForm = (props: Partial<React.ComponentProps<typeof SettingsForm>> = {}) =>
   render(
     <>
@@ -383,12 +383,13 @@ describe("Akun", () => {
     await typeInto(/Kata sandi lama/, "a1".repeat(37));
     expect(screen.getAllByText("Kata sandi maksimal 72 karakter.").length).toBeGreaterThan(0);
   });
-  it("menampilkan data pemilik (baca saja)", () => {
+  it("bagian Akun: data pemilik bisa diubah dan status email tampil", () => {
     renderForm();
     const accountSection = document.getElementById("akun")!;
-    expect(accountSection).toHaveTextContent("Diego");
-    expect(accountSection).toHaveTextContent("0812-3456-7890");
+    expect(within(accountSection).getByLabelText(/Nama pemilik/)).toHaveValue("Diego");
+    expect(within(accountSection).getByLabelText(/Nomor WA login/)).toHaveValue("081234567890");
     expect(accountSection).toHaveTextContent("d@x.id");
+    expect(accountSection).toHaveTextContent("Belum diverifikasi");
   });
   it("kata sandi lama salah -> error di field, form tidak dikosongkan", async () => {
     changePassword.mockResolvedValue({

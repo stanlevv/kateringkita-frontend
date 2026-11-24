@@ -50,6 +50,21 @@ export const businessSchema = z.object({
   address: requiredText("Alamat wajib diisi.", 255),
 });
 
+// --- Akun (Pengaturan > Akun): aturan sama dengan backend PATCH /me dan /me/email/* ---
+const emailField = z.string().trim().min(1, "Email wajib diisi.").pipe(z.email("Format email tidak valid."));
+const currentPasswordField = z.string().min(1, "Kata sandi saat ini wajib diisi.").max(72, "Maksimal 72 karakter.");
+/** Kode OTP dari email: tepat 6 angka. */
+export const otpCodeSchema = z.string().regex(/^\d{6}$/, "Kode berisi 6 angka.");
+
+/** Form data akun: nama pemilik dan nomor WA login. Sandi saat ini dicek terpisah (hanya wajib bila nomor berubah). */
+export const accountSchema = z.object({
+  full_name: requiredText("Nama lengkap wajib diisi.", 150),
+  phone: waNumber,
+});
+
+/** Form ganti email: email baru dan kata sandi saat ini. */
+export const emailChangeSchema = z.object({ email: emailField, current_password: currentPasswordField });
+
 /** Form lupa sandi: email tujuan kode reset. */
 export const emailResetSchema = z.object({
   email: z.string().trim().min(1, "Email wajib diisi.").pipe(z.email("Format email tidak valid.")),
@@ -58,7 +73,7 @@ export const emailResetSchema = z.object({
 /** Form reset sandi: kode 6 angka dan kata sandi baru. */
 export const resetPasswordSchema = z
   .object({
-    code: z.string().regex(/^\d{6}$/, "Kode berisi 6 angka."),
+    code: otpCodeSchema,
     password: newPasswordSchema,
     confirm: z.string(),
   })

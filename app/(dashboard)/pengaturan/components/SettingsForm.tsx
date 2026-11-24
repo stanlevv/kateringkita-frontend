@@ -20,7 +20,6 @@ import { FileDrop } from "@/app/components/ui/FileDrop";
 import { Input, Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
-import { formatPhone } from "@/lib/format";
 import { uploadPhoto } from "@/lib/upload";
 import { validateProfile } from "@/lib/schemas";
 import type { MerchantProfile } from "@/types/profile";
@@ -31,6 +30,8 @@ import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
 import { TableOrderSettings } from "./TableOrderSettings";
 import { PickupPointPicker } from "./PickupPointPicker";
 import { PayoutBankAccount } from "./PayoutBankAccount";
+import { AccountForm } from "./AccountForm";
+import { EmailVerification } from "./EmailVerification";
 
 /** Bagian halaman; `id` juga dipakai sebagai #hash tautan dan nilai ?lengkapi=, jadi tidak boleh diganti. */
 const SECTIONS = [
@@ -294,7 +295,7 @@ function ImageField({
 type Props = {
   profile: MerchantProfile;
   pickupPoints: PickupPoint[] | null;
-  user: { full_name: string; phone: string; email: string };
+  user: { full_name: string; phone: string; email: string; email_verified: boolean };
   incompleteSection?: string;
   tables?: Table[] | null; // meja untuk pesan dari meja; tidak diisi = daftar kosong
   payouts?: MyPayouts | null; // data pencairan; null = gagal dimuat
@@ -305,7 +306,7 @@ type Props = {
  * perubahan belum disimpan (useUnsavedGuard).
  * @param props.profile profil toko dari backend
  * @param props.pickupPoints semua titik temu, null = gagal dimuat
- * @param props.user nama, nomor WA, dan email akun yang masuk
+ * @param props.user nama, nomor WA, email, dan status verifikasi email akun yang masuk
  * @param props.incompleteSection id bagian dari ?lengkapi= yang digulir dan disorot 3 detik
  * @param props.tables meja untuk pesan dari meja, null = gagal dimuat
  * @param props.payouts saldo, rekening, dan riwayat pencairan, null = gagal dimuat
@@ -626,20 +627,10 @@ export function SettingsForm({ profile, pickupPoints, user, incompleteSection, t
           </Section>
 
           <Section id="akun" title="Akun" highlighted={highlightedSection === "akun"}>
-            <dl className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <dt className="text-sm text-ink-muted">Nama pemilik</dt>
-                <dd className="font-medium text-ink">{user.full_name}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-ink-muted">Nomor WA login</dt>
-                <dd className="font-medium text-ink">{formatPhone(user.phone)}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-ink-muted">Email</dt>
-                <dd className="break-all font-medium text-ink">{user.email || "-"}</dd>
-              </div>
-            </dl>
+            <div className="flex flex-col gap-8">
+              <AccountForm fullName={user.full_name} phone={user.phone} />
+              <EmailVerification email={user.email} verified={user.email_verified} />
+            </div>
             <ChangePasswordForm />
           </Section>
 
