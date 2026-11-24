@@ -1,4 +1,4 @@
-// Test layout dashboard: badge dari server, lebar sidebar dari cookie, dan mode pemeliharaan.
+// Test layout dashboard: badge pesanan, notifikasi, dan chat dari server, lebar sidebar dari cookie, dan mode pemeliharaan.
 // Services dan cookie dipalsukan (vi.mock); layout dipanggil langsung sebagai fungsi lalu hasilnya dibaca sebagai JSON.
 import { describe, expect, it, vi } from "vitest";
 
@@ -8,6 +8,7 @@ vi.mock("@/services/auth.service", () => ({
 vi.mock("@/services/profile.service", () => ({ getProfile: async () => ({ error: { code: "X", message: "x" } }) }));
 vi.mock("@/services/order.service", () => ({ getNeedsActionCount: async () => 7 }));
 vi.mock("@/services/notification.service", () => ({ getUnreadNotificationCount: async () => 4 }));
+vi.mock("@/services/order-chat.service", () => ({ getUnreadChatCount: async () => 5 }));
 let maintenance = { aktif: false, pesan: null as string | null };
 vi.mock("@/services/meta.service", () => ({ getMaintenance: async () => maintenance }));
 let sidebarCookie: string | undefined;
@@ -27,6 +28,10 @@ describe("shell dashboard", () => {
     const layout = await DashboardLayout({ children: null });
     expect(JSON.stringify(layout)).toContain('"badge":7');
     expect(JSON.stringify(layout)).toContain('"unreadNotifications":4');
+  });
+  it("badge chat = total chat belum dibaca dari /merchant/chats/unread, diteruskan ke sidebar dan header", async () => {
+    const json = JSON.stringify(await DashboardLayout({ children: null }));
+    expect(json.match(/"unreadChats":5/g)).toHaveLength(2);
   });
   it("lebar sidebar dari cookie kk-sidebar sudah dirender server (tanpa kedip)", async () => {
     sidebarCookie = "ringkas";

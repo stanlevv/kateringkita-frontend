@@ -1,5 +1,5 @@
-// Komponen OrderDetail: rincian satu pesanan (pemesan, item, harga, riwayat status) dan tombol aksinya.
-// Dipakai halaman /pesanan/[code] dan laci slip di dashboard (tanpa tombol aksi).
+// Komponen OrderDetail: rincian satu pesanan (pemesan, item, harga, riwayat status), tombol aksi, dan panel chat.
+// Dipakai halaman /pesanan/[code] dan laci slip di dashboard (tanpa tombol aksi dan tanpa chat).
 // Status pesanan: holding = menunggu konfirmasi/pembayaran, confirmed = dikonfirmasi, cooking = dimasak,
 // ready = siap, completed = selesai, cancelled = dibatalkan, expired = kadaluarsa (tidak dikonfirmasi tepat waktu).
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
@@ -19,6 +19,7 @@ import { formatTime, formatRupiah, formatDate, formatPhone, wibDate } from "@/li
 import { orderStatusView, actionTexts, successText, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
 import { ChatWaLink, actionErrorView, OutOfStockDialog, RejectButton } from "./OrderActionParts";
+import { OrderChatPanel } from "./OrderChatPanel";
 import { RejectDialog } from "./RejectDialog";
 import { StatusTimeline } from "./StatusTimeline";
 
@@ -111,8 +112,8 @@ function OrderActions({ order }: { order: MerchantOrder }) {
  * Rincian satu pesanan. Selalu menampilkan data dari prop; setelah aksi berhasil halaman dimuat ulang sehingga prop
  * berisi status terbaru.
  * @param props.order data pesanan
- * @param props.showActions tampilkan tombol aksi (bawaan true; false untuk laci slip di dashboard karena kartu
- * dashboard sudah punya tombol aksi)
+ * @param props.showActions tampilkan tombol aksi dan panel chat (bawaan true; false untuk laci slip di dashboard
+ * karena kartu dashboard sudah punya tombol aksi)
  * @returns elemen `div` berisi rincian
  */
 export function OrderDetail({ order, showActions = true }: { order: MerchantOrder; showActions?: boolean }) {
@@ -176,6 +177,12 @@ export function OrderDetail({ order, showActions = true }: { order: MerchantOrde
       </Section>
 
       {showActions && <OrderActions key={order.status} order={order} />}
+
+      {showActions && (
+        <Section title="Chat dengan pembeli">
+          <OrderChatPanel key={order.code} code={order.code} />
+        </Section>
+      )}
     </div>
   );
 }

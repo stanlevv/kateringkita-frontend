@@ -350,3 +350,20 @@ describe("sinkron tidak melewatkan pesanan", () => {
     expect(result.current.clockOffset).toBe(3000);
   });
 });
+
+describe("jumlah chat belum dibaca", () => {
+  it("unread_chats dari respons disimpan; respons tanpa unread_chats tidak mengubahnya", async () => {
+    const withChats = (total: number) =>
+      ({
+        ...okResponse(),
+        json: async () => ({ data: { orders: [], menus: MENUS, unread_chats: total } }),
+      }) as Response;
+    fetchMock.mockImplementationOnce(async () => withChats(2));
+    const { result } = mountHook();
+    expect(result.current.unreadChats).toBeNull();
+    await advance(5000);
+    expect(result.current.unreadChats).toBe(2);
+    await advance(5000);
+    expect(result.current.unreadChats).toBe(2);
+  });
+});

@@ -1,6 +1,7 @@
 // Bentuk data yang dikirim backend untuk panel admin (/api/v1/admin/...).
 // Nama properti mengikuti JSON dari backend, jadi sengaja tidak diterjemahkan.
 // Dipakai services/admin-*.service.ts, server action admin, dan halaman di app/(admin).
+import type { ChatMessage } from "@/types/order-chat";
 
 /** Status pesanan seperti yang dilaporkan backend di panel admin. */
 export type AdminOrderStatus = "holding" | "confirmed" | "cooking" | "ready" | "completed" | "cancelled" | "expired";
@@ -207,3 +208,19 @@ export type TicketDetail = Omit<TicketSummary, "last_message_preview" | "custome
   order: { code: string; status: AdminOrderStatus; total: number; merchant_name: string; created_at: string } | null;
   messages: TicketMessage[];
 };
+
+/**
+ * Satu laporan chat pesanan di daftar admin. `reporter_role` = pihak yang melapor; `reporter_name` null bila akun
+ * pelapor sudah dihapus.
+ */
+export type ChatReportSummary = {
+  id: number;
+  order_code: string;
+  reporter_role: "customer" | "merchant";
+  reporter_name: string | null;
+  reason: string;
+  created_at: string;
+};
+
+/** Detail laporan chat: ringkasan ditambah seluruh riwayat pesan chat pesanan itu (urut id naik). */
+export type ChatReportDetail = ChatReportSummary & { messages: ChatMessage[] };

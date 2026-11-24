@@ -342,3 +342,23 @@ describe("status dapur di luar jam buka", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("badge chat di sidebar", () => {
+  it("jumlah chat belum dibaca dari cek berkala berubah -> router.refresh sekali; nilai pertama tidak memicu", async () => {
+    const withChats = (total: number) =>
+      ({
+        ...okResponse(),
+        json: async () => ({ data: { orders: [], menus: menus(), unread_chats: total } }),
+      }) as Response;
+    fetchMock
+      .mockImplementationOnce(async () => withChats(1))
+      .mockImplementationOnce(async () => withChats(1))
+      .mockImplementationOnce(async () => withChats(2));
+    render(dashboardTree(loadData()));
+    await advance(5000);
+    await advance(5000);
+    expect(refresh).not.toHaveBeenCalled();
+    await advance(5000);
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+});

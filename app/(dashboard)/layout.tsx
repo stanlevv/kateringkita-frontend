@@ -2,7 +2,7 @@
 // verifikasi toko dan verifikasi email, dan area konten. Layout = file khusus Next.js yang membungkus semua halaman di folder ini.
 // Ini server component (tanpa "use client"): dijalankan di server dan boleh memanggil services langsung.
 // Data: sesi penjual (requireMerchant), status pemeliharaan, profil toko, jumlah pesanan perlu tindakan, jumlah
-// notifikasi belum dibaca, dan cookie lebar sidebar.
+// notifikasi belum dibaca, jumlah pesan chat belum dibaca, dan cookie lebar sidebar.
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Header } from "@/app/components/shell/Header";
@@ -13,6 +13,7 @@ import { EmailVerificationBanner } from "@/app/components/EmailVerificationBanne
 import { Toaster } from "@/app/components/ui/Toast";
 import { getUnreadNotificationCount } from "@/services/notification.service";
 import { getNeedsActionCount } from "@/services/order.service";
+import { getUnreadChatCount } from "@/services/order-chat.service";
 import { getProfile } from "@/services/profile.service";
 import { requireMerchant } from "@/services/auth.service";
 import { getMaintenance } from "@/services/meta.service";
@@ -35,11 +36,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const maintenance = await getMaintenance();
   if (maintenance.aktif) return <MaintenanceNotice message={maintenance.pesan} />;
   // 3. Ambil data shell sekaligus. Badge dan status dapur dihitung di layout, jadi hanya diperbarui saat halaman
-  // dimuat penuh atau saat router.refresh() dipanggil (dashboard memanggilnya ketika jumlah pesanan berubah).
-  const [profile, badge, unreadNotifications, cookieStore] = await Promise.all([
+  // dimuat penuh atau saat router.refresh() dipanggil (dashboard memanggilnya ketika jumlah pesanan atau jumlah chat
+  // belum dibaca berubah; panel chat memanggilnya setelah menandai pesan dibaca).
+  const [profile, badge, unreadNotifications, unreadChats, cookieStore] = await Promise.all([
     getProfile(),
     getNeedsActionCount(),
     getUnreadNotificationCount(),
+    getUnreadChatCount(),
     cookies(),
   ]);
   // 4. Susun status dapur, nama pengguna, dan nama toko untuk sidebar dan header.
@@ -63,6 +66,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           store={store}
           badge={badge}
           unreadNotifications={unreadNotifications}
+          unreadChats={unreadChats}
           mode={parseSidebarMode(cookieStore.get(SIDEBAR_COOKIE)?.value)}
         />
         <div className="flex min-w-0 flex-1 flex-col">
@@ -72,6 +76,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             store={store}
             badge={badge}
             unreadNotifications={unreadNotifications}
+            unreadChats={unreadChats}
           />
           <div className="flex flex-col gap-3 px-4 pt-4 empty:hidden md:px-6">
             <VerificationBanner merchant={merchant} />
