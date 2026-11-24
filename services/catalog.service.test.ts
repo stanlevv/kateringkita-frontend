@@ -19,6 +19,11 @@ describe("catalog.service", () => {
     expect(await getPublicMerchants()).toEqual({ data: [] });
     expect(mocked).toHaveBeenCalledWith("/merchants");
   });
+  it("getPublicMerchants(3) menyaring per titik ambil", async () => {
+    mocked.mockResolvedValue({ ok: true, status: 200, data: [] });
+    await getPublicMerchants(3);
+    expect(mocked).toHaveBeenCalledWith("/merchants?pickup_point_id=3");
+  });
   it("getMerchantBySlug memanggil /merchants/<slug>", async () => {
     mocked.mockResolvedValue({ ok: true, status: 200, data: { slug: "dapur-bu-sri" } as never });
     await getMerchantBySlug("dapur-bu-sri");

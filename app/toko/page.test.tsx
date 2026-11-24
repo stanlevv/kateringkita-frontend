@@ -15,6 +15,7 @@ const m = (slug: string, name: string, extra = {}) => ({
   merchant_type: { id: 1, name: "Katering" },
   rating_avg: 0,
   rating_count: 0,
+  menu_count: 0,
   ...extra,
 });
 
