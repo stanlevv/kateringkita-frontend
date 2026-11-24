@@ -366,4 +366,20 @@ describe("jumlah chat belum dibaca", () => {
     await advance(5000);
     expect(result.current.unreadChats).toBe(2);
   });
+  it("unread_chat_orders dari respons disimpan; respons tanpa kunci itu tidak mengubahnya", async () => {
+    const chatOrders = [{ code: "KK-1", unread_count: 2, last_message_at: "2026-11-01T03:00:00.000Z" }];
+    fetchMock.mockImplementationOnce(
+      async () =>
+        ({
+          ...okResponse(),
+          json: async () => ({ data: { orders: [], menus: MENUS, unread_chats: 2, unread_chat_orders: chatOrders } }),
+        }) as Response,
+    );
+    const { result } = mountHook();
+    expect(result.current.unreadChatOrders).toBeNull();
+    await advance(5000);
+    expect(result.current.unreadChatOrders).toEqual(chatOrders);
+    await advance(5000);
+    expect(result.current.unreadChatOrders).toEqual(chatOrders);
+  });
 });

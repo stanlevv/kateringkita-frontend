@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Trophy, Volume2, VolumeX } from "lucide-react";
 import { QuotaPanel } from "@/app/(dashboard)/dashboard/components/QuotaPanel";
 import { OrderQueue } from "@/app/(dashboard)/dashboard/components/OrderQueue";
+import { useReportUnreadChats } from "@/app/components/shell/ChatNotifier";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { useStoreStatus } from "@/app/components/shell/StoreStatus";
 import { useStoreOpenToggle } from "@/app/components/shell/StoreStatusToggle";
@@ -88,8 +89,18 @@ function DashboardContent({
   loadFailed,
 }: DashboardData & { loadFailed: boolean }) {
   // 1. Data live (polling), status dapur bersama, dan jam lokal yang berdetak tiap detik.
-  const { orders, menus, lastSyncedAt, disconnected, clockOffset, unreadChats, receiveOrder, receiveMenu, refresh } =
-    useLiveDashboard({ orders: initialOrders, menus: initialMenus, loadedAt });
+  const {
+    orders,
+    menus,
+    lastSyncedAt,
+    disconnected,
+    clockOffset,
+    unreadChats,
+    unreadChatOrders,
+    receiveOrder,
+    receiveMenu,
+    refresh,
+  } = useLiveDashboard({ orders: initialOrders, menus: initialMenus, loadedAt });
   const { isOpen, openTime, closeTime } = useStoreStatus();
   const { changeStoreOpen, pending: storeOpenPending } = useStoreOpenToggle();
   const [now, setNow] = useState(loadedAt);
@@ -132,6 +143,12 @@ function DashboardContent({
     previousUnreadChats.current = unreadChats;
     if (!isFirstValue) router.refresh();
   }, [unreadChats, router]);
+  // 5c. Rincian chat per pesanan: angka di tombol Chat kartu, dan diserahkan ke pemberitahuan pesan baru di layout
+  //     supaya layout tidak mengecek sendiri selama dashboard tampil.
+  useReportUnreadChats(unreadChatOrders);
+  const unreadChatCounts = Object.fromEntries(
+    (unreadChatOrders ?? []).map((chatOrder) => [chatOrder.code, chatOrder.unread_count]),
+  );
   // 6. Lebar tablet? (server selalu menganggap bukan tablet.)
   const isTablet = useSyncExternalStore(
     subscribeTablet,
@@ -254,6 +271,7 @@ function DashboardContent({
             onFocusQuota={focusQuota}
             onReceiveOrder={receiveOrder}
             onRefresh={refresh}
+            unreadChatCounts={unreadChatCounts}
             quotaPanel={isTablet ? <div className="flex flex-col gap-4">{sidePanel}</div> : undefined}
           />
           {!isTablet && (

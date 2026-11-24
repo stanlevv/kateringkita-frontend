@@ -1,5 +1,6 @@
-// Test OrderCard: tampilan delapan status pesanan, isi kartu, Chat WA, tombol aksi, timer tahan, dan sorot pesanan baru.
-import { render, screen, within } from "@testing-library/react";
+// Test OrderCard: tampilan delapan status pesanan, isi kartu, Chat WA, tombol aksi, timer tahan, sorot pesanan baru,
+// dan tombol Chat ke panel chat pesanan.
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { applyHoldExpiry } from "@/lib/dashboard";
@@ -122,5 +123,34 @@ describe("sorot pesanan baru", () => {
     renderCard(baseOrder, { isNew: true });
     expect(screen.getByRole("article")).toHaveAttribute("data-baru", "true");
     expect(screen.getByText("Baru")).toBeInTheDocument();
+  });
+});
+
+describe("tombol Chat", () => {
+  it.each(["confirmed", "cooking", "ready"] as const)(
+    "%s: Chat ke /pesanan/<kode>#chat beserta jumlah belum dibaca",
+    (status) => {
+      renderCard(orderWith({ status }), { unreadChatCount: 2 });
+      expect(screen.getByRole("link", { name: "Chat · 2" })).toHaveAttribute("href", "/pesanan/KK-20261031-7QF2#chat");
+    },
+  );
+  it("chat tersedia tanpa pesan belum dibaca -> Chat tanpa angka", () => {
+    renderCard(orderWith({ status: "cooking", cooking_at: baseOrder.created_at }));
+    expect(screen.getByRole("link", { name: "Chat" })).toBeInTheDocument();
+  });
+  it("chat belum dibuka (holding) atau sudah selesai tanpa pesan -> tanpa tombol Chat", () => {
+    renderCard(baseOrder);
+    expect(screen.queryByRole("link", { name: /^Chat( ·|$)/ })).toBeNull();
+    cleanup();
+    renderCard(orderWith({ status: "completed" }));
+    expect(screen.queryByRole("link", { name: /^Chat( ·|$)/ })).toBeNull();
+  });
+  it("pesanan selesai yang masih punya pesan belum dibaca -> Chat tetap muncul", () => {
+    renderCard(orderWith({ status: "completed" }), { unreadChatCount: 1 });
+    expect(screen.getByRole("link", { name: "Chat · 1" })).toBeInTheDocument();
+  });
+  it("pesanan meja: chat tidak tersedia -> tanpa tombol Chat", () => {
+    renderCard(orderWith({ status: "cooking", table: { id: 1, label: "3" } }));
+    expect(screen.queryByRole("link", { name: /^Chat( ·|$)/ })).toBeNull();
   });
 });

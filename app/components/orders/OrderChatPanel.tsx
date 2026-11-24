@@ -68,6 +68,7 @@ export function OrderChatPanel({ code }: { code: string }) {
   const lastFetchedId = useRef(0);
   const markedReadId = useRef(0);
   const listRef = useRef<HTMLOListElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // 2. Cek berkala: langsung saat tampil, lalu tiap 5 detik; dilewati saat tab tersembunyi dan langsung jalan lagi
   //    saat tab terlihat. Berhenti (timer dihapus) bila chat tidak tersedia atau sudah ditutup karena tidak akan ada
@@ -138,7 +139,12 @@ export function OrderChatPanel({ code }: { code: string }) {
     });
   }, [chat, lastCustomerId, code, router]);
 
-  // 4. Gulir ke pesan terbaru setiap jumlah pesan bertambah.
+  // 4. Dibuka lewat tautan ber-#chat (tombol Chat di dashboard, toast, atau notifikasi): gulir panel ke layar sekali.
+  useEffect(() => {
+    if (window.location.hash === "#chat") panelRef.current?.scrollIntoView({ block: "start" });
+  }, []);
+
+  // 5. Gulir ke pesan terbaru setiap jumlah pesan bertambah.
   useEffect(() => {
     const list = listRef.current;
     if (list) list.scrollTop = list.scrollHeight;
@@ -211,7 +217,7 @@ export function OrderChatPanel({ code }: { code: string }) {
     chat.other_party_last_read_id >= message.id;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div id="chat" ref={panelRef} className="flex scroll-mt-20 flex-col gap-3">
       {chat?.available && (
         <div className="flex justify-end">
           <Button

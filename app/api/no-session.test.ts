@@ -1,5 +1,6 @@
 // Test route handler /api/* tanpa cookie sesi, memakai services/auth.service.ts yang asli (hanya cookies dan redirect
-// yang dipalsukan): sinkron, wa, dan chat dialihkan ke /login?alasan=sesi-habis, unduhan CSV dijawab 401 JSON.
+// yang dipalsukan): sinkron, wa, chat, dan chat belum dibaca dialihkan ke /login?alasan=sesi-habis, unduhan CSV
+// dijawab 401 JSON.
 import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
@@ -17,6 +18,7 @@ import { GET as syncRoute } from "@/app/api/dashboard/sinkron/route";
 import { GET as reportCsvRoute } from "@/app/api/laporan/csv/route";
 import { GET as whatsappRoute } from "@/app/api/pesanan/[code]/wa/route";
 import { GET as chatRoute } from "@/app/api/pesanan/[code]/chat/route";
+import { GET as unreadChatsRoute } from "@/app/api/chat/belum-dibaca/route";
 
 describe("Route Handler /api/* tanpa cookie sesi", () => {
   it("sinkron -> redirect ke /login?alasan=sesi-habis", async () => {
@@ -35,6 +37,9 @@ describe("Route Handler /api/* tanpa cookie sesi", () => {
         params: Promise.resolve({ code: "KK-1" }),
       }),
     ).rejects.toThrow("REDIRECT:/login?alasan=sesi-habis");
+  });
+  it("chat belum dibaca -> redirect ke /login?alasan=sesi-habis", async () => {
+    await expect(unreadChatsRoute()).rejects.toThrow("REDIRECT:/login?alasan=sesi-habis");
   });
   it("csv -> 401 JSON", async () => {
     const response = await reportCsvRoute(

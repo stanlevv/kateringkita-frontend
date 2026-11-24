@@ -1,10 +1,12 @@
 // Layout semua halaman penjual (/dashboard, /pesanan, /menu, /pengaturan, dan lainnya): sidebar, header, banner
-// verifikasi toko dan verifikasi email, dan area konten. Layout = file khusus Next.js yang membungkus semua halaman di folder ini.
+// verifikasi toko dan verifikasi email, pemberitahuan pesan baru dari pembeli (ChatNotifier), dan area konten.
+// Layout = file khusus Next.js yang membungkus semua halaman di folder ini.
 // Ini server component (tanpa "use client"): dijalankan di server dan boleh memanggil services langsung.
 // Data: sesi penjual (requireMerchant), status pemeliharaan, profil toko, jumlah pesanan perlu tindakan, jumlah
 // notifikasi belum dibaca, jumlah pesan chat belum dibaca, dan cookie lebar sidebar.
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { ChatNotifier } from "@/app/components/shell/ChatNotifier";
 import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { StoreStatusProvider, type StoreInfo } from "@/app/components/shell/StoreStatus";
@@ -26,7 +28,8 @@ export const metadata: Metadata = { title: "Dashboard penjual", robots: { index:
  * Membungkus halaman penjual dengan sidebar, header, dan banner verifikasi. Saat pemeliharaan aktif, seluruh shell
  * diganti halaman pemberitahuan.
  * @param props.children halaman yang sedang dibuka
- * @returns shell dashboard di dalam StoreStatusProvider (status dapur bersama), atau MaintenanceNotice
+ * @returns shell dashboard di dalam StoreStatusProvider (status dapur bersama) dan ChatNotifier (pemberitahuan pesan
+ *   pembeli), atau MaintenanceNotice
  */
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   // 1. Pastikan yang masuk adalah penjual. Bila belum masuk atau bukan penjual, requireMerchant memanggil redirect()
@@ -55,39 +58,41 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <StoreStatusProvider store={store}>
-      <a
-        href="#konten"
-        className="sr-only z-50 rounded-md bg-surface px-4 py-2 font-medium text-primary focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus-visible:ring-2 focus-visible:ring-focus"
-      >
-        Lewati ke konten
-      </a>
-      <div className="flex min-h-dvh bg-canvas text-ink">
-        <Sidebar
-          store={store}
-          badge={badge}
-          unreadNotifications={unreadNotifications}
-          unreadChats={unreadChats}
-          mode={parseSidebarMode(cookieStore.get(SIDEBAR_COOKIE)?.value)}
-        />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Header
-            userName={userName}
-            merchantName={merchantName}
+      <ChatNotifier>
+        <a
+          href="#konten"
+          className="sr-only z-50 rounded-md bg-surface px-4 py-2 font-medium text-primary focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus-visible:ring-2 focus-visible:ring-focus"
+        >
+          Lewati ke konten
+        </a>
+        <div className="flex min-h-dvh bg-canvas text-ink">
+          <Sidebar
             store={store}
             badge={badge}
             unreadNotifications={unreadNotifications}
             unreadChats={unreadChats}
+            mode={parseSidebarMode(cookieStore.get(SIDEBAR_COOKIE)?.value)}
           />
-          <div className="flex flex-col gap-3 px-4 pt-4 empty:hidden md:px-6">
-            <VerificationBanner merchant={merchant} />
-            <EmailVerificationBanner user={user} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Header
+              userName={userName}
+              merchantName={merchantName}
+              store={store}
+              badge={badge}
+              unreadNotifications={unreadNotifications}
+              unreadChats={unreadChats}
+            />
+            <div className="flex flex-col gap-3 px-4 pt-4 empty:hidden md:px-6">
+              <VerificationBanner merchant={merchant} />
+              <EmailVerificationBanner user={user} />
+            </div>
+            <main id="konten" tabIndex={-1} className="flex-1 p-4 md:p-6">
+              {children}
+            </main>
           </div>
-          <main id="konten" tabIndex={-1} className="flex-1 p-4 md:p-6">
-            {children}
-          </main>
         </div>
-      </div>
-      <Toaster />
+        <Toaster />
+      </ChatNotifier>
     </StoreStatusProvider>
   );
 }

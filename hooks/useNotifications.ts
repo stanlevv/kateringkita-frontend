@@ -19,7 +19,7 @@ const HIGHLIGHT_MS = 3000; // lama kartu pesanan baru disorot
 let soundFallback: boolean | null = null;
 const soundListeners = new Set<() => void>();
 /** Membaca pilihan suara (bawaan: menyala). @returns true bila suara menyala */
-function readSoundEnabled(): boolean {
+export function readSoundEnabled(): boolean {
   try {
     const storedValue = localStorage.getItem(SOUND_STORAGE_KEY);
     if (storedValue !== null) return storedValue !== "0";

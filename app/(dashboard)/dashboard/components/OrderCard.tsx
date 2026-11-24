@@ -1,13 +1,15 @@
-// Komponen OrderCard: kartu satu pesanan di antrean dashboard (timer tahan, item, titik temu, total, tombol aksi).
+// Komponen OrderCard: kartu satu pesanan di antrean dashboard (timer tahan, item, titik temu, total, tombol aksi,
+// dan tombol Chat ke panel chat pesanan).
 // Dipakai OrderQueue.
 // Status pesanan: holding = menunggu konfirmasi (atau menunggu pembayaran online), confirmed = dikonfirmasi,
 // cooking = dimasak, ready = siap diambil/diantar, completed = selesai, cancelled = dibatalkan, expired = kadaluarsa.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
-import { BellRing, FileText, MapPin, Timer } from "lucide-react";
+import { BellRing, FileText, MapPin, MessagesSquare, Timer } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
+import { LinkButton } from "@/app/components/ui/LinkButton";
 import { PaymentBadge } from "@/app/components/ui/PaymentBadge";
 import { StatusBadge } from "@/app/components/ui/StatusBadge";
 import { cx } from "@/app/components/ui/cx";
@@ -20,6 +22,9 @@ import { ChatWaLink, RejectButton } from "@/app/components/orders/OrderActionPar
 const formatCountdown = (seconds: number) =>
   `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
+/** Status yang chatnya terbuka (setelah dikonfirmasi sampai siap). */
+const CHAT_OPEN_STATUSES: MerchantOrder["status"][] = ["confirmed", "cooking", "ready"];
+
 type Props = {
   order: MerchantOrder;
   /** Detik tahan tersisa (hanya pesanan holding), dihitung komponen induk. */
@@ -30,6 +35,8 @@ type Props = {
   isNew?: boolean;
   /** Aksi yang sedang ditunda/dikirim untuk kartu ini. */
   pending?: OrderAction;
+  /** Jumlah pesan pembeli belum dibaca di chat pesanan ini. */
+  unreadChatCount?: number;
   onAction: (action: OrderAction) => void;
   onReject: () => void;
   onSlip: () => void;
@@ -43,12 +50,24 @@ type Props = {
  * @param props.now jam server sekarang (opsional)
  * @param props.isNew sorot sebagai pesanan baru (opsional)
  * @param props.pending aksi yang sedang ditunda/dikirim; semua tombol aksi nonaktif selama ada
+ * @param props.unreadChatCount jumlah pesan pembeli belum dibaca (opsional, bawaan 0); tombol Chat tampil bila chat
+ *   terbuka atau masih ada pesan belum dibaca
  * @param props.onAction dipanggil dengan aksi utama yang ditekan
  * @param props.onReject membuka dialog tolak
  * @param props.onSlip membuka laci slip
  * @returns elemen `article`
  */
-export function OrderCard({ order, holdSecondsLeft, now, isNew, pending, onAction, onReject, onSlip }: Props) {
+export function OrderCard({
+  order,
+  holdSecondsLeft,
+  now,
+  isNew,
+  pending,
+  unreadChatCount = 0,
+  onAction,
+  onReject,
+  onSlip,
+}: Props) {
   // 1. Tombol dan keterangan untuk status ini.
   const view = orderStatusView(order);
   // 2. Timer tahan: segera bila kurang dari 60 detik; panjang total tahan untuk garis kemajuan (bawaan 5 menit).
@@ -62,6 +81,8 @@ export function OrderCard({ order, holdSecondsLeft, now, isNew, pending, onActio
       ? Math.max(0, Math.floor((now - Date.parse(order.cooking_at)) / 60000))
       : null;
   const cancelled = order.status === "cancelled" || order.status === "expired";
+  // 4. Chat: pesanan meja tidak punya chat; pesan belum dibaca tetap bisa dibuka walau chat sudah ditutup.
+  const showChat = unreadChatCount > 0 || (!order.table && CHAT_OPEN_STATUSES.includes(order.status));
 
   return (
     <article
@@ -163,6 +184,12 @@ export function OrderCard({ order, holdSecondsLeft, now, isNew, pending, onActio
         <div className="flex flex-wrap gap-2 sm:ml-auto">
           {view.secondary.includes("reject") && <RejectButton disabled={!!pending} onClick={onReject} />}
           {view.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
+          {showChat && (
+            <LinkButton variant="secondary" href={`/pesanan/${encodeURIComponent(order.code)}#chat`}>
+              <MessagesSquare aria-hidden className="size-4" />
+              {unreadChatCount > 0 ? `Chat · ${unreadChatCount}` : "Chat"}
+            </LinkButton>
+          )}
           <Button variant="ghost" onClick={onSlip}>
             <FileText aria-hidden className="size-4" />
             Lihat slip

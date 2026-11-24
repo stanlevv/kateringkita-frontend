@@ -362,3 +362,29 @@ describe("badge chat di sidebar", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("tombol Chat di kartu", () => {
+  it("rincian chat dari cek berkala -> kartu menampilkan Chat · N ke /pesanan/<kode>#chat", async () => {
+    const data = loadData();
+    const readyOrder = data.orders.find((order) => order.status === "ready")!;
+    const unreadChatOrders = [{ code: readyOrder.code, unread_count: 2, last_message_at: "2026-11-25T03:00:00.000Z" }];
+    fetchMock.mockImplementation(
+      async () =>
+        ({
+          ...okResponse(),
+          json: async () => ({
+            data: { orders: [], menus: menus(), unread_chats: 2, unread_chat_orders: unreadChatOrders },
+          }),
+        }) as Response,
+    );
+    render(dashboardTree(data));
+    await user.click(screen.getByRole("tab", { name: /Siap diambil/ }));
+    const readyCard = within(screen.getByText(readyOrder.code).closest("article") as HTMLElement);
+    expect(readyCard.getByRole("link", { name: "Chat" })).toBeInTheDocument();
+    await advance(5000);
+    expect(readyCard.getByRole("link", { name: "Chat · 2" })).toHaveAttribute(
+      "href",
+      `/pesanan/${readyOrder.code}#chat`,
+    );
+  });
+});

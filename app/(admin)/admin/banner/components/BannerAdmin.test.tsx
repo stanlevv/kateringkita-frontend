@@ -151,6 +151,25 @@ describe("BannerAdmin", () => {
     expect(await screen.findByText("Banner diarsipkan.")).toBeInTheDocument();
   });
 
+  it("tampilan Arsip: label menyertakan status asal banner", () => {
+    const archivedAt = past;
+    render(
+      <BannerAdmin
+        banners={[
+          makeBanner({ id: 1, status: "menunggu", archived_at: archivedAt }),
+          makeBanner({ id: 2, status: "disetujui", archived_at: archivedAt }),
+          makeBanner({ id: 3, status: "ditolak", archived_at: archivedAt }),
+          makeBanner({ id: 4, status: "nonaktif", archived_at: archivedAt }),
+        ]}
+        vouchers={[]}
+        canEdit
+        archived
+      />,
+    );
+    for (const origin of ["Menunggu", "Disetujui", "Ditolak", "Nonaktif"])
+      expect(screen.getByText(`Diarsipkan · ${origin}`)).toBeInTheDocument();
+  });
+
   it("tampilan Arsip: hanya Pulihkan, pesan 409 apa adanya; support tanpa tombol", async () => {
     const message = "Toko ini sudah punya banner aktif.";
     setAdminBannerArchived.mockResolvedValue({ error: { code: "CONFLICT", message } });
