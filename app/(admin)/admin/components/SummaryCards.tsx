@@ -2,7 +2,7 @@
 // yang hampir kedaluwarsa, ubin jumlah penjual per status (menaut ke daftar terkait), dan aksi admin terakhir.
 // Server component: hanya menampilkan data yang dikirim halaman.
 import Link from "next/link";
-import { Banknote, CheckCircle2, ChevronRight, Hourglass, PauseCircle, Store, Timer, Wrench } from "lucide-react";
+import { Banknote, CheckCircle2, ChevronRight, PauseCircle, Store, Timer, Wrench } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
 import { Card } from "@/app/components/ui/Card";
@@ -24,9 +24,9 @@ const ORDER_STATUSES: [AdminOrderStatus, DisplayStatus][] = [
   ["expired", "expired"],
 ];
 
-// Ubin jumlah penjual: kunci data, label, tujuan tautan, dan ikon.
+// Ubin jumlah penjual: kunci data, label, tujuan tautan, dan ikon. Penjual menunggu verifikasi tidak di sini karena
+// sudah tampil di ubin "Perlu tindakan" (QueueTiles) dengan angka dan tautan yang sama.
 const MERCHANT_TILES: { key: keyof AdminSummary["merchants"]; label: string; href: string; icon: LucideIcon }[] = [
-  { key: "pending", label: "Menunggu verifikasi", href: "/admin/verifikasi", icon: Hourglass },
   { key: "needs_fix", label: "Perlu perbaikan", href: "/admin/verifikasi", icon: Wrench },
   { key: "verified", label: "Aktif", href: "/admin/penjual?status=verified", icon: CheckCircle2 },
   { key: "suspended", label: "Ditangguhkan", href: "/admin/penjual?status=suspended", icon: PauseCircle },
@@ -81,7 +81,7 @@ export function SummaryCards({ data }: { data: AdminSummary }) {
 
       <section aria-label="Penjual">
         <h2 className="mb-3 text-lg font-semibold text-ink">Penjual</h2>
-        <ul className="grid grid-cols-2 gap-4 xl:grid-cols-5">
+        <ul className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           {MERCHANT_TILES.map(({ key, label, href, icon }) => (
             <li key={key}>
               <Link href={href} className={TILE_LINK_CLASS}>

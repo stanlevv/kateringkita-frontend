@@ -29,7 +29,6 @@ describe("kartu ringkasan", () => {
   it("menaut ke layar terkait", () => {
     render(<SummaryCards data={data} />);
     const href = (name: RegExp) => screen.getByRole("link", { name }).getAttribute("href");
-    expect(href(/Menunggu verifikasi/)).toBe("/admin/verifikasi");
     expect(href(/Perlu perbaikan/)).toBe("/admin/verifikasi");
     expect(href(/Aktif/)).toBe("/admin/penjual?status=verified");
     expect(href(/Ditangguhkan/)).toBe("/admin/penjual?status=suspended");
@@ -39,7 +38,7 @@ describe("kartu ringkasan", () => {
   it("angka, omzet Rupiah, status pesanan berlabel, tertahan, dan log terakhir", () => {
     render(<SummaryCards data={data} />);
     expect(screen.getByText("Rp 1.250.000")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Menunggu verifikasi/ })).toHaveTextContent("4");
+    expect(screen.queryByRole("link", { name: /Menunggu verifikasi/ })).not.toBeInTheDocument();
     const ordersRegion = screen.getByRole("region", { name: "Pesanan hari ini" });
     expect(within(ordersRegion).getByText("Selesai").closest("li")).toHaveTextContent("9");
     expect(within(ordersRegion).getByText("Siap diambil").closest("li")).toHaveTextContent("3");
