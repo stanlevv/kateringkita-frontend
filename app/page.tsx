@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 /** Kelas Tailwind yang dipakai berulang: lebar isi halaman, label kecil di atas judul, dan judul bagian (h2). */
 const WRAP = "mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8";
 const EYEBROW = "text-sm font-semibold uppercase tracking-[0.12em] text-primary";
-const H2 =
+const SECTION_HEADING =
   "mt-3 font-display text-[clamp(1.9rem,3.6vw,2.75rem)] font-extrabold leading-[1.1] tracking-tight text-balance";
 
 // Semua klaim di halaman ini harus sesuai fitur yang benar-benar ada: tanpa angka pengguna atau testimoni karangan.
@@ -329,7 +329,7 @@ export default async function Home() {
           <div className={WRAP}>
             <div className="max-w-2xl">
               <p className={EYEBROW}>Fitur</p>
-              <h2 id="fitur-judul" className={H2}>
+              <h2 id="fitur-judul" className={SECTION_HEADING}>
                 Semua yang dibutuhkan dapur katering kampus
               </h2>
               <p className="mt-4 text-lg text-ink-muted">
@@ -360,7 +360,7 @@ export default async function Home() {
           <div className={`${WRAP} grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16`}>
             <div>
               <p className={EYEBROW}>Mulai</p>
-              <h2 id="mulai-judul" className={H2}>
+              <h2 id="mulai-judul" className={SECTION_HEADING}>
                 Mulai berjualan dalam tiga langkah
               </h2>
               <p className="mt-4 text-lg text-ink-muted">
@@ -394,7 +394,7 @@ export default async function Home() {
           <div className={`${WRAP} grid gap-10 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16`}>
             <div>
               <p className={EYEBROW}>Tanya jawab</p>
-              <h2 id="faq-judul" className={H2}>
+              <h2 id="faq-judul" className={SECTION_HEADING}>
                 Pertanyaan yang sering diajukan
               </h2>
               <p className="mt-4 text-lg text-ink-muted">
