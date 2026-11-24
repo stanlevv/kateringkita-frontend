@@ -1,4 +1,4 @@
-// Test OrderDetail: selalu mengikuti prop, rincian harga, riwayat status, dan aksi di detail (sukses, galat, tolak,
+// Test OrderDetail: selalu mengikuti prop, rincian harga, riwayat status, panel chat, dan aksi di detail (sukses, galat, tolak,
 // stok tidak cukup). Server action dan router dipalsukan (vi.mock).
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -9,6 +9,7 @@ const refresh = vi.fn();
 const push = vi.fn();
 vi.mock("@/app/actions/orders", () => ({ orderAction: (...args: unknown[]) => orderAction(...args) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
+vi.mock("./OrderChatPanel", () => ({ OrderChatPanel: ({ code }: { code: string }) => <p>panel chat {code}</p> }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { orders } from "@/lib/fixtures/orders";
 import { OrderDetail } from "./OrderDetail";
@@ -103,6 +104,17 @@ describe("rincian", () => {
     expect(within(timeline).getByText("Dikonfirmasi")).toBeInTheDocument();
     expect(within(timeline).getByText("Mulai dimasak")).toBeInTheDocument();
     expect(within(timeline).queryByText("Selesai")).not.toBeInTheDocument();
+  });
+});
+
+describe("panel chat", () => {
+  it("halaman detail memasang panel chat untuk pesanan itu; laci slip dashboard tidak", () => {
+    const { unmount } = renderDetail("7QF2");
+    expect(screen.getByRole("heading", { name: "Chat dengan pembeli" })).toBeInTheDocument();
+    expect(screen.getByText(`panel chat ${findOrder("7QF2").code}`)).toBeInTheDocument();
+    unmount();
+    renderDetail("7QF2", false);
+    expect(screen.queryByText(/panel chat/)).not.toBeInTheDocument();
   });
 });
 
