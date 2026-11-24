@@ -180,7 +180,7 @@ export function OrderDetail({ order, showActions = true }: { order: MerchantOrde
 
       {showActions && (
         <Section title="Chat dengan pembeli">
-          <OrderChatPanel code={order.code} />
+          <OrderChatPanel key={order.code} code={order.code} />
         </Section>
       )}
     </div>

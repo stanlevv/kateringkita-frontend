@@ -227,6 +227,18 @@ describe("cek berkala dan tandai dibaca", () => {
     await screen.findByText("A");
     expect(markChatRead).not.toHaveBeenCalled();
   });
+  it("chat selesai -> timer cek berkala dihapus sebelum panel ditutup", async () => {
+    const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+    const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+    serveChats({ messages: [message(1, "customer", "A")], chat: { is_open: false, closed_reason: "finished" } });
+    renderPanel();
+    await screen.findByText("A");
+    // Timer cek berkala = setInterval berjeda 5 detik (waitFor juga memakai setInterval, dengan jeda lain).
+    const pollTimer = setIntervalSpy.mock.results[setIntervalSpy.mock.calls.findIndex(([, delay]) => delay === 5000)];
+    await waitFor(() => expect(clearIntervalSpy).toHaveBeenCalledWith(pollTimer.value));
+    setIntervalSpy.mockRestore();
+    clearIntervalSpy.mockRestore();
+  });
   it("cek berkala gagal -> pesan galat kecil, tanpa melempar", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 503 }));
     renderPanel();

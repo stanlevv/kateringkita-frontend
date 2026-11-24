@@ -70,7 +70,8 @@ export function OrderChatPanel({ code }: { code: string }) {
   const listRef = useRef<HTMLOListElement>(null);
 
   // 2. Cek berkala: langsung saat tampil, lalu tiap 5 detik; dilewati saat tab tersembunyi dan langsung jalan lagi
-  //    saat tab terlihat. Berhenti bila chat tidak tersedia atau sudah ditutup karena tidak akan ada pesan baru.
+  //    saat tab terlihat. Berhenti (timer dihapus) bila chat tidak tersedia atau sudah ditutup karena tidak akan ada
+  //    pesan baru.
   useEffect(() => {
     let isStopped = false;
     let isPolling = false;
@@ -102,7 +103,10 @@ export function OrderChatPanel({ code }: { code: string }) {
         setMessages((current) => mergeMessages(current, data.messages));
         setChat(data.chat);
         setLoadFailed(false);
-        if (!data.chat.available || data.chat.closed_reason === "finished") isStopped = true;
+        if (!data.chat.available || data.chat.closed_reason === "finished") {
+          isStopped = true;
+          clearInterval(intervalId);
+        }
       } catch {
         if (!isStopped) setLoadFailed(true);
       } finally {
@@ -110,8 +114,8 @@ export function OrderChatPanel({ code }: { code: string }) {
       }
     }
     const onVisibilityChange = () => void poll();
-    void poll();
     const intervalId = setInterval(() => void poll(), POLL_INTERVAL_MS);
+    void poll();
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       isStopped = true;
