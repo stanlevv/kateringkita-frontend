@@ -46,27 +46,27 @@ describe("shell admin", () => {
       .getAllByRole("link")
       .map((link) => [link.textContent, link.getAttribute("href")]);
     expect(links).toEqual([
-      ["Ringkasan", "/admin"],
+      ["Dashboard", "/admin"],
       ["Verifikasi", "/admin/verifikasi"],
       ["Penjual", "/admin/penjual"],
       ["Pembeli", "/admin/pembeli"],
-      ["Moderasi", "/admin/moderasi"],
       ["Tiket", "/admin/tiket"],
       ["Chat dilaporkan", "/admin/chat-dilaporkan"],
-      ["Data master", "/admin/data-master"],
-      ["Promo & biaya", "/admin/promo"],
+      ["Moderasi", "/admin/moderasi"],
+      ["Verifikasi AI", "/admin/hasil-ai"],
       ["Banner", "/admin/banner"],
       ["Pop-up", "/admin/popup"],
+      ["Pengumuman", "/admin/pengumuman"],
+      ["Promo & biaya", "/admin/promo"],
+      ["Data master", "/admin/data-master"],
       ["Keuangan", "/admin/keuangan"],
       ["Pencairan", "/admin/pencairan"],
-      ["Pengumuman", "/admin/pengumuman"],
-      ["Verifikasi AI", "/admin/hasil-ai"],
       ["AI", "/admin/ai"],
       ["Kelola admin", "/admin/admin"],
       ["Log", "/admin/log"],
       ["Server", "/admin/server"],
     ]);
-    expect(within(nav).getByRole("link", { name: "Ringkasan" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
     expect(screen.queryByText(/Data contoh/)).toBeNull();
     expect(screen.queryByRole("searchbox")).toBeNull();
     expect(screen.queryByText(/Pengaturan akun/)).toBeNull();
