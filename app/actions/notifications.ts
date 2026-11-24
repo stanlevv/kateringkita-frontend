@@ -2,7 +2,7 @@
 
 // Server action notifikasi penjual: menandai semua notifikasi sudah dibaca saat halaman Notifikasi dibuka.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
 
 import { apiFetch, toResult } from "@/services/api";
 import { getSessionToken, requireMerchant } from "@/services/auth.service";

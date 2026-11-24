@@ -2,7 +2,8 @@
 
 // Server action admin untuk banner beranda dan gambar platform: buat banner platform, tinjau banner penjual, dan minta alamat unggah.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend. Hanya admin super dan ops; support hanya melihat.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
+// Hanya admin super dan ops; support hanya melihat.
 
 import { errorResult, fieldErrorResult } from "@/lib/action-result";
 import { validateBanner, type BannerInput } from "@/lib/banner";

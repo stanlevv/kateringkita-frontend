@@ -2,7 +2,8 @@
 
 // Server action admin untuk penyedia AI (gerbang AI: daftar kunci API Gemini dan sejenisnya): tambah, ubah, hapus, dan uji.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend. Validasi isi ada di backend; file ini hanya meneruskan.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
+// Validasi isi ada di backend; file ini hanya meneruskan.
 
 import { adminFetch, toResult } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";

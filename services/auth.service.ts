@@ -2,7 +2,7 @@ import "server-only";
 
 // Sesi login di server: membaca token dari cookie dan memastikan peran pengguna sebelum halaman dirender.
 // Cookie httpOnly = cookie yang tidak bisa dibaca JavaScript di browser, jadi token aman dari skrip jahat.
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { cache } from "react";
 import { cookies } from "next/headers";

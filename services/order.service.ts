@@ -2,7 +2,7 @@ import "server-only";
 
 // Data pesanan penjual dari backend (GET /merchant/orders): daftar, antrean dashboard, perubahan terbaru, dan detail.
 // Skenario /pratinjau (hanya mode pengembangan) bisa memaksa hasil kosong atau gagal tanpa memanggil backend.
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { cache } from "react";
 import { toResult, merchantFetch } from "@/services/api";

@@ -2,7 +2,8 @@
 
 // Server action pesan dari meja: penjual mengatur fitur makan di tempat dan daftar meja; tamu (tanpa login) memesan lewat QR meja.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend. Validasi isi ada di backend; file ini hanya meneruskan.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
+// Validasi isi ada di backend; file ini hanya meneruskan.
 
 import { apiFetch, toResult, merchantFetch } from "@/services/api";
 import { requireMerchant } from "@/services/auth.service";

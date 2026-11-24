@@ -2,7 +2,8 @@
 
 // Server action pengaturan platform oleh admin: promo platform, biaya layanan, kontak CS (layanan pelanggan), dan mode pemeliharaan.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend. Backend tetap sumber kebenaran aturan isian.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
+// Backend tetap sumber kebenaran aturan isian.
 
 import { errorResult, fieldErrorResult } from "@/lib/action-result";
 import { adminFetch, toResult } from "@/services/api";

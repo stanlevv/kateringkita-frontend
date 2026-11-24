@@ -1,8 +1,9 @@
 import "server-only";
 
 // Lapisan paling bawah sebelum backend: semua panggilan HTTP ke API backend lewat file ini.
-// Alur: halaman -> actions -> services -> api.ts -> backend. Hanya berjalan di server ("server-only"),
-// jadi alamat backend dan token sesi tidak pernah sampai ke browser.
+// Alur baca data: halaman -> services -> api.ts -> backend. Alur ubah data: form/tombol -> server action -> api.ts
+// -> backend, kadang lewat services. Hanya berjalan di server ("server-only"), jadi alamat backend dan token sesi
+// tidak pernah sampai ke browser.
 
 import { headers as requestHeaders } from "next/headers";
 import { redirect } from "next/navigation";

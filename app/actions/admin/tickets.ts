@@ -2,7 +2,8 @@
 
 // Server action tiket bantuan: admin membalas dan menutup tiket keluhan pengguna. Semua tingkat admin (super, ops, support) boleh.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend. Backend tetap pemeriksa utama izinnya.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
+// Backend tetap pemeriksa utama izinnya.
 
 import { errorResult, fieldErrorResult } from "@/lib/action-result";
 import { MAX_REPLY_LENGTH, isValidTicketCode } from "@/services/admin-ticket.service";

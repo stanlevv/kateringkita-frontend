@@ -2,7 +2,7 @@
 
 // Server action ganti kata sandi untuk semua peran (penjual di Pengaturan, admin di Akun saya atau saat wajib ganti sandi sementara).
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
 
 import { errorResult, fieldErrorResult } from "@/lib/action-result";
 import { validateFields, changePasswordSchema } from "@/lib/schemas";

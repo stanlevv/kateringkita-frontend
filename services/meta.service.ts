@@ -1,7 +1,7 @@
 import "server-only";
 
 // Data pendukung umum dari backend (GET /meta/...): kategori, titik temu, dan status mode pemeliharaan.
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { apiFetch, toResult } from "@/services/api";
 import { getScenario } from "@/lib/scenario";

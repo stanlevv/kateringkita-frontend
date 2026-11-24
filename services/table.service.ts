@@ -1,7 +1,7 @@
 import "server-only";
 
 // Data fitur pesan dari meja: daftar meja toko (untuk penjual) dan menu meja (publik, tanpa login).
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { apiFetch, toResult, merchantFetch } from "@/services/api";
 import type { Table, TableMenu } from "@/types/table";

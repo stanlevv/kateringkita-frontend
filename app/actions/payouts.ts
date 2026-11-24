@@ -2,7 +2,8 @@
 
 // Server action pencairan dana: penjual menyimpan rekening tujuan; admin super mencatat pencairan dan menandai refund sudah ditransfer.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend. Validasi isi (dan cek ulang kata sandi) ada di backend.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
+// Validasi isi (dan cek ulang kata sandi) ada di backend.
 
 import { adminFetch, toResult, merchantFetch } from "@/services/api";
 import { requireAdmin, requireMerchant } from "@/services/auth.service";

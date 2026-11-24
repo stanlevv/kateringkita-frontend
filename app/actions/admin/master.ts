@@ -2,7 +2,8 @@
 
 // Server action data master (kategori, jenis penjual, titik temu): simpan, aktif/nonaktif, dan tukar urutan tampil.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services (admin-master.service untuk aturan isian) -> api.ts -> backend.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> services (admin-master.service untuk
+// aturan isian) -> api.ts -> backend.
 
 import { errorResult, fieldErrorResult } from "@/lib/action-result";
 import { adminFetch, toResult } from "@/services/api";

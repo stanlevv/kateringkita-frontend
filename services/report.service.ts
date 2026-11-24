@@ -2,7 +2,7 @@ import "server-only";
 
 // Data laporan penjualan dari backend (GET /merchant/reports/...): ringkasan, per jam, dan transaksi.
 // Skenario /pratinjau (hanya mode pengembangan) bisa memaksa hasil kosong atau gagal tanpa memanggil backend.
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { toResult, merchantFetch } from "@/services/api";
 import { getScenario } from "@/lib/scenario";

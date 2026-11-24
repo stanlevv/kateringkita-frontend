@@ -1,7 +1,7 @@
 import "server-only";
 
 // Data promo/voucher penjual dari backend (GET /merchant/promos).
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { toResult, merchantFetch } from "@/services/api";
 import { getScenario } from "@/lib/scenario";

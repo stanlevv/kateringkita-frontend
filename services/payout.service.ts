@@ -1,7 +1,7 @@
 import "server-only";
 
 // Data pencairan dana: halaman penjual (rekening, saldo, riwayat) dan halaman admin super (saldo per toko, refund, riwayat).
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { adminFetch, toResult, merchantFetch } from "@/services/api";
 import type { BalanceList, Payout, MyPayouts, PendingRefund } from "@/types/payout";

@@ -1,7 +1,7 @@
 import "server-only";
 
 // Data profil toko penjual dari backend (GET /merchant/profile).
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { cache } from "react";
 import { toResult, merchantFetch } from "@/services/api";

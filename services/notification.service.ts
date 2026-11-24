@@ -1,7 +1,7 @@
 import "server-only";
 
 // Notifikasi pengguna (GET /me/notifications, semua peran): pengumuman admin, hasil moderasi foto menu, dll.
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { apiFetch } from "@/services/api";
 import { getSessionToken } from "@/services/auth.service";

@@ -2,7 +2,7 @@
 
 // Server action moderasi konten oleh admin: sembunyikan/tampilkan ulasan, turunkan/pulihkan menu, dan hapus satu foto menu.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
 
 import { errorResult, fieldErrorResult } from "@/lib/action-result";
 import { adminFetch, toResult } from "@/services/api";

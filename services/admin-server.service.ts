@@ -1,7 +1,7 @@
 import "server-only";
 
 // Data dashboard server untuk admin: status kesehatan dan log galat/lambat.
-// Posisi di alur: halaman/actions -> services (file ini) -> api.ts -> backend.
+// Posisi di alur: halaman (baca data) atau server action (ubah data) -> services (file ini) -> api.ts -> backend.
 
 import { adminFetch, toResult } from "@/services/api";
 import type { ServerLog, ServerStatus } from "@/types/server";

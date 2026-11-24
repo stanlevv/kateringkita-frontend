@@ -2,7 +2,7 @@
 
 // Server action masuk, daftar penjual, keluar, dan lupa kata sandi untuk web (penjual dan admin).
 // "use server" menandai fungsi di file ini sebagai server action: dijalankan di server Next.js saat form dikirim atau dipanggil komponen.
-// Posisi di alur: halaman/form -> server action (file ini) -> services/api.ts -> backend.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
