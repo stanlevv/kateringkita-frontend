@@ -1,4 +1,5 @@
-// Test service chat pesanan penjual: path backend, after_id, ringkasan chat belum dibaca, dan efek skenario pratinjau.
+// Test service chat pesanan penjual: path backend, after_id, ringkasan chat belum dibaca, daftar chat belum dibalas,
+// dan efek skenario pratinjau.
 // Cookie skenario dan merchantFetch dipalsukan (vi.mock), jadi test berjalan tanpa backend.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -13,7 +14,7 @@ vi.mock("@/services/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/api")>()),
   merchantFetch: (...args: unknown[]) => merchantFetch(...args),
 }));
-import { getOrderChat, getUnreadChatCount, getUnreadChats } from "./order-chat.service";
+import { getOrderChat, getUnreadChatCount, getUnreadChats, getUnrepliedChats } from "./order-chat.service";
 
 const UNREAD = { total: 3, orders: [{ code: "KK-1", unread_count: 3, last_message_at: "2026-11-24T03:00:00.000Z" }] };
 
@@ -55,6 +56,28 @@ describe("getUnreadChats dan getUnreadChatCount", () => {
     expect(await getUnreadChats()).toEqual({ data: { total: 0, orders: [] } });
     jar.value = "gagal-muat";
     expect(await getUnreadChats()).toMatchObject({ error: { code: "INTERNAL_ERROR" } });
+    expect(merchantFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("getUnrepliedChats", () => {
+  it("GET /chats/unreplied; galat diteruskan", async () => {
+    const unreplied = {
+      total: 1,
+      orders: [{ code: "KK-1", status: "ready", last_message_at: "2026-11-24T03:00:00.000Z", unread_count: 0 }],
+    };
+    merchantFetch.mockResolvedValue({ ok: true, status: 200, data: unreplied });
+    expect(await getUnrepliedChats()).toEqual({ data: unreplied });
+    expect(merchantFetch).toHaveBeenCalledWith("/chats/unreplied");
+    merchantFetch.mockResolvedValue({ ok: false, status: 500, error: { code: "INTERNAL_ERROR", message: "x" } });
+    expect(await getUnrepliedChats()).toEqual({ error: { code: "INTERNAL_ERROR", message: "x" } });
+  });
+  it("skenario pratinjau: kosong tanpa memanggil backend, gagal-muat -> galat", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    jar.value = "kosong";
+    expect(await getUnrepliedChats()).toEqual({ data: { total: 0, orders: [] } });
+    jar.value = "gagal-muat";
+    expect(await getUnrepliedChats()).toMatchObject({ error: { code: "INTERNAL_ERROR" } });
     expect(merchantFetch).not.toHaveBeenCalled();
   });
 });

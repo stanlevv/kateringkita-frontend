@@ -1,13 +1,14 @@
 import "server-only";
 
-// Data chat pesanan penjual dari backend: pesan satu pesanan (GET /merchant/orders/:code/messages) dan ringkasan chat
-// yang punya pesan pembeli belum dibaca (GET /merchant/chats/unread) untuk badge sidebar dan daftar "Chat belum dibalas".
+// Data chat pesanan penjual dari backend: pesan satu pesanan (GET /merchant/orders/:code/messages), ringkasan chat
+// yang punya pesan pembeli belum dibaca (GET /merchant/chats/unread) untuk badge sidebar, dan daftar chat yang pesan
+// terakhirnya dari pembeli (GET /merchant/chats/unreplied) untuk daftar "Chat belum dibalas".
 // Posisi di alur: halaman atau route handler (baca data) -> services (file ini) -> api.ts -> backend.
 
 import { toResult, merchantFetch } from "@/services/api";
 import { getScenario } from "@/lib/scenario";
 import type { DataResult } from "@/types/api";
-import type { ChatMessage, ChatState, UnreadChats } from "@/types/order-chat";
+import type { ChatMessage, ChatState, UnreadChats, UnrepliedChats } from "@/types/order-chat";
 
 /**
  * Mengambil pesan chat satu pesanan beserta keadaan chatnya.
@@ -37,6 +38,18 @@ export async function getUnreadChats(): Promise<DataResult<UnreadChats>> {
   if (scenario === "gagal-muat") return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
   if (scenario === "kosong" || scenario === "penjual-baru") return { data: { total: 0, orders: [] } };
   return toResult(await merchantFetch<UnreadChats>("/chats/unread"));
+}
+
+/**
+ * Mengambil daftar chat belum dibalas (pesan terakhirnya dari pembeli). Skenario /pratinjau (hanya mode pengembangan)
+ * bisa memaksa kosong atau gagal tanpa memanggil backend.
+ * @returns `{ data: { total, orders } }` (paling lama menunggu dulu) atau `{ error }`
+ */
+export async function getUnrepliedChats(): Promise<DataResult<UnrepliedChats>> {
+  const scenario = await getScenario();
+  if (scenario === "gagal-muat") return { error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." } };
+  if (scenario === "kosong" || scenario === "penjual-baru") return { data: { total: 0, orders: [] } };
+  return toResult(await merchantFetch<UnrepliedChats>("/chats/unreplied"));
 }
 
 /**

@@ -1,16 +1,16 @@
 // Halaman /pesanan: daftar pesanan penjual dengan cari, filter tanggal dan status, serta halaman (paginasi), ditambah
-// filter "Chat belum dibalas" (?chat=belum-dibalas) yang menampilkan pesanan dengan pesan pembeli belum dibaca.
+// filter "Chat belum dibalas" (?chat=belum-dibalas) yang menampilkan pesanan yang pesan chat terakhirnya dari pembeli.
 // Server component: membaca searchParams (parameter URL seperti ?tanggal=&status=&q=&page=), mengambil satu halaman
-// pesanan lewat getOrders (atau ringkasan chat lewat getUnreadChats) di server, lalu menyerahkannya ke OrderTable
-// (atau UnreadChatList).
+// pesanan lewat getOrders (atau daftar chat belum dibalas lewat getUnrepliedChats) di server, lalu menyerahkannya ke
+// OrderTable (atau UnrepliedChatList).
 import { Suspense } from "react";
 import Link from "next/link";
 import { OrderTable } from "@/app/(dashboard)/pesanan/components/OrderTable";
-import { UnreadChatList } from "@/app/(dashboard)/pesanan/components/UnreadChatList";
+import { UnrepliedChatList } from "@/app/(dashboard)/pesanan/components/UnrepliedChatList";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { getOrders } from "@/services/order.service";
-import { getUnreadChats } from "@/services/order-chat.service";
+import { getUnrepliedChats } from "@/services/order-chat.service";
 import { todayWib } from "@/lib/format";
 import { STATUS_FILTER } from "@/lib/order-filter";
 import { requireMerchant } from "@/services/auth.service";
@@ -56,7 +56,7 @@ function ListSwitch({ isChatFilter }: { isChatFilter: boolean }) {
  * tombol Back bekerja.
  * @param props.searchParams parameter URL: `tanggal` (YYYY-MM-DD), `status`, `q` (kode/nama), `page`, dan
  *   `chat=belum-dibalas` (daftar chat belum dibalas; filter lain diabaikan)
- * @returns PageHeader berisi pilihan daftar dan OrderTable (atau UnreadChatList). Suspense dibutuhkan karena
+ * @returns PageHeader berisi pilihan daftar dan OrderTable (atau UnrepliedChatList). Suspense dibutuhkan karena
  * OrderTable membaca URL di klien (useSearchParams).
  */
 export default async function OrdersPage({
@@ -67,14 +67,14 @@ export default async function OrdersPage({
   // 1. Pastikan penjual sudah masuk, lalu baca parameter URL.
   await requireMerchant();
   const query = await searchParams;
-  // 2. Filter chat: ambil ringkasan chat belum dibaca saja, tanpa daftar pesanan.
+  // 2. Filter chat: ambil daftar chat belum dibalas saja, tanpa daftar pesanan.
   if (firstValue(query.chat) === UNREPLIED_CHAT_FILTER) {
-    const chats = await getUnreadChats();
+    const chats = await getUnrepliedChats();
     return (
       <PageHeader title="Pesanan">
         <div className="flex flex-col gap-4">
           <ListSwitch isChatFilter />
-          <UnreadChatList chats={"data" in chats ? chats.data : null} />
+          <UnrepliedChatList chats={"data" in chats ? chats.data : null} />
         </div>
       </PageHeader>
     );

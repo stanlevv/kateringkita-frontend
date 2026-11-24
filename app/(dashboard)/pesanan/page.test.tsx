@@ -1,5 +1,5 @@
 // Test halaman /pesanan: searchParams diteruskan ke getOrders (nilai tak sah diabaikan) dan hasilnya ke OrderTable,
-// serta filter ?chat=belum-dibalas yang memakai getUnreadChats.
+// serta filter ?chat=belum-dibalas yang memakai getUnrepliedChats.
 // Services dan OrderTable dipalsukan (vi.mock).
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -8,8 +8,8 @@ const getOrders = vi.fn();
 vi.mock("@/services/auth.service", () => ({ requireMerchant: async () => ({ user: {}, merchant: null }) }));
 vi.mock("@/services/order.service", () => ({ getOrders: (...args: unknown[]) => getOrders(...args) }));
 vi.mock("@/app/(dashboard)/pesanan/components/OrderTable", () => ({ OrderTable: () => null }));
-const getUnreadChats = vi.fn();
-vi.mock("@/services/order-chat.service", () => ({ getUnreadChats: () => getUnreadChats() }));
+const getUnrepliedChats = vi.fn();
+vi.mock("@/services/order-chat.service", () => ({ getUnrepliedChats: () => getUnrepliedChats() }));
 import { todayWib } from "@/lib/format";
 import OrdersPage from "./page";
 
@@ -34,24 +34,37 @@ describe("halaman daftar pesanan", () => {
     getOrders.mockResolvedValue({ error: { code: "X", message: "x" } });
     expect(JSON.stringify(await OrdersPage({ searchParams: Promise.resolve({}) }))).toContain('"loadFailed":true');
   });
-  it("?chat=belum-dibalas: daftar chat belum dibalas dari /merchant/chats/unread, tanpa getOrders", async () => {
+  it("?chat=belum-dibalas: daftar dari /merchant/chats/unreplied, tanpa getOrders; pil belum dibaca hanya bila > 0", async () => {
     getOrders.mockClear();
-    getUnreadChats.mockResolvedValue({
+    getUnrepliedChats.mockResolvedValue({
       data: {
         total: 2,
-        orders: [{ code: "KK-20261124-AB12", unread_count: 2, last_message_at: "2026-11-24T03:00:00Z" }],
+        orders: [
+          { code: "KK-20261124-AB12", status: "confirmed", unread_count: 2, last_message_at: "2026-11-24T03:00:00Z" },
+          { code: "KK-20261124-CD34", status: "ready", unread_count: 0, last_message_at: "2026-11-24T03:30:00Z" },
+        ],
       },
     });
     render(await OrdersPage({ searchParams: Promise.resolve({ chat: "belum-dibalas" }) }));
     expect(getOrders).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: /KK-20261124-AB12/ })).toHaveAttribute("href", "/pesanan/KK-20261124-AB12");
-    expect(screen.getByText("2 pesan baru")).toBeInTheDocument();
+    const first = screen.getByRole("link", { name: /KK-20261124-AB12/ });
+    expect(first).toHaveAttribute("href", "/pesanan/KK-20261124-AB12");
+    expect(first).toHaveTextContent("2 belum dibaca");
+    expect(first).toHaveTextContent("Menunggu balasan sejak 10.00");
+    const second = screen.getByRole("link", { name: /KK-20261124-CD34/ });
+    expect(second).toHaveTextContent("Menunggu balasan sejak 10.30");
+    expect(second).not.toHaveTextContent("belum dibaca");
     expect(screen.getByRole("link", { name: "Chat belum dibalas" })).toHaveAttribute("aria-current", "page");
   });
-  it("tanpa filter chat: getUnreadChats tidak dipanggil, tautan filter tetap ada", async () => {
-    getUnreadChats.mockClear();
+  it("?chat=belum-dibalas: daftar kosong -> Semua chat sudah dibalas", async () => {
+    getUnrepliedChats.mockResolvedValue({ data: { total: 0, orders: [] } });
+    render(await OrdersPage({ searchParams: Promise.resolve({ chat: "belum-dibalas" }) }));
+    expect(screen.getByText("Semua chat sudah dibalas")).toBeInTheDocument();
+  });
+  it("tanpa filter chat: getUnrepliedChats tidak dipanggil, tautan filter tetap ada", async () => {
+    getUnrepliedChats.mockClear();
     render(await openPage({}));
-    expect(getUnreadChats).not.toHaveBeenCalled();
+    expect(getUnrepliedChats).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "Chat belum dibalas" })).toHaveAttribute(
       "href",
       "/pesanan?chat=belum-dibalas",

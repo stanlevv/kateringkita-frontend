@@ -1,4 +1,5 @@
-// Bentuk data chat pesanan dari backend (GET /merchant/orders/:code/messages dan GET /merchant/chats/unread).
+// Bentuk data chat pesanan dari backend (GET /merchant/orders/:code/messages, GET /merchant/chats/unread, dan
+// GET /merchant/chats/unreplied).
 // Nama properti mengikuti JSON backend.
 
 /** Satu pesan chat. Pesan berisi teks, foto, atau keduanya; `created_at` berupa waktu ISO UTC. */
@@ -28,4 +29,14 @@ export type ChatState = {
 export type UnreadChats = {
   total: number;
   orders: { code: string; unread_count: number; last_message_at: string }[];
+};
+
+/**
+ * Chat belum dibalas: pesanan yang chatnya terbuka dan pesan terakhirnya dari pembeli, yang paling lama menunggu dulu.
+ * `total` = jumlah pesanan; `last_message_at` = waktu pesan pembeli yang belum dibalas; `unread_count` = pesan pembeli
+ * yang belum dibaca (bisa 0 bila sudah dibaca tetapi belum dibalas).
+ */
+export type UnrepliedChats = {
+  total: number;
+  orders: { code: string; status: string; last_message_at: string; unread_count: number }[];
 };
