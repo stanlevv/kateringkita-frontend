@@ -1,0 +1,69 @@
+// Halaman publik /toko: daftar katering yang sudah bergabung, jadi pintu masuk ke tiap halaman toko.
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { Star } from "lucide-react";
+import { Brand } from "@/app/components/shell/Brand";
+import { getPublicMerchants } from "@/services/catalog.service";
+
+const WRAP = "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8";
+
+export const metadata: Metadata = {
+  title: "Daftar Katering Kampus",
+  description: "Daftar katering di sekitar kampus yang sudah bergabung di KateringKita. Pilih toko, lihat menu dan harganya.",
+  alternates: { canonical: "/toko" },
+};
+
+export default async function DaftarTokoPage() {
+  const res = await getPublicMerchants();
+  if ("error" in res) throw new Error(res.error.message);
+  const merchants = res.data;
+
+  return (
+    <>
+      <header className="border-b border-line bg-surface">
+        <div className={`${WRAP} flex h-16 items-center`}>
+          <Brand />
+        </div>
+      </header>
+      <main className={`${WRAP} py-10`}>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
+          Katering kampus di KateringKita
+        </h1>
+        <p className="mt-2 text-ink-muted">Pilih toko untuk melihat menu, harga, dan titik ambilnya.</p>
+        {merchants.length === 0 ? (
+          <p className="mt-8 text-ink-muted">Belum ada toko yang bisa dipesan.</p>
+        ) : (
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+            {merchants.map((m) => (
+              <li key={m.slug}>
+                <Link
+                  href={`/toko/${m.slug}`}
+                  className="flex items-center gap-4 rounded-lg border border-line bg-surface p-4 hover:border-primary"
+                >
+                  <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-subtle text-lg font-bold text-ink-muted">
+                    {m.logo_url ? (
+                      <Image src={m.logo_url} alt="" fill unoptimized sizes="56px" className="object-cover" />
+                    ) : (
+                      m.business_name.charAt(0).toUpperCase()
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold">{m.business_name}</span>
+                    <span className="block text-sm text-ink-muted">{m.merchant_type.name}</span>
+                    {m.rating_count > 0 && (
+                      <span className="mt-1 inline-flex items-center gap-1 text-sm">
+                        <Star aria-hidden className="size-4 text-primary" />
+                        {m.rating_avg} <span className="text-ink-muted">({m.rating_count})</span>
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+    </>
+  );
+}

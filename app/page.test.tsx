@@ -72,4 +72,10 @@ describe("landing", () => {
     expect(shownQuestions.length).toBeGreaterThan(0);
     expect(faq.mainEntity.map((question: { name: string }) => question.name)).toEqual(shownQuestions);
   });
+
+  it("footer menautkan ke daftar katering /toko", async () => {
+    getSession.mockResolvedValue(null);
+    render(await Home());
+    expect(screen.getByRole("link", { name: "Lihat katering yang sudah bergabung" })).toHaveAttribute("href", "/toko");
+  });
 });
