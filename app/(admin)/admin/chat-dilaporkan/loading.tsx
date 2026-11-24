@@ -10,7 +10,7 @@ export default function Loading() {
   return (
     <PageFrame
       title="Chat dilaporkan"
-      description="Chat pesanan yang dilaporkan pembeli atau penjual. Halaman ini hanya untuk membaca."
+      description="Chat pesanan yang dilaporkan pembeli atau penjual. Laporan yang belum dibuka ada di atas. Halaman ini hanya untuk membaca."
     >
       <SkeletonList columns={3} />
     </PageFrame>

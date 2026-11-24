@@ -19,7 +19,8 @@ import { requireAdmin } from "@/services/auth.service";
 import type { ChatReportSummary, PageMeta } from "@/types/admin";
 
 /**
- * Halaman daftar chat dilaporkan, terbaru di atas, dengan nomor halaman di URL (?page=).
+ * Halaman daftar chat dilaporkan: yang belum dibuka di atas lalu terbaru (urutan dari backend), dengan nomor halaman di
+ * URL (?page=). Laporan yang belum dibuka diberi label "Belum dibuka".
  * @param props.searchParams parameter URL: `page` (nomor halaman)
  * @returns PageHeader berisi daftar laporan, atau LoadError bila gagal dimuat
  */
@@ -39,7 +40,7 @@ export default async function ChatReportsPage({
   return (
     <PageHeader
       title="Chat dilaporkan"
-      description="Chat pesanan yang dilaporkan pembeli atau penjual. Halaman ini hanya untuk membaca."
+      description="Chat pesanan yang dilaporkan pembeli atau penjual. Laporan yang belum dibuka ada di atas. Halaman ini hanya untuk membaca."
     >
       {!response.ok || !rows ? (
         <LoadError
@@ -57,12 +58,21 @@ export default async function ChatReportsPage({
           <ul className="flex flex-col gap-3">
             {rows.map((report) => (
               <li key={report.id}>
+                {/* membuka detail menandai laporan sudah dibuka; prefetch tidak boleh memicunya */}
                 <Link
                   href={`/admin/chat-dilaporkan/${report.id}`}
+                  prefetch={false}
                   className="flex min-h-11 flex-col gap-1 rounded-lg border border-line bg-surface p-4 focus-visible:ring-2 focus-visible:ring-focus"
                 >
                   <span className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-mono font-semibold text-primary">{report.order_code}</span>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono font-semibold text-primary">{report.order_code}</span>
+                      {report.reviewed_at === null && (
+                        <span className="rounded-md bg-info-bg px-2 py-1 text-sm font-medium text-info">
+                          Belum dibuka
+                        </span>
+                      )}
+                    </span>
                     <span className="text-sm text-ink-muted">
                       {formatDate(report.created_at)} · {formatTime(report.created_at)}
                     </span>
