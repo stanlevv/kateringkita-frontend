@@ -1,6 +1,6 @@
 // Aturan banner beranda: label status untuk penjual dan admin, serta validasi form yang sama dengan backend.
 
-import { CheckCircle2, Clock, EyeOff, XCircle, CalendarClock, type LucideIcon } from "lucide-react";
+import { Archive, CheckCircle2, Clock, EyeOff, XCircle, CalendarClock, type LucideIcon } from "lucide-react";
 import type { Tone } from "@/lib/order-status";
 import type { Banner } from "@/types/banner";
 
@@ -8,9 +8,11 @@ import type { Banner } from "@/types/banner";
  * Menentukan label, warna, dan ikon status banner pada waktu tertentu.
  * @param banner data banner
  * @param now waktu sekarang dalam milidetik
- * @returns label status (mis. "Tayang", "Terjadwal"), nada warna, dan ikon
+ * @returns label status (mis. "Tayang", "Terjadwal", "Diarsipkan admin"), nada warna, dan ikon
  */
 export function bannerStatus(banner: Banner, now: number): { label: string; tone: Tone; icon: LucideIcon } {
+  // Banner arsip tidak tayang apa pun status persetujuannya.
+  if (banner.archived_at) return { label: "Diarsipkan admin", tone: "neutral", icon: Archive };
   if (banner.status === "menunggu") return { label: "Menunggu persetujuan", tone: "warning", icon: Clock };
   if (banner.status === "ditolak") return { label: "Ditolak", tone: "danger", icon: XCircle };
   if (banner.status === "nonaktif") return { label: "Nonaktif", tone: "neutral", icon: EyeOff };
@@ -20,13 +22,16 @@ export function bannerStatus(banner: Banner, now: number): { label: string; tone
 }
 
 /**
- * Mengecek apakah banner memakai jatah satu banner aktif per toko (menunggu atau disetujui dan belum berakhir).
+ * Mengecek apakah banner memakai jatah satu banner aktif per toko (menunggu atau disetujui, belum berakhir, dan tidak
+ * diarsipkan admin).
  * @param banner data banner
  * @param now waktu sekarang dalam milidetik
  * @returns true bila banner masih memakai jatah aktif
  */
 export const isBannerActive = (banner: Banner, now: number) =>
-  (banner.status === "menunggu" || banner.status === "disetujui") && Date.parse(banner.ends_at) > now;
+  !banner.archived_at &&
+  (banner.status === "menunggu" || banner.status === "disetujui") &&
+  Date.parse(banner.ends_at) > now;
 
 /** Isian form banner yang dikirim ke backend. */
 export type BannerInput = {

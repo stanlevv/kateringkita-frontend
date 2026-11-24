@@ -20,6 +20,8 @@ export type Banner = {
   sort_order: number;
   reviewed_at: string | null;
   created_at: string;
+  /** Waktu banner diarsipkan admin; null atau tidak ada bila tidak diarsipkan. */
+  archived_at?: string | null;
 };
 
 /** Pilihan voucher di form banner/pop-up: id, kode, dan label yang dibaca manusia. */
