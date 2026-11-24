@@ -40,3 +40,11 @@ d5bf1816636c8fd81b434ff1881fe392c57b68ba
 5280a1de7f26534d3e335488ed700303ea082c47
 # refactor(web-admin-2): nama kode bahasa Inggris yang jelas (F28)
 2d2256783a84232214e56daeaaf9e822975728a2
+# refactor(web-root): nama kode bahasa Inggris yang jelas di halaman /, gambar pratinjau, 404, dan vitest.config (F28)
+561bf871ac6825d5bae3d3f61241ff2e4e86957b
+# refactor(web-shell): storeName menjadi merchantName, sama dengan glosarium (F28)
+6969200e3d8d952a61d431920559cd4f60e5545d
+# refactor(web-orders): action-error.tsx menjadi OrderActionParts.tsx, kind "stok" menjadi "outOfStock" (F28)
+52bb57b3a9ff59707103cc1fe2b69b4f63ac3a98
+# refactor(test): kode catatan internal di judul test diganti kata-kata (F28)
+92afe761d725544de50efe8488113acd8fbeaf37
