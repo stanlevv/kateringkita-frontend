@@ -1,7 +1,10 @@
 // Test halaman admin "Chat dilaporkan": daftar (kode pesanan, pelapor, alasan, waktu, kosong, gagal, paginasi), baca
-// satu laporan (semua pesan, tanpa kotak ketik, 404, id tidak valid), dan penjagaan sesi admin.
-// requireAdmin dan adminFetch diganti tiruan (mock), jadi test tidak memanggil backend.
+// satu laporan (semua pesan, tanpa kotak ketik, 404, id tidak valid), label "Belum dibuka", tautan detail tanpa prefetch,
+// dan penjagaan sesi admin.
+// requireAdmin dan adminFetch diganti tiruan (mock), jadi test tidak memanggil backend. next/link dipalsukan agar prop
+// `prefetch` terlihat sebagai atribut data-prefetch.
 import { render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdmin = vi.fn();
@@ -10,6 +13,11 @@ vi.mock("@/services/auth.service", () => ({ requireAdmin: (...args: unknown[]) =
 vi.mock("@/services/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/api")>()),
   adminFetch: (...args: unknown[]) => adminFetch(...args),
+}));
+vi.mock("next/link", () => ({
+  default: ({ prefetch, ...props }: ComponentProps<"a"> & { prefetch?: boolean | null }) => (
+    <a data-prefetch={String(prefetch)} {...props} />
+  ),
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -28,6 +36,7 @@ const report = (overrides: Partial<ChatReportSummary> = {}): ChatReportSummary =
   reporter_name: "Warung Bu Sari",
   reason: "Pembeli mengirim kata kasar berulang kali",
   created_at: "2026-11-24T03:05:00.000Z",
+  reviewed_at: null,
   ...overrides,
 });
 const detail: ChatReportDetail = {
@@ -67,6 +76,25 @@ describe("/admin/chat-dilaporkan daftar", () => {
     expect(screen.getByText("Pembeli mengirim kata kasar berulang kali")).toBeInTheDocument();
     expect(screen.getByText(/24 Nov 2026 · 10\.05/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /KK-20261124-AB12/ })).toHaveAttribute("href", "/admin/chat-dilaporkan/12");
+  });
+
+  it("label Belum dibuka hanya untuk laporan yang detailnya belum dibuka", async () => {
+    adminFetch.mockResolvedValue(
+      ok([report(), report({ id: 13, order_code: "KK-20261124-CD34", reviewed_at: "2026-11-24T04:00:00.000Z" })], {
+        page: 1,
+        limit: 20,
+        total: 2,
+      }),
+    );
+    render(await ChatReportsPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByRole("link", { name: /KK-20261124-AB12/ })).toHaveTextContent("Belum dibuka");
+    expect(screen.getByRole("link", { name: /KK-20261124-CD34/ })).not.toHaveTextContent("Belum dibuka");
+  });
+
+  it("tautan detail tanpa prefetch (membuka detail menandai laporan sudah dibuka)", async () => {
+    adminFetch.mockResolvedValue(ok([report()], { page: 1, limit: 20, total: 1 }));
+    render(await ChatReportsPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByRole("link", { name: /KK-20261124-AB12/ })).toHaveAttribute("data-prefetch", "false");
   });
 
   it("akun pelapor dihapus (reporter_name null) -> (akun dihapus)", async () => {

@@ -58,9 +58,17 @@ describe("sidebar", () => {
 });
 
 describe("Sidebar -> NavList (batas server/klien)", () => {
-  it("NavList hanya menerima prop yang dapat diserialisasi (tanpa fungsi/komponen)", () => {
-    for (const admin of [false, true]) {
-      const element = Sidebar({ store, badge: 1, admin });
+  it("NavList hanya menerima prop yang dapat diserialisasi (tanpa fungsi/komponen); queues objek datar angka/null", () => {
+    const queues = {
+      merchants_pending: 1,
+      tickets_open: 2,
+      chats_reported: 3,
+      payouts_pending: null,
+      refunds_pending: null,
+      ai_results_pending: 4,
+    };
+    for (const props of [{ admin: false }, { admin: true }, { admin: true, queues }]) {
+      const element = Sidebar({ store, badge: 1, ...props });
       const foundProps: Record<string, unknown>[] = [];
       const walk = (node: unknown): void => {
         if (!node || typeof node !== "object") return;
@@ -73,8 +81,12 @@ describe("Sidebar -> NavList (batas server/klien)", () => {
       };
       walk(element);
       expect(foundProps).toHaveLength(1);
-      for (const value of Object.values(foundProps[0]))
+      const { queues: navQueues, ...rest } = foundProps[0];
+      for (const value of Object.values(rest))
         expect(["string", "number", "boolean", "undefined"]).toContain(typeof value);
+      expect(navQueues).toEqual(props.queues);
+      for (const value of Object.values(navQueues ?? {}))
+        expect(value === null || typeof value === "number").toBe(true);
     }
   });
 });

@@ -1,7 +1,9 @@
 // Layout panel admin: membungkus /admin dan semua halaman di bawahnya dengan sidebar, header, dan area konten.
 // Layout = file khusus Next.js yang membungkus semua halaman di folder ini. Ini server component (tanpa "use client"):
 // dijalankan di server, jadi boleh membaca sesi dan cookie langsung.
-// Data: sesi admin (requireAdmin di services/auth.service.ts) dan cookie kk-sidebar (sidebar lebar atau ringkas).
+// Data: sesi admin (requireAdmin di services/auth.service.ts), cookie kk-sidebar (sidebar lebar atau ringkas), dan
+// hitungan antrean untuk lencana menu (GET /admin/queues). Layout tidak dijalankan ulang saat navigasi klien, jadi
+// angka lencana diperbarui saat muat penuh atau router.refresh() (dipanggil sesudah aksi admin).
 // Peran admin: super boleh membuka semua menu; ops dan support tidak melihat menu khusus super (keuangan, pencairan,
 // AI, kelola admin, server). Menu disaring di lib/admin-level.ts; backend tetap memeriksa hak akses setiap permintaan.
 import type { Metadata } from "next";
@@ -9,6 +11,7 @@ import { cookies } from "next/headers";
 import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { Toaster } from "@/app/components/ui/Toast";
+import { getAdminQueues } from "@/services/admin-queue.service";
 import { requireAdmin } from "@/services/auth.service";
 import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
 import { ForcedPasswordChange } from "./components/ForcedPasswordChange";
@@ -20,10 +23,12 @@ export const metadata: Metadata = { title: "Panel admin", robots: { index: false
  * Membungkus halaman admin dengan sidebar dan header. Berbeda dari panel penjual: tanpa banner "Data contoh" dan tanpa
  * status dapur, karena admin tidak punya toko dan datanya selalu dari backend sungguhan.
  * @param props.children halaman admin yang sedang dibuka
+ * Admin dengan sandi sementara tidak memanggil /queues (backend menolak /admin/* sampai sandinya diganti).
  * @returns shell admin; isi halaman diganti ForcedPasswordChange bila admin masih memakai sandi sementara
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const [{ user }, cookieStore] = await Promise.all([requireAdmin(), cookies()]);
+  const queues = user.must_change_password ? null : await getAdminQueues();
   return (
     <>
       <a
@@ -38,6 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           level={user.admin_level}
           store={null}
           badge={0}
+          queues={queues}
           mode={parseSidebarMode(cookieStore.get(SIDEBAR_COOKIE)?.value)}
         />
         <div className="flex min-w-0 flex-1 flex-col">
@@ -48,6 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             merchantName="Admin"
             store={null}
             badge={0}
+            queues={queues}
           />
           {/* Akun dengan sandi sementara wajib ganti sandi dulu; backend juga menolak /admin/* sampai sandinya diganti */}
           <main id="konten" tabIndex={-1} className="flex-1 p-4 md:p-6">

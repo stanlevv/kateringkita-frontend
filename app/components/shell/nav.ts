@@ -1,6 +1,7 @@
 // Daftar menu navigasi panel penjual dan panel admin. Satu definisi untuk sidebar, rail tablet, dan drawer ponsel.
 // Dibaca NavList.
 import {
+  AppWindow,
   BadgeCheck,
   Banknote,
   Bell,
@@ -30,42 +31,75 @@ import {
 
 /**
  * Satu menu. `badge`: true = jumlah pesanan perlu tindakan; "notifications" = notifikasi belum dibaca;
- * "chats" = pesan pembeli belum dibaca di chat pesanan.
+ * "chats" = pesan pembeli belum dibaca di chat pesanan; kunci antrean admin ("merchants_pending", "tickets_open",
+ * "chats_reported", "ai_results_pending") = hitungan dari GET /admin/queues; "payouts" = toko siap dicairkan + refund
+ * menunggu.
  * `exact`: aktif hanya bila URL sama persis (bukan juga sub-halamannya).
  */
 export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-  badge?: boolean | "notifications" | "chats";
+  badge?:
+    | boolean
+    | "notifications"
+    | "chats"
+    | "merchants_pending"
+    | "tickets_open"
+    | "chats_reported"
+    | "ai_results_pending"
+    | "payouts";
   exact?: boolean;
 };
-/** Satu kelompok menu dengan judul kecil di atasnya. */
+/** Satu kelompok menu dengan judul kecil di atasnya; judul "" = kelompok tanpa judul. */
 export type NavGroup = { title: string; items: NavItem[] };
 
-/** Menu panel admin. Menu khusus tingkat super disaring NavList lewat canAccessPage (lib/admin-level.ts). */
+/**
+ * Menu panel admin, berkelompok. Menu khusus tingkat super disaring NavList lewat canAccessPage (lib/admin-level.ts);
+ * kelompok yang semua menunya tersaring ikut disembunyikan.
+ */
 export const ADMIN_NAV: NavGroup[] = [
+  { title: "", items: [{ href: "/admin", label: "Dashboard", icon: LayoutGrid, exact: true }] },
   {
-    title: "Admin",
+    title: "Pengguna",
     items: [
-      { href: "/admin", label: "Ringkasan", icon: LayoutGrid, exact: true },
-      { href: "/admin/verifikasi", label: "Verifikasi", icon: ShieldCheck },
+      { href: "/admin/verifikasi", label: "Verifikasi", icon: ShieldCheck, badge: "merchants_pending" },
       { href: "/admin/penjual", label: "Penjual", icon: Store },
       { href: "/admin/pembeli", label: "Pembeli", icon: Users },
-      { href: "/admin/moderasi", label: "Moderasi", icon: Flag },
+    ],
+  },
+  {
+    title: "Layanan",
+    items: [
       // Tiket bantuan: semua tingkat (super, ops, support), tidak termasuk SUPER_ONLY_PAGES di lib/admin-level.ts
-      { href: "/admin/tiket", label: "Tiket", icon: LifeBuoy },
-      { href: "/admin/chat-dilaporkan", label: "Chat dilaporkan", icon: MessageCircle },
-      { href: "/admin/data-master", label: "Data master", icon: Database },
-      { href: "/admin/promo", label: "Promo & biaya", icon: Tag },
+      { href: "/admin/tiket", label: "Tiket", icon: LifeBuoy, badge: "tickets_open" },
+      { href: "/admin/chat-dilaporkan", label: "Chat dilaporkan", icon: MessageCircle, badge: "chats_reported" },
+      { href: "/admin/moderasi", label: "Moderasi", icon: Flag },
+      // Verifikasi hasil AI: semua tingkat melihat, super & ops memutuskan (tidak termasuk SUPER_ONLY_PAGES)
+      { href: "/admin/hasil-ai", label: "Verifikasi AI", icon: BadgeCheck, badge: "ai_results_pending" },
+    ],
+  },
+  {
+    title: "Konten & promo",
+    items: [
       // Banner beranda: semua tingkat melihat, super & ops memutuskan (tidak termasuk SUPER_ONLY_PAGES)
       { href: "/admin/banner", label: "Banner", icon: ImageIcon },
-      { href: "/admin/popup", label: "Pop-up", icon: Megaphone },
-      { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
-      { href: "/admin/pencairan", label: "Pencairan", icon: Banknote },
+      { href: "/admin/popup", label: "Pop-up", icon: AppWindow },
       { href: "/admin/pengumuman", label: "Pengumuman", icon: Megaphone },
-      // Verifikasi hasil AI: semua tingkat melihat, super & ops memutuskan (tidak termasuk SUPER_ONLY_PAGES)
-      { href: "/admin/hasil-ai", label: "Verifikasi AI", icon: BadgeCheck },
+      { href: "/admin/promo", label: "Promo & biaya", icon: Tag },
+      { href: "/admin/data-master", label: "Data master", icon: Database },
+    ],
+  },
+  {
+    title: "Keuangan",
+    items: [
+      { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
+      { href: "/admin/pencairan", label: "Pencairan", icon: Banknote, badge: "payouts" },
+    ],
+  },
+  {
+    title: "Sistem",
+    items: [
       { href: "/admin/ai", label: "AI", icon: Sparkles },
       { href: "/admin/admin", label: "Kelola admin", icon: UserCog },
       { href: "/admin/log", label: "Log", icon: ScrollText },

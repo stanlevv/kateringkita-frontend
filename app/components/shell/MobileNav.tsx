@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { Menu, PanelLeftOpen } from "lucide-react";
 import { Drawer } from "@/app/components/ui/Drawer";
+import type { AdminQueues } from "@/types/admin";
 import { IconButton } from "@/app/components/ui/IconButton";
 import { NavList } from "./NavList";
 import type { StoreInfo } from "./StoreStatus";
@@ -20,6 +21,7 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
  * @param props.unreadChats jumlah pesan pembeli belum dibaca di chat pesanan
  * @param props.admin panel admin
  * @param props.level tingkat admin untuk menyaring menu
+ * @param props.queues hitungan antrean admin untuk lencana menu, atau null bila gagal dimuat
  * @param props.rail tombol versi rail (drawer kiri)
  * @returns tombol dan Drawer
  */
@@ -30,6 +32,7 @@ export function MobileNav({
   unreadChats = 0,
   admin = false,
   level,
+  queues,
   rail = false,
 }: {
   store: StoreInfo | null;
@@ -38,6 +41,7 @@ export function MobileNav({
   unreadChats?: number;
   admin?: boolean;
   level?: unknown;
+  queues?: AdminQueues | null;
   rail?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -59,6 +63,7 @@ export function MobileNav({
           onNavigate={() => setOpen(false)}
           admin={admin}
           level={level}
+          queues={queues}
         />
         {store && !admin && (
           <div className="border-t border-line pt-3">

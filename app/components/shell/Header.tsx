@@ -1,6 +1,7 @@
 // Komponen Header: bilah atas panel penjual/admin (tombol menu ponsel, cari pesanan, jam, menu akun).
 // Dipakai layout app/(dashboard) dan app/(admin)/admin.
 import { Search } from "lucide-react";
+import type { AdminQueues } from "@/types/admin";
 import { AccountMenu } from "./AccountMenu";
 import { Clock } from "./Clock";
 import { MobileNav } from "./MobileNav";
@@ -16,6 +17,7 @@ import type { StoreInfo } from "./StoreStatus";
  * @param props.unreadChats jumlah pesan pembeli belum dibaca di chat pesanan
  * @param props.admin panel admin (tanpa kotak cari)
  * @param props.level tingkat admin untuk menyaring menu
+ * @param props.queues hitungan antrean admin untuk lencana menu, atau null bila gagal dimuat
  * @returns elemen `header`
  */
 export function Header({
@@ -27,6 +29,7 @@ export function Header({
   unreadChats = 0,
   admin = false,
   level,
+  queues,
 }: {
   userName: string;
   merchantName: string;
@@ -36,6 +39,7 @@ export function Header({
   unreadChats?: number;
   admin?: boolean;
   level?: unknown;
+  queues?: AdminQueues | null;
 }) {
   return (
     <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-surface px-4">
@@ -46,6 +50,7 @@ export function Header({
         unreadChats={unreadChats}
         admin={admin}
         level={level}
+        queues={queues}
       />
       {!admin && (
         <form action="/pesanan" method="get" role="search" className="relative min-w-0 max-w-md flex-1">
