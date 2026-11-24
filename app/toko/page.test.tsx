@@ -23,16 +23,22 @@ beforeEach(() => getPublicMerchants.mockReset());
 describe("/toko", () => {
   it("menampilkan tautan tiap toko dengan nama dan jenis usaha", async () => {
     getPublicMerchants.mockResolvedValue({
-      data: [m("dapur-ani", "Dapur Ani", { rating_avg: 4.5, rating_count: 3 }), m("warung-budi", "Warung Budi")],
+      data: [m("dapur-ani", "Dapur Ani", { rating_avg: 4.33, rating_count: 3 }), m("warung-budi", "Warung Budi")],
     });
     render(await Page());
     expect(screen.getByRole("heading", { level: 1, name: "Katering kampus di KateringKita" })).toBeInTheDocument();
     const a = screen.getByRole("link", { name: /Dapur Ani/ });
     expect(a).toHaveAttribute("href", "/toko/dapur-ani");
     expect(a).toHaveTextContent("Katering");
-    expect(a).toHaveTextContent("4.5");
+    expect(a).toHaveTextContent("4.3 (3 ulasan)");
     expect(screen.getByRole("link", { name: /Warung Budi/ })).toHaveAttribute("href", "/toko/warung-budi");
-    expect(screen.getByRole("link", { name: /Warung Budi/ })).not.toHaveTextContent("0");
+    expect(screen.getByRole("link", { name: /Warung Budi/ })).not.toHaveTextContent("ulasan");
+  });
+
+  it("ada tautan kembali ke beranda", async () => {
+    getPublicMerchants.mockResolvedValue({ data: [] });
+    render(await Page());
+    expect(screen.getByRole("link", { name: "KateringKita, beranda" })).toHaveAttribute("href", "/");
   });
 
   it("daftar kosong", async () => {
@@ -49,5 +55,7 @@ describe("/toko", () => {
   it("metadata", () => {
     expect(metadata.title).toBe("Daftar Katering Kampus");
     expect(metadata.alternates?.canonical).toBe("/toko");
+    expect(metadata.openGraph).toMatchObject({ type: "website", locale: "id_ID", title: "Daftar Katering Kampus", url: "/toko" });
+    expect(metadata.openGraph?.description).toBe(metadata.description);
   });
 });

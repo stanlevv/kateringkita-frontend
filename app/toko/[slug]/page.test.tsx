@@ -74,6 +74,11 @@ describe("halaman toko", () => {
     expect(container.querySelector('script[type="application/ld+json"]')).not.toBeNull();
   });
 
+  it("ada tautan ke beranda", async () => {
+    render(await Page(params("dapur-ani")));
+    expect(screen.getByRole("link", { name: "KateringKita, beranda" })).toHaveAttribute("href", "/");
+  });
+
   it("tanpa menu dan tutup", async () => {
     getMerchantMenus.mockResolvedValue({ data: [] });
     getMerchantBySlug.mockResolvedValue({ data: { ...profile, is_open: false } });
@@ -113,6 +118,14 @@ describe("generateMetadata", () => {
     expect(m.alternates?.canonical).toBe("/toko/dapur-ani");
     expect((m.description ?? "").length).toBeLessThanOrEqual(160);
     expect(JSON.stringify(m.openGraph)).toContain("https://r2.test/cover.jpg");
+  });
+
+  it("toko tanpa menu tidak diindeks; dengan menu tanpa robots", async () => {
+    expect(await generateMetadata(params("dapur-ani"))).not.toHaveProperty("robots");
+    getMerchantMenus.mockResolvedValue({ data: [] });
+    expect((await generateMetadata(params("dapur-ani"))).robots).toEqual({ index: false, follow: true });
+    getMerchantMenus.mockResolvedValue({ error: { code: "INTERNAL", message: "x" } });
+    expect(await generateMetadata(params("dapur-ani"))).not.toHaveProperty("robots");
   });
 
   it("deskripsi null memakai teks bawaan", async () => {

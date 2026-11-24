@@ -31,6 +31,9 @@ const loadProfile = cache(async (slug: string) => {
   return res.data;
 });
 
+/** Menu toko; `cache` agar generateMetadata dan halaman memanggil backend sekali per permintaan. */
+const loadMenus = cache((slug: string) => getMerchantMenus(slug));
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const p = await loadProfile(slug);
@@ -39,10 +42,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     p.description ?? `Pesan katering dari ${p.business_name} (${p.merchant_type.name}). Lihat menu, harga, dan titik ambil di KateringKita.`
   ).slice(0, 160);
   const image = p.cover_url ?? p.logo_url;
+  // Toko tanpa menu dianggap halaman tipis; bila menu gagal dimuat, biarkan halaman yang melempar galat.
+  const menusRes = await loadMenus(slug);
+  const empty = !("error" in menusRes) && menusRes.data.length === 0;
   return {
     title,
     description,
     alternates: { canonical: `/toko/${p.slug}` },
+    ...(empty && { robots: { index: false, follow: true } }),
     openGraph: {
       type: "website",
       locale: "id_ID",
@@ -58,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TokoPage({ params }: Props) {
   const { slug } = await params;
   if (!SLUG_RE.test(slug)) notFound();
-  const [profile, menusRes] = await Promise.all([loadProfile(slug), getMerchantMenus(slug)]);
+  const [profile, menusRes] = await Promise.all([loadProfile(slug), loadMenus(slug)]);
   if ("error" in menusRes) throw new Error(menusRes.error.message);
   const menus = menusRes.data;
 
@@ -70,8 +77,10 @@ export default async function TokoPage({ params }: Props) {
       <JsonLd data={merchantJsonLd(profile, menus)} />
       <header className="border-b border-line bg-surface">
         <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Brand />
-          <Link href="/toko" className="text-sm font-semibold text-ink-muted hover:text-ink">
+          <Link href="/" aria-label="KateringKita, beranda" className="rounded-md">
+            <Brand />
+          </Link>
+          <Link href="/toko" className="inline-flex min-h-11 items-center text-sm font-semibold text-ink-muted hover:text-ink">
             Semua toko
           </Link>
         </div>

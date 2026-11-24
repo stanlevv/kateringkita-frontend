@@ -5,14 +5,25 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 import { Brand } from "@/app/components/shell/Brand";
 import { connection } from "next/server";
+import { SITE_NAME } from "@/lib/site";
 import { getPublicMerchants } from "@/services/catalog.service";
 
 const WRAP = "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8";
 
+const DESCRIPTION = "Daftar katering di sekitar kampus yang sudah bergabung di KateringKita. Pilih toko, lihat menu dan harganya.";
+
 export const metadata: Metadata = {
   title: "Daftar Katering Kampus",
-  description: "Daftar katering di sekitar kampus yang sudah bergabung di KateringKita. Pilih toko, lihat menu dan harganya.",
+  description: DESCRIPTION,
   alternates: { canonical: "/toko" },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    siteName: SITE_NAME,
+    title: "Daftar Katering Kampus",
+    description: DESCRIPTION,
+    url: "/toko",
+  },
 };
 
 export default async function DaftarTokoPage() {
@@ -26,7 +37,9 @@ export default async function DaftarTokoPage() {
     <>
       <header className="border-b border-line bg-surface">
         <div className={`${WRAP} flex h-16 items-center`}>
-          <Brand />
+          <Link href="/" aria-label="KateringKita, beranda" className="rounded-md">
+            <Brand />
+          </Link>
         </div>
       </header>
       <main className={`${WRAP} py-10`}>
@@ -57,7 +70,7 @@ export default async function DaftarTokoPage() {
                     {m.rating_count > 0 && (
                       <span className="mt-1 inline-flex items-center gap-1 text-sm">
                         <Star aria-hidden className="size-4 text-primary" />
-                        {m.rating_avg} <span className="text-ink-muted">({m.rating_count})</span>
+                        {m.rating_avg.toFixed(1)} <span className="text-ink-muted">({m.rating_count} ulasan)</span>
                       </span>
                     )}
                   </span>
