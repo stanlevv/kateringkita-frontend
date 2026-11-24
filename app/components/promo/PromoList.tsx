@@ -1,11 +1,12 @@
 // Komponen PromoList: kartu voucher dengan status, tombol ubah, aktif/nonaktif, dan hapus. Dipakai /promo (promo
-// toko) dan /admin/promo (promo platform). Perubahan dikirim lewat server action setPromoActive, deletePromo, dan
-// savePromo (app/actions/promos.ts), atau aksi admin yang dikirim lewat prop.
+// toko) dan /admin/promo (promo platform; di sana ada tombol arsipkan, dan tampilan Arsip hanya berisi tombol
+// pulihkan). Perubahan dikirim lewat server action setPromoActive, deletePromo, dan savePromo (app/actions/promos.ts),
+// atau aksi admin yang dikirim lewat prop.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
-import { EyeOff, Pencil, Plus, Power, TicketPercent, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, EyeOff, Pencil, Plus, Power, TicketPercent, Trash2 } from "lucide-react";
 import { deletePromo, setPromoActive } from "@/app/actions/promos";
 import { callAction } from "@/lib/action";
 import { LoadError } from "@/app/components/LoadError";
@@ -29,7 +30,10 @@ import { PromoForm } from "./PromoForm";
  * @param props.admin mode admin (promo platform)
  * @param props.saveAction penyimpan voucher (bawaan savePromo)
  * @param props.setActiveAction pengubah aktif/nonaktif (bawaan setPromoActive)
- * @returns tombol buat, grid kartu, dialog formulir, dan dialog konfirmasi hapus
+ * @param props.archiveAction pengarsip/pemulih promo platform; bila ada, mode admin mendapat tombol Arsipkan
+ * @param props.archived true di tampilan Arsip: hanya tombol Pulihkan, tanpa buat, ubah, dan aktif/nonaktif
+ * @param props.canEdit false untuk admin support: semua tombol ubah disembunyikan (bawaan true)
+ * @returns tombol buat, grid kartu, dialog formulir, serta dialog konfirmasi hapus dan arsip
  */
 export function PromoList({
   promos,
@@ -37,6 +41,9 @@ export function PromoList({
   admin,
   saveAction,
   setActiveAction,
+  archiveAction,
+  archived = false,
+  canEdit = true,
 }: {
   promos: Promo[];
   loadFailed: boolean;
@@ -44,13 +51,19 @@ export function PromoList({
   admin?: boolean;
   saveAction?: (id: number | null, input: unknown) => Promise<ActionResult<Promo>>;
   setActiveAction?: (id: number, active: boolean) => Promise<ActionResult<Promo>>;
+  archiveAction?: (id: number, archived: boolean) => Promise<ActionResult<Promo>>;
+  archived?: boolean;
+  canEdit?: boolean;
 }) {
-  // 1. Perubahan lokal per id (null = dihapus), voucher baru, isi dialog ("new" = buat baru), dan voucher yang akan
-  //    dihapus. Jam dibekukan saat tampil supaya status kartu tidak berubah di tengah render.
+  // 1. Perubahan lokal per id (null = dihapus atau dipindah ke/dari arsip), voucher baru, isi dialog ("new" = buat
+  //    baru), serta voucher yang akan dihapus atau diarsipkan. Jam dibekukan saat tampil supaya status kartu tidak
+  //    berubah di tengah render.
   const [localChanges, setLocalChanges] = useState<Record<number, Promo | null>>({});
   const [newPromos, setNewPromos] = useState<Promo[]>([]);
   const [form, setForm] = useState<"new" | Promo | null>(null);
   const [promoToDelete, setPromoToDelete] = useState<Promo | null>(null);
+  const [promoToArchive, setPromoToArchive] = useState<Promo | null>(null);
+  const [archiving, setArchiving] = useState(false); // arsip/pulihkan sedang dikirim; mencegah klik ganda
   const [now] = useState(() => Date.now());
 
   // 2. Data gagal dimuat.
@@ -68,6 +81,7 @@ export function PromoList({
     return current ? [current] : [];
   });
   const openCreateForm = () => setForm("new");
+  const canCreate = canEdit && !archived;
 
   // 4. Aktif/nonaktif secara optimistis (tampilan berubah dulu, dikembalikan bila server gagal). Menonaktifkan
   //    memberi toast dengan tombol Batalkan.
@@ -101,7 +115,18 @@ export function PromoList({
     toast({ tone: "success", message: "Promo dihapus" });
   }
 
-  // 6. Hasil formulir: voucher baru masuk ke atas daftar, voucher yang diubah menimpa versi lama.
+  // 6. Arsipkan atau pulihkan promo platform; berhasil = kartu pindah dari tampilan ini. Pesan penolakan backend
+  //    (mis. 409 PROMO_IN_USE) tampil apa adanya.
+  async function setPromoArchive(promo: Promo, archive: boolean) {
+    setArchiving(true);
+    const result = await callAction(() => archiveAction!(promo.id, archive));
+    setArchiving(false);
+    if ("error" in result) return toast({ tone: "danger", message: result.error.message });
+    setLocalChanges((previous) => ({ ...previous, [promo.id]: null }));
+    toast({ tone: "success", message: archive ? "Promo diarsipkan" : "Promo dipulihkan" });
+  }
+
+  // 7. Hasil formulir: voucher baru masuk ke atas daftar, voucher yang diubah menimpa versi lama.
   function handleSaved(promo: Promo) {
     if (form === "new") setNewPromos((previous) => [promo, ...previous]);
     else setLocalChanges((previous) => ({ ...previous, [promo.id]: promo }));
@@ -111,25 +136,37 @@ export function PromoList({
   return (
     <div className="flex flex-col gap-4">
       {visiblePromos.length === 0 ? (
-        <EmptyState
-          icon={TicketPercent}
-          title="Belum ada promo"
-          body="Buat kode promo untuk menarik pembeli"
-          action={
-            <Button onClick={openCreateForm}>
-              <Plus aria-hidden className="size-4" />
-              Buat promo
-            </Button>
-          }
-        />
+        archived ? (
+          <EmptyState
+            icon={TicketPercent}
+            title="Belum ada promo yang diarsipkan"
+            body="Promo yang diarsipkan muncul di sini dan bisa dipulihkan."
+          />
+        ) : (
+          <EmptyState
+            icon={TicketPercent}
+            title="Belum ada promo"
+            body="Buat kode promo untuk menarik pembeli"
+            action={
+              canCreate && (
+                <Button onClick={openCreateForm}>
+                  <Plus aria-hidden className="size-4" />
+                  Buat promo
+                </Button>
+              )
+            }
+          />
+        )
       ) : (
         <>
-          <div>
-            <Button onClick={openCreateForm}>
-              <Plus aria-hidden className="size-4" />
-              Buat promo
-            </Button>
-          </div>
+          {canCreate && (
+            <div>
+              <Button onClick={openCreateForm}>
+                <Plus aria-hidden className="size-4" />
+                Buat promo
+              </Button>
+            </div>
+          )}
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {visiblePromos.map((promo) => {
               const statusBadge = PROMO_STATUS[promoStatus(promo, now)];
@@ -176,33 +213,61 @@ export function PromoList({
                         </dd>
                       </div>
                     </dl>
-                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                      <Button variant="secondary" aria-label={`Ubah ${promo.code}`} onClick={() => setForm(promo)}>
-                        <Pencil aria-hidden className="size-4" />
-                        Ubah
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        aria-label={`${promo.is_active ? "Nonaktifkan" : "Aktifkan"} ${promo.code}`}
-                        onClick={() => void setActive(promo, !promo.is_active)}
-                      >
-                        <Power aria-hidden className="size-4" />
-                        {promo.is_active ? "Nonaktifkan" : "Aktifkan"}
-                      </Button>
-                      {admin ? null : promo.used_count === 0 ? (
+                    {canEdit && archived && archiveAction && (
+                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
                         <Button
-                          variant="ghost"
-                          className="ml-auto text-danger"
-                          aria-label={`Hapus ${promo.code}`}
-                          onClick={() => setPromoToDelete(promo)}
+                          variant="secondary"
+                          aria-label={`Pulihkan ${promo.code}`}
+                          disabled={archiving}
+                          onClick={() => void setPromoArchive(promo, false)}
                         >
-                          <Trash2 aria-hidden className="size-4" />
-                          Hapus
+                          <ArchiveRestore aria-hidden className="size-4" />
+                          Pulihkan
                         </Button>
-                      ) : (
-                        <p className="text-sm text-ink-muted">Sudah dipakai — nonaktifkan saja</p>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                    {canEdit && !archived && (
+                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                        <Button variant="secondary" aria-label={`Ubah ${promo.code}`} onClick={() => setForm(promo)}>
+                          <Pencil aria-hidden className="size-4" />
+                          Ubah
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          aria-label={`${promo.is_active ? "Nonaktifkan" : "Aktifkan"} ${promo.code}`}
+                          onClick={() => void setActive(promo, !promo.is_active)}
+                        >
+                          <Power aria-hidden className="size-4" />
+                          {promo.is_active ? "Nonaktifkan" : "Aktifkan"}
+                        </Button>
+                        {admin ? (
+                          archiveAction && (
+                            <Button
+                              variant="ghost"
+                              className="ml-auto"
+                              aria-label={`Arsipkan ${promo.code}`}
+                              disabled={archiving}
+                              onClick={() => setPromoToArchive(promo)}
+                            >
+                              <Archive aria-hidden className="size-4" />
+                              Arsipkan
+                            </Button>
+                          )
+                        ) : promo.used_count === 0 ? (
+                          <Button
+                            variant="ghost"
+                            className="ml-auto text-danger"
+                            aria-label={`Hapus ${promo.code}`}
+                            onClick={() => setPromoToDelete(promo)}
+                          >
+                            <Trash2 aria-hidden className="size-4" />
+                            Hapus
+                          </Button>
+                        ) : (
+                          <p className="text-sm text-ink-muted">Sudah dipakai — nonaktifkan saja</p>
+                        )}
+                      </div>
+                    )}
                   </article>
                 </li>
               );
@@ -236,6 +301,19 @@ export function PromoList({
           const promo = promoToDelete!;
           setPromoToDelete(null);
           void removePromo(promo);
+        }}
+      />
+      <ConfirmDialog
+        open={!!promoToArchive}
+        onClose={() => setPromoToArchive(null)}
+        tone="danger"
+        title="Arsipkan promo?"
+        body={`Kode ${promoToArchive?.code ?? ""} tidak bisa dipakai lagi, tetapi riwayat pesanannya tetap utuh. Promo bisa dipulihkan dari tampilan Arsip.`}
+        confirmLabel="Ya, arsipkan"
+        onConfirm={() => {
+          const promo = promoToArchive!;
+          setPromoToArchive(null);
+          void setPromoArchive(promo, true);
         }}
       />
     </div>

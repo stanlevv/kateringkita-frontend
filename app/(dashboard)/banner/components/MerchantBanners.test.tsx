@@ -65,4 +65,23 @@ describe("MerchantBanners", () => {
     await userEvent.click(screen.getByRole("button", { name: "Ajukan ulang" }));
     expect((screen.getByLabelText(/Judul/) as HTMLInputElement).value).toBe("Diskon pembukaan");
   });
+
+  it("diarsipkan admin: label netral, tanpa ubah/ajukan ulang, tombol Ajukan banner muncul, hapus tetap ada", () => {
+    const archivedAt = new Date().toISOString();
+    render(
+      <MerchantBanners
+        banners={[
+          makeBanner({ status: "disetujui", archived_at: archivedAt }),
+          makeBanner({ id: 2, status: "ditolak", title: "Banner ditolak", archived_at: archivedAt }),
+        ]}
+        vouchers={[]}
+      />,
+    );
+    expect(screen.getAllByText("Diarsipkan admin")).toHaveLength(2);
+    expect(screen.queryByText("Tayang")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ajukan ulang" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ubah" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Hapus" })).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Ajukan banner" })).toBeInTheDocument();
+  });
 });

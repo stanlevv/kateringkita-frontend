@@ -182,7 +182,8 @@ export function BannerForm({
           <Input type="datetime-local" value={ends} onChange={(event) => setEnds(event.target.value)} />
         </Field>
       </div>
-      {mode === "admin" && (
+      {/* Urutan tampil hanya diisi saat membuat banner platform; ubah isi banner tidak mengubah urutan */}
+      {mode === "admin" && !banner && (
         <Field label="Urutan tampil" id="bf-sort" help="Kecil tampil lebih dulu." error={errors.sort_order}>
           <Input
             type="number"

@@ -32,12 +32,17 @@ describe("bannerStatus", () => {
     });
     expect(bannerStatus(makeBanner({ status: "ditolak" }), NOW)).toMatchObject({ label: "Ditolak", tone: "danger" });
     expect(bannerStatus(makeBanner({ status: "nonaktif" }), NOW).label).toBe("Nonaktif");
+    expect(bannerStatus(makeBanner({ archived_at: "2026-11-17T01:00:00.000Z" }), NOW)).toMatchObject({
+      label: "Diarsipkan admin",
+      tone: "neutral",
+    });
   });
   it("aktif = menunggu/disetujui yang belum berakhir", () => {
     expect(isBannerActive(makeBanner({}), NOW)).toBe(true);
     expect(isBannerActive(makeBanner({ status: "menunggu" }), NOW)).toBe(true);
     expect(isBannerActive(makeBanner({ status: "ditolak" }), NOW)).toBe(false);
     expect(isBannerActive(makeBanner({ ends_at: "2026-11-17T00:00:00.000Z" }), NOW)).toBe(false);
+    expect(isBannerActive(makeBanner({ archived_at: "2026-11-17T01:00:00.000Z" }), NOW)).toBe(false);
   });
 });
 

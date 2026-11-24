@@ -21,7 +21,7 @@ import type { Banner, VoucherOption } from "@/types/banner";
 
 /**
  * Banner toko. Satu toko hanya boleh punya satu banner aktif (menunggu atau tayang), jadi tombol Ajukan disembunyikan
- * selama ada banner aktif. Banner yang ditolak bisa diajukan ulang.
+ * selama ada banner aktif. Banner yang ditolak bisa diajukan ulang; banner yang diarsipkan admin hanya bisa dihapus.
  * @param props.banners banner milik toko
  * @param props.vouchers voucher toko yang bisa dijadikan tujuan banner
  * @returns tombol ajukan, kartu banner, dan dialog formulir
@@ -85,7 +85,7 @@ export function MerchantBanners({ banners, vouchers }: { banners: Banner[]; vouc
                     <p className="text-sm text-danger">Alasan admin: {banner.catatan}</p>
                   )}
                   <div className="mt-auto flex flex-wrap gap-2">
-                    {(banner.status === "ditolak" || banner.status === "menunggu") && (
+                    {!banner.archived_at && (banner.status === "ditolak" || banner.status === "menunggu") && (
                       <Button variant="secondary" onClick={() => setForm(banner)}>
                         {banner.status === "ditolak" ? "Ajukan ulang" : "Ubah"}
                       </Button>

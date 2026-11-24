@@ -1,6 +1,6 @@
 "use server";
 
-// Server action pop-up promo di aplikasi pembeli (mobile): buat atau ubah pop-up.
+// Server action pop-up promo di aplikasi pembeli (mobile): buat, ubah, arsipkan, atau pulihkan pop-up.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
 // Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
 // Hanya admin super dan ops; support hanya melihat.
@@ -58,4 +58,18 @@ export async function savePopup(id: number | null, input: Partial<PopupInput>): 
       body,
     }),
   );
+}
+
+/**
+ * Mengarsipkan pop-up (POST /admin/popups/:id/archive) atau memulihkannya (POST /admin/popups/:id/restore). Pop-up arsip
+ * tidak tampil di aplikasi pembeli.
+ * @param id id pop-up
+ * @param archived true untuk mengarsipkan, false untuk memulihkan
+ * @returns `{ data }` berisi pop-up terbaru; `{ error }` bila id atau `archived` tidak valid, atau backend menolak
+ *   (mis. 409 PROMO_ARCHIVED saat memulihkan pop-up yang vouchernya masih diarsipkan)
+ */
+export async function setPopupArchived(id: number, archived: boolean): Promise<ActionResult<Popup>> {
+  await requireAdmin("super", "ops");
+  if (!isValidId(id) || typeof archived !== "boolean") return errorResult("VALIDATION_ERROR", "Pop-up tidak valid.");
+  return toResult(await adminFetch<Popup>(`/popups/${id}/${archived ? "archive" : "restore"}`, { method: "POST" }));
 }
