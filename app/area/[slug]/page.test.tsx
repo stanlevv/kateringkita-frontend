@@ -125,12 +125,17 @@ describe("halaman area", () => {
 describe("generateMetadata", () => {
   it("judul, kanonik, deskripsi, OG; 2 toko bermenu -> bisa diindeks", async () => {
     const m = await generateMetadata(params(SLUG));
-    expect(m.title).toBe("Katering di Gazebo Fakultas Ilmu Komputer — Menu & Harga");
+    expect(m.title).toBe("Katering Gazebo Fakultas Ilmu Komputer");
     expect(m.alternates?.canonical).toBe(`/area/${SLUG}`);
     expect(m.description).toBe(
       "2 toko katering mengantar ke Gazebo Fakultas Ilmu Komputer. Lihat menu, harga, dan pesan lewat KateringKita.",
     );
-    expect(m.openGraph).toMatchObject({ type: "website", locale: "id_ID", url: `/area/${SLUG}` });
+    expect(m.openGraph).toMatchObject({
+      type: "website",
+      locale: "id_ID",
+      url: `/area/${SLUG}`,
+      images: ["/opengraph-image"],
+    });
     expect(m.robots).toBeUndefined();
   });
 

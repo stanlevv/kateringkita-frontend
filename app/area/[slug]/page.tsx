@@ -51,7 +51,7 @@ const loadArea = cache(async (param: string) => {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const { point, canonical, stores } = await loadArea(slug);
-  const title = `Katering di ${point.name} — Menu & Harga`;
+  const title = `Katering ${point.name}`;
   const description =
     `${stores.length} toko katering mengantar ke ${point.name}. Lihat menu, harga, dan pesan lewat KateringKita.`.slice(
       0,
@@ -70,6 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `/area/${canonical}`,
+      images: ["/opengraph-image"],
     },
   };
 }

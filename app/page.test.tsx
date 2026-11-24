@@ -73,6 +73,19 @@ describe("landing", () => {
     expect(faq.mainEntity.map((question: { name: string }) => question.name)).toEqual(shownQuestions);
   });
 
+  it("sinyal lokal UB Malang: label hero, footer, areaServed Organization", async () => {
+    getSession.mockResolvedValue(null);
+    const { container } = render(await Home());
+    expect(screen.getByText("Untuk penjual katering di sekitar kampus UB Malang")).toBeInTheDocument();
+    expect(container.textContent).toContain("untuk dapur di sekitar Universitas Brawijaya, Malang.");
+    const jsonLd = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!);
+    const org = jsonLd["@graph"].find((n: { "@type": string }) => n["@type"] === "Organization");
+    expect(org.areaServed).toEqual([
+      { "@type": "City", name: "Malang" },
+      { "@type": "CollegeOrUniversity", name: "Universitas Brawijaya" },
+    ]);
+  });
+
   it("footer menautkan ke daftar katering /toko", async () => {
     getSession.mockResolvedValue(null);
     render(await Home());

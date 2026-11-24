@@ -2,13 +2,15 @@
 
 /** Alamat utama situs dari env SITE_URL, tanpa garis miring di akhir. */
 export const SITE_URL = (process.env.SITE_URL || "https://ketringkita.edufin.app").replace(/\/+$/, "");
+/** Wilayah layanan untuk sinyal SEO lokal. */
+export const SERVICE_AREA = "Universitas Brawijaya, Malang";
 /** Nama situs. */
 export const SITE_NAME = "KateringKita";
 /** Judul bawaan halaman. */
-export const SITE_TITLE = "KateringKita — Aplikasi Kelola Pesanan Katering Kampus";
+export const SITE_TITLE = "KateringKita — Kelola Pesanan Katering Kampus UB Malang";
 /** Deskripsi bawaan halaman untuk mesin pencari. */
 export const SITE_DESCRIPTION =
-  "Terima pre-order makanan dari mahasiswa, atur kuota porsi harian, dan pantau penjualan dari satu dashboard. Untuk penjual katering di sekitar kampus.";
+  "Terima pre-order makanan dari mahasiswa, atur kuota porsi harian, dan pantau penjualan dari satu dashboard. Untuk penjual katering di sekitar Universitas Brawijaya, Malang.";
 
 /** Rute yang perlu login (sama dengan daftar di proxy.ts); tidak perlu dirayapi mesin pencari. */
 export const PRIVATE_PATHS = [

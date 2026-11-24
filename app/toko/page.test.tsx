@@ -32,7 +32,7 @@ describe("/toko", () => {
       data: [m("dapur-ani", "Dapur Ani", { rating_avg: 4.33, rating_count: 3 }), m("warung-budi", "Warung Budi")],
     });
     render(await Page());
-    expect(screen.getByRole("heading", { level: 1, name: "Katering kampus di KateringKita" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Katering di sekitar kampus UB Malang" })).toBeInTheDocument();
     const a = screen.getByRole("link", { name: /Dapur Ani/ });
     expect(a).toHaveAttribute("href", "/toko/dapur-ani");
     expect(a).toHaveTextContent("Katering");
@@ -88,12 +88,15 @@ describe("/toko", () => {
   });
 
   it("metadata", () => {
-    expect(metadata.title).toBe("Daftar Katering Kampus");
+    expect(metadata.title).toBe("Katering Kampus UB Malang");
+    expect(metadata.description).toContain("Universitas Brawijaya, Malang");
+    expect(metadata.description!.length).toBeLessThanOrEqual(160);
     expect(metadata.alternates?.canonical).toBe("/toko");
     expect(metadata.openGraph).toMatchObject({
       type: "website",
       locale: "id_ID",
-      title: "Daftar Katering Kampus",
+      title: "Katering Kampus UB Malang",
+      images: ["/opengraph-image"],
       url: "/toko",
     });
     expect(metadata.openGraph?.description).toBe(metadata.description);
