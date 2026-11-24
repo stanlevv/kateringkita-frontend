@@ -22,6 +22,7 @@ const invalidOrder = () => errorResult("VALIDATION_ERROR", "Data pesanan tidak v
  * @param input `body` teks pesan (di-trim, 1–1000 karakter) dan/atau `image_url` alamat foto hasil unggah chat
  * @returns `{ data }` berisi pesan tersimpan; `{ error }` bila isi tidak sah atau backend menolak (mis. 409
  *   CHAT_CLOSED bila pesanan sudah selesai, 400 bila foto bukan dari folder chat pesanan ini, 429 terlalu sering)
+ * @throws dialihkan ke halaman masuk (redirect Next.js) oleh requireMerchant bila sesi penjual tidak ada
  */
 export async function sendChatMessage(
   code: string,
@@ -49,6 +50,7 @@ export async function sendChatMessage(
  * @param lastId id pesan pembeli terakhir yang benar-benar sudah tampil di layar
  * @returns `{ data: true }` bila tersimpan (backend menjawab 204 tanpa isi); `{ error }` bila data tidak sah atau
  *   backend menolak
+ * @throws dialihkan ke halaman masuk (redirect Next.js) oleh requireMerchant bila sesi penjual tidak ada
  */
 export async function markChatRead(code: string, lastId: number): Promise<ActionResult<true>> {
   await requireMerchant();
@@ -67,6 +69,7 @@ export async function markChatRead(code: string, lastId: number): Promise<Action
  * @param reason alasan laporan, 5–500 karakter setelah di-trim
  * @returns `{ data }` berisi laporan tersimpan; `{ error }` bila alasan tidak sah atau backend menolak (mis. 409
  *   ALREADY_REPORTED bila toko sudah melaporkan chat ini)
+ * @throws dialihkan ke halaman masuk (redirect Next.js) oleh requireMerchant bila sesi penjual tidak ada
  */
 export async function reportChat(
   code: string,
@@ -92,6 +95,7 @@ export async function reportChat(
  * @param file jenis file (`content_type`) dan ukuran dalam byte (`size`)
  * @returns `{ data: { upload_url, public_url, expires_at } }`; `{ error }` bila backend menolak (mis. 409 chat
  *   tertutup, 400 jenis atau ukuran file tidak sah, 503 unggah belum tersedia)
+ * @throws dialihkan ke halaman masuk (redirect Next.js) oleh requireMerchant bila sesi penjual tidak ada
  */
 export async function requestChatUpload(
   code: string,
