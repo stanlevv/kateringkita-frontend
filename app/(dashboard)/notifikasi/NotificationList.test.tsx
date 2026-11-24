@@ -1,4 +1,5 @@
-// Test NotificationList: judul, isi, penanda belum dibaca, tandai semua dibaca lalu refresh, dan keadaan kosong.
+// Test NotificationList: judul, isi, penanda belum dibaca, tandai semua dibaca lalu refresh, keadaan kosong, dan
+// notifikasi pesan pembeli yang bertaut ke chat pesanan.
 // Router dan server action dipalsukan (vi.mock).
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -60,5 +61,75 @@ describe("NotificationList", () => {
     });
     expect(screen.getByText("Belum ada notifikasi")).toBeInTheDocument();
     expect(markAllNotificationsRead).not.toHaveBeenCalled();
+  });
+});
+
+describe("notifikasi pesan pembeli", () => {
+  const chatNotification = (data: AppNotification["data"]) =>
+    makeNotification({
+      id: 5,
+      type: "chat_message",
+      title: "Pesan baru dari pembeli",
+      body: "Pembeli mengirim pesan di pesanan KK-20261125-AB12.",
+      data,
+      read_at: "2026-11-25T03:00:00.000Z",
+    });
+  it("chat_message -> judul bertaut ke /pesanan/<kode>#chat dengan ikon chat", async () => {
+    await act(async () => {
+      render(
+        <NotificationList
+          rows={[chatNotification({ order_code: "KK-20261125-AB12" })]}
+          total={1}
+          page={1}
+          unread={0}
+        />,
+      );
+    });
+    const link = screen.getByRole("link", { name: "Pesan baru dari pembeli" });
+    expect(link).toHaveAttribute("href", "/pesanan/KK-20261125-AB12#chat");
+    expect(screen.getByRole("listitem").querySelector("svg.lucide-messages-square")).not.toBeNull();
+    expect(screen.getByText("Pembeli mengirim pesan di pesanan KK-20261125-AB12.")).toBeInTheDocument();
+  });
+  it("data berupa teks JSON (bentuk dari production) -> tetap bertaut ke chat pesanannya", async () => {
+    await act(async () => {
+      render(
+        <NotificationList
+          rows={[chatNotification('{"order_code":"KK-20261125-AB12"}')]}
+          total={1}
+          page={1}
+          unread={0}
+        />,
+      );
+    });
+    expect(screen.getByRole("link", { name: "Pesan baru dari pembeli" })).toHaveAttribute(
+      "href",
+      "/pesanan/KK-20261125-AB12#chat",
+    );
+  });
+  it.each([
+    ["teks rusak", "{bukan json"],
+    ["teks tanpa kode", '{"menu_id":3}'],
+    ["kode kosong", { order_code: "" }],
+  ])("data %s -> tampil tanpa tautan", async (_, data) => {
+    await act(async () => {
+      render(<NotificationList rows={[chatNotification(data)]} total={1} page={1} unread={0} />);
+    });
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByText("Pesan baru dari pembeli")).toBeInTheDocument();
+  });
+  it("chat_message tanpa order_code dan jenis tak dikenal -> teks biasa tanpa tautan", async () => {
+    await act(async () => {
+      render(
+        <NotificationList
+          rows={[chatNotification(null), makeNotification({ id: 6, type: "jenis_baru", title: "Kabar lain" })]}
+          total={2}
+          page={1}
+          unread={0}
+        />,
+      );
+    });
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByText("Pesan baru dari pembeli")).toBeInTheDocument();
+    expect(screen.getByText("Kabar lain")).toBeInTheDocument();
   });
 });

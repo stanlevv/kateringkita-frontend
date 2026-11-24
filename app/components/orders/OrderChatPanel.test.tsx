@@ -1,5 +1,6 @@
 // Test OrderChatPanel: gelembung pembeli/penjual, pesan cepat, tanda "Dibaca", mode hanya-baca, kiriman 409, cek
-// berkala (after_id dari hasil GET saja, berhenti saat tab tersembunyi), tandai dibaca, foto, dan laporan.
+// berkala (after_id dari hasil GET saja, berhenti saat tab tersembunyi), tandai dibaca, foto, laporan, dan gulir ke
+// panel dari tautan #chat.
 // fetch, server action, unggah foto, dan router dipalsukan (vi.mock / vi.stubGlobal).
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -261,5 +262,29 @@ describe("laporan", () => {
     serveChats({ messages: [], chat: { reported_by_me: true } });
     renderPanel();
     expect(await screen.findByRole("button", { name: "Sudah dilaporkan" })).toBeDisabled();
+  });
+});
+
+describe("tautan #chat", () => {
+  const scrollIntoView = vi.fn();
+  beforeEach(() => {
+    scrollIntoView.mockReset();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    serveChats({ messages: [] });
+  });
+  afterEach(() => {
+    window.location.hash = "";
+  });
+  it("URL berakhiran #chat -> panel ber-id chat digulir ke layar", async () => {
+    window.location.hash = "#chat";
+    renderPanel();
+    await screen.findByText("Belum ada pesan.");
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView.mock.contexts[0]).toBe(document.getElementById("chat"));
+  });
+  it("tanpa #chat -> tidak menggulir", async () => {
+    renderPanel();
+    await screen.findByText("Belum ada pesan.");
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 });

@@ -15,12 +15,13 @@ import { GET } from "./route";
 
 const callRoute = (query: string) => GET(new NextRequest(`http://localhost/api/dashboard/sinkron${query}`));
 const SINCE = "2026-11-01T03:00:00.000Z";
+const UNREAD_ORDERS = [{ code: "KK-1", unread_count: 3, last_message_at: "2026-11-01T03:00:00.000Z" }];
 
 beforeEach(() => {
   requireMerchant.mockReset().mockResolvedValue({});
   getChangedOrders.mockReset().mockResolvedValue({ data: [{ code: "A" }] });
   getMenus.mockReset().mockResolvedValue({ data: [{ id: 1 }] });
-  getUnreadChats.mockReset().mockResolvedValue({ data: { total: 3, orders: [] } });
+  getUnreadChats.mockReset().mockResolvedValue({ data: { total: 3, orders: UNREAD_ORDERS } });
 });
 
 describe("GET /api/dashboard/sinkron", () => {
@@ -34,11 +35,13 @@ describe("GET /api/dashboard/sinkron", () => {
       expect(getMenus).not.toHaveBeenCalled();
     },
   );
-  it("sukses -> 200 { data: { orders, menus, unread_chats } } + no-store", async () => {
+  it("sukses -> 200 { data: { orders, menus, unread_chats, unread_chat_orders } } + no-store", async () => {
     const response = await callRoute(`?sejak=${encodeURIComponent(SINCE)}`);
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
-    expect(await response.json()).toEqual({ data: { orders: [{ code: "A" }], menus: [{ id: 1 }], unread_chats: 3 } });
+    expect(await response.json()).toEqual({
+      data: { orders: [{ code: "A" }], menus: [{ id: 1 }], unread_chats: 3, unread_chat_orders: UNREAD_ORDERS },
+    });
     expect(getChangedOrders).toHaveBeenCalledWith(SINCE);
   });
   it("getChangedOrders galat -> 503 { error }", async () => {
@@ -50,7 +53,7 @@ describe("GET /api/dashboard/sinkron", () => {
       error: { code: "INTERNAL_ERROR", message: "Terjadi kesalahan. Coba lagi." },
     });
   });
-  it("jumlah chat gagal diambil -> tetap 200 tanpa unread_chats", async () => {
+  it("jumlah chat gagal diambil -> tetap 200 tanpa unread_chats dan unread_chat_orders", async () => {
     getUnreadChats.mockResolvedValue({ error: { code: "X", message: "x" } });
     const response = await callRoute(`?sejak=${encodeURIComponent(SINCE)}`);
     expect(response.status).toBe(200);

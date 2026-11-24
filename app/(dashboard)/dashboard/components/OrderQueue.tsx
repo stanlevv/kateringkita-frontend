@@ -53,6 +53,8 @@ type Props = {
   onReceiveOrder: (order: MerchantOrder) => void;
   /** Sinkron antrean sekarang (setelah aksi atau saat status sudah berubah). */
   onRefresh: () => void;
+  /** Jumlah pesan pembeli belum dibaca per kode pesanan (untuk tombol Chat di kartu). */
+  unreadChatCounts?: Record<string, number>;
   /** Lebar 768–1279 px (tablet): panel kuota menjadi tab "Kuota" di samping tab antrean. */
   quotaPanel?: ReactNode;
 };
@@ -74,6 +76,7 @@ const SEND_NOW_SECONDS = 5; // sisa tahan sependek ini tidak memberi jendela Bat
  * @param props.onFocusQuota memindahkan fokus ke isian kuota (opsional satu menu)
  * @param props.onReceiveOrder menerima pesanan terbaru dari respons aksi
  * @param props.onRefresh meminta sinkron antrean sekarang
+ * @param props.unreadChatCounts jumlah pesan belum dibaca per kode pesanan (opsional)
  * @param props.quotaPanel isi tab "Kuota" (hanya di tablet)
  * @returns elemen `section`
  */
@@ -86,6 +89,7 @@ export function OrderQueue({
   onFocusQuota,
   onReceiveOrder,
   onRefresh,
+  unreadChatCounts,
   quotaPanel,
 }: Props) {
   // 1. State: tab aktif, pesanan yang sedang ditolak/dilihat slipnya/kurang stok, dan aksi yang sedang dikirim.
@@ -231,6 +235,7 @@ export function OrderQueue({
                 now={now}
                 isNew={newOrderCodes.includes(order.code)}
                 pending={pending[order.code]?.action ?? sending[order.code]}
+                unreadChatCount={unreadChatCounts?.[order.code]}
                 onAction={(action) => startAction(order, action)}
                 onReject={() => setRejectCode(order.code)}
                 onSlip={() => setSlipCode(order.code)}

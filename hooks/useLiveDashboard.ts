@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { updatedSinceCursor, mergeOrders, clockOffsetMs } from "@/lib/dashboard";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
+import type { UnreadChats } from "@/types/order-chat";
 
 const VISIBLE_INTERVAL_MS = 5000; // jeda polling saat tab sedang dilihat
 const HIDDEN_INTERVAL_MS = 30_000; // jeda polling saat tab tersembunyi (hemat baterai dan server)
@@ -37,7 +38,8 @@ type InitialData = { orders: MerchantOrder[]; menus: MerchantMenu[]; loadedAt: n
  * @param initial pesanan, menu, dan jam server saat halaman dimuat
  * @returns `orders`, `menus`, `lastSyncedAt` (jam sinkron terakhir), `disconnected` (galat atau offline),
  *   `clockOffset` (selisih jam server − jam perangkat, ms), `unreadChats` (jumlah pesan chat belum dibaca dari sinkron
- *   terakhir, atau null), `receiveOrder`/`receiveMenu` (masukkan hasil aksi
+ *   terakhir, atau null), `unreadChatOrders` (rincian pesan belum dibaca per pesanan dari sinkron terakhir, atau
+ *   null), `receiveOrder`/`receiveMenu` (masukkan hasil aksi
  *   pengguna langsung), dan `refresh` (segarkan sekarang)
  */
 export function useLiveDashboard(initial: InitialData) {
@@ -57,6 +59,7 @@ export function useLiveDashboard(initial: InitialData) {
   const [clockOffset, setClockOffset] = useState(0);
   // Jumlah pesan chat belum dibaca dari sinkron terakhir; null sampai sinkron pertama membawanya.
   const [unreadChats, setUnreadChats] = useState<number | null>(null);
+  const [unreadChatOrders, setUnreadChatOrders] = useState<UnreadChats["orders"] | null>(null);
   const online = useSyncExternalStore(
     subscribeOnline,
     () => navigator.onLine,
@@ -127,13 +130,19 @@ export function useLiveDashboard(initial: InitialData) {
         }
         if (!response.ok) throw new Error(String(response.status));
         const { data } = (await response.json()) as {
-          data: { orders: MerchantOrder[]; menus: MerchantMenu[]; unread_chats?: number };
+          data: {
+            orders: MerchantOrder[];
+            menus: MerchantMenu[];
+            unread_chats?: number;
+            unread_chat_orders?: UnreadChats["orders"];
+          };
         };
         const receivedAt = Date.now();
         consecutiveErrors = 0;
         setOrders((currentOrders) => mergeOrders(currentOrders, data.orders));
         if (menuVersion.current === versionAtStart) setMenus(data.menus);
         if (typeof data.unread_chats === "number") setUnreadChats(data.unread_chats);
+        if (Array.isArray(data.unread_chat_orders)) setUnreadChatOrders(data.unread_chat_orders);
         const offset = clockOffsetMs(data.orders, receivedAt);
         if (offset !== null) setClockOffset(offset);
         setLastSyncedAt(receivedAt);
@@ -194,6 +203,7 @@ export function useLiveDashboard(initial: InitialData) {
     disconnected: failed || !online,
     clockOffset,
     unreadChats,
+    unreadChatOrders,
     receiveOrder,
     receiveMenu,
     refresh,
