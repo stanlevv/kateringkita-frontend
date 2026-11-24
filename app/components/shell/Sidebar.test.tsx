@@ -53,7 +53,7 @@ describe("sidebar", () => {
         <Sidebar store={store} badge={0} unreadChats={5} />
       </StoreStatusProvider>,
     );
-    expect(screen.getByRole("link", { name: /Pesanan/ })).toHaveTextContent("5 chat belum dibaca");
+    expect(screen.getByRole("link", { name: /Pesanan/ })).toHaveTextContent("5 pesan chat belum dibaca");
   });
 });
 

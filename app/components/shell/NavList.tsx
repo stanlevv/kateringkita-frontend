@@ -8,9 +8,16 @@ import { cx, focusRing } from "@/app/components/ui/cx";
 import { canAccessPage } from "@/lib/admin-level";
 import { MERCHANT_NAV, ADMIN_NAV } from "./nav";
 
+/** Teks pembaca layar sesudah angka badge, per jenis badge (`badge` di nav.ts; `true` = "actions"). */
+const BADGE_SR_LABEL = {
+  actions: "perlu tindakan",
+  notifications: "belum dibaca",
+  chats: "pesan chat belum dibaca",
+} as const;
+
 /**
  * Daftar menu. Menu yang cocok dengan URL sekarang ditandai `aria-current="page"` (pembaca layar menyebutnya
- * halaman aktif). Angka badge punya teks tersembunyi ("3 belum dibaca") agar tidak hanya berupa angka.
+ * halaman aktif). Angka badge punya teks tersembunyi (lihat BADGE_SR_LABEL) agar tidak hanya berupa angka.
  * Hanya berisi prop sederhana (angka/teks/boolean) karena dirender dari komponen server.
  * @param props.badge jumlah pesanan perlu tindakan
  * @param props.unreadNotifications jumlah notifikasi belum dibaca
@@ -44,6 +51,7 @@ export function NavList({
     : MERCHANT_NAV;
   const path = usePathname();
   const labelClass = rail ? "hidden sb-lebar:inline" : "";
+  const badgeCounts = { actions: badge, notifications: unreadNotifications, chats: unreadChats };
   return (
     <nav aria-label="Menu utama" className="flex flex-col gap-4">
       {nav.map((group) => (
@@ -60,14 +68,8 @@ export function NavList({
           <ul className="flex flex-col gap-1">
             {group.items.map(({ href, label, icon: Icon, badge: badgeKind, exact }) => {
               const active = path === href || (!exact && path.startsWith(`${href}/`));
-              const count =
-                badgeKind === "notifications"
-                  ? unreadNotifications
-                  : badgeKind === "chats"
-                    ? unreadChats
-                    : badgeKind
-                      ? badge
-                      : 0;
+              const badgeKey = badgeKind === true ? "actions" : badgeKind || undefined;
+              const count = badgeKey ? badgeCounts[badgeKey] : 0;
               return (
                 <li key={href}>
                   <Link
@@ -86,7 +88,7 @@ export function NavList({
                   >
                     <Icon aria-hidden className="size-5 shrink-0" />
                     <span className={cx("flex-1", labelClass)}>{label}</span>
-                    {count > 0 && (
+                    {badgeKey && count > 0 && (
                       <span
                         className={cx(
                           "min-w-5 rounded-full bg-warning-bg px-1.5 text-center text-xs font-bold text-warning",
@@ -95,12 +97,7 @@ export function NavList({
                       >
                         <span aria-hidden>{count}</span>
                         <span className="sr-only">
-                          {count}{" "}
-                          {badgeKind === "notifications"
-                            ? "belum dibaca"
-                            : badgeKind === "chats"
-                              ? "chat belum dibaca"
-                              : "perlu tindakan"}
+                          {count} {BADGE_SR_LABEL[badgeKey]}
                         </span>
                       </span>
                     )}
