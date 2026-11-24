@@ -125,7 +125,11 @@ export async function registerMerchant(_previousState: AuthState, form: FormData
       client: "web",
     }),
   });
-  if (!session.ok || !session.data || session.data.user?.role !== "merchant") return { ok: true };
+  if (!session.ok || !session.data) return { ok: true };
+  if (session.data.user?.role !== "merchant") {
+    await apiFetch("/auth/logout", { method: "POST", token: session.data.token }).catch(() => {});
+    return { ok: true };
+  }
   await startSession(session.data.token, session.data.expires_at);
   // redirect() melempar, jadi dipanggil di luar try/catch; di klien navigasi dilakukan Next.
   redirect("/dashboard");

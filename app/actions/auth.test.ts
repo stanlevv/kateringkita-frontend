@@ -152,8 +152,14 @@ describe("daftar penjual: masuk otomatis", () => {
   });
 
   it("daftar + login penjual -> cookie sesi dan redirect /dashboard", async () => {
+    vi.stubEnv("INTERNAL_API_SECRET", "s".repeat(32));
+    requestHeaders.set("x-real-ip", "203.0.113.5");
     apiFetch.mockResolvedValueOnce(registered).mockResolvedValueOnce(loginOk("merchant"));
     await expect(registerMerchant({}, buildRegisterForm())).rejects.toThrow("REDIRECT /dashboard");
+    expect((apiFetch.mock.calls[1][1] as { headers?: unknown }).headers).toEqual({
+      "X-Client-IP": "203.0.113.5",
+      "X-Internal-Secret": "s".repeat(32),
+    });
     expect(apiFetch.mock.calls[1][0]).toBe("/auth/login");
     expect(JSON.parse((apiFetch.mock.calls[1][1] as { body: string }).body)).toEqual({
       identifier: "081234567890",
@@ -179,9 +185,10 @@ describe("daftar penjual: masuk otomatis", () => {
     expect(setCookie).not.toHaveBeenCalled();
     expect(redirect).not.toHaveBeenCalled();
   });
-  it("login otomatis mengembalikan role bukan penjual -> { ok: true }, tanpa cookie", async () => {
-    apiFetch.mockResolvedValueOnce(registered).mockResolvedValueOnce(loginOk("customer"));
+  it("login otomatis mengembalikan role bukan penjual -> token dicabut, { ok: true }, tanpa cookie", async () => {
+    apiFetch.mockResolvedValueOnce(registered).mockResolvedValueOnce(loginOk("customer")).mockResolvedValue(registered);
     await expect(registerMerchant({}, buildRegisterForm())).resolves.toEqual({ ok: true });
+    expect(apiFetch).toHaveBeenCalledWith("/auth/logout", expect.objectContaining({ token: "tok" }));
     expect(setCookie).not.toHaveBeenCalled();
     expect(redirect).not.toHaveBeenCalled();
   });

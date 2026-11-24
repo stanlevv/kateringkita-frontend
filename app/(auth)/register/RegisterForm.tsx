@@ -1,6 +1,6 @@
 // Formulir daftar penjual di halaman /register, dalam dua langkah: data pemilik (nama, WA, email, sandi) lalu data
 // usaha (nama usaha, jenis usaha, alamat). Data dikirim ke server action `registerMerchant` (backend POST
-// /auth/merchant/register). Setelah berhasil tampil layar "Akun berhasil dibuat"; pengguna tidak masuk otomatis.
+// /auth/merchant/register). Setelah berhasil, server action masuk otomatis dan mengarahkan ke /dashboard; layar "Akun berhasil dibuat" hanya cadangan bila masuk otomatis gagal.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, dan event form.
 "use client";
 
@@ -118,7 +118,7 @@ export default function RegisterForm({ types, typesFailed }: { types: MerchantTy
       const formData = new FormData();
       for (const [name, value] of Object.entries(values)) if (name !== "confirm") formData.set(name, value);
       const result = await registerMerchant({}, formData);
-      // 2. Berhasil -> layar berhasil. Gagal jaringan -> banner umum.
+      // 2. Berhasil + masuk otomatis -> server action mengarahkan ke /dashboard (tidak kembali). Berhasil tanpa masuk otomatis -> layar berhasil. Gagal jaringan -> banner umum.
       if (result.ok) {
         moveFocusRef.current = true;
         return setRegistered(true);
