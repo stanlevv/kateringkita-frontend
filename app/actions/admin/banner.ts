@@ -1,6 +1,7 @@
 "use server";
 
-// Server action admin untuk banner beranda dan gambar platform: buat banner platform, tinjau banner penjual, dan minta alamat unggah.
+// Server action admin untuk banner beranda dan gambar platform: buat dan ubah banner platform, tinjau banner penjual,
+// arsipkan atau pulihkan banner, dan minta alamat unggah.
 // "use server" menandai fungsi di file ini sebagai server action: dipanggil dari komponen di browser, tetapi dijalankan di server Next.js.
 // Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
 // Hanya admin super dan ops; support hanya melihat.
@@ -29,6 +30,40 @@ export async function createAdminBanner(_id: number | null, input: BannerInput):
   if (Object.keys(errors).length) return fieldErrorResult(errors, "Periksa kembali isian banner.");
   const body = JSON.stringify({ ...input, title: input.title.trim() });
   return toResult(await adminFetch<Banner>("/banners", { method: "POST", body }));
+}
+
+/**
+ * Mengubah isi banner platform (PATCH /admin/banners/:id/content): judul, gambar, tujuan, dan masa tayang. Status dan
+ * urutan tampil tidak ikut berubah; status tetap lewat `reviewAdminBanner`. Bentuk parameternya sama dengan
+ * `createAdminBanner` agar bisa dipakai BannerForm.
+ * @param id id banner platform yang diubah
+ * @param input isian banner lengkap
+ * @returns `{ data }` berisi banner terbaru; `{ error }` bila id kosong atau tidak valid, isian salah (pesan per field),
+ *   atau backend menolak (mis. 409 MERCHANT_BANNER untuk banner toko)
+ */
+export async function updateAdminBannerContent(id: number | null, input: BannerInput): Promise<ActionResult<Banner>> {
+  // 1. Hanya super dan ops; id dan isian harus valid.
+  await requireAdmin("super", "ops");
+  if (!isValidId(id)) return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
+  const errors = validateBanner(input);
+  if (Object.keys(errors).length) return fieldErrorResult(errors, "Periksa kembali isian banner.");
+  // 2. Kirim isian lengkap dengan judul yang sudah dirapikan.
+  const body = JSON.stringify({ ...input, title: input.title.trim() });
+  return toResult(await adminFetch<Banner>(`/banners/${id}/content`, { method: "PATCH", body }));
+}
+
+/**
+ * Mengarsipkan banner platform atau toko (POST /admin/banners/:id/archive) atau memulihkannya (…/restore). Banner arsip
+ * tidak tampil di aplikasi pembeli.
+ * @param id id banner
+ * @param archived true untuk mengarsipkan, false untuk memulihkan
+ * @returns `{ data }` berisi banner terbaru; `{ error }` bila id atau `archived` tidak valid, atau backend menolak
+ *   (mis. 409 PROMO_ARCHIVED, atau toko yang sudah punya banner aktif)
+ */
+export async function setAdminBannerArchived(id: number, archived: boolean): Promise<ActionResult<Banner>> {
+  await requireAdmin("super", "ops");
+  if (!isValidId(id) || typeof archived !== "boolean") return errorResult("VALIDATION_ERROR", "Banner tidak valid.");
+  return toResult(await adminFetch<Banner>(`/banners/${id}/${archived ? "archive" : "restore"}`, { method: "POST" }));
 }
 
 /** Isian tinjauan banner: status baru, catatan (wajib bila ditolak), dan/atau urutan tayang. */

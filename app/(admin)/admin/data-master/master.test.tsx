@@ -34,6 +34,7 @@ vi.mock("@/app/actions/admin/promos", () => ({
   saveServiceFee: (...args: unknown[]) => saveServiceFee(...args),
   savePlatformPromo: (...args: unknown[]) => savePlatformPromo(...args),
   setPlatformPromoActive: (...args: unknown[]) => setPlatformPromoActive(...args),
+  setPlatformPromoArchived: vi.fn(),
 }));
 vi.mock("@/app/actions/promos", () => ({ savePromo: vi.fn(), setPromoActive: vi.fn(), deletePromo: vi.fn() }));
 import { ServiceFeeForm } from "@/app/(admin)/admin/components/ServiceFeeForm";
@@ -99,7 +100,7 @@ describe("halaman data master", () => {
   it("tanpa admin: backend tidak dipanggil di kedua halaman", async () => {
     requireAdmin.mockRejectedValue(new Error("404"));
     await expect(MasterDataPage({ searchParams: Promise.resolve({}) })).rejects.toThrow();
-    await expect(PromoPage()).rejects.toThrow();
+    await expect(PromoPage({ searchParams: Promise.resolve({}) })).rejects.toThrow();
     expect(adminFetch).not.toHaveBeenCalled();
   });
   it("gagal muat -> Coba lagi; kosong -> empty state", async () => {
@@ -194,7 +195,7 @@ describe("promo platform & biaya layanan", () => {
         ? { ok: true, status: 200, data: [promo] }
         : { ok: true, status: 200, data: { service_fee: 2000 } },
     );
-    render(await PromoPage());
+    render(await PromoPage({ searchParams: Promise.resolve({}) }));
     expect(requireAdmin).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/Rp\s?2\.000/)).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "PLAT10" })).toBeInTheDocument();

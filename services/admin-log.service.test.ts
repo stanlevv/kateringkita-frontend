@@ -1,6 +1,6 @@
 // Test label log aktivitas admin dan daftar perubahan field.
 import { describe, expect, it } from "vitest";
-import { listChanges, actionLabel } from "@/services/admin-log.service";
+import { listChanges, actionLabel, LOG_ACTIONS } from "@/services/admin-log.service";
 
 describe("label log", () => {
   it("memetakan aksi ke label Indonesia, tak dikenal apa adanya", () => {
@@ -10,6 +10,11 @@ describe("label log", () => {
     expect(actionLabel("settings.service_fee")).toBe("Ubah biaya layanan");
     expect(actionLabel("ticket.reply")).toBe("Balas tiket bantuan");
     expect(actionLabel("ticket.close")).toBe("Tutup tiket bantuan");
+    expect(actionLabel("promo.archive")).toBe("Arsipkan promo");
+    expect(actionLabel("banner.restore")).toBe("Pulihkan banner");
+    expect(actionLabel("banner.update")).toBe("Ubah banner");
+    expect(actionLabel("popup.archive")).toBe("Arsipkan pop-up");
+    expect(LOG_ACTIONS).toContainEqual(["popup.restore", "Pulihkan pop-up"]);
     expect(actionLabel("x.y")).toBe("x.y");
   });
   it("daftar perubahan: hanya field yang berbeda, lama → baru", () => {

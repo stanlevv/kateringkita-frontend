@@ -1,5 +1,6 @@
 // Test PromoList: isi kartu dan status, lencana Tersembunyi, kosong, gagal muat, aturan hapus, nonaktifkan + Batalkan,
-// aksi gagal, dan voucher baru di atas. Server action dipalsukan (vi.mock).
+// aksi gagal, voucher baru di atas, serta arsip dan pulihkan promo platform (mode admin). Server action dipalsukan
+// (vi.mock).
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -117,5 +118,76 @@ describe("PromoList", () => {
     await waitFor(() => expect(screen.getByRole("article", { name: "BARU10" })).toBeInTheDocument());
     expect(screen.getAllByRole("article")[0]).toHaveAccessibleName("BARU10");
     expect(screen.getByText("Promo disimpan")).toBeInTheDocument();
+  });
+
+  describe("arsip promo platform (mode admin)", () => {
+    const archiveAction = vi.fn();
+    const renderAdmin = (props: { archived?: boolean; canEdit?: boolean } = {}) =>
+      render(
+        <>
+          <Toaster />
+          <PromoList admin promos={allPromos} loadFailed={false} archiveAction={archiveAction} {...props} />
+        </>,
+      );
+    beforeEach(() => archiveAction.mockReset().mockResolvedValue({ data: allPromos[0] }));
+
+    it("Arsipkan lewat konfirmasi -> kartu hilang", async () => {
+      renderAdmin();
+      await userEvent.click(screen.getByRole("button", { name: "Arsipkan HEMAT10" }));
+      expect(archiveAction).not.toHaveBeenCalled();
+      await userEvent.click(screen.getByRole("button", { name: "Ya, arsipkan" }));
+      await waitFor(() => expect(archiveAction).toHaveBeenCalledWith(1, true));
+      await waitFor(() => expect(screen.queryByRole("article", { name: "HEMAT10" })).toBeNull());
+      expect(screen.getByText("Promo diarsipkan")).toBeInTheDocument();
+    });
+
+    it("PROMO_IN_USE: pesan tampil apa adanya, kartu tetap", async () => {
+      const message = "Promo masih dipakai di pop-up atau banner: Promo akhir pekan.";
+      archiveAction.mockResolvedValue({ error: { code: "PROMO_IN_USE", message } });
+      renderAdmin();
+      await userEvent.click(screen.getByRole("button", { name: "Arsipkan HEMAT10" }));
+      await userEvent.click(screen.getByRole("button", { name: "Ya, arsipkan" }));
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(screen.getByRole("article", { name: "HEMAT10" })).toBeInTheDocument();
+    });
+
+    it("tampilan Arsip: hanya Pulihkan; kosong tanpa tombol Buat", async () => {
+      const { unmount } = renderAdmin({ archived: true });
+      for (const name of ["Buat promo", "Ubah HEMAT10", "Nonaktifkan HEMAT10", "Arsipkan HEMAT10"])
+        expect(screen.queryByRole("button", { name })).toBeNull();
+      await userEvent.click(screen.getByRole("button", { name: "Pulihkan HEMAT10" }));
+      expect(archiveAction).toHaveBeenCalledWith(1, false);
+      await waitFor(() => expect(screen.queryByRole("article", { name: "HEMAT10" })).toBeNull());
+      expect(screen.getByText("Promo dipulihkan")).toBeInTheDocument();
+      unmount();
+      render(<PromoList admin promos={[]} loadFailed={false} archiveAction={archiveAction} archived />);
+      expect(screen.getByText("Belum ada promo yang diarsipkan")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Buat promo" })).toBeNull();
+    });
+
+    it("Pulihkan nonaktif selama permintaan berjalan (cegah klik ganda)", async () => {
+      let finish: (value: unknown) => void = () => {};
+      archiveAction.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+      renderAdmin({ archived: true });
+      await userEvent.click(screen.getByRole("button", { name: "Pulihkan HEMAT10" }));
+      expect(screen.getByRole("button", { name: "Pulihkan SARAPAN5K" })).toBeDisabled();
+      finish({ data: allPromos[0] });
+      await waitFor(() => expect(screen.getByRole("button", { name: "Pulihkan SARAPAN5K" })).toBeEnabled());
+      expect(archiveAction).toHaveBeenCalledTimes(1);
+    });
+
+    it("support: tanpa tombol buat, ubah, aktifkan, arsip, maupun pulihkan", () => {
+      const { unmount } = renderAdmin({ canEdit: false });
+      for (const name of [/Buat promo/, /^Ubah/, /^Nonaktifkan/, /^Aktifkan/, /^Arsipkan/])
+        expect(screen.queryByRole("button", { name })).toBeNull();
+      unmount();
+      renderAdmin({ canEdit: false, archived: true });
+      expect(screen.queryByRole("button", { name: /^Pulihkan/ })).toBeNull();
+    });
+
+    it("mode penjual tidak punya tombol Arsipkan", () => {
+      renderList();
+      expect(screen.queryByRole("button", { name: /^Arsipkan/ })).toBeNull();
+    });
   });
 });
