@@ -2,26 +2,35 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-// Pratinjau tautan (WhatsApp, X, Facebook, LinkedIn). Dibuat sekali saat build; font Plus Jakarta Sans (OFL) dari assets/fonts.
+// Gambar pratinjau tautan (Open Graph) untuk WhatsApp, X, Facebook, dan LinkedIn.
+// Dibuat sekali saat build; font Plus Jakarta Sans (lisensi OFL) dibaca dari assets/fonts.
 export const alt = "KateringKita — kelola pesanan katering kampus tanpa porsi tersisa";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 // Bentuk sama dengan LogoMark (app/components/shell/Brand.tsx), diisi putih.
 const LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M9.4 3.9c-.55.75-.55 1.5 0 2.25M12 3.4c-.6.8-.6 1.6 0 2.4M14.6 3.9c-.55.75-.55 1.5 0 2.25" stroke="#fff" stroke-opacity=".75" stroke-width="1.2" stroke-linecap="round"/><circle cx="12" cy="8.9" r="1.25" fill="#fff"/><path d="M5.4 17.2a6.6 6.6 0 0 1 13.2 0z" fill="#fff"/><rect x="4" y="18.4" width="16" height="2" rx="1" fill="#fff"/></svg>`;
+/** Warna gambar: oranye merek, teks utama, teks redup, dan garis. */
 const ORANGE = "#C2410C",
   INK = "#262017",
   MUTED = "#665D55",
   LINE_COLOR = "#E8E5DF";
 
+/**
+ * Menggambar kartu pratinjau 1200×630: logo dan judul di kiri, contoh struk pesanan di kanan.
+ * @returns gambar PNG dari ImageResponse (JSX diubah menjadi gambar oleh Satori)
+ */
 export default async function Image() {
+  // 1. Baca dua ketebalan font dari disk.
   const [boldFont, mediumFont] = await Promise.all([
     readFile(join(process.cwd(), "assets/fonts/PlusJakartaSans-ExtraBold.ttf")),
     readFile(join(process.cwd(), "assets/fonts/PlusJakartaSans-Medium.ttf")),
   ]);
+  // 2. Gaya baris struk (kiri-kanan) dan garis pemisah, dipakai berulang di bawah.
   const rowStyle = { display: "flex", justifyContent: "space-between" } as const;
   const dividerStyle = { display: "flex", height: 2, background: LINE_COLOR, margin: "18px 0" } as const;
 
+  // 3. Susun gambar.
   return new ImageResponse(
     <div
       style={{

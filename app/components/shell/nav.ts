@@ -50,17 +50,17 @@ export const ADMIN_NAV: NavGroup[] = [
       { href: "/admin/verifikasi", label: "Verifikasi", icon: ShieldCheck },
       { href: "/admin/penjual", label: "Penjual", icon: Store },
       { href: "/admin/moderasi", label: "Moderasi", icon: Flag },
-      // Tiket bantuan: semua tingkat (super, ops, support), bukan KHUSUS_SUPER di lib/admin-level.ts
+      // Tiket bantuan: semua tingkat (super, ops, support), tidak termasuk SUPER_ONLY_PAGES di lib/admin-level.ts
       { href: "/admin/tiket", label: "Tiket", icon: LifeBuoy },
       { href: "/admin/data-master", label: "Data master", icon: Database },
       { href: "/admin/promo", label: "Promo & biaya", icon: Tag },
-      // Banner beranda: semua tingkat melihat, super & ops memutuskan (bukan KHUSUS_SUPER)
+      // Banner beranda: semua tingkat melihat, super & ops memutuskan (tidak termasuk SUPER_ONLY_PAGES)
       { href: "/admin/banner", label: "Banner", icon: ImageIcon },
       { href: "/admin/popup", label: "Pop-up", icon: Megaphone },
       { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
       { href: "/admin/pencairan", label: "Pencairan", icon: Banknote },
       { href: "/admin/pengumuman", label: "Pengumuman", icon: Megaphone },
-      // Verifikasi hasil AI: semua tingkat melihat, super & ops memutuskan (bukan KHUSUS_SUPER)
+      // Verifikasi hasil AI: semua tingkat melihat, super & ops memutuskan (tidak termasuk SUPER_ONLY_PAGES)
       { href: "/admin/hasil-ai", label: "Verifikasi AI", icon: BadgeCheck },
       { href: "/admin/ai", label: "AI", icon: Sparkles },
       { href: "/admin/admin", label: "Kelola admin", icon: UserCog },

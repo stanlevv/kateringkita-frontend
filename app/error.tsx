@@ -1,10 +1,17 @@
 "use client";
 
+// Halaman galat untuk semua rute: Next.js menampilkannya bila sebuah halaman melempar galat saat dirender.
+// "use client" wajib karena halaman galat Next harus berjalan di browser.
 import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 
-// SY-2: tanpa detail teknis. Next 16: prop `retry` (bukan `reset`).
+/**
+ * Halaman galat umum. Sengaja tanpa detail teknis (pesan galat tidak ditampilkan ke pengguna).
+ * Next 16 memberi prop `retry` (dulu `reset`) untuk mencoba merender ulang halaman.
+ * @param props.retry fungsi dari Next untuk mencoba lagi
+ * @returns tampilan "Terjadi kesalahan" dengan tombol Coba lagi dan tautan ke dashboard
+ */
 export default function Error({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-canvas p-6 text-center text-ink">

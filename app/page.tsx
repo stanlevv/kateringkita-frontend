@@ -1,3 +1,6 @@
+// Halaman `/`: halaman pembuka publik untuk calon penjual (siapa pun boleh membuka, tanpa login).
+// Isinya teks tetap. Satu-satunya data yang dibaca adalah sesi login (services/auth.service.ts),
+// untuk memilih tombol utama.
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -22,6 +25,7 @@ import { Brand } from "@/app/components/shell/Brand";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 
+/** Metadata SEO halaman ini: alamat kanonik dan pratinjau tautan (Open Graph). */
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
@@ -34,20 +38,24 @@ export const metadata: Metadata = {
   },
 };
 
+/** Kelas Tailwind yang dipakai berulang: lebar isi halaman, label kecil di atas judul, dan judul bagian (h2). */
 const WRAP = "mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8";
 const EYEBROW = "text-sm font-semibold uppercase tracking-[0.12em] text-primary";
 const H2 =
   "mt-3 font-display text-[clamp(1.9rem,3.6vw,2.75rem)] font-extrabold leading-[1.1] tracking-tight text-balance";
 
-// Semua klaim di halaman ini harus sesuai fitur yang ada (LD-S1): tanpa angka pengguna atau testimoni karangan.
+// Semua klaim di halaman ini harus sesuai fitur yang benar-benar ada: tanpa angka pengguna atau testimoni karangan.
+/** Tiga keunggulan singkat yang dicentang di bawah tombol hero. */
 const HIGHLIGHTS = ["Kuota porsi harian", "Antrean pesanan langsung", "Laporan & ekspor CSV"];
 
+/** Angka singkat di pita bawah hero: `value` angka besar, `caption` keterangannya. */
 const FACTS = [
   { value: "5 menit", caption: "porsi ditahan untuk pembeli saat checkout" },
   { value: "5 detik", caption: "antrean pesanan diperbarui tanpa muat ulang" },
   { value: "Tunai · VA · Online", caption: "bayar non-tunai lewat Midtrans, pesanan diterima otomatis begitu lunas" },
 ];
 
+/** Kartu di bagian "Fitur": ikon, judul, dan penjelasan satu fitur. */
 const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
   {
     icon: Gauge,
@@ -96,6 +104,7 @@ const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
   },
 ];
 
+/** Tiga langkah mulai berjualan di bagian "Mulai". */
 const STEPS = [
   {
     title: "Daftar sebagai penjual",
@@ -147,6 +156,7 @@ const FAQ = [
   },
 ];
 
+/** Data terstruktur (JSON-LD) untuk mesin pencari: organisasi, situs, aplikasi, dan daftar tanya jawab. */
 const ORGANIZATION_ID = `${SITE_URL}/#organisasi`;
 const JSON_LD = {
   "@context": "https://schema.org",
@@ -187,10 +197,15 @@ const JSON_LD = {
   ],
 };
 
-// Halaman pembuka publik: hero + demo struk, fitur, alur satu pesanan, tiga langkah mulai, tanya jawab.
+/**
+ * Halaman pembuka publik: hero + demo struk, fitur, alur satu pesanan, tiga langkah mulai, dan tanya jawab.
+ * Tombol utama menyesuaikan siapa yang membuka: admin ke panel admin, penjual ke dashboard, pengunjung ke pendaftaran.
+ * @returns elemen halaman landing
+ */
 export default async function Home() {
-  // LD-A1: backend mati atau sesi tidak valid -> tampilkan header pengunjung.
+  // 1. Baca sesi login. Bila backend mati atau sesi tidak sah, anggap pengunjung (header tetap tampil).
   const session = await getSession().catch(() => null);
+  // 2. Pilih tombol utama (cta = call to action) sesuai peran.
   const isMerchant = session?.user.role === "merchant";
   const isAdmin = session?.user.role === "admin";
   const cta = isAdmin
@@ -200,6 +215,7 @@ export default async function Home() {
       : { href: "/register", label: "Daftar jadi penjual" };
   const isVisitor = !isMerchant && !isAdmin;
 
+  // 3. Tampilkan halaman; tautan "Masuk" hanya untuk pengunjung yang belum login.
   return (
     <div className="bg-surface text-ink">
       {/* JSON-LD berupa data, bukan skrip yang dijalankan; "<" di-escape sesuai panduan Next.js. */}

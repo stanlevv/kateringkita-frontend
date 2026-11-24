@@ -1,9 +1,15 @@
+// Halaman 404: ditampilkan Next.js untuk alamat yang tidak ada.
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 
+/** Kelas dasar dua tautan di halaman ini (tinggi minimal 44 px dan garis fokus). */
 const linkClassName =
   "inline-flex min-h-11 items-center justify-center rounded-md px-4 font-semibold focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2";
 
+/**
+ * Halaman "tidak ditemukan" dengan tautan ke dashboard dan ke beranda.
+ * @returns tampilan 404
+ */
 export default function NotFound() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-canvas p-6 text-center text-ink">

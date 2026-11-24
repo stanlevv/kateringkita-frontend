@@ -1,4 +1,4 @@
-/* Ilustrasi halaman pembuka (M-01): printer struk + papan porsi (PrinterDemo) dan alur satu pesanan (OrderFlow).
+/* Ilustrasi halaman pembuka: printer struk + papan porsi (PrinterDemo) dan alur satu pesanan (OrderFlow).
    Tata letak halaman memakai utilitas Tailwind di app/page.tsx. Warna hanya dari token @theme di styles/kk-theme.css. */
 .wrap {
   max-width: 72rem;
