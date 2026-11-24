@@ -12,7 +12,7 @@ const mountHook = () => {
   return { run, ...rendered };
 };
 
-describe("DB-A2 / Review Focus 2: aksi ditunda tepat sekali", () => {
+describe("aksi ditunda tepat sekali", () => {
   it("dijalankan sekali setelah 5 dtk, pending selama menunggu", () => {
     const { run, result } = mountHook();
     act(() => result.current.schedule("A", "confirm"));

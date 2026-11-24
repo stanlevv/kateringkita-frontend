@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe("uploadPhoto (M-07, M-10, FE-08)", () => {
+describe("uploadPhoto", () => {
   it("sukses: minta URL lalu PUT berkas dengan Content-Type; hasil = public_url", async () => {
     expect(await uploadPhoto(photo, "logo")).toEqual({ data: { public_url: "https://cdn.test/a.png" } });
     expect(requestUpload).toHaveBeenCalledWith({ purpose: "logo", content_type: "image/png", size: 10 });

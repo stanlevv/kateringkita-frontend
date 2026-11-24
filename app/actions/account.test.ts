@@ -29,7 +29,7 @@ const setScenario = (value: string) => {
 };
 const passwordInput = { current_password: "lama1234", new_password: "baru12345" };
 
-describe("changePassword (PG-N2, PG-E2)", () => {
+describe("changePassword", () => {
   it("sukses: PUT /me/password dengan token sesi (204)", async () => {
     apiFetch.mockResolvedValue({ ok: true, status: 204, data: undefined });
     expect(await changePassword(passwordInput)).toEqual({ data: { ok: true } });

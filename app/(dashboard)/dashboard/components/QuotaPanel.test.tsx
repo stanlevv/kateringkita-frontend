@@ -28,7 +28,7 @@ describe("QuotaPanel", () => {
     render(<QuotaPanel menus={menus()} now={5_400} lastSyncedAt={0} onMenuSaved={vi.fn()} />);
     expect(screen.getByText("Diperbarui 5 detik lalu")).toBeInTheDocument();
   });
-  it("DB-N3 perubahan tombol dikirim sebagai delta setelah jeda, hasil diteruskan", async () => {
+  it("perubahan tombol dikirim sebagai delta setelah jeda, hasil diteruskan", async () => {
     vi.useFakeTimers();
     const saved = { ...baseMenu, quota_today: 41, available: 16 };
     adjustQuota.mockResolvedValue({ data: saved });
@@ -43,7 +43,7 @@ describe("QuotaPanel", () => {
     expect(adjustQuota).toHaveBeenCalledExactlyOnceWith(1, { delta: 1 });
     expect(onMenuSaved).toHaveBeenLastCalledWith(saved);
   });
-  it("AUD-04 pengetikan angka langsung dikirim sebagai quota_today absolut setelah jeda", async () => {
+  it("pengetikan angka langsung dikirim sebagai quota_today absolut setelah jeda", async () => {
     vi.useFakeTimers();
     const saved = { ...baseMenu, quota_today: 45, available: 20 };
     adjustQuota.mockResolvedValue({ data: saved });
@@ -59,7 +59,7 @@ describe("QuotaPanel", () => {
     expect(adjustQuota).toHaveBeenCalledExactlyOnceWith(1, { quota_today: 45 });
     expect(onMenuSaved).toHaveBeenLastCalledWith(saved);
   });
-  it("M-04 setelah simpan sukses angka tidak balik ke lama selama menus belum berubah; draf lepas saat data baru tiba", async () => {
+  it("setelah simpan sukses angka tidak balik ke lama selama menus belum berubah; draf lepas saat data baru tiba", async () => {
     vi.useFakeTimers();
     const saved = { ...baseMenu, quota_today: 41, available: 16 };
     adjustQuota.mockResolvedValue({ data: saved });
@@ -76,7 +76,7 @@ describe("QuotaPanel", () => {
     rerender(panel([{ ...saved, quota_today: 50, available: 25 }])); // draf sudah lepas: nilai server dipakai
     expect(screen.getByRole("spinbutton")).toHaveValue(50);
   });
-  it("DB-E4 server menolak -> angka kembali + toast", async () => {
+  it("server menolak -> angka kembali + toast", async () => {
     vi.useFakeTimers();
     adjustQuota.mockResolvedValue({
       error: { code: "CONFLICT", message: "Kuota tidak bisa di bawah porsi yang sudah dipesan (25)." },

@@ -9,7 +9,7 @@ vi.mock("@/app/actions/assistant", () => ({ askAssistant: (...args: unknown[]) =
 
 beforeEach(() => askAssistant.mockReset());
 
-describe("F17 AssistantPanel", () => {
+describe("AssistantPanel", () => {
   it("pertanyaan kosong tidak dikirim", async () => {
     render(<AssistantPanel />);
     await act(async () => {

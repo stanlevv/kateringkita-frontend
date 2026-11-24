@@ -40,7 +40,7 @@ const renderTable = (overrides: Partial<Parameters<typeof TransactionTable>[0]> 
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("LP-N3 buku transaksi", () => {
+describe("buku transaksi", () => {
   it("kolom sesuai spesifikasi dan satu baris per transaksi", () => {
     renderTable();
     const table = screen.getByRole("table");
@@ -64,14 +64,14 @@ describe("LP-N3 buku transaksi", () => {
     );
     expect(screen.getByText(`Halaman 1 dari ${Math.ceil(allTransactions.length / 20)}`)).toBeInTheDocument();
   });
-  it("LP-S1 tanpa transaksi -> pesan kosong, tombol unduh nonaktif", () => {
+  it("tanpa transaksi -> pesan kosong, tombol unduh nonaktif", () => {
     renderTable({ rows: [], total: 0 });
     expect(screen.getByText("Belum ada transaksi di rentang ini")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Unduh CSV" })).toBeDisabled();
   });
 });
 
-describe("LP-N4/E2 unduh CSV", () => {
+describe("unduh CSV", () => {
   it("memanggil rute CSV dengan rentang", async () => {
     const fetchMock = vi
       .fn()

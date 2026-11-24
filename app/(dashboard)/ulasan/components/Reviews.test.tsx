@@ -11,7 +11,7 @@ import { ReviewList } from "./ReviewList";
 const allReviews = reviews();
 const menuOptions = menus().map((menu) => ({ id: menu.id, name: menu.name }));
 
-describe("RatingSummary (UL-N1)", () => {
+describe("RatingSummary", () => {
   it("rata-rata, jumlah, dan sebaran 5->1 berjumlah total (teks, bukan warna saja)", () => {
     render(<RatingSummary reviews={allReviews} />);
     const summary = summarizeReviews(allReviews);
@@ -25,7 +25,7 @@ describe("RatingSummary (UL-N1)", () => {
   });
 });
 
-describe("MenuRatings (UL-N2)", () => {
+describe("MenuRatings", () => {
   it("tiap menu tautan ke ?menu=<id>; Semua menu mengosongkan filter", () => {
     render(<MenuRatings reviews={allReviews} menus={menuOptions} menuId={allReviews[0].menu_id} />);
     const link = screen.getByRole("link", { name: new RegExp(allReviews[0].menu_name) });
@@ -35,7 +35,7 @@ describe("MenuRatings (UL-N2)", () => {
   });
 });
 
-describe("ReviewList (UL-N3, UL-S1)", () => {
+describe("ReviewList", () => {
   it("nama disamarkan, bintang dengan teks pembaca layar, menu, tanggal", () => {
     const { rows, total } = filterReviews(allReviews, {}, 1);
     render(<ReviewList rows={rows} total={total} page={1} filter={{}} />);
@@ -50,7 +50,7 @@ describe("ReviewList (UL-N3, UL-S1)", () => {
     expect(screen.getByRole("link", { name: /^4 bintang/ })).toHaveAttribute("href", "/ulasan?menu=3&bintang=4");
     expect(screen.getByRole("link", { name: "Semua bintang" })).toHaveAttribute("aria-current", "true");
   });
-  it("UL-S1 belum ada ulasan sama sekali", () => {
+  it("belum ada ulasan sama sekali", () => {
     render(<ReviewList rows={[]} total={0} page={1} filter={{}} noReviews />);
     expect(screen.getByText("Ulasan muncul setelah pembeli menyelesaikan pesanan")).toBeInTheDocument();
   });

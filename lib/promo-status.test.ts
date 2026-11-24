@@ -23,7 +23,7 @@ const base: Promo = {
 };
 const statusOf = (overrides: Partial<Promo>) => promoStatus({ ...base, ...overrides }, NOW);
 
-describe("promoStatus (PR-N1)", () => {
+describe("promoStatus", () => {
   it("urutan: nonaktif > terjadwal > berakhir > kuota habis > berjalan", () => {
     expect(statusOf({})).toBe("berjalan");
     expect(statusOf({ is_active: false, starts_at: "2026-12-01T00:00:00Z" })).toBe("nonaktif");

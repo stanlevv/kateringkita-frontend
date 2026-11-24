@@ -10,7 +10,7 @@ import { CollapsibleSidebar } from "./CollapsibleSidebar";
 
 const aside = (container: HTMLElement) => container.querySelector("aside")!;
 
-describe("SH-N1 sidebar bisa diciutkan/dilebarkan", () => {
+describe("sidebar bisa diciutkan/dilebarkan", () => {
   afterEach(() => {
     document.cookie = "kk-sidebar=; path=/; max-age=0";
   });

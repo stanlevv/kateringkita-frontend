@@ -5,7 +5,7 @@ import { countMenuTabs, marginPercent, filterMenus, filterBySearchAndCategory } 
 
 const allMenus = menus();
 
-describe("MN-N2 saring & hitung tab", () => {
+describe("saring & hitung tab", () => {
   it("tab: Nonaktif = !is_active, Habis/Menipis hanya menu aktif, Aktif = semua yang aktif", () => {
     const counts = countMenuTabs(allMenus);
     expect(counts.semua).toBe(12);

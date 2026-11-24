@@ -118,7 +118,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("DB-N1 / D10 aksi memakai baris dari respons", () => {
+describe("aksi memakai baris dari respons", () => {
   it("Konfirmasi: optimistis, 5 dtk, 3 argumen; respons langsung tampil, sinkron segera, tanpa router.refresh", async () => {
     const data = loadData();
     const original = data.orders.find((order) => order.code === ORDER_CODE)!;
@@ -177,7 +177,7 @@ describe("DB-N1 / D10 aksi memakai baris dari respons", () => {
   });
 });
 
-describe("DB-A3 pesanan baru dari penyegaran", () => {
+describe("pesanan baru dari penyegaran", () => {
   const newOrder = (code: string): MerchantOrder => {
     const now = Date.now();
     return {
@@ -216,7 +216,7 @@ describe("DB-A3 pesanan baru dari penyegaran", () => {
   });
 });
 
-describe("D2 angka konsisten dengan kartu", () => {
+describe("angka konsisten dengan kartu", () => {
   it("penyegaran memindahkan ready -> completed: kartu hilang dari Siap diambil dan omzet naik di render yang sama", async () => {
     const data = loadData();
     const readyOrder = data.orders.find((order) => order.status === "ready")!;
@@ -241,7 +241,7 @@ describe("waktu tahan", () => {
     });
     expect(secondsLeft()).toBeLessThanOrEqual(initialSeconds - 9);
   });
-  it("D8 jam server 200 dtk lebih cepat -> sisa turun 200 dtk; < 60 dtk -> Segera", async () => {
+  it("jam server 200 dtk lebih cepat -> sisa turun 200 dtk; < 60 dtk -> Segera", async () => {
     const data = loadData();
     const original = data.orders.find((order) => order.code === ORDER_CODE)!;
     render(dashboardTree(data));
@@ -257,7 +257,7 @@ describe("waktu tahan", () => {
   });
 });
 
-describe("galat data (G-1 / DB-E5)", () => {
+describe("galat data", () => {
   it("belum ada data + galat -> layar gagal muat dengan Coba lagi", async () => {
     render(dashboardTree(null, true));
     expect(screen.getByText("Data dashboard belum bisa dimuat")).toBeInTheDocument();
@@ -294,7 +294,7 @@ describe("galat data (G-1 / DB-E5)", () => {
   });
 });
 
-describe("DB-N3 kuota", () => {
+describe("kuota", () => {
   const updatedText = () => screen.getAllByText(/Diperbarui \d+ detik lalu/)[0];
   it("ubah kuota -> baris dari respons tampil tanpa router.refresh", async () => {
     const data = loadData();

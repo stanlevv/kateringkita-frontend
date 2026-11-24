@@ -24,7 +24,7 @@ beforeEach(() => {
 const buildSearchParams = (values = {}) => Promise.resolve(values);
 const merchant = { user: { role: "merchant" }, merchant: {} };
 
-describe("LG-A3 / RG-A2 sudah login", () => {
+describe("sudah login", () => {
   it("/login -> /dashboard", async () => {
     getSession.mockResolvedValue(merchant);
     await expect(LoginPage({ searchParams: buildSearchParams() })).rejects.toThrow("REDIRECT /dashboard");

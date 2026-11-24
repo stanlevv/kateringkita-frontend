@@ -87,7 +87,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("D6 jeda saat terlihat", () => {
+describe("jeda saat terlihat", () => {
   it("tidak ada fetch sebelum 5 dtk; lalu 1 fetch dengan sejak = updated_at terbesar - 5 dtk", async () => {
     mountHook();
     await advance(4900);
@@ -127,7 +127,7 @@ describe("D6 jeda saat terlihat", () => {
   });
 });
 
-describe("D6 tab tersembunyi", () => {
+describe("tab tersembunyi", () => {
   it("fetch berikut setelah 30 dtk; kembali terlihat -> fetch langsung", async () => {
     visibility = "hidden";
     mountHook();
@@ -141,7 +141,7 @@ describe("D6 tab tersembunyi", () => {
   });
 });
 
-describe("D7 galat", () => {
+describe("galat", () => {
   it("503 -> putus, mundur 10, 20, 40, 60, 60 dtk; sukses -> pulih dan kembali 5 dtk", async () => {
     fetchMock.mockImplementation(async () => errorResponse());
     const { result } = mountHook();
@@ -191,7 +191,7 @@ describe("D7 galat", () => {
   });
 });
 
-describe("D8 jam server", () => {
+describe("jam server", () => {
   it("holding di respons -> selisih ~ 2000 ms", async () => {
     const holdingOrder = buildOrder({
       code: "H",
@@ -208,7 +208,7 @@ describe("D8 jam server", () => {
   });
 });
 
-describe("D5/D10 terima & awal", () => {
+describe("terima & awal", () => {
   it("receiveOrder(o) lebih baru langsung tampil; poll lama yang tiba kemudian tidak menimpanya", async () => {
     const { result } = mountHook();
     await advance(4999);
@@ -258,7 +258,7 @@ describe("D5/D10 terima & awal", () => {
   });
 });
 
-describe("D6 unmount", () => {
+describe("unmount", () => {
   it("fetch berjalan dibatalkan; tidak ada setState setelah unmount", async () => {
     const consoleError = vi.spyOn(console, "error");
     const abortSpy = vi.spyOn(AbortController.prototype, "abort");
@@ -273,7 +273,7 @@ describe("D6 unmount", () => {
   });
 });
 
-describe("review F16: sinkron tidak melewatkan pesanan", () => {
+describe("sinkron tidak melewatkan pesanan", () => {
   it("1. antrean kosong & jam perangkat 3 mnt lebih cepat -> sejak tetap dari jam server halaman (dimuat - 60 dtk)", async () => {
     vi.setSystemTime(PAGE_LOADED_AT + 180_000);
     const orderC = buildOrder({ code: "C", updated_at: new Date(PAGE_LOADED_AT + 1000).toISOString() });

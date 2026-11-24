@@ -101,7 +101,7 @@ describe("tab antrean (brief §3)", () => {
   });
 });
 
-describe("DB-A2 aksi optimistis dengan Batalkan 5 dtk (Review Focus 2)", () => {
+describe("aksi optimistis dengan Batalkan 5 dtk", () => {
   it("Konfirmasi -> kartu langsung Dikonfirmasi + toast Batalkan; Batalkan -> kembali, action tidak dipanggil", async () => {
     setup();
     await user.click(inCard(HOLDING_CODE).getByRole("button", { name: "Konfirmasi" }));
@@ -122,7 +122,7 @@ describe("DB-A2 aksi optimistis dengan Batalkan 5 dtk (Review Focus 2)", () => {
     await user.click(screen.getByRole("tab", { name: /Dimasak/ }));
     expect(inCard(CONFIRMED_CODE).getByText("Dimasak")).toBeInTheDocument();
   });
-  it("tunggu 5 dtk -> dipanggil sekali tanpa objek pesanan; baris respons diteruskan + sinkron segera (D10)", async () => {
+  it("tunggu 5 dtk -> dipanggil sekali tanpa objek pesanan; baris respons diteruskan + sinkron segera", async () => {
     setup();
     await user.click(inCard(HOLDING_CODE).getByRole("button", { name: "Konfirmasi" }));
     await act(async () => {
@@ -138,7 +138,7 @@ describe("DB-A2 aksi optimistis dengan Batalkan 5 dtk (Review Focus 2)", () => {
     });
     expect(orderAction).toHaveBeenCalledTimes(1);
   });
-  it("data server baru (updated_at berubah) menggantikan tampilan optimistis (D14)", async () => {
+  it("data server baru (updated_at berubah) menggantikan tampilan optimistis", async () => {
     const { rerenderWith } = setup();
     await user.click(inCard(HOLDING_CODE).getByRole("button", { name: "Konfirmasi" }));
     await act(async () => {
@@ -183,12 +183,12 @@ describe("galat aksi: kartu kembali ke status semula", () => {
     });
     return rendered;
   };
-  it("DB-E1 gagal -> toast Gagal mengonfirmasi, kartu kembali", async () => {
+  it("gagal -> toast Gagal mengonfirmasi, kartu kembali", async () => {
     await confirmAndWait({ error: { code: "INTERNAL_ERROR", message: "x" } });
     expect(region()).toHaveTextContent("Gagal mengonfirmasi. Coba lagi.");
     expect(inCard(HOLDING_CODE).getByRole("button", { name: "Konfirmasi" })).toBeEnabled();
   });
-  it("DB-E1 aksi melempar (jaringan putus) -> kartu kembali dan bisa diproses lagi", async () => {
+  it("aksi melempar (jaringan putus) -> kartu kembali dan bisa diproses lagi", async () => {
     orderAction.mockRejectedValue(new Error("Failed to fetch"));
     setup();
     await user.click(inCard(HOLDING_CODE).getByRole("button", { name: "Konfirmasi" }));
@@ -199,20 +199,20 @@ describe("galat aksi: kartu kembali ke status semula", () => {
     expect(inCard(HOLDING_CODE).getByText("Menunggu konfirmasi")).toBeInTheDocument();
     expect(inCard(HOLDING_CODE).getByRole("button", { name: "Konfirmasi" })).toBeEnabled();
   });
-  it("DB-E2 CONFLICT -> toast Pesanan sudah berubah status + sinkron segera", async () => {
+  it("CONFLICT -> toast Pesanan sudah berubah status + sinkron segera", async () => {
     await confirmAndWait({ error: { code: "CONFLICT", message: "Batas waktu pesanan sudah habis." } });
     expect(region()).toHaveTextContent("Batas waktu pesanan sudah habis.");
     expect(onRefresh).toHaveBeenCalled();
     expect(onReceiveOrder).not.toHaveBeenCalled();
     expect(inCard(HOLDING_CODE).getByText("Menunggu konfirmasi")).toBeInTheDocument();
   });
-  it("DB-E3 OUT_OF_STOCK -> dialog Tambah kuota / Tolak pesanan", async () => {
+  it("OUT_OF_STOCK -> dialog Tambah kuota / Tolak pesanan", async () => {
     const { onFocusQuota } = await confirmAndWait({ error: { code: "OUT_OF_STOCK", message: "x" } });
     const dialog = screen.getByRole("dialog", { name: "Stok tidak cukup untuk pesanan ini" });
     await user.click(within(dialog).getByRole("button", { name: "Tambah kuota" }));
     expect(onFocusQuota).toHaveBeenCalledWith(orders()[0].items[0].menu_id);
   });
-  it("DB-E3 Tolak pesanan dari dialog stok membuka dialog alasan", async () => {
+  it("Tolak pesanan dari dialog stok membuka dialog alasan", async () => {
     await confirmAndWait({ error: { code: "OUT_OF_STOCK", message: "x" } });
     await user.click(screen.getByRole("button", { name: "Tolak pesanan" }));
     expect(screen.getByRole("dialog", { name: /Tolak pesanan/ })).toBeInTheDocument();
@@ -220,7 +220,7 @@ describe("galat aksi: kartu kembali ke status semula", () => {
   });
 });
 
-describe("DB-A1 tolak dengan alasan wajib", () => {
+describe("tolak dengan alasan wajib", () => {
   it("tombol Tolak nonaktif sampai alasan dipilih; mengirim alasan", async () => {
     orderAction.mockResolvedValue(actionResult(HOLDING_CODE, "cancelled"));
     setup();
@@ -237,7 +237,7 @@ describe("DB-A1 tolak dengan alasan wajib", () => {
   });
 });
 
-describe("DB-S2 antrean kosong", () => {
+describe("antrean kosong", () => {
   it("EmptyState dengan Atur kuota", async () => {
     const { onFocusQuota } = setup([]);
     expect(screen.getByText("Belum ada pesanan")).toBeInTheDocument();
@@ -246,7 +246,7 @@ describe("DB-S2 antrean kosong", () => {
   });
 });
 
-describe("DB-N5 lihat slip", () => {
+describe("lihat slip", () => {
   it("membuka laci slip dengan rincian harga", async () => {
     setup();
     await user.click(inCard(HOLDING_CODE).getByRole("button", { name: "Lihat slip" }));

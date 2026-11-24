@@ -17,7 +17,7 @@ describe("QuotaRow (brief §5)", () => {
     expect(screen.getByText("Aman").closest("span")?.querySelector("svg")).not.toBeNull();
     expect(screen.getByText("Tersedia 15 · Ditahan 3 · Terjual 22")).toBeInTheDocument();
   });
-  it("DB-E4 batas bawah = terjual + ditahan: tombol − nonaktif + keterangan", () => {
+  it("batas bawah = terjual + ditahan: tombol − nonaktif + keterangan", () => {
     render(<QuotaRow menu={menuWith({ quota_today: 25, available: 0 })} onQuotaChange={vi.fn()} />);
     expect(screen.getByRole("button", { name: /Kurangi/ })).toBeDisabled();
     expect(screen.getByText("Tidak bisa di bawah porsi yang sudah dipesan")).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe("QuotaRow (brief §5)", () => {
     expect(input).toHaveValue(30);
     expect(onQuotaChange).not.toHaveBeenCalled();
   });
-  it("DB-N3 menu habis punya +5 / +10", async () => {
+  it("menu habis punya +5 / +10", async () => {
     const onQuotaChange = vi.fn();
     render(<QuotaRow menu={menuWith({ quota_today: 25, available: 0 })} onQuotaChange={onQuotaChange} />);
     expect(screen.getByText("Habis")).toBeInTheDocument();
@@ -45,7 +45,7 @@ describe("QuotaRow (brief §5)", () => {
     render(<QuotaRow menu={baseMenu} onQuotaChange={vi.fn()} />);
     expect(screen.queryByRole("button", { name: /\+5/ })).toBeNull();
   });
-  it("AUD-04 memanggil onDelta saat tombol cepat +5 / +10 ditekan", async () => {
+  it("memanggil onDelta saat tombol cepat +5 / +10 ditekan", async () => {
     const onDelta = vi.fn();
     render(<QuotaRow menu={menuWith({ quota_today: 25, available: 0 })} onQuotaChange={vi.fn()} onDelta={onDelta} />);
     await userEvent.click(screen.getByRole("button", { name: /\+5/ }));

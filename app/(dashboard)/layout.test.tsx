@@ -19,22 +19,22 @@ vi.mock("next/headers", () => ({
 import DashboardLayout from "./layout";
 
 describe("shell dashboard", () => {
-  it("F13: penanda data contoh sudah tidak ada (semua services tersambung backend)", async () => {
+  it("penanda data contoh sudah tidak ada (semua services tersambung backend)", async () => {
     const layout = await DashboardLayout({ children: null });
     expect(JSON.stringify(layout)).not.toContain("data contoh");
   });
-  it("badge pesanan = jumlah menunggu + terkonfirmasi dari server (M-04)", async () => {
+  it("badge pesanan = jumlah menunggu + terkonfirmasi dari server", async () => {
     const layout = await DashboardLayout({ children: null });
     expect(JSON.stringify(layout)).toContain('"badge":7');
     expect(JSON.stringify(layout)).toContain('"unreadNotifications":4');
   });
-  it("SH-N1: lebar sidebar dari cookie kk-sidebar sudah dirender server (tanpa kedip)", async () => {
+  it("lebar sidebar dari cookie kk-sidebar sudah dirender server (tanpa kedip)", async () => {
     sidebarCookie = "ringkas";
     expect(JSON.stringify(await DashboardLayout({ children: null }))).toContain('"mode":"ringkas"');
     sidebarCookie = undefined;
     expect(JSON.stringify(await DashboardLayout({ children: null }))).toContain('"mode":"lebar"');
   });
-  it("F27: mode pemeliharaan aktif -> halaman pemberitahuan berisi pesan admin, tanpa shell", async () => {
+  it("mode pemeliharaan aktif -> halaman pemberitahuan berisi pesan admin, tanpa shell", async () => {
     maintenance = { aktif: true, pesan: "Sampai 14.00 WIB" };
     const json = JSON.stringify(await DashboardLayout({ children: null }));
     maintenance = { aktif: false, pesan: null };

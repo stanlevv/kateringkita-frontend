@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-describe("FE-01/FE-11 store contoh dihapus", () => {
+describe("store contoh dihapus", () => {
   it("lib/store.tsx tidak ada dan layout tidak memakai StoreProvider", () => {
     expect(existsSync(join(__dirname, "store.tsx"))).toBe(false);
     const layout = readFileSync(join(__dirname, "../app/(dashboard)/layout.tsx"), "utf8");

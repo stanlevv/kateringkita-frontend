@@ -50,8 +50,8 @@ afterEach(() => {
   requireMerchant.mockClear();
 });
 
-describe("saveMenu (M-07, FE-02, FE-03)", () => {
-  it("MF-E4 input tidak valid -> VALIDATION_ERROR lokal, server tidak dipanggil", async () => {
+describe("saveMenu", () => {
+  it("input tidak valid -> VALIDATION_ERROR lokal, server tidak dipanggil", async () => {
     const result = await saveMenu(null, { ...validMenu, price: 9000, hpp: 9000, name: "" });
     expect("error" in result && result.error.code).toBe("VALIDATION_ERROR");
     expect("error" in result && result.error.fields?.price?.[0]).toContain("lebih besar dari HPP");
@@ -73,13 +73,13 @@ describe("saveMenu (M-07, FE-02, FE-03)", () => {
     expect(sentBody().name).toBe("Nasi Box");
     expect(result).toEqual({ data: { id: 5, name: "Dari Server" } });
   });
-  it("ubah -> PATCH /menus/5, tidak pernah POST (FE-02)", async () => {
+  it("ubah -> PATCH /menus/5, tidak pernah POST", async () => {
     await saveMenu(5, validMenu);
     expect(merchantFetch).toHaveBeenCalledTimes(1);
     expect(merchantFetch.mock.calls[0][0]).toBe("/menus/5");
     expect(merchantFetch.mock.calls[0][1].method).toBe("PATCH");
   });
-  it("galat backend diteruskan: 400 fields.price (FE-03) dan 404", async () => {
+  it("galat backend diteruskan: 400 fields.price dan 404", async () => {
     merchantFetch.mockResolvedValue({
       ok: false,
       status: 400,
@@ -108,7 +108,7 @@ describe("saveMenu (M-07, FE-02, FE-03)", () => {
   });
 });
 
-describe("adjustQuota (M-05, FE-03)", () => {
+describe("adjustQuota", () => {
   it("PATCH /menus/3/quota dengan body apa adanya", async () => {
     await adjustQuota(3, { quota_today: 7 });
     expect(merchantFetch.mock.calls[0][0]).toBe("/menus/3/quota");
@@ -160,7 +160,7 @@ describe("id bukan bilangan bulat positif ditolak sebelum membangun path", () =>
   });
 });
 
-describe("setMenuActive (M-07)", () => {
+describe("setMenuActive", () => {
   it("PATCH /menus/3 body { is_active }", async () => {
     await setMenuActive(3, false);
     expect(merchantFetch.mock.calls[0][0]).toBe("/menus/3");
@@ -175,7 +175,7 @@ describe("setMenuActive (M-07)", () => {
   });
 });
 
-describe("requestUpload (M-07, M-10, FE-08)", () => {
+describe("requestUpload", () => {
   const file = { purpose: "menu" as const, content_type: "image/png", size: 10 };
   it("POST /uploads dengan body apa adanya; data backend diteruskan", async () => {
     merchantFetch.mockResolvedValue({
@@ -199,7 +199,7 @@ describe("requestUpload (M-07, M-10, FE-08)", () => {
       error: { code: "SERVICE_UNAVAILABLE", message: "Unggah foto belum tersedia. Coba lagi nanti." },
     });
   });
-  it("gagal-aksi -> error tanpa memanggil server (MF-E3)", async () => {
+  it("gagal-aksi -> error tanpa memanggil server", async () => {
     setScenario("gagal-aksi");
     expect("error" in (await requestUpload(file))).toBe(true);
     expect(merchantFetch).not.toHaveBeenCalled();

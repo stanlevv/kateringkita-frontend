@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ChatWaLink } from "./OrderActionParts";
 
-describe("M-04, M-11 ChatWaLink", () => {
+describe("ChatWaLink", () => {
   it("menuju route handler dengan kode ter-encode, tab baru, ≥ 44 px", () => {
     render(<ChatWaLink code="KK/1 ?#" />);
     const link = screen.getByRole("link", { name: /Chat WA/ });

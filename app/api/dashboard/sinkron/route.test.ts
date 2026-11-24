@@ -20,7 +20,7 @@ beforeEach(() => {
   getMenus.mockReset().mockResolvedValue({ data: [{ id: 1 }] });
 });
 
-describe("D3 GET /api/dashboard/sinkron (M-04)", () => {
+describe("GET /api/dashboard/sinkron", () => {
   it.each(["", "?sejak=kemarin", "?sejak=2026-11-01T03:00:00"])(
     "sejak tidak valid (%s) -> 400 tanpa fetch",
     async (query) => {

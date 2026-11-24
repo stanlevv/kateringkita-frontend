@@ -5,7 +5,7 @@ import type { Transaction } from "@/types/report";
 
 const TODAY = "2026-10-31";
 
-describe("LP-E1 validateRange", () => {
+describe("validateRange", () => {
   it("rentang sah -> null", () => {
     expect(validateRange("2026-10-25", "2026-10-31", TODAY)).toBeNull();
     expect(validateRange("2026-10-31", "2026-10-31", TODAY)).toBeNull();
@@ -26,7 +26,7 @@ describe("LP-E1 validateRange", () => {
   });
 });
 
-describe("LP-N1 parseRange", () => {
+describe("parseRange", () => {
   it("tanpa parameter -> hari ini", () => {
     expect(parseRange(undefined, undefined, TODAY)).toEqual({ from: TODAY, to: TODAY, error: null });
   });
@@ -37,7 +37,7 @@ describe("LP-N1 parseRange", () => {
       error: null,
     });
   });
-  it("tidak sah -> hari ini + pesan galat (LP-E1)", () => {
+  it("tidak sah -> hari ini + pesan galat", () => {
     expect(parseRange("2026-10-31", "2026-10-01", TODAY)).toEqual({
       from: TODAY,
       to: TODAY,
@@ -72,7 +72,7 @@ const makeTransaction = (overrides: Partial<Transaction> = {}): Transaction => (
   ...overrides,
 });
 
-describe("LP-N4 createTransactionsCsv", () => {
+describe("createTransactionsCsv", () => {
   it("header & satu baris (waktu WIB, laba = omzet - HPP)", () => {
     const [header, row] = createTransactionsCsv([makeTransaction()]).trim().split("\r\n");
     expect(header).toBe("kode,waktu,menu,qty,omzet,hpp,laba,metode");
@@ -99,7 +99,7 @@ describe("LP-N4 createTransactionsCsv", () => {
   });
 });
 
-describe("LP-N2 groupByHour", () => {
+describe("groupByHour", () => {
   it("menjumlah per jam WIB, urut jam", () => {
     const result = groupByHour([
       makeTransaction({ code: "A", completed_at: "2026-10-31T04:10:00.000Z", total: 10000, qty: 1 }),

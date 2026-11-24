@@ -41,7 +41,7 @@ describe("getScenario", () => {
   });
 });
 
-describe("D12 skenario gagal-sinkron", () => {
+describe("skenario gagal-sinkron", () => {
   it("terdaftar dengan label tanpa istilah teknis", () => {
     const scenario = SCENARIOS.find((item) => item.id === "gagal-sinkron");
     expect(scenario?.label).toBe("Gagal menyegarkan");

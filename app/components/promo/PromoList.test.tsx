@@ -32,8 +32,8 @@ beforeEach(() => {
   savePromo.mockReset();
 });
 
-describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
-  it("PR-N1 kartu: kode, jenis, terpakai, status dengan teks", () => {
+describe("PromoList", () => {
+  it("kartu: kode, jenis, terpakai, status dengan teks", () => {
     renderList();
     const card = screen.getByRole("article", { name: "HEMAT10" });
     expect(within(card).getByText("Diskon 10% maks Rp 10.000")).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
     expect(screen.getAllByText("Tersembunyi")).toHaveLength(1);
   });
 
-  it("PR-S1 kosong", () => {
+  it("kosong", () => {
     renderList([]);
     expect(screen.getByText("Belum ada promo")).toBeInTheDocument();
     expect(screen.getByText("Buat kode promo untuk menarik pembeli")).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
     expect(screen.getByRole("button", { name: "Coba lagi" })).toBeInTheDocument();
   });
 
-  it("PR-N3 hapus hanya bila belum dipakai; yang dipakai diberi saran nonaktifkan", () => {
+  it("hapus hanya bila belum dipakai; yang dipakai diberi saran nonaktifkan", () => {
     renderList();
     expect(screen.queryByRole("button", { name: "Hapus HEMAT10" })).toBeNull();
     expect(
@@ -107,7 +107,7 @@ describe("PromoList (PR-N1, PR-N3, PR-S1)", () => {
     expect(within(screen.getByRole("article", { name: "HEMAT10" })).getByText("Aktif")).toBeInTheDocument();
   });
 
-  it("PR-N2 promo baru muncul di atas setelah simpan", async () => {
+  it("promo baru muncul di atas setelah simpan", async () => {
     savePromo.mockResolvedValue({ data: { ...allPromos[0], id: 9, code: "BARU10", used_count: 0 } });
     renderList();
     await userEvent.click(screen.getByRole("button", { name: "Buat promo" }));

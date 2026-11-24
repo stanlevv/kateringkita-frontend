@@ -10,7 +10,7 @@ const typeInto = async (label: string | RegExp, text: string, i = 0) => {
   if (text) await userEvent.type(field, text);
 };
 
-describe("HppCalculator (HP-N1, HP-N2, HP-E1)", () => {
+describe("HppCalculator", () => {
   it("hasil langsung dan tautan Pakai untuk menu", async () => {
     render(<HppCalculator />);
     await typeInto(/Biaya/, "50000");
@@ -27,7 +27,7 @@ describe("HppCalculator (HP-N1, HP-N2, HP-E1)", () => {
     );
   });
 
-  it("HP-E1 margin 95 dan biaya 0 -> error per field, tanpa hasil", async () => {
+  it("margin 95 dan biaya 0 -> error per field, tanpa hasil", async () => {
     render(<HppCalculator />);
     await typeInto(/Biaya/, "0");
     await typeInto(/Porsi/, "1");

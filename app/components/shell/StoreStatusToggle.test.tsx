@@ -24,7 +24,7 @@ beforeEach(() => {
   refresh.mockReset();
 });
 
-describe("SH-N3 / SH-E1 status dapur", () => {
+describe("status dapur", () => {
   it("Buka -> Tutup membuka dialog; batal tetap Buka", async () => {
     renderWithStore(<StoreStatusToggle />);
     await userEvent.click(kitchenSwitch());
@@ -42,7 +42,7 @@ describe("SH-N3 / SH-E1 status dapur", () => {
     expect(setStoreOpen).toHaveBeenCalledWith(false);
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
   });
-  it("SH-E1 aksi gagal -> kembali Buka + toast error, tanpa refresh", async () => {
+  it("aksi gagal -> kembali Buka + toast error, tanpa refresh", async () => {
     setStoreOpen.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Gagal." } });
     renderWithStore(
       <>
@@ -58,7 +58,7 @@ describe("SH-N3 / SH-E1 status dapur", () => {
     expect(kitchenSwitch()).toHaveAttribute("aria-checked", "true");
     expect(refresh).not.toHaveBeenCalled();
   });
-  it("SH-E1 aksi melempar (jaringan putus) -> kembali Tutup, saklar aktif lagi, toast", async () => {
+  it("aksi melempar (jaringan putus) -> kembali Tutup, saklar aktif lagi, toast", async () => {
     setStoreOpen.mockRejectedValue(new Error("Failed to fetch"));
     renderWithStore(
       <>
@@ -90,7 +90,7 @@ describe("SH-N3 / SH-E1 status dapur", () => {
     finishRequest({ data: { is_open: true } });
     await waitFor(() => expect(kitchenSwitch()).not.toBeDisabled());
   });
-  it("SH-A1 saklar menyala tapi di luar jam buka: status Tutup seperti yang dilihat pembeli", async () => {
+  it("saklar menyala tapi di luar jam buka: status Tutup seperti yang dilihat pembeli", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-30T22:30:00Z")); // 05.30 WIB
     renderWithStore(<StoreStatusToggle />);
@@ -111,7 +111,7 @@ describe("SH-N3 / SH-E1 status dapur", () => {
   });
 });
 
-describe("SH-A2 sinkron sidebar dan drawer", () => {
+describe("sinkron sidebar dan drawer", () => {
   it("tutup lewat drawer, tutup drawer, buka ulang -> tetap Tutup", async () => {
     setStoreOpen.mockResolvedValue({ data: { is_open: false } });
     renderWithStore(<MobileNav store={INFO} badge={0} />);

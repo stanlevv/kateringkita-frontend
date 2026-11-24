@@ -9,7 +9,7 @@ import {
   countNeedsAction,
 } from "./shell";
 
-describe("SH-N1 mode sidebar dari cookie", () => {
+describe("mode sidebar dari cookie", () => {
   it("hanya 'ringkas' yang menciutkan; kosong/asing = lebar", () => {
     expect(parseSidebarMode("ringkas")).toBe("ringkas");
     expect(parseSidebarMode("lebar")).toBe("lebar");
@@ -21,7 +21,7 @@ describe("SH-N1 mode sidebar dari cookie", () => {
 // 2026-10-31 04:42Z = 11.42 WIB (Sabtu)
 const MIDDAY = Date.parse("2026-10-31T04:42:00Z");
 
-describe("SH-N1 badge perlu tindakan", () => {
+describe("badge perlu tindakan", () => {
   it("menghitung holding dan confirmed saja", () => {
     const orders = ["holding", "confirmed", "cooking", "ready", "completed", "holding"].map((status) => ({
       status,
@@ -31,7 +31,7 @@ describe("SH-N1 badge perlu tindakan", () => {
     expect(countNeedsAction(orders as never)).toBe(3);
     expect(countNeedsAction([])).toBe(0);
   });
-  it("F26: VA/online belum lunas tidak dihitung (diterima otomatis setelah lunas)", () => {
+  it("VA/online belum lunas tidak dihitung (diterima otomatis setelah lunas)", () => {
     const makeOrder = (payment_method: string, payment_status: string) => ({
       status: "holding",
       payment_method,
@@ -42,7 +42,7 @@ describe("SH-N1 badge perlu tindakan", () => {
   });
 });
 
-describe("SH-A1 di luar jam buka", () => {
+describe("di luar jam buka", () => {
   it("di dalam rentang -> false", () => expect(isOutsideOpenHours(MIDDAY, "07:00", "16:00")).toBe(false));
   it("sebelum buka -> true", () =>
     expect(isOutsideOpenHours(Date.parse("2026-10-30T22:30:00Z"), "07:00", "16:00")).toBe(true)); // 05.30 WIB
@@ -59,7 +59,7 @@ describe("SH-A1 di luar jam buka", () => {
   it("label", () => expect(openHoursLabel("07:00", "16:00")).toBe("07.00–16.00"));
 });
 
-describe("SH-N2 jam & inisial", () => {
+describe("jam & inisial", () => {
   it("format hari jam WIB", () => expect(formatDayTime(MIDDAY)).toBe("Sab, 31 Okt · 11.42 WIB"));
   it("inisial", () => {
     expect(initials("Rohan Rifqi")).toBe("RR");

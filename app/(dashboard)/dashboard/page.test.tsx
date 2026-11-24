@@ -84,7 +84,7 @@ describe("Dashboard berisi (brief §3)", () => {
     expect(tab).toHaveTextContent("4"); // VA belum lunas tidak dihitung
     expect(kpi("Perlu tindakan")).toHaveTextContent("4");
   });
-  it("D2: KPI dihitung dari antrean & kuota nyata, bukan data contoh", async () => {
+  it("KPI dihitung dari antrean & kuota nyata, bukan data contoh", async () => {
     await renderPage(null);
     const today = wibDate(new Date().toISOString());
     const revenue = fixtureOrders()
@@ -120,7 +120,7 @@ describe("Dashboard berisi (brief §3)", () => {
 });
 
 describe("state brief §6 per skenario", () => {
-  it("DB-S2 kosong -> antrean kosong + Atur kuota", async () => {
+  it("kosong -> antrean kosong + Atur kuota", async () => {
     await renderPage("kosong");
     expect(screen.getByText("Belum ada pesanan")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Atur kuota" })).toBeInTheDocument();
@@ -129,13 +129,13 @@ describe("state brief §6 per skenario", () => {
     expect(kpi("Rata-rata siap")).toHaveTextContent("—");
     expect(screen.getByText("Belum ada penjualan hari ini.")).toBeInTheDocument();
   });
-  it("G-1 gagal-muat -> pesan + Coba lagi memuat ulang", async () => {
+  it("gagal-muat -> pesan + Coba lagi memuat ulang", async () => {
     await renderPage("gagal-muat");
     expect(screen.getByText("Data dashboard belum bisa dimuat")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Coba lagi" }));
     expect(refresh).toHaveBeenCalled();
   });
-  it("DB-S5 dapur-tutup -> banner + Buka sekarang memakai status dapur bersama", async () => {
+  it("dapur-tutup -> banner + Buka sekarang memakai status dapur bersama", async () => {
     setStoreOpen.mockResolvedValue({ data: { is_open: true } });
     await renderPage("dapur-tutup");
     expect(screen.getByText("Dapur tutup — pembeli tidak bisa memesan")).toBeInTheDocument();
@@ -144,12 +144,12 @@ describe("state brief §6 per skenario", () => {
     expect(setStoreOpen).toHaveBeenCalledWith(true);
     await waitFor(() => expect(screen.queryByText("Dapur tutup — pembeli tidak bisa memesan")).toBeNull());
   });
-  it("DB-S6 luar-jam -> banner jam buka + tautan Pengaturan", async () => {
+  it("luar-jam -> banner jam buka + tautan Pengaturan", async () => {
     await renderPage("luar-jam");
     expect(screen.getByText(/Di luar jam buka \(\d\d\.\d\d–\d\d\.\d\d\)/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ubah jam buka" })).toHaveAttribute("href", "/pengaturan");
   });
-  it("DB-A5 penjual-baru -> Siapkan toko dengan centang otomatis", async () => {
+  it("penjual-baru -> Siapkan toko dengan centang otomatis", async () => {
     await renderPage("penjual-baru");
     const card = screen.getByRole("region", { name: "Siapkan toko" });
     expect(within(card).getByRole("link", { name: /Lengkapi pengaturan/ })).toHaveAttribute(
@@ -168,7 +168,7 @@ describe("state brief §6 per skenario", () => {
         .closest("li"),
     ).toHaveAttribute("data-selesai", "false");
   });
-  it("DB-A3 pesanan-baru -> kartu disorot di atas + judul tab (jendela tidak difokus) sampai difokus", async () => {
+  it("pesanan-baru -> kartu disorot di atas + judul tab (jendela tidak difokus) sampai difokus", async () => {
     vi.spyOn(document, "hasFocus").mockReturnValue(false);
     await renderPage("pesanan-baru");
     expect(screen.getAllByRole("article")[0]).toHaveTextContent("KK-20261031-S6ZA");
@@ -180,13 +180,13 @@ describe("state brief §6 per skenario", () => {
     });
     expect(document.title).toBe("Dashboard · KateringKita");
   });
-  it("DB-A3 jendela sedang difokus -> sorot tanpa mengubah judul tab", async () => {
+  it("jendela sedang difokus -> sorot tanpa mengubah judul tab", async () => {
     vi.spyOn(document, "hasFocus").mockReturnValue(true);
     await renderPage("pesanan-baru");
     expect(screen.getByText("KK-20261031-S6ZA").closest("article")).toHaveAttribute("data-baru", "true");
     expect(document.title).toBe("Dashboard · KateringKita");
   });
-  it("DB-E5 offline -> banner Koneksi terputus, aksi tetap ada", async () => {
+  it("offline -> banner Koneksi terputus, aksi tetap ada", async () => {
     await renderPage(null);
     vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     act(() => {

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { safeNext } from "./safe-next";
 
-describe("LG-N1 next aman (Review Focus 4)", () => {
+describe("next aman", () => {
   it("path internal lolos", () => expect(safeNext("/menu?q=a")).toBe("/menu?q=a"));
   it.each([
     "https://evil.com",

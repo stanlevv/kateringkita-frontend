@@ -4,7 +4,7 @@ import { menus } from "./fixtures/menus";
 import { reviews } from "./fixtures/reviews";
 import { LIMIT_REVIEWS, summarizeByMenu, summarizeReviews, maskName, filterReviews } from "./review";
 
-describe("maskName (R-09)", () => {
+describe("maskName", () => {
   it("dua huruf pertama + ***", () => {
     expect(maskName("Rafli R.")).toBe("Ra***");
     expect(maskName("  budi ")).toBe("bu***");
@@ -13,7 +13,7 @@ describe("maskName (R-09)", () => {
   });
 });
 
-describe("summarizeReviews (UL-N1)", () => {
+describe("summarizeReviews", () => {
   it("sebaran 5 sampai 1 berjumlah total; rata-rata 1 desimal", () => {
     const reviewList = reviews();
     const summary = summarizeReviews(reviewList);
@@ -29,7 +29,7 @@ describe("summarizeReviews (UL-N1)", () => {
   });
 });
 
-describe("summarizeByMenu (UL-N2)", () => {
+describe("summarizeByMenu", () => {
   it("menu tanpa ulasan tetap tampil dengan jumlah 0", () => {
     const reviewList = reviews();
     const result = summarizeByMenu(
@@ -45,7 +45,7 @@ describe("summarizeByMenu (UL-N2)", () => {
   });
 });
 
-describe("filterReviews (UL-N2, UL-N3)", () => {
+describe("filterReviews", () => {
   const reviewList = reviews();
   it("menyaring per menu dan bintang, terbaru dulu", () => {
     const id = reviewList[0].menu_id;

@@ -59,7 +59,7 @@ describe("saveCustomerServiceContact", () => {
   });
 });
 
-describe("saveMaintenance (F27)", () => {
+describe("saveMaintenance", () => {
   it("PUT /admin/settings/maintenance dengan pesan dirapikan; pesan >200 ditolak tanpa API", async () => {
     adminFetch.mockResolvedValue({
       ok: true,

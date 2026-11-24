@@ -13,7 +13,7 @@ const SUMMARY = {
   bestSeller: null,
 };
 
-describe("KpiRow (M-04, D2)", () => {
+describe("KpiRow", () => {
   it("angka dari ringkasan; tanpa teks vs kemarin", () => {
     render(<KpiRow summary={SUMMARY} />);
     expect(kpi("Omzet hari ini")).toHaveTextContent("Rp 125.000");

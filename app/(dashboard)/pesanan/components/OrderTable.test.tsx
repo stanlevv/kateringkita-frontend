@@ -29,7 +29,7 @@ beforeEach(() => {
   params = new URLSearchParams();
 });
 
-describe("PS-N1 tabel", () => {
+describe("tabel", () => {
   it("kolom dan baris dari server; item ringkas", () => {
     renderTable();
     for (const header of ["Kode", "Waktu", "Pemesan", "Item", "Total", "Pembayaran", "Status"])
@@ -49,7 +49,7 @@ describe("PS-N1 tabel", () => {
   });
 });
 
-describe("PS-N1/N3 filter dan halaman di URL", () => {
+describe("filter dan halaman di URL", () => {
   it("ganti status menulis ?status= dan mengembalikan halaman ke 1", async () => {
     params = new URLSearchParams("page=2");
     renderTable();
@@ -87,7 +87,7 @@ describe("PS-N1/N3 filter dan halaman di URL", () => {
   });
 });
 
-describe("PS-S1 state", () => {
+describe("state", () => {
   it("hari ini belum ada pesanan", () => {
     renderTable([], false, 0);
     expect(screen.getByText("Belum ada pesanan hari ini")).toBeInTheDocument();

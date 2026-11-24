@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { config, proxy } from "./proxy";
 
-describe("G-10 proxy", () => {
+describe("proxy", () => {
   it("tanpa sesi -> /login?next= berisi path + query", () => {
     const response = proxy(new NextRequest("http://localhost:3000/menu?q=a"));
     expect(response.status).toBe(307);

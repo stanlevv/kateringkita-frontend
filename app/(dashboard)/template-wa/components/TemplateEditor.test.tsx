@@ -32,7 +32,7 @@ beforeEach(() => {
   saveProfile.mockResolvedValue({ data: {} });
 });
 
-describe("WA-N1 chip placeholder", () => {
+describe("chip placeholder", () => {
   it("menyisipkan di posisi kursor dan kursor tetap setelah sisipan", async () => {
     renderEditor("AB");
     const textarea = editor();
@@ -53,7 +53,7 @@ describe("WA-N1 chip placeholder", () => {
   });
 });
 
-describe("WA-N2 pratinjau langsung", () => {
+describe("pratinjau langsung", () => {
   it("terisi dengan pesanan contoh dan ikut berubah saat mengetik", async () => {
     renderEditor("Halo {nama}");
     const preview = screen.getByRole("region", { name: "Pratinjau pesan" });
@@ -72,7 +72,7 @@ describe("WA-N2 pratinjau langsung", () => {
   });
 });
 
-describe("WA-E1/E2 galat", () => {
+describe("galat", () => {
   it("kata kunci tak dikenal -> pesan dan simpan dicegah", async () => {
     renderEditor("Halo {harga}");
     await userEvent.type(editor(), " {{kode}");
@@ -92,7 +92,7 @@ describe("WA-E1/E2 galat", () => {
   });
 });
 
-describe("WA-A1 kembalikan ke bawaan", () => {
+describe("kembalikan ke bawaan", () => {
   it("lewat dialog; setelahnya templat bawaan dan belum tersimpan", async () => {
     renderEditor("Halo {nama}");
     await userEvent.click(screen.getByRole("button", { name: "Kembalikan ke bawaan" }));
@@ -109,7 +109,7 @@ describe("WA-A1 kembalikan ke bawaan", () => {
   });
 });
 
-describe("WA-N3 simpan & G-5", () => {
+describe("simpan & penjaga perubahan", () => {
   it("tombol simpan hanya saat berubah; simpan mengirim wa_template saja; toast", async () => {
     renderEditor("Halo");
     expect(saveButton()).not.toBeInTheDocument();

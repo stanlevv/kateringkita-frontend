@@ -26,7 +26,7 @@ beforeEach(() => {
   requireMerchant.mockClear();
 });
 
-describe("orderAction (M-04, M-08, D15)", () => {
+describe("orderAction", () => {
   it("wajib sesi: requireMerchant dipanggil", async () => {
     await orderAction(ORDER_CODE, "confirm");
     expect(requireMerchant).toHaveBeenCalledOnce();
@@ -82,19 +82,19 @@ describe("orderAction (M-04, M-08, D15)", () => {
     });
     expect(await orderAction("KK-X", "cook")).toMatchObject({ error: { code: "NOT_FOUND" } });
   });
-  it("DB-E1 skenario gagal-aksi -> INTERNAL_ERROR tanpa fetch", async () => {
+  it("skenario gagal-aksi -> INTERNAL_ERROR tanpa fetch", async () => {
     getScenario.mockResolvedValue("gagal-aksi");
     const result = await orderAction(ORDER_CODE, "confirm");
     expect("error" in result && result.error.code).toBe("INTERNAL_ERROR");
     expect(merchantFetch).not.toHaveBeenCalled();
   });
-  it("DB-E2 skenario status-berubah -> CONFLICT tanpa fetch", async () => {
+  it("skenario status-berubah -> CONFLICT tanpa fetch", async () => {
     getScenario.mockResolvedValue("status-berubah");
     const result = await orderAction(ORDER_CODE, "confirm");
     expect("error" in result && result.error.code).toBe("CONFLICT");
     expect(merchantFetch).not.toHaveBeenCalled();
   });
-  it("DB-E3 skenario stok-bentrok hanya untuk konfirmasi -> OUT_OF_STOCK", async () => {
+  it("skenario stok-bentrok hanya untuk konfirmasi -> OUT_OF_STOCK", async () => {
     getScenario.mockResolvedValue("stok-bentrok");
     const result = await orderAction(ORDER_CODE, "confirm");
     expect("error" in result && result.error.code).toBe("OUT_OF_STOCK");

@@ -11,7 +11,7 @@ const base = {
 } as MerchantOrder;
 const makeOrder = (overrides: Partial<MerchantOrder>): MerchantOrder => ({ ...base, ...overrides });
 
-describe("F21 pesanan meja diantar ke meja, bukan diambil", () => {
+describe("pesanan meja diantar ke meja, bukan diambil", () => {
   const withTable = { table: { id: 1, label: "5" } };
   it("dimasak: tombol utama 'Siap diantar'; siap: label 'Siap diantar'; toast 'siap diantar'", () => {
     expect(orderStatusView(makeOrder({ status: "cooking", ...withTable })).primaryLabel).toBe("Siap diantar");
@@ -33,7 +33,7 @@ describe("nextStatus", () => {
   it("holding+qris belum bayar confirm -> CONFLICT", () => {
     expect(nextStatus(makeOrder({ payment_method: "qris" }), "confirm")).toEqual({ error: "CONFLICT" });
   });
-  it("F26 VA/online belum lunas: konfirmasi ditolak (lunas diterima otomatis oleh Midtrans)", () => {
+  it("VA/online belum lunas: konfirmasi ditolak (lunas diterima otomatis oleh Midtrans)", () => {
     for (const payment_method of ["va", "online"] as const)
       expect(nextStatus(makeOrder({ payment_method }), "confirm")).toEqual({ error: "CONFLICT" });
     expect(nextStatus(makeOrder({ payment_method: "online", payment_status: "paid" }), "confirm")).toMatchObject({
@@ -94,7 +94,7 @@ describe("peta status (brief v3 sec 4)", () => {
       "Kadaluarsa",
     ]);
   });
-  it("F26 menunggu bayar: tanpa tombol utama, keterangan diterima otomatis", () => {
+  it("menunggu bayar: tanpa tombol utama, keterangan diterima otomatis", () => {
     expect(statusView["menunggu-bayar"].hint).toBe("Diterima otomatis setelah lunas");
   });
   it("ada 8 tampilan", () => {

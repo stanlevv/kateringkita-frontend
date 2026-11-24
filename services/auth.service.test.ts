@@ -16,7 +16,7 @@ const asRole = (role: string) => {
   me = { status: 200, ok: true, data: { user: { role }, merchant: null } };
 };
 
-describe("G-10 requireMerchant", () => {
+describe("requireMerchant", () => {
   it("sesi habis -> alasan=sesi-habis", async () => {
     me = { status: 401, ok: false };
     const { requireMerchant } = await import("./auth.service");
@@ -39,7 +39,7 @@ describe("G-10 requireMerchant", () => {
   });
 });
 
-describe("F18 requireAdmin", () => {
+describe("requireAdmin", () => {
   it("sesi habis -> alasan=sesi-habis", async () => {
     me = { status: 401, ok: false };
     const { requireAdmin } = await import("./auth.service");

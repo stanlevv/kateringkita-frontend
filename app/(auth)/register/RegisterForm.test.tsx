@@ -46,21 +46,21 @@ describe("register", () => {
     expect(screen.getAllByText("Data usaha").length).toBeGreaterThan(0);
   });
 
-  it("RG-E1 langkah 1 tidak lanjut bila no WA 0712…", async () => {
+  it("langkah 1 tidak lanjut bila no WA 0712…", async () => {
     render(<RegisterForm types={types} typesFailed={false} />);
     await fillOwnerStep("071234567890");
     expect(screen.queryByLabelText(/Nama usaha/)).not.toBeInTheDocument();
     expect(screen.getAllByText("Nomor WA harus diawali 08 dan 10–13 digit.").length).toBeGreaterThan(0);
   });
 
-  it("RG-A1 Kembali mempertahankan isian", async () => {
+  it("Kembali mempertahankan isian", async () => {
     render(<RegisterForm types={types} typesFailed={false} />);
     await fillOwnerStep();
     await click("Kembali");
     expect((screen.getByLabelText(/Nomor WA/) as HTMLInputElement).value).toBe("081234567890");
   });
 
-  it("RG-E2 409 dengan fields.phone -> kembali ke langkah 1 + tautan Masuk", async () => {
+  it("409 dengan fields.phone -> kembali ke langkah 1 + tautan Masuk", async () => {
     registerMerchant.mockResolvedValue({
       code: "CONFLICT",
       error: "x",
@@ -77,7 +77,7 @@ describe("register", () => {
     expect(screen.getAllByRole("link", { name: "Masuk" }).length).toBeGreaterThanOrEqual(2);
   });
 
-  it("RG-E4 jaringan gagal -> banner, isian tetap", async () => {
+  it("jaringan gagal -> banner, isian tetap", async () => {
     registerMerchant.mockResolvedValue({ code: "NETWORK", error: "x" });
     render(<RegisterForm types={types} typesFailed={false} />);
     await fillOwnerStep();
@@ -87,7 +87,7 @@ describe("register", () => {
     expect((screen.getByLabelText(/Nama usaha/) as HTMLInputElement).value).toBe("Dapur Budi");
   });
 
-  it("RG-E2 409 polos tanpa fields -> kalimat tetap di field no WA", async () => {
+  it("409 polos tanpa fields -> kalimat tetap di field no WA", async () => {
     registerMerchant.mockResolvedValue({ code: "CONFLICT", error: "Data sudah terdaftar." });
     render(<RegisterForm types={types} typesFailed={false} />);
     await fillOwnerStep();
@@ -121,7 +121,7 @@ describe("register", () => {
     expect(screen.getByRole("heading", { name: "Akun berhasil dibuat" })).toHaveFocus();
   });
 
-  it("RG-N1 sukses -> layar Berhasil tanpa login otomatis", async () => {
+  it("sukses -> layar Berhasil tanpa login otomatis", async () => {
     registerMerchant.mockResolvedValue({ ok: true });
     render(<RegisterForm types={types} typesFailed={false} />);
     await fillOwnerStep();
@@ -134,7 +134,7 @@ describe("register", () => {
   });
 });
 
-describe("RG-E3", () => {
+describe("jenis usaha gagal dimuat", () => {
   it("jenis usaha gagal dimuat di langkah 2", async () => {
     render(<RegisterForm types={[]} typesFailed />);
     await fillOwnerStep();

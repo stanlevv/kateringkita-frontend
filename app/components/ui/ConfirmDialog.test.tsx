@@ -31,7 +31,7 @@ function TestDialog({
   );
 }
 
-describe("ConfirmDialog (G-4)", () => {
+describe("ConfirmDialog", () => {
   it("requireReason: konfirmasi nonaktif sampai alasan dipilih; Lainnya wajib teks", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();

@@ -30,7 +30,7 @@ beforeEach(() => {
   getTransactions.mockResolvedValue({ data: [row] });
 });
 
-describe("LP-N4 rute CSV", () => {
+describe("rute CSV", () => {
   it("text/csv, header kolom, nama file laporan-<dari>-<sampai>.csv", async () => {
     const response = await callRoute(`?dari=${today}&sampai=${today}`);
     expect(response.status).toBe(200);
@@ -50,7 +50,7 @@ describe("LP-N4 rute CSV", () => {
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ message: "Dari server" });
   });
-  it("LP-E1 rentang tidak sah -> 400 dengan pesan Indonesia", async () => {
+  it("rentang tidak sah -> 400 dengan pesan Indonesia", async () => {
     const response = await callRoute(`?dari=${today}&sampai=2020-01-01`);
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ message: "Tanggal akhir harus setelah tanggal awal." });

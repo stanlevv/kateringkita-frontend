@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { validateHpp, calculateHpp } from "./hpp";
 
-describe("calculateHpp (HP-N1)", () => {
+describe("calculateHpp", () => {
   it("contoh plan: 7000 / 0,6 dibulatkan ke atas Rp 500", () => {
     const ingredients = [
       { name: "Ayam", cost: 50000, portions: 10 },
@@ -21,7 +21,7 @@ describe("calculateHpp (HP-N1)", () => {
   });
 });
 
-describe("validateHpp (HP-E1)", () => {
+describe("validateHpp", () => {
   const ok = [{ name: "", cost: 1000, portions: 1 }];
   it("margin di luar 0-90", () => {
     expect(validateHpp(ok, 95).margin).toBe("Target margin 0–90%.");

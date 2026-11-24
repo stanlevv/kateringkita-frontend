@@ -88,13 +88,13 @@ describe("services", () => {
     expect(await getCategories()).toEqual({ data: categories() });
     expect(apiFetch).toHaveBeenCalledWith("/meta/categories");
   });
-  it("F13 getReviews: GET /merchant/reviews", async () => {
+  it("getReviews: GET /merchant/reviews", async () => {
     set();
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [] });
     expect(await getReviews()).toEqual({ data: [] });
     expect(merchantFetch).toHaveBeenCalledWith("/reviews");
   });
-  it("F12 getPromos: GET /merchant/promos", async () => {
+  it("getPromos: GET /merchant/promos", async () => {
     set();
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: [] });
     expect(await getPromos()).toEqual({ data: [] });
@@ -223,7 +223,7 @@ describe("services", () => {
     merchantFetch.mockResolvedValue({ ok: false, status: 500, error: { code: "X", message: "x" } });
     expect(await getNeedsActionCount()).toBe(0);
   });
-  it("getOrder (PS-E1): GET /orders/:code, NOT_FOUND dan gagal-muat", async () => {
+  it("getOrder: GET /orders/:code, NOT_FOUND dan gagal-muat", async () => {
     set();
     expect(await getOrder("KK-20261031-7QF2")).toMatchObject({ data: { code: "KK-20261031-7QF2" } });
     expect(merchantFetch).toHaveBeenCalledWith("/orders/KK-20261031-7QF2");
@@ -237,7 +237,7 @@ describe("services", () => {
   });
 });
 
-describe("D4 getChangedOrders (M-04)", () => {
+describe("getChangedOrders", () => {
   const SINCE = "2026-11-01T03:00:00.000Z";
   const makeRows = (count: number, updatedAt: string, codePrefix = "K") =>
     Array.from({ length: count }, (_, i) => ({
@@ -308,7 +308,7 @@ describe("D4 getChangedOrders (M-04)", () => {
   });
 });
 
-describe("D11 laporan memakai API (M-09, FE-09)", () => {
+describe("laporan memakai API", () => {
   const RANGE = { from: "2026-10-25", to: "2026-10-31" };
   const summary = {
     target: 3_500_000,
@@ -367,7 +367,7 @@ describe("D11 laporan memakai API (M-09, FE-09)", () => {
       expect(await load()).toEqual(ERR);
     expect(merchantFetch).not.toHaveBeenCalled();
   });
-  it.each(["kosong", "penjual-baru"])("%s -> nol dan [] tanpa memanggil API (LP-S1)", async (scenario) => {
+  it.each(["kosong", "penjual-baru"])("%s -> nol dan [] tanpa memanggil API", async (scenario) => {
     set(scenario);
     merchantFetch.mockClear();
     expect(await getReportSummary(RANGE)).toEqual({
@@ -379,7 +379,7 @@ describe("D11 laporan memakai API (M-09, FE-09)", () => {
   });
 });
 
-describe("D2 data contoh dashboard dihapus (DS-10)", () => {
+describe("data contoh dashboard dihapus", () => {
   it("tidak ada getDashboard / DashboardSummary / omzetHariIni di fe", async () => {
     const { existsSync, readdirSync, readFileSync, statSync } = await import("node:fs");
     const { join } = await import("node:path");

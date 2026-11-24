@@ -33,7 +33,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("D9 / review 8: hanya holding baru hari ini (WIB) yang dianggap pesanan baru", () => {
+describe("hanya holding baru hari ini (WIB) yang dianggap pesanan baru", () => {
   it("kode baru berstatus selain holding atau dibuat kemarin (WIB) tidak disorot/diumumkan", () => {
     const { result, rerender } = mountHook();
     rerender({
@@ -67,7 +67,7 @@ describe("review A/C: pesanan dibayar & jam server", () => {
     });
     expect(result.current.newOrderCodes).toEqual(["LUNAS"]);
   });
-  it("F26: VA/online belum lunas tidak disorot; disorot saat lunas & diterima otomatis", () => {
+  it("VA/online belum lunas tidak disorot; disorot saat lunas & diterima otomatis", () => {
     const { result, rerender } = mountHook();
     const unpaidOrder = buildOrder("VA", {
       payment_method: "va",
@@ -98,7 +98,7 @@ describe("review A/C: pesanan dibayar & jam server", () => {
   });
 });
 
-describe("D9 / review 10: pengumuman berulang tetap terbaca", () => {
+describe("pengumuman berulang tetap terbaca", () => {
   it("dua gelombang '1 pesanan baru masuk' berturut-turut menghasilkan teks berbeda", () => {
     const { result, rerender } = mountHook();
     const firstWave = [...initialOrders, buildOrder("B1", { created_at: new Date(PAGE_LOADED_AT).toISOString() })];

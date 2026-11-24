@@ -25,7 +25,7 @@ beforeEach(() => {
   push.mockReset();
 });
 
-describe("F11 lupa sandi", () => {
+describe("lupa sandi", () => {
   it("email salah format -> galat, action tidak dipanggil", async () => {
     render(<ForgotPasswordForm />);
     fill(/^Email/, "bukan-email");

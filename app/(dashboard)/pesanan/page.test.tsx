@@ -14,7 +14,7 @@ const openPage = async (query: Record<string, string | string[] | undefined>) =>
   return OrdersPage({ searchParams: Promise.resolve(query) });
 };
 
-describe("PS-N1 halaman daftar pesanan", () => {
+describe("halaman daftar pesanan", () => {
   it("searchParams diteruskan ke getOrders", async () => {
     await openPage({ status: "ready", tanggal: "2026-11-01", q: " rina ", page: "2" });
     expect(getOrders).toHaveBeenLastCalledWith({ status: "ready", date: "2026-11-01", q: "rina", page: 2 });

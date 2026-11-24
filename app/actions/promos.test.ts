@@ -45,7 +45,7 @@ afterEach(() => {
 });
 const sentBody = () => JSON.parse(merchantFetch.mock.calls[0][1].body);
 
-describe("savePromo (M-13, F12)", () => {
+describe("savePromo", () => {
   it("baru -> POST /promos; kode huruf besar; kunci asing dibuang", async () => {
     mockSuccess({ id: 7, ...validPromo, used_count: 0 });
     const result = await savePromo(null, { ...validPromo, code: " baru10 ", used_count: 99, merchant_id: 3 });
@@ -61,7 +61,7 @@ describe("savePromo (M-13, F12)", () => {
     await savePromo(1, validPromo);
     expect(merchantFetch).toHaveBeenCalledWith("/promos/1", expect.objectContaining({ method: "PATCH" }));
   });
-  it("PR-E2 validasi klien: nilai, persen, tanggal, kode, kuota -> tanpa memanggil API", async () => {
+  it("validasi klien: nilai, persen, tanggal, kode, kuota -> tanpa memanggil API", async () => {
     for (const [override, field] of [
       [{ value: 0 }, "value"],
       [{ value: 101 }, "value"],
@@ -79,7 +79,7 @@ describe("savePromo (M-13, F12)", () => {
     await savePromo(null, { ...validPromo, type: "free_service_fee", value: 0, max_discount: 5000 });
     expect(sentBody()).toMatchObject({ value: 0, max_discount: null });
   });
-  it("PR-E1 kode dipakai dari backend diteruskan ke field kode", async () => {
+  it("kode dipakai dari backend diteruskan ke field kode", async () => {
     merchantFetch.mockResolvedValue({
       ok: false,
       status: 409,
@@ -111,7 +111,7 @@ describe("setPromoActive & deletePromo", () => {
     expect(await deletePromo(2)).toEqual({ data: { id: 2 } });
     expect(merchantFetch).toHaveBeenLastCalledWith("/promos/2", { method: "DELETE" });
   });
-  it("PR-N3 promo terpakai: CONFLICT dari backend", async () => {
+  it("promo terpakai: CONFLICT dari backend", async () => {
     merchantFetch.mockResolvedValue({
       ok: false,
       status: 409,

@@ -120,7 +120,7 @@ describe("Stepper (Review Focus 3)", () => {
     fireEvent.click(plus);
     expect(screen.getByRole("spinbutton")).toHaveValue(12);
   });
-  it("AUD-04 memanggil onDelta saat tombol +/- ditekan bila onDelta disediakan", async () => {
+  it("memanggil onDelta saat tombol +/- ditekan bila onDelta disediakan", async () => {
     const onDelta = vi.fn();
     const onChange = vi.fn();
     render(<Stepper label="Kuota" value={10} min={5} onChange={onChange} onDelta={onDelta} />);

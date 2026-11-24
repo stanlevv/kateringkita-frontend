@@ -20,7 +20,7 @@ beforeEach(() => login.mockReset());
 afterEach(() => vi.useRealTimers());
 
 describe("login", () => {
-  it("LG-E1 field kosong -> error per field, action tidak dipanggil", async () => {
+  it("field kosong -> error per field, action tidak dipanggil", async () => {
     render(<LoginForm />);
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
@@ -29,14 +29,14 @@ describe("login", () => {
     expect(login).not.toHaveBeenCalled();
   });
 
-  it("LG-N1 next dikirim sebagai field tersembunyi", async () => {
+  it("next dikirim sebagai field tersembunyi", async () => {
     login.mockResolvedValue(undefined);
     render(<LoginForm next="/menu?q=a" />);
     await submitForm();
     expect((login.mock.calls[0][1] as FormData).get("next")).toBe("/menu?q=a");
   });
 
-  it("LG-E2 kredensial salah -> pesan umum, kata sandi kosong + fokus", async () => {
+  it("kredensial salah -> pesan umum, kata sandi kosong + fokus", async () => {
     login.mockResolvedValue({ code: "UNAUTHENTICATED", error: "x" });
     render(<LoginForm />);
     await submitForm();
@@ -46,7 +46,7 @@ describe("login", () => {
     expect(passwordInput).toHaveFocus();
   });
 
-  it("LG-E3 RATE_LIMITED -> tombol nonaktif dengan hitung mundur 60 dtk", async () => {
+  it("RATE_LIMITED -> tombol nonaktif dengan hitung mundur 60 dtk", async () => {
     vi.useFakeTimers();
     login.mockResolvedValue({ code: "RATE_LIMITED", error: "x" });
     render(<LoginForm />);
@@ -64,7 +64,7 @@ describe("login", () => {
     expect(screen.queryByText(/Terlalu banyak percobaan/)).not.toBeInTheDocument();
   });
 
-  it("LG-E4 NETWORK -> pesan server tidak terjangkau, isian tetap", async () => {
+  it("NETWORK -> pesan server tidak terjangkau, isian tetap", async () => {
     login.mockResolvedValue({ code: "NETWORK", error: "x" });
     render(<LoginForm />);
     await submitForm();
@@ -72,14 +72,14 @@ describe("login", () => {
     expect((screen.getByLabelText(/Email atau nomor WA/) as HTMLInputElement).value).toBe("081234567890");
   });
 
-  it("LG-E5 NOT_MERCHANT -> pesan akun pembeli", async () => {
+  it("NOT_MERCHANT -> pesan akun pembeli", async () => {
     login.mockResolvedValue({ code: "NOT_MERCHANT", error: "x" });
     render(<LoginForm />);
     await submitForm();
     expect(screen.getByText("Akun ini akun pembeli. Gunakan aplikasi KateringKita di ponsel.")).toBeInTheDocument();
   });
 
-  it("LG-A1/A2/E5/daftar banner konteks", () => {
+  it("banner konteks (lanjut, sesi habis, akun pembeli, baru daftar)", () => {
     const { rerender } = render(<LoginForm next="/menu" />);
     expect(screen.getByText("Masuk untuk melanjutkan")).toBeInTheDocument();
     rerender(<LoginForm reason="sesi-habis" />);
@@ -90,7 +90,7 @@ describe("login", () => {
     expect(screen.getByText("Akun berhasil dibuat. Silakan masuk.")).toBeInTheDocument();
   });
 
-  it("LG-A4 tampilkan/sembunyikan kata sandi", () => {
+  it("tampilkan/sembunyikan kata sandi", () => {
     render(<LoginForm />);
     const passwordInput = screen.getByLabelText(/^Kata sandi/);
     const button = screen.getByRole("button", { name: "Tampilkan kata sandi" });

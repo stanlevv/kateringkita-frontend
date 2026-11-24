@@ -13,7 +13,7 @@ import EditMenuPage from "./page";
 
 const renderPage = async (id: string) => render(await EditMenuPage({ params: Promise.resolve({ id }) }));
 
-describe("MF-E5 /menu/[id]", () => {
+describe("/menu/[id]", () => {
   it("id bukan angka -> Menu tidak ditemukan dengan tautan ke katalog", async () => {
     await renderPage("abc");
     expect(screen.getByText("Menu tidak ditemukan")).toBeInTheDocument();

@@ -9,7 +9,7 @@ const baseOrder = orders()[0]; // holding tunai, titik temu
 const renderDialog = (patch: Partial<MerchantOrder>) =>
   render(<RejectDialog order={{ ...baseOrder, ...patch }} onClose={vi.fn()} onConfirm={vi.fn()} />);
 
-describe("RejectDialog (DB-A1, F26)", () => {
+describe("RejectDialog", () => {
   it("tunai: tanpa peringatan dana; alasan titik temu tersedia", () => {
     renderDialog({});
     expect(screen.queryByText(/lewat Midtrans/)).toBeNull();

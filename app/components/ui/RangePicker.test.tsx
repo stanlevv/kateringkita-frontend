@@ -17,7 +17,7 @@ const renderPicker = (from = TODAY, to = TODAY, error: string | null = null) =>
 
 beforeEach(() => replace.mockReset());
 
-describe("LP-N1 pemilih rentang", () => {
+describe("pemilih rentang", () => {
   it("preset mengisi dari/sampai di URL", async () => {
     renderPicker();
     await userEvent.click(screen.getByRole("button", { name: "7 hari" }));
@@ -41,7 +41,7 @@ describe("LP-N1 pemilih rentang", () => {
   });
 });
 
-describe("LP-E1 galat di pemilih", () => {
+describe("galat di pemilih", () => {
   it("akhir sebelum awal: pesan tampil, URL tidak berubah", async () => {
     renderPicker("2026-10-25", "2026-10-31");
     await userEvent.click(screen.getByRole("button", { name: "Pilih tanggal" }));

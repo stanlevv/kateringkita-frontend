@@ -10,7 +10,7 @@ const samplePoints = [
   { hour: 12, orders: 12, portions: 27, revenue: 508_000 },
 ];
 
-describe("LP-N2 grafik per jam", () => {
+describe("grafik per jam", () => {
   it("satu batang per jam, bisa difokus, berlabel jam, pesanan, omzet", () => {
     render(<HourlyChart points={samplePoints} days={1} />);
     const bars = screen.getAllByRole("img", { name: /^Jam / });
@@ -53,7 +53,7 @@ describe("LP-N2 grafik per jam", () => {
     expect(svg.parentElement).toHaveClass("min-w-[560px]");
     expect(svg.parentElement?.parentElement).toHaveClass("overflow-x-auto");
   });
-  it("LP-S1 tanpa data -> pesan di dalam kartu", () => {
+  it("tanpa data -> pesan di dalam kartu", () => {
     render(<HourlyChart points={[]} days={1} />);
     expect(screen.getByText("Belum ada penjualan di rentang ini")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();

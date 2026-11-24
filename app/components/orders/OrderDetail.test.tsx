@@ -65,7 +65,7 @@ describe("sinkron dengan server & tampilan", () => {
   });
 });
 
-describe("PS-N2 rincian", () => {
+describe("rincian", () => {
   it("rincian harga menjumlah untuk semua pesanan contoh", () => {
     for (const order of allOrders) expect(order.subtotal - order.discount + order.service_fee).toBe(order.total);
   });
@@ -81,7 +81,7 @@ describe("PS-N2 rincian", () => {
     expect(screen.getByText(/Sambal dipisah/)).toBeInTheDocument();
     expect(screen.getByText(/Titik ambil/)).toBeInTheDocument();
   });
-  it("F21 pesanan meja: tombol & riwayat memakai 'Siap diantar'", () => {
+  it("pesanan meja: tombol & riwayat memakai 'Siap diantar'", () => {
     const cooking = { ...findOrder("E2HV"), table: { id: 1, label: "5" } };
     const { rerender } = render(<OrderDetail order={cooking} />);
     expect(screen.getByRole("button", { name: "Siap diantar" })).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe("PS-N2 rincian", () => {
   });
 });
 
-describe("PS-A1 dibatalkan/kadaluarsa", () => {
+describe("dibatalkan/kadaluarsa", () => {
   it.each([
     ["N2VH", "Dibatalkan oleh penjual", "Stok habis"],
     ["P3WJ", "Dibatalkan oleh pembeli", "Dibatalkan pembeli"],

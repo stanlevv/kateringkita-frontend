@@ -9,7 +9,7 @@ import { AccountMenu } from "./AccountMenu";
 
 const trigger = () => screen.getByRole("button", { name: /Rohan Rifqi/ });
 
-describe("SH-N2 menu akun (disclosure)", () => {
+describe("menu akun (disclosure)", () => {
   it("Keluar berupa form terpisah dari Pengaturan akun", async () => {
     render(<AccountMenu userName="Rohan Rifqi" merchantName="Dapur Barokah" />);
     expect(trigger()).toHaveAttribute("aria-expanded", "false");

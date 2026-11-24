@@ -24,7 +24,7 @@ beforeEach(() => {
   }));
 });
 
-describe("SH-E1 setStoreOpen", () => {
+describe("setStoreOpen", () => {
   it("wajib sesi: requireMerchant dipanggil", async () => {
     getScenario.mockResolvedValue(null);
     requireMerchant.mockClear();

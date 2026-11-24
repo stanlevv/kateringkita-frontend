@@ -43,8 +43,8 @@ afterEach(() => {
   requireMerchant.mockClear();
 });
 
-describe("saveProfile (M-10, M-11)", () => {
-  it("meneruskan logo_url ke backend (F04 D15); qris_image_url tidak dikirim lagi (F26)", async () => {
+describe("saveProfile", () => {
+  it("meneruskan logo_url ke backend; qris_image_url tidak dikirim lagi", async () => {
     await saveProfile({
       ...validProfile,
       logo_url: "https://cdn.test/l.png",
@@ -86,14 +86,14 @@ describe("saveProfile (M-10, M-11)", () => {
     expect(body).toMatchObject({ description: "halo", business_name: "Dapur Baru" });
     for (const key of ["is_open", "merchant_type", "extra"]) expect(key in body).toBe(false);
   });
-  it("PG-E1 tidak valid -> VALIDATION_ERROR lokal, server tidak dipanggil", async () => {
+  it("tidak valid -> VALIDATION_ERROR lokal, server tidak dipanggil", async () => {
     const result = await saveProfile({ ...validProfile, close_time: "06:00", pickup_point_ids: [] });
     expect("error" in result && result.error.code).toBe("VALIDATION_ERROR");
     expect("error" in result && result.error.fields?.close_time).toBeTruthy();
     expect("error" in result && result.error.fields?.pickup_point_ids).toBeTruthy();
     expect(merchantFetch).not.toHaveBeenCalled();
   });
-  it("hanya wa_template (M-11) -> body { wa_template }; tak dikenal ditolak lokal", async () => {
+  it("hanya wa_template -> body { wa_template }; tak dikenal ditolak lokal", async () => {
     await saveProfile({ wa_template: "Halo {nama}" });
     expect(sentBody()).toEqual({ wa_template: "Halo {nama}" });
     merchantFetch.mockClear();

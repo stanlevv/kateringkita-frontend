@@ -24,14 +24,14 @@ beforeEach(() => {
 });
 
 describe("landing", () => {
-  it("LD-N1/N2 pengunjung: Masuk + Daftar sebagai penjual", async () => {
+  it("pengunjung: Masuk + Daftar sebagai penjual", async () => {
     getSession.mockResolvedValue(null);
     render(await Home());
     expect(screen.getAllByRole("link", { name: "Masuk" })[0]).toHaveAttribute("href", "/login");
     expect(screen.getAllByRole("link", { name: /Daftar/ })[0]).toHaveAttribute("href", "/register");
   });
 
-  it("LD-A1 sudah login: Buka dashboard", async () => {
+  it("sudah login: Buka dashboard", async () => {
     getSession.mockResolvedValue({ user: { role: "merchant" }, merchant: {} });
     render(await Home());
     expect(screen.getAllByRole("link", { name: "Buka dashboard" })[0]).toHaveAttribute("href", "/dashboard");
@@ -50,7 +50,7 @@ describe("landing", () => {
     expect(screen.getAllByRole("link", { name: "Masuk" }).length).toBeGreaterThan(0);
   });
 
-  it("LD-S1 tanpa klaim palsu", async () => {
+  it("tanpa klaim palsu", async () => {
     getSession.mockResolvedValue(null);
     const { container } = render(await Home());
     expect(container.textContent).not.toMatch(/Redis|RAG|Lab|WebSocket/);

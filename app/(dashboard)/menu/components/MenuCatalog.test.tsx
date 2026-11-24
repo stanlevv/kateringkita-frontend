@@ -39,7 +39,7 @@ beforeEach(() => {
   params = new URLSearchParams();
 });
 
-describe("MN-N1 kartu", () => {
+describe("kartu", () => {
   it("menampilkan harga, margin %, badge stok, rincian dan aksi Ubah", () => {
     renderCatalog();
     const cardScope = within(card("Nasi Ayam Bakar Madu"));
@@ -50,7 +50,7 @@ describe("MN-N1 kartu", () => {
   });
 });
 
-describe("MN-N2 filter di URL", () => {
+describe("filter di URL", () => {
   it("tab status menampilkan jumlah dan mengubah URL", async () => {
     renderCatalog();
     expect(screen.getByRole("tab", { name: /Semua\s*12/ })).toBeInTheDocument();
@@ -82,26 +82,26 @@ describe("MN-N2 filter di URL", () => {
   });
 });
 
-describe("MN-S1/S2/S3 state", () => {
-  it("MN-S1 belum ada menu", () => {
+describe("state", () => {
+  it("belum ada menu", () => {
     renderCatalog([]);
     expect(screen.getByText("Belum ada menu. Tambahkan menu pertama agar pembeli bisa memesan.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Tambah menu" })).toHaveAttribute("href", "/menu/baru");
   });
-  it("MN-S2 filter tanpa hasil + Hapus filter membersihkan URL", async () => {
+  it("filter tanpa hasil + Hapus filter membersihkan URL", async () => {
     params = new URLSearchParams("q=zzz&kategori=snack");
     renderCatalog();
     expect(screen.getByText('Tidak ada menu yang cocok dengan "zzz"')).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Hapus filter" }));
     expect(replace).toHaveBeenCalledWith("/menu", { scroll: false });
   });
-  it("MN-S3 gagal muat", () => {
+  it("gagal muat", () => {
     renderCatalog(allMenus, true);
     expect(screen.getByRole("button", { name: "Coba lagi" })).toBeInTheDocument();
   });
 });
 
-describe("MN-A1/E1 nonaktifkan", () => {
+describe("nonaktifkan", () => {
   it("dialog -> menu hilang dari tab Aktif seketika + toast Batalkan yang mengaktifkan lagi", async () => {
     setMenuActive.mockResolvedValue({ data: { ...allMenus[0] } });
     renderCatalog();
@@ -115,7 +115,7 @@ describe("MN-A1/E1 nonaktifkan", () => {
     expect(setMenuActive).toHaveBeenLastCalledWith(1, true);
     expect(within(card("Nasi Ayam Bakar Madu")).getByRole("button", { name: "Nonaktifkan" })).toBeInTheDocument();
   });
-  it("MN-E1 gagal -> keadaan kembali + toast galat", async () => {
+  it("gagal -> keadaan kembali + toast galat", async () => {
     setMenuActive.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Menu belum diubah. Coba lagi." } });
     renderCatalog();
     await userEvent.click(within(card("Nasi Ayam Bakar Madu")).getByRole("button", { name: "Nonaktifkan" }));
@@ -123,7 +123,7 @@ describe("MN-A1/E1 nonaktifkan", () => {
     expect(await screen.findByText("Menu belum diubah. Coba lagi.")).toBeInTheDocument();
     expect(within(card("Nasi Ayam Bakar Madu")).getByRole("button", { name: "Nonaktifkan" })).toBeInTheDocument();
   });
-  it("MN-A2 Aktifkan lagi memanggil aksi", async () => {
+  it("Aktifkan lagi memanggil aksi", async () => {
     params = new URLSearchParams("status=nonaktif");
     setMenuActive.mockResolvedValue({ data: allMenus[8] });
     renderCatalog();
@@ -132,7 +132,7 @@ describe("MN-A1/E1 nonaktifkan", () => {
   });
 });
 
-describe("MN-N4 kuota inline", () => {
+describe("kuota inline", () => {
   it("stepper tombol + mengirim delta atomik setelah jeda", async () => {
     vi.useFakeTimers();
     adjustQuota.mockResolvedValue({ data: { ...allMenus[0], quota_today: 41, available: 16 } });
@@ -161,7 +161,7 @@ describe("MN-N4 kuota inline", () => {
   });
 });
 
-describe("MN-N4 baris server disalin utuh", () => {
+describe("baris server disalin utuh", () => {
   it("terjual & ditahan dari server ikut tampil setelah kuota berubah", async () => {
     vi.useFakeTimers();
     adjustQuota.mockResolvedValue({
@@ -179,7 +179,7 @@ describe("MN-N4 baris server disalin utuh", () => {
   });
 });
 
-describe("MN-N2 balapan timer pencarian", () => {
+describe("balapan timer pencarian", () => {
   it("Hapus filter membatalkan ketikan tertunda: tidak ada replace yang memulihkan filter", async () => {
     vi.useFakeTimers();
     params = new URLSearchParams("q=zzz&kategori=snack");
@@ -220,7 +220,7 @@ describe("MN-N2 balapan timer pencarian", () => {
   });
 });
 
-describe("D13 overlay lokal gugur saat data server baru tiba (M-05)", () => {
+describe("overlay lokal gugur saat data server baru tiba", () => {
   const catalogTree = (menuList: typeof allMenus) => (
     <>
       <Toaster />

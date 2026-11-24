@@ -17,7 +17,7 @@ beforeEach(() => {
   adminFetch.mockReset().mockResolvedValue({ ok: true, status: 200, data: {} });
 });
 
-describe("applyMerchantAction (A-05)", () => {
+describe("applyMerchantAction", () => {
   it("memanggil requireAdmin lebih dulu; jika menolak, backend tidak dipanggil", async () => {
     requireAdmin.mockRejectedValue(new Error("404"));
     await expect(applyMerchantAction(1, "verify")).rejects.toThrow();

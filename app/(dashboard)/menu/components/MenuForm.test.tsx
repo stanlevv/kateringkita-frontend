@@ -50,7 +50,7 @@ beforeEach(() => {
   URL.revokeObjectURL = vi.fn();
 });
 
-describe("G-2 ringkasan error", () => {
+describe("ringkasan error", () => {
   it("submit kosong -> ringkasan dengan beberapa error dan fokus pindah ke sana", async () => {
     renderForm();
     await userEvent.click(screen.getByRole("button", { name: "Simpan menu" }));
@@ -69,7 +69,7 @@ describe("G-2 ringkasan error", () => {
   });
 });
 
-describe("MF-E1 / MF-A3 harga & margin", () => {
+describe("harga & margin", () => {
   it("harga <= HPP menampilkan pesan HPP", async () => {
     renderForm();
     await typeInto(/HPP/, "12000");
@@ -99,7 +99,7 @@ describe("pre-order & opsi", () => {
     await userEvent.click(screen.getByRole("switch", { name: "Menu pre-order" }));
     expect(screen.getByLabelText(/Pesan H-/)).toBeInTheDocument();
   });
-  it("MF-E6 opsi sama -> error di baris; tambah, urutkan, hapus", async () => {
+  it("opsi sama -> error di baris; tambah, urutkan, hapus", async () => {
     renderForm();
     await userEvent.click(screen.getByRole("button", { name: "Tambah opsi" }));
     await userEvent.click(screen.getByRole("button", { name: "Tambah opsi" }));
@@ -114,7 +114,7 @@ describe("pre-order & opsi", () => {
   });
 });
 
-describe("MF-N1 simpan", () => {
+describe("simpan", () => {
   it("sukses -> toast dan pindah ke /menu", async () => {
     saveMenu.mockResolvedValue({ data: menus()[0] });
     renderForm();
@@ -127,7 +127,7 @@ describe("MF-N1 simpan", () => {
     expect((await screen.findAllByText("Menu disimpan")).length).toBeGreaterThan(0);
     expect(push).toHaveBeenCalledWith("/menu");
   });
-  it("MF-E4 error validasi server dipetakan ke field + ringkasan", async () => {
+  it("error validasi server dipetakan ke field + ringkasan", async () => {
     saveMenu.mockResolvedValue({
       error: { code: "VALIDATION_ERROR", message: "x", fields: { name: ["Nama sudah dipakai."] } },
     });
@@ -158,7 +158,7 @@ describe("MF-N1 simpan", () => {
   });
 });
 
-describe("MF-N2 ubah", () => {
+describe("ubah", () => {
   it("terisi dari menu, judul via halaman; simpan memakai id", async () => {
     saveMenu.mockResolvedValue({ data: menus()[0] });
     const menu = menus()[0];
@@ -170,7 +170,7 @@ describe("MF-N2 ubah", () => {
   });
 });
 
-describe("HP-N2 prefill", () => {
+describe("prefill", () => {
   it("HPP dan harga terisi dari query", () => {
     renderForm({ prefill: { hpp: 7000, price: 12000 } });
     expect(screen.getByLabelText(/HPP/)).toHaveValue(7000);
@@ -178,8 +178,8 @@ describe("HP-N2 prefill", () => {
   });
 });
 
-describe("MF-E2/E3/A2 foto", () => {
-  it("MF-E2 format salah ditolak sebelum unggah", () => {
+describe("foto", () => {
+  it("format salah ditolak sebelum unggah", () => {
     renderForm();
     fireEvent.change(document.querySelector("input[type=file]") as HTMLInputElement, {
       target: { files: [new File(["x"], "a.gif", { type: "image/gif" })] },
@@ -187,7 +187,7 @@ describe("MF-E2/E3/A2 foto", () => {
     expect(screen.getByText("Format foto harus JPG, PNG, atau WebP.")).toBeInTheDocument();
     expect(uploadPhoto).not.toHaveBeenCalled();
   });
-  it("MF-A2 progres selama unggah, tombol simpan menunggu", async () => {
+  it("progres selama unggah, tombol simpan menunggu", async () => {
     let resolveUpload!: (value: unknown) => void;
     uploadPhoto.mockReturnValue(
       new Promise((resolve) => {
@@ -203,7 +203,7 @@ describe("MF-E2/E3/A2 foto", () => {
     await act(async () => resolveUpload({ data: { upload_url: null, public_url: null } }));
     expect(screen.getByRole("button", { name: "Simpan menu" })).toBeEnabled();
   });
-  it("MF-E3 unggah gagal -> pesan + ulang; menu tetap bisa disimpan tanpa foto", async () => {
+  it("unggah gagal -> pesan + ulang; menu tetap bisa disimpan tanpa foto", async () => {
     uploadPhoto.mockResolvedValueOnce({ error: { code: "UPLOAD_FAILED", message: "Foto gagal diunggah. Coba lagi" } });
     saveMenu.mockResolvedValue({ data: menus()[0] });
     renderForm();
@@ -309,7 +309,7 @@ describe("MF-E2/E3/A2 foto", () => {
   });
 });
 
-describe("MF-A1 / G-5 penjaga perubahan", () => {
+describe("penjaga perubahan", () => {
   it("tidak dirty: klik tautan tidak memunculkan dialog; beforeunload tidak dicegah", async () => {
     renderForm();
     const event = new Event("beforeunload", { cancelable: true });

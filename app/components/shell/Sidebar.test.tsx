@@ -10,7 +10,7 @@ import { StoreStatusProvider } from "./StoreStatus";
 
 const store = { isOpen: true, openTime: "07:00", closeTime: "16:00" };
 
-describe("SH-N1 sidebar", () => {
+describe("sidebar", () => {
   it("4 grup dan 11 tautan (termasuk Banner, Notifikasi); tautan aktif aria-current", () => {
     render(
       <StoreStatusProvider store={store}>

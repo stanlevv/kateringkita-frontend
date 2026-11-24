@@ -47,7 +47,7 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 
-describe("PG-N1 bilah simpan menempel", () => {
+describe("bilah simpan menempel", () => {
   it("tidak ada tanpa perubahan; muncul saat berubah; Batalkan mengembalikan nilai", async () => {
     renderForm();
     expect(saveBar()).not.toBeInTheDocument();
@@ -109,7 +109,7 @@ describe("PG-N1 bilah simpan menempel", () => {
   });
 });
 
-describe("PG-E1 validasi", () => {
+describe("validasi", () => {
   it("jam tutup <= jam buka -> error dan tidak terkirim", async () => {
     renderForm();
     fireEvent.change(screen.getByLabelText(/Jam tutup/), { target: { value: "07:00" } });
@@ -123,7 +123,7 @@ describe("PG-E1 validasi", () => {
     await userEvent.tab();
     expect(screen.getByText(/Durasi tahan pesanan (minimal 1|maksimal 30)/)).toBeInTheDocument();
   });
-  it("tanpa titik temu -> error; ringkasan menerima fokus (G-2)", async () => {
+  it("tanpa titik temu -> error; ringkasan menerima fokus", async () => {
     renderForm();
     for (const checkbox of screen.getAllByRole("checkbox")) await userEvent.click(checkbox);
     await userEvent.click(saveBar()!);
@@ -153,7 +153,7 @@ describe("PG-E1 validasi", () => {
   });
 });
 
-describe("PG-E4 titik temu gagal dimuat", () => {
+describe("titik temu gagal dimuat", () => {
   it("pesan + Coba lagi di bagian itu saja; bagian lain tetap bisa dipakai", async () => {
     renderForm({ pickupPoints: null });
     await userEvent.click(screen.getByRole("button", { name: "Coba lagi" }));
@@ -163,7 +163,7 @@ describe("PG-E4 titik temu gagal dimuat", () => {
   });
 });
 
-describe("PG-A2 lengkapi bagian", () => {
+describe("lengkapi bagian", () => {
   it("?lengkapi=titik-temu menggulir, memfokuskan judul, dan menyorot", async () => {
     renderForm({ incompleteSection: "titik-temu" });
     const section = document.getElementById("titik-temu")!;
@@ -190,7 +190,7 @@ describe("PG-A2 lengkapi bagian", () => {
   });
 });
 
-describe("PG-A1 peringatan keluar", () => {
+describe("peringatan keluar", () => {
   it("perubahan belum disimpan + klik tautan internal -> dialog", async () => {
     renderForm();
     await typeInto(/Nama usaha/, "Dapur Lain");
@@ -204,7 +204,7 @@ describe("PG-A1 peringatan keluar", () => {
   });
 });
 
-describe("Logo (M-10, FE-08); F26 QRIS toko dihapus", () => {
+describe("Logo; QRIS toko dihapus", () => {
   const createPng = () => new File([new Uint8Array(10)], "f.png", { type: "image/png" });
   const chooseFile = (i: number) =>
     fireEvent.change(document.querySelectorAll("input[type=file]")[i] as HTMLInputElement, {
@@ -390,7 +390,7 @@ describe("Akun", () => {
     expect(accountSection).toHaveTextContent("0812-3456-7890");
     expect(accountSection).toHaveTextContent("d@x.id");
   });
-  it("PG-E2 kata sandi lama salah -> error di field, form tidak dikosongkan", async () => {
+  it("kata sandi lama salah -> error di field, form tidak dikosongkan", async () => {
     changePassword.mockResolvedValue({
       error: { code: "VALIDATION_ERROR", message: "x", fields: { current_password: ["Kata sandi lama salah."] } },
     });
@@ -402,7 +402,7 @@ describe("Akun", () => {
     expect((await screen.findAllByText(/Kata sandi lama salah\./)).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/Kata sandi lama/)).toHaveValue("salah1234");
   });
-  it("PG-N2 sukses -> toast persis dan form kosong; tidak ada panggilan simpan toko", async () => {
+  it("sukses -> toast persis dan form kosong; tidak ada panggilan simpan toko", async () => {
     changePassword.mockResolvedValue({ data: { ok: true } });
     renderForm();
     await typeInto(/Kata sandi lama/, "lama12345");
@@ -425,7 +425,7 @@ describe("Akun", () => {
   });
 });
 
-describe("F26 rekening pencairan (di luar form utama, tersimpan langsung)", () => {
+describe("rekening pencairan (di luar form utama, tersimpan langsung)", () => {
   const emptyPayouts = { ...myPayouts(), account: null, payouts: [] };
   it("belum ada rekening: form tampil, saldo & bagian toko dijelaskan, simpan tidak membuat form utama kotor", async () => {
     saveBankAccount.mockResolvedValue({ data: myPayouts() });

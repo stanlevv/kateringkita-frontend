@@ -15,23 +15,23 @@ const profile = {
   daily_revenue_target: 0,
   pickup_point_ids: [1],
 };
-describe("validateProfile (M-10)", () => {
+describe("validateProfile", () => {
   it("valid lolos", () => expect(validateProfile(profile)).toEqual({}));
-  it("PG-E1 tutup <= buka", () => {
+  it("tutup <= buka", () => {
     expect(validateProfile({ ...profile, close_time: "07:00" }).close_time).toBeTruthy();
     expect(validateProfile({ ...profile, close_time: "06:00" }).close_time).toBeTruthy();
   });
-  it("PG-E1 tutup<=buka tetap dilaporkan walau field lain salah", () => {
+  it("tutup<=buka tetap dilaporkan walau field lain salah", () => {
     const errors = validateProfile({ ...profile, business_name: "", close_time: "06:00" });
     expect(errors.business_name && errors.close_time).toBeTruthy();
   });
-  it("PG-E1 durasi 0 dan 31 ditolak, 1 dan 30 lolos", () => {
+  it("durasi 0 dan 31 ditolak, 1 dan 30 lolos", () => {
     expect(validateProfile({ ...profile, hold_minutes: 0 }).hold_minutes).toBeTruthy();
     expect(validateProfile({ ...profile, hold_minutes: 31 }).hold_minutes).toBeTruthy();
     expect(validateProfile({ ...profile, hold_minutes: 1.5 }).hold_minutes).toBeTruthy();
     expect(validateProfile({ ...profile, hold_minutes: 30 })).toEqual({});
   });
-  it("PG-E1 tanpa titik temu; no WA salah; target negatif", () => {
+  it("tanpa titik temu; no WA salah; target negatif", () => {
     expect(validateProfile({ ...profile, pickup_point_ids: [] }).pickup_point_ids).toBe(
       "Pilih minimal satu titik temu.",
     );
@@ -47,7 +47,7 @@ describe("validateProfile (M-10)", () => {
     expect(validateProfile({ ...profile, description: "a".repeat(501) }).description).toBeTruthy();
     expect(validateProfile({ ...profile, address: "a".repeat(256) }).address).toBeTruthy();
   });
-  it("patch sebagian: hanya wa_template; WA-E1/E2", () => {
+  it("patch sebagian: hanya wa_template; placeholder tak dikenal, template kosong atau terlalu panjang", () => {
     expect(validateProfile({ wa_template: "Halo {nama}" }, false)).toEqual({});
     expect(validateProfile({ wa_template: "Halo {harga}" }, false).wa_template).toBe(
       "Kata kunci {harga} tidak dikenal.",
@@ -56,7 +56,7 @@ describe("validateProfile (M-10)", () => {
     expect(validateProfile({ wa_template: "a".repeat(1001) }, false).wa_template).toBeTruthy();
   });
 });
-describe("changePasswordSchema (PG-N2)", () => {
+describe("changePasswordSchema", () => {
   it("memakai aturan sandi pendaftaran", () => {
     expect(Object.keys(validateFields(changePasswordSchema, { current_password: "x", new_password: "abc" }))).toContain(
       "new_password",
@@ -94,16 +94,16 @@ const validMenu = {
 };
 const check = (overrides: object) => validateFields(menuFormSchema, { ...validMenu, ...overrides });
 
-describe("menuFormSchema (M-07)", () => {
+describe("menuFormSchema", () => {
   it("input bukan objek tidak melempar", () => {
     expect(() => validateFields(menuFormSchema, null)).not.toThrow();
     expect(Object.keys(validateFields(menuFormSchema, null))).not.toHaveLength(0);
   });
   it("isian valid lolos", () => expect(check({})).toEqual({}));
-  it("MF-E1 harga sama dengan HPP", () => {
+  it("harga sama dengan HPP", () => {
     expect(check({ price: 12000, hpp: 12000 }).price).toBe("Harga jual harus lebih besar dari HPP (Rp 12.000).");
   });
-  it("batas atas D9 sama dengan backend", () => {
+  it("batas atas sama dengan backend", () => {
     expect(check({ price: 100_000_001 }).price).toBe("Harga jual maksimal 100.000.000.");
     expect(check({ hpp: 100_000_001 }).hpp).toBe("HPP maksimal 100.000.000.");
     expect(check({ daily_quota: 10_001 }).daily_quota).toBe("Kuota harian maksimal 10.000.");
@@ -115,7 +115,7 @@ describe("menuFormSchema (M-07)", () => {
     const twentyOneOptions = Array.from({ length: 21 }, (_, i) => ({ name: `O${i}`, extra_price: 0 }));
     expect(check({ options: twentyOneOptions }).options).toBe("Maksimal 20 opsi.");
   });
-  it("MF-E1 harga di bawah 1.000", () => expect(check({ price: 900, hpp: 100 }).price).toMatch(/1\.000/));
+  it("harga di bawah 1.000", () => expect(check({ price: 900, hpp: 100 }).price).toMatch(/1\.000/));
   it("uang dan kuota harus bilangan bulat", () => {
     expect(check({ hpp: 100.5 }).hpp).toBeTruthy();
     expect(check({ daily_quota: 2.5 }).daily_quota).toBeTruthy();
@@ -134,7 +134,7 @@ describe("menuFormSchema (M-07)", () => {
     expect(check({ is_preorder: true, preorder_days: 8 }).preorder_days).toBeTruthy();
     expect(check({ is_preorder: true, preorder_days: 2 })).toEqual({});
   });
-  it("MF-E6 opsi bernama sama (tanpa beda huruf) dan opsi kosong menjadi galat per baris", () => {
+  it("opsi bernama sama (tanpa beda huruf) dan opsi kosong menjadi galat per baris", () => {
     const errors = check({
       options: [
         { name: "Pedas", extra_price: 0 },

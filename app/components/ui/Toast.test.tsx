@@ -7,7 +7,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("Toast (G-6)", () => {
+describe("Toast", () => {
   it("tampil di region aria-live polite, fokus tidak pindah, hilang setelah 4 dtk", () => {
     vi.useFakeTimers();
     render(

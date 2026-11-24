@@ -31,7 +31,7 @@ beforeEach(() => {
   merchantFetch.mockReset();
 });
 
-describe("M-04, M-11 Chat WA penjual", () => {
+describe("Chat WA penjual", () => {
   it("wajib sesi penjual, memanggil endpoint WA dengan kode ter-encode", async () => {
     merchantFetch.mockResolvedValue({ ok: true, status: 200, data: { url: "https://wa.me/62812?text=Halo" } });
     await redirectTarget("KK/1");

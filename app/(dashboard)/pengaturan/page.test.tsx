@@ -38,7 +38,7 @@ afterEach(() => {
   requireMerchant.mockClear();
 });
 
-describe("halaman /pengaturan (M-10)", () => {
+describe("halaman /pengaturan", () => {
   it("memanggil requireMerchant; satu h1; semua bagian ada", async () => {
     getScenario.mockResolvedValue(null);
     render(await SettingsPage({ searchParams: searchParamsOf() }));
@@ -55,7 +55,7 @@ describe("halaman /pengaturan (M-10)", () => {
   });
 });
 
-describe("halaman /template-wa (M-11)", () => {
+describe("halaman /template-wa", () => {
   it("memanggil requireMerchant; satu h1; pratinjau dari pesanan pertama", async () => {
     getScenario.mockResolvedValue(null);
     render(await WhatsappTemplatePage());

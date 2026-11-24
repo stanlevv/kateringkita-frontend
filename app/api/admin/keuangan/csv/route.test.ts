@@ -32,7 +32,7 @@ beforeEach(() => {
   });
 });
 
-describe("F20 CSV keuangan", () => {
+describe("CSV keuangan", () => {
   it("BOM + header + baris toko (aman dari rumus) + baris TOTAL", async () => {
     const response = await callRoute(`?dari=${today}&sampai=${today}`);
     expect(response.status).toBe(200);

@@ -31,14 +31,14 @@ beforeEach(() => {
   onClose.mockReset();
 });
 
-describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
+describe("PromoForm", () => {
   it("kode dipaksa huruf besar", async () => {
     renderForm();
     await typeInto(/Kode promo/, "ramadan1");
     expect(screen.getByLabelText(/Kode promo/)).toHaveValue("RAMADAN1");
   });
 
-  it("PR-E2 nilai 0, persen > 100, selesai <= mulai -> error per field + ringkasan fokus", async () => {
+  it("nilai 0, persen > 100, selesai <= mulai -> error per field + ringkasan fokus", async () => {
     renderForm();
     await typeInto(/Kode promo/, "AB");
     await typeInto(/^Nilai/, "0");
@@ -62,7 +62,7 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
     expect(screen.queryByLabelText(/^Nilai/)).toBeNull();
   });
 
-  it("C2: penjual tidak punya opsi gratis biaya layanan; admin tetap punya; promo toko lama jenis itu tetap bisa diubah", () => {
+  it("penjual tidak punya opsi gratis biaya layanan; admin tetap punya; promo toko lama jenis itu tetap bisa diubah", () => {
     const optionValues = () =>
       Array.from((screen.getByLabelText(/Jenis promo/) as HTMLSelectElement).options).map((option) => option.value);
     const { unmount } = renderForm();
@@ -112,7 +112,7 @@ describe("PromoForm (PR-N2, PR-E1, PR-E2)", () => {
     );
   });
 
-  it("PR-E1 respons 409 -> error di field kode, fokus ke ringkasan, form tetap terisi", async () => {
+  it("respons 409 -> error di field kode, fokus ke ringkasan, form tetap terisi", async () => {
     savePromo.mockResolvedValue({
       error: { code: "CONFLICT", message: "Kode sudah dipakai.", fields: { code: ["Kode sudah dipakai."] } },
     });

@@ -18,7 +18,7 @@ const STABLE_MENUS: MerchantMenu[] = [
   { ...baseMenu, id: 1, quota_today: 10, sold_today: 0, held_today: 0, available: 10 },
 ];
 
-describe("useQuota - AUD-04 Kuota Atomik & Konkurensi", () => {
+describe("useQuota - Kuota Atomik & Konkurensi", () => {
   beforeEach(() => {
     adjustQuota.mockReset();
     vi.useFakeTimers();
@@ -28,7 +28,7 @@ describe("useQuota - AUD-04 Kuota Atomik & Konkurensi", () => {
     vi.useRealTimers();
   });
 
-  it("regresi AUD-04: demonstrasi mengapa pengiriman kuota mutlak menyebabkan lost update", async () => {
+  it("regresi: demonstrasi mengapa pengiriman kuota mutlak menyebabkan lost update", async () => {
     let serverQuota = 10;
     // Server simulasi: jika klien mengirim quota_today absolut, nilai langsung ditimpa
     adjustQuota.mockImplementation(async (_id, change) => {
@@ -46,7 +46,7 @@ describe("useQuota - AUD-04 Kuota Atomik & Konkurensi", () => {
     expect(serverQuota).toBe(11);
   });
 
-  it("AUD-04: dua klien menekan +1 mengirim delta sehingga server mengakumulasikan menjadi 12", async () => {
+  it("dua klien menekan +1 mengirim delta sehingga server mengakumulasikan menjadi 12", async () => {
     let serverQuota = 10;
     adjustQuota.mockImplementation(async (_id, change) => {
       if ("delta" in change) {

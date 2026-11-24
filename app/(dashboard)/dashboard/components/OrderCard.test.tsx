@@ -50,7 +50,7 @@ describe("OrderCard 8 tampilan status (brief §4)", () => {
     else expect(primaryButton).toBeNull();
   });
 
-  it("F26 menunggu bayar: tanpa tombol utama, keterangan diterima otomatis", () => {
+  it("menunggu bayar: tanpa tombol utama, keterangan diterima otomatis", () => {
     renderCard(orderWith({ status: "holding", payment_method: "va", payment_status: "unpaid" }));
     expect(screen.getByText("Diterima otomatis setelah lunas")).toBeInTheDocument();
   });
@@ -67,7 +67,7 @@ describe("OrderCard 8 tampilan status (brief §4)", () => {
     expect(screen.getByText("Tunai")).toBeInTheDocument();
   });
 
-  it("DB-N4 Chat WA membuka wa.me di tab baru", () => {
+  it("Chat WA membuka wa.me di tab baru", () => {
     renderCard(baseOrder);
     const waLink = screen.getByRole("link", { name: /Chat WA/ });
     expect(waLink).toHaveAttribute("href", expect.stringMatching(/^\/api\/pesanan\/KK-[\w-]+\/wa$/));
@@ -85,14 +85,14 @@ describe("OrderCard 8 tampilan status (brief §4)", () => {
     expect(handlers.onSlip).toHaveBeenCalled();
   });
 
-  it("DB-A2 saat ditunda: tombol menampilkan proses dan nonaktif", () => {
+  it("saat ditunda: tombol menampilkan proses dan nonaktif", () => {
     renderCard(baseOrder, { pending: "confirm" });
     const button = screen.getByRole("button", { name: /Mengonfirmasi/ });
     expect(button).toBeDisabled();
   });
 });
 
-describe("DB-A4 timer tahan", () => {
+describe("timer tahan", () => {
   it("sisa 59 dtk -> Segera dengan nada error", () => {
     renderCard(baseOrder, { holdSecondsLeft: 59 });
     const timer = screen.getByText(/Segera/);
@@ -117,7 +117,7 @@ describe("DB-A4 timer tahan", () => {
   });
 });
 
-describe("DB-A3 sorot pesanan baru", () => {
+describe("sorot pesanan baru", () => {
   it("kartu baru ditandai", () => {
     renderCard(baseOrder, { isNew: true });
     expect(screen.getByRole("article")).toHaveAttribute("data-baru", "true");

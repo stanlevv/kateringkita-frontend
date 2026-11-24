@@ -19,7 +19,7 @@ vi.mock("@/services/order.service", async () => {
 });
 import OrderDetailPage from "./page";
 
-describe("PS-E1 / PS-N2 halaman detail", () => {
+describe("halaman detail", () => {
   it("kode tidak ada: blok 'Pesanan tidak ditemukan' + kembali", async () => {
     render(await OrderDetailPage({ params: Promise.resolve({ code: "KK-NOPE" }) }));
     expect(screen.getAllByText("Pesanan tidak ditemukan").length).toBeGreaterThan(0);

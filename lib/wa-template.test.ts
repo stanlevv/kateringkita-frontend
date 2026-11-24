@@ -11,8 +11,8 @@ import {
 
 const values = templateValuesFromOrder(orders()[0]);
 
-describe("wa-template (M-11)", () => {
-  it("WA-N1 daftar placeholder lengkap dengan keterangan", () => {
+describe("wa-template", () => {
+  it("daftar placeholder lengkap dengan keterangan", () => {
     expect(PLACEHOLDER.map((placeholder) => placeholder.code)).toEqual([
       "{kode}",
       "{nama}",
@@ -24,14 +24,14 @@ describe("wa-template (M-11)", () => {
     ]);
     expect(PLACEHOLDER.every((placeholder) => placeholder.description.length > 0)).toBe(true);
   });
-  it("WA-N2 renderTemplate mengisi placeholder", () => {
+  it("renderTemplate mengisi placeholder", () => {
     const text = renderTemplate("Halo {nama}, pesanan {kode}", values);
     expect(text).toBe(`Halo ${orders()[0].customer_name}, pesanan ${orders()[0].code}`);
   });
   it("renderTemplate membiarkan kata kunci tak dikenal dan mengisi semua kemunculan", () => {
     expect(renderTemplate("{harga} {kode} {kode}", values)).toBe(`{harga} ${orders()[0].code} ${orders()[0].code}`);
   });
-  it("WA-E1 findUnknownPlaceholders", () => {
+  it("findUnknownPlaceholders", () => {
     expect(findUnknownPlaceholders("{harga} {kode} {harga}")).toEqual(["{harga}"]);
     expect(findUnknownPlaceholders("{kode} {nama}")).toEqual([]);
   });

@@ -10,7 +10,7 @@ import { ErrorSummary } from "./ErrorSummary";
 import { Pagination } from "./Pagination";
 import { DataTable } from "./DataTable";
 
-describe("Button (G-3)", () => {
+describe("Button", () => {
   it("loading -> disabled, aria-busy, teks loadingText", () => {
     render(
       <Button loading loadingText="Menyimpan…">
@@ -23,7 +23,7 @@ describe("Button (G-3)", () => {
   });
 });
 
-describe("Field (G-2)", () => {
+describe("Field", () => {
   it("error -> input aria-invalid dan aria-describedby menunjuk teks error", () => {
     render(
       <Field label="Nama" error="Nama wajib diisi" help="Bantuan">
@@ -47,7 +47,7 @@ describe("Field (G-2)", () => {
   });
 });
 
-describe("Badge status (G-7)", () => {
+describe("Badge status", () => {
   it("StatusBadge memakai peta order-status: tunai holding = Menunggu konfirmasi", () => {
     render(<StatusBadge order={{ status: "holding", payment_method: "cod", payment_status: "unpaid" }} />);
     expect(screen.getByText("Menunggu konfirmasi")).toBeInTheDocument();
@@ -59,7 +59,7 @@ describe("Badge status (G-7)", () => {
   });
 });
 
-describe("ErrorSummary (G-2)", () => {
+describe("ErrorSummary", () => {
   it("role alert, daftar tautan ke field, fokus pindah ke ringkasan", () => {
     render(<ErrorSummary errors={[{ id: "nama", message: "Nama wajib diisi" }]} />);
     const alert = screen.getByRole("alert");
@@ -109,7 +109,7 @@ describe("ErrorSummary (G-2)", () => {
   });
 });
 
-describe("Pagination (G-1)", () => {
+describe("Pagination", () => {
   it("menampilkan Halaman X dari Y dan tautan berikutnya", () => {
     render(<Pagination page={2} total={45} limit={20} hrefFor={(pageNumber) => `/x?page=${pageNumber}`} />);
     expect(screen.getByText("Halaman 2 dari 3")).toBeInTheDocument();

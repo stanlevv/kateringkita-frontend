@@ -23,7 +23,7 @@ import type { MerchantOrder } from "@/types/order";
 
 const makeOrder = (overrides: Partial<MerchantOrder>): MerchantOrder => ({ ...orders()[0], ...overrides });
 
-describe("D14 applyOptimisticActions: status tujuan hanya selama updated_at server sama", () => {
+describe("applyOptimisticActions: status tujuan hanya selama updated_at server sama", () => {
   const base = makeOrder({
     code: "A",
     status: "holding",
@@ -61,7 +61,7 @@ describe("D14 applyOptimisticActions: status tujuan hanya selama updated_at serv
 const iso = (timestamp: number) => new Date(timestamp).toISOString();
 const OLD_CREATED_AT = iso(-600_000); // dibuat jauh sebelum `sekarang` di test -> bukan pesanan baru
 
-describe("DB-A4 waktu tahan", () => {
+describe("waktu tahan", () => {
   it("sisa = hold_until − sekarang, minimal 0", () => {
     const order = makeOrder({ status: "holding", hold_until: iso(1_100_000) });
     expect(holdSecondsLeft(order, 1_030_000)).toBe(70);
@@ -128,7 +128,7 @@ describe("tab antrean (brief §3)", () => {
   });
 });
 
-describe("DB-N3 panel kuota", () => {
+describe("panel kuota", () => {
   const makeMenu = (id: number, available: number, is_active = true) =>
     ({ ...menus()[0], id, available, is_active }) as MerchantMenu;
   it("stok: habis 0, menipis <= 3, aman > 3", () => {
@@ -151,7 +151,7 @@ describe("DB-N3 panel kuota", () => {
   });
 });
 
-describe("D5 mergeOrders", () => {
+describe("mergeOrders", () => {
   const orderA = makeOrder({ code: "A", updated_at: "2026-11-01T04:00:10.000Z", status: "holding" });
   const orderB = makeOrder({ code: "B", updated_at: "2026-11-01T04:00:20.000Z", status: "confirmed" });
   const current = [orderA, orderB];
@@ -175,7 +175,7 @@ describe("D5 mergeOrders", () => {
   });
 });
 
-describe("D3 updatedSinceCursor", () => {
+describe("updatedSinceCursor", () => {
   it("updated_at terbesar - 5 dtk", () => {
     const list = [
       makeOrder({ code: "A", updated_at: "2026-11-01T04:00:10Z" }),
@@ -188,7 +188,7 @@ describe("D3 updatedSinceCursor", () => {
   });
 });
 
-describe("D8 clockOffsetMs", () => {
+describe("clockOffsetMs", () => {
   it("hold_until - seconds_left - diterima dari holding pertama", () => {
     const list = [
       makeOrder({ code: "X", status: "confirmed", hold_until: null, seconds_left: null }),
@@ -207,7 +207,7 @@ describe("D8 clockOffsetMs", () => {
   });
 });
 
-describe("D2 summarizeToday", () => {
+describe("summarizeToday", () => {
   const NOW = Date.parse("2026-11-01T03:00:00Z"); // 1 Nov 2026 10:00 WIB
   const item = (menu_id: number, menu_name: string, qty: number) => ({
     menu_id,
@@ -287,7 +287,7 @@ describe("D2 summarizeToday", () => {
     ({ ...menus()[0], id, quota_today, sold_today, held_today, is_active }) as MerchantMenu;
   const menuList = [makeMenu(1, 20, 5, 2), makeMenu(2, 10, 3, 0), makeMenu(3, 50, 40, 0, false)];
 
-  it("D10 omzet = jumlah subtotal (bukan total) pesanan completed hari ini", () => {
+  it("omzet = jumlah subtotal (bukan total) pesanan completed hari ini", () => {
     expect(summarizeToday(list, menuList, NOW).revenue).toBe(28000);
   });
   it("omzet hanya completed hari ini (WIB); kapasitas menu aktif; perlu tindakan", () => {

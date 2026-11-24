@@ -33,7 +33,7 @@ beforeEach(() => {
   adminFetch.mockReset().mockResolvedValue(okResponse());
 });
 
-describe("requireAdmin di semua action admin (A-01…A-04)", () => {
+describe("requireAdmin di semua action admin", () => {
   it("menolak -> backend tidak dipanggil", async () => {
     requireAdmin.mockRejectedValue(new Error("404"));
     const allActions = [

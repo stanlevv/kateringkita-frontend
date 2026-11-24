@@ -41,7 +41,7 @@ beforeEach(() => {
   setCookie.mockClear();
 });
 
-describe("F18 login web per role", () => {
+describe("login web per role", () => {
   it("admin -> /admin", async () => {
     mockLoginAs("admin");
     await expect(login({}, buildLoginForm())).rejects.toThrow("REDIRECT /admin");
@@ -79,7 +79,7 @@ describe("F18 login web per role", () => {
   });
 });
 
-describe("F01-SEC-2 IP klien ke backend", () => {
+describe("IP klien ke backend", () => {
   const sentHeaders = () => (apiFetch.mock.calls[0][1] as { headers?: Record<string, string> }).headers;
   it("mengirim X-Client-IP & X-Internal-Secret bila rahasia diisi (x-real-ip diutamakan)", async () => {
     vi.stubEnv("INTERNAL_API_SECRET", "s".repeat(32));
@@ -109,7 +109,7 @@ describe("F01-SEC-2 IP klien ke backend", () => {
   });
 });
 
-describe("F11 lupa sandi", () => {
+describe("lupa sandi", () => {
   it("requestResetCode -> POST /auth/password/forgot", async () => {
     apiFetch.mockResolvedValue({ ok: true, status: 200, data: { message: "x" } });
     expect(await requestResetCode("a@b.id")).toEqual({ ok: true });

@@ -18,7 +18,7 @@ beforeEach(() => {
   adminFetch.mockResolvedValue({ ok: true, status: 200, data: { id: 1 } });
 });
 
-describe("F19 moderasi", () => {
+describe("moderasi", () => {
   it("hide/takedown wajib alasan; dikirim ke rute yang benar", async () => {
     expect(await moderate(3, "hide", "  Spam  ")).toEqual({ data: { id: 1 } });
     expect(adminFetch).toHaveBeenCalledWith("/reviews/3/hide", {
