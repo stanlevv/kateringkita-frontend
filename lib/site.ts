@@ -25,3 +25,6 @@ export const PRIVATE_PATHS = [
   "/admin",
   "/api/",
 ];
+
+/** Alamat aplikasi pembeli dari env BUYER_APP_URL (tanpa garis miring di akhir); kosong = tombol "Pesan lewat aplikasi" disembunyikan. */
+export const BUYER_APP_URL: string | null = process.env.BUYER_APP_URL?.replace(/\/+$/, "") || null;
