@@ -1,7 +1,8 @@
 // Komponen PopupList: isi halaman /admin/popup. Tombol "Buat pop-up" (formulir di dialog: judul, gambar, voucher
-// platform opsional, masa tayang, aktif) dan kartu setiap pop-up dengan statusnya serta tombol nonaktifkan/aktifkan.
-// Simpan lewat server action savePopup (app/actions/admin/popup.ts); gambar diunggah langsung dari peramban
-// (lib/upload.ts) dengan alamat unggah dari requestAdminUpload. Data pop-up dan voucher diambil page.tsx.
+// platform opsional, masa tayang, aktif) dan kartu setiap pop-up dengan statusnya serta tombol ubah (dialog yang sama,
+// terisi), nonaktifkan/aktifkan, dan arsipkan. Di tampilan Arsip, kartu hanya punya tombol pulihkan.
+// Simpan lewat server action savePopup dan setPopupArchived (app/actions/admin/popup.ts); gambar diunggah langsung dari
+// peramban (lib/upload.ts) dengan alamat unggah dari requestAdminUpload. Data pop-up dan voucher diambil page.tsx.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, dialog, dan router.
 "use client";
 
@@ -9,10 +10,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarClock, CheckCircle2, EyeOff, Megaphone, Plus, type LucideIcon } from "lucide-react";
 import { requestAdminUpload } from "@/app/actions/admin/banner";
-import { savePopup } from "@/app/actions/admin/popup";
+import { savePopup, setPopupArchived } from "@/app/actions/admin/popup";
 import { Badge } from "@/app/components/ui/Badge";
 import { Banner as AlertBanner } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
+import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Field } from "@/app/components/ui/Field";
@@ -24,6 +26,7 @@ import { callAction } from "@/lib/action";
 import { formatDate, wibInputToIso, isoToWibInput } from "@/lib/format";
 import type { Tone } from "@/lib/order-status";
 import { uploadPhoto } from "@/lib/upload";
+import { withCurrentVoucher } from "@/lib/voucher-options";
 import type { VoucherOption } from "@/types/banner";
 import type { Popup } from "@/types/popup";
 
@@ -41,28 +44,34 @@ export function popupStatus(popup: Popup, now: number): { label: string; tone: T
 }
 
 /**
- * Formulir pop-up baru. Masa tayang bawaan: sekarang sampai 7 hari lagi; jam diisi dan ditampilkan dalam WIB.
+ * Formulir pop-up baru atau pop-up yang diubah (terisi dari `popup`). Masa tayang bawaan pop-up baru: sekarang sampai
+ * 7 hari lagi; jam diisi dan ditampilkan dalam WIB.
+ * @param props.popup pop-up yang diubah; kosong = pop-up baru
  * @param props.vouchers voucher platform yang bisa ditautkan
  * @param props.onSaved dipanggil setelah pop-up tersimpan
  * @param props.onClose dipanggil saat tombol Batal ditekan
  * @returns form
  */
 function PopupForm({
+  popup,
   vouchers,
   onSaved,
   onClose,
 }: {
+  popup?: Popup | null;
   vouchers: VoucherOption[];
   onSaved: () => void;
   onClose: () => void;
 }) {
   // 1. State isian, galat per isian, galat umum (tanpa isian), dan tanda sedang mengirim.
-  const [title, setTitle] = useState("");
-  const [image, setImage] = useState("");
-  const [promoId, setPromoId] = useState("");
-  const [starts, setStarts] = useState(() => isoToWibInput(new Date().toISOString()));
-  const [ends, setEnds] = useState(() => isoToWibInput(new Date(Date.now() + 7 * 86400e3).toISOString()));
-  const [active, setActive] = useState(true);
+  const [title, setTitle] = useState(popup?.title ?? "");
+  const [image, setImage] = useState(popup?.image_url ?? "");
+  const [promoId, setPromoId] = useState(popup?.promo ? String(popup.promo.id) : "");
+  const [starts, setStarts] = useState(() => isoToWibInput(popup?.starts_at ?? new Date().toISOString()));
+  const [ends, setEnds] = useState(() =>
+    isoToWibInput(popup?.ends_at ?? new Date(Date.now() + 7 * 86400e3).toISOString()),
+  );
+  const [active, setActive] = useState(popup?.is_active ?? true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -74,14 +83,14 @@ function PopupForm({
     setImage(result.data.public_url);
   }
 
-  // 3. Simpan pop-up baru.
+  // 3. Simpan pop-up baru (id null) atau pop-up yang diubah.
   async function submit(event: React.FormEvent) {
     // 1. Cegah kirim ganda, lalu kirim isian; jam WIB dari isian diubah ke waktu ISO.
     event.preventDefault();
     if (busy) return;
     setBusy(true);
     const result = await callAction(() =>
-      savePopup(null, {
+      savePopup(popup?.id ?? null, {
         title: title.trim(),
         image_url: image,
         promo_id: promoId ? Number(promoId) : null,
@@ -133,7 +142,7 @@ function PopupForm({
       >
         <Select value={promoId} onChange={(event) => setPromoId(event.target.value)}>
           <option value="">Tanpa voucher</option>
-          {vouchers.map((voucher) => (
+          {withCurrentVoucher(vouchers, popup?.promo ?? null).map((voucher) => (
             <option key={voucher.id} value={voucher.id}>
               {voucher.code} — {voucher.label}
             </option>
@@ -168,24 +177,29 @@ function PopupForm({
 }
 
 /**
- * Pop-up promo aplikasi mobile: daftar + status, buat baru, nonaktifkan / aktifkan. Support hanya melihat.
- * @param props.popups semua pop-up dari backend
- * @param props.vouchers voucher platform yang bisa ditautkan ke pop-up baru
+ * Pop-up promo aplikasi mobile: daftar + status, buat baru, ubah, nonaktifkan / aktifkan, arsipkan, dan pulihkan.
+ * Support hanya melihat.
+ * @param props.popups pop-up dari backend (yang tidak diarsipkan, atau yang diarsipkan di tampilan Arsip)
+ * @param props.vouchers voucher platform yang bisa ditautkan ke pop-up
  * @param props.canEdit true bila admin boleh membuat dan mengubah pop-up (super dan ops)
- * @returns tombol buat, kartu pop-up, dan dialog PopupForm
+ * @param props.archived true di tampilan Arsip: tanpa tombol buat, ubah, dan arsip; hanya pulihkan
+ * @returns tombol buat, kartu pop-up, dialog PopupForm, dan dialog konfirmasi arsip
  */
 export function PopupList({
   popups,
   vouchers,
   canEdit,
+  archived = false,
 }: {
   popups: Popup[];
   vouchers: VoucherOption[];
   canEdit: boolean;
+  archived?: boolean;
 }) {
-  // 1. State dialog buat pop-up dan waktu acuan status.
+  // 1. State dialog formulir ("new" = pop-up baru), pop-up yang menunggu konfirmasi arsip, dan waktu acuan status.
   const router = useRouter();
-  const [createOpen, setCreateOpen] = useState(false);
+  const [form, setForm] = useState<"new" | Popup | null>(null);
+  const [popupToArchive, setPopupToArchive] = useState<Popup | null>(null);
   // eslint-disable-next-line react-hooks/purity -- status tayang dihitung saat render
   const now = Date.now();
 
@@ -197,22 +211,38 @@ export function PopupList({
     router.refresh();
   }
 
+  // 3. Arsipkan atau pulihkan satu pop-up; pesan penolakan backend (mis. 409) tampil apa adanya.
+  async function setPopupArchive(popup: Popup, archive: boolean) {
+    const result = await callAction(() => setPopupArchived(popup.id, archive));
+    if ("error" in result) return toast({ tone: "danger", message: result.error.message });
+    toast({ tone: "success", message: archive ? "Pop-up diarsipkan." : "Pop-up dipulihkan." });
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {canEdit && (
+      {canEdit && !archived && (
         <div>
-          <Button onClick={() => setCreateOpen(true)}>
+          <Button onClick={() => setForm("new")}>
             <Plus aria-hidden className="size-4" />
             Buat pop-up
           </Button>
         </div>
       )}
       {popups.length === 0 ? (
-        <EmptyState
-          icon={Megaphone}
-          title="Belum ada pop-up"
-          body="Pop-up tampil saat aplikasi pembeli dibuka, sekali sehari."
-        />
+        archived ? (
+          <EmptyState
+            icon={Megaphone}
+            title="Belum ada pop-up yang diarsipkan"
+            body="Pop-up yang diarsipkan muncul di sini dan bisa dipulihkan."
+          />
+        ) : (
+          <EmptyState
+            icon={Megaphone}
+            title="Belum ada pop-up"
+            body="Pop-up tampil saat aplikasi pembeli dibuka, sekali sehari."
+          />
+        )
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {popups.map((popup) => {
@@ -236,10 +266,24 @@ export function PopupList({
                     {formatDate(popup.ends_at)}
                   </p>
                   {canEdit && (
-                    <div className="mt-auto flex justify-end">
-                      <Button variant="secondary" onClick={() => void togglePopupActive(popup, !popup.is_active)}>
-                        {popup.is_active ? "Nonaktifkan" : "Aktifkan"}
-                      </Button>
+                    <div className="mt-auto flex flex-wrap justify-end gap-2">
+                      {archived ? (
+                        <Button variant="secondary" onClick={() => void setPopupArchive(popup, false)}>
+                          Pulihkan
+                        </Button>
+                      ) : (
+                        <>
+                          <Button variant="secondary" onClick={() => setForm(popup)}>
+                            Ubah
+                          </Button>
+                          <Button variant="secondary" onClick={() => void togglePopupActive(popup, !popup.is_active)}>
+                            {popup.is_active ? "Nonaktifkan" : "Aktifkan"}
+                          </Button>
+                          <Button variant="secondary" onClick={() => setPopupToArchive(popup)}>
+                            Arsipkan
+                          </Button>
+                        </>
+                      )}
                     </div>
                   )}
                 </article>
@@ -249,23 +293,37 @@ export function PopupList({
         </ul>
       )}
       <Dialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        title="Buat pop-up"
+        open={form !== null}
+        onClose={() => setForm(null)}
+        title={form === "new" ? "Buat pop-up" : "Ubah pop-up"}
         className="max-h-[90dvh] w-[min(36rem,calc(100vw-2rem))] overflow-y-auto"
       >
-        {createOpen && (
+        {form !== null && (
           <PopupForm
+            popup={form === "new" ? null : form}
             vouchers={vouchers}
-            onClose={() => setCreateOpen(false)}
+            onClose={() => setForm(null)}
             onSaved={() => {
-              setCreateOpen(false);
+              setForm(null);
               toast({ tone: "success", message: "Pop-up disimpan." });
               router.refresh();
             }}
           />
         )}
       </Dialog>
+      <ConfirmDialog
+        open={!!popupToArchive}
+        onClose={() => setPopupToArchive(null)}
+        tone="danger"
+        title="Arsipkan pop-up?"
+        body={`"${popupToArchive?.title ?? ""}" berhenti tampil di aplikasi pembeli. Pop-up bisa dipulihkan dari tampilan Arsip.`}
+        confirmLabel="Ya, arsipkan"
+        onConfirm={() => {
+          const popup = popupToArchive!;
+          setPopupToArchive(null);
+          void setPopupArchive(popup, true);
+        }}
+      />
     </div>
   );
 }
