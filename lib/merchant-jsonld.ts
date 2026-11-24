@@ -1,4 +1,5 @@
 // Pembentuk JSON-LD FoodEstablishment untuk halaman toko publik (tanpa alamat/telepon: data privat).
+import { formatRupiah } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import type { MenuCard, MerchantProfile } from "@/types/catalog";
 
@@ -6,6 +7,8 @@ export function merchantJsonLd(profile: MerchantProfile, menus: MenuCard[]): Rec
   const sections = new Map<string, MenuCard[]>();
   for (const m of menus) sections.set(m.category.name, [...(sections.get(m.category.name) ?? []), m]);
   const image = profile.cover_url ?? profile.logo_url;
+  const prices = menus.map((m) => m.price);
+  const [min, max] = [Math.min(...prices), Math.max(...prices)];
 
   return {
     "@context": "https://schema.org",
@@ -24,6 +27,7 @@ export function merchantJsonLd(profile: MerchantProfile, menus: MenuCard[]): Rec
       },
     }),
     ...(menus.length > 0 && {
+      priceRange: min === max ? formatRupiah(min) : `${formatRupiah(min)}–${formatRupiah(max)}`,
       hasMenu: {
         "@type": "Menu",
         hasMenuSection: [...sections].map(([name, items]) => ({
