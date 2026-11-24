@@ -1,5 +1,6 @@
 // Komponen MenuForm: formulir tambah dan ubah menu (info dasar, foto, harga, stok, pre-order, opsi) dengan pratinjau
-// pembeli. Dipakai /menu/baru dan /menu/[id]. Data disimpan lewat server action saveMenu (app/actions/menus.ts);
+// pembeli. Dipakai /menu/baru dan /menu/[id] milik penjual, serta menu toko di panel admin. Bawaannya disimpan lewat
+// server action saveMenu (app/actions/menus.ts);
 // foto diunggah langsung dari peramban lewat lib/upload.ts.
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";

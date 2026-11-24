@@ -1,7 +1,7 @@
 // Halaman /menu/baru: formulir tambah menu.
 // Server component: mengambil daftar kategori (getCategories) di server dan membaca searchParams (parameter URL).
 import { LoadError } from "@/app/components/LoadError";
-import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
+import { MenuForm } from "@/app/components/menu/MenuForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { getCategories } from "@/services/meta.service";
 import { requireMerchant } from "@/services/auth.service";

@@ -1,6 +1,6 @@
 // Halaman /admin/penjual/[id]/menu/baru: tambah menu atas nama toko. Memakai MenuForm milik penjual dengan server
 // action admin (saveMerchantMenu) dan tanpa unggah foto. Hanya admin super dan ops.
-import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
+import { MenuForm } from "@/app/components/menu/MenuForm";
 import { saveMerchantMenu } from "@/app/actions/admin/merchant-edit";
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";

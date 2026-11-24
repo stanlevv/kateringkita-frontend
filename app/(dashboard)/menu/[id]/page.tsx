@@ -2,7 +2,7 @@
 // Server component: mengambil menu (getMenu) dan kategori (getCategories) di server.
 import { SearchX } from "lucide-react";
 import { LoadError } from "@/app/components/LoadError";
-import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
+import { MenuForm } from "@/app/components/menu/MenuForm";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { LinkButton } from "@/app/components/ui/LinkButton";

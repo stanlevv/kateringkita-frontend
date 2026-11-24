@@ -1,6 +1,6 @@
 // Halaman /admin/penjual/[id]/menu/[menuId]: ubah menu toko. Memakai MenuForm milik penjual dengan server action admin
 // (saveMerchantMenu); foto lama dipertahankan, unggah foto baru tetap dari akun penjual. Hanya admin super dan ops.
-import { MenuForm } from "@/app/(dashboard)/menu/components/MenuForm";
+import { MenuForm } from "@/app/components/menu/MenuForm";
 import { saveMerchantMenu } from "@/app/actions/admin/merchant-edit";
 import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";

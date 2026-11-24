@@ -1,6 +1,6 @@
 // Kerangka memuat /menu/[id].
 // loading.tsx = file khusus Next.js yang tampil otomatis selama page.tsx menunggu data.
-import { MenuFormSkeleton } from "../components/MenuFormSkeleton";
+import { MenuFormSkeleton } from "@/app/components/menu/MenuFormSkeleton";
 
 /**
  * Kerangka formulir ubah menu.
