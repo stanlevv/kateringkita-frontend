@@ -46,7 +46,12 @@ export default async function SettingsPage({
           pickupPoints={"error" in pickupPoints ? null : pickupPoints.data}
           tables={"error" in tables ? null : tables.data}
           payouts={"error" in payouts ? null : payouts.data}
-          user={{ full_name: toText(user.full_name), phone: toText(user.phone), email: toText(user.email) }}
+          user={{
+            full_name: toText(user.full_name),
+            phone: toText(user.phone),
+            email: toText(user.email),
+            email_verified: user.email_verified === true,
+          }}
           incompleteSection={typeof params.lengkapi === "string" ? params.lengkapi : undefined}
         />
       )}

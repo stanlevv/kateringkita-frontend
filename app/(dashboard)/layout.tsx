@@ -1,5 +1,5 @@
 // Layout semua halaman penjual (/dashboard, /pesanan, /menu, /pengaturan, dan lainnya): sidebar, header, banner
-// verifikasi toko, dan area konten. Layout = file khusus Next.js yang membungkus semua halaman di folder ini.
+// verifikasi toko dan verifikasi email, dan area konten. Layout = file khusus Next.js yang membungkus semua halaman di folder ini.
 // Ini server component (tanpa "use client"): dijalankan di server dan boleh memanggil services langsung.
 // Data: sesi penjual (requireMerchant), status pemeliharaan, profil toko, jumlah pesanan perlu tindakan, jumlah
 // notifikasi belum dibaca, dan cookie lebar sidebar.
@@ -9,6 +9,7 @@ import { Header } from "@/app/components/shell/Header";
 import { Sidebar } from "@/app/components/shell/Sidebar";
 import { StoreStatusProvider, type StoreInfo } from "@/app/components/shell/StoreStatus";
 import { VerificationBanner } from "@/app/components/VerificationBanner";
+import { EmailVerificationBanner } from "@/app/components/EmailVerificationBanner";
 import { Toaster } from "@/app/components/ui/Toast";
 import { getUnreadNotificationCount } from "@/services/notification.service";
 import { getNeedsActionCount } from "@/services/order.service";
@@ -72,8 +73,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             badge={badge}
             unreadNotifications={unreadNotifications}
           />
-          <div className="px-4 pt-4 empty:hidden md:px-6">
+          <div className="flex flex-col gap-3 px-4 pt-4 empty:hidden md:px-6">
             <VerificationBanner merchant={merchant} />
+            <EmailVerificationBanner user={user} />
           </div>
           <main id="konten" tabIndex={-1} className="flex-1 p-4 md:p-6">
             {children}
