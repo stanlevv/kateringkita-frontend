@@ -25,6 +25,7 @@ import { marginPercent } from "@/lib/menu-filter";
 import { validateFields, menuFormSchema } from "@/lib/schemas";
 import type { Category } from "@/types/meta";
 import type { MerchantMenu } from "@/types/menu";
+import type { ActionResult } from "@/types/api";
 import { ExtraPhotos } from "./ExtraPhotos";
 import { MenuPreview } from "./MenuPreview";
 import { OptionsEditor, type OptionRow } from "./OptionsEditor";
@@ -117,16 +118,25 @@ function FormSection({ title, children }: { title: string; children: ReactNode }
  * @param props.categories daftar kategori
  * @param props.menu menu yang diubah; ada = mode ubah, tidak ada = mode tambah
  * @param props.prefill harga dan HPP awal dari Kalkulator HPP (opsional)
+ * @param props.save server action penyimpan (bawaan saveMenu milik penjual; panel admin memberi versi atas nama toko)
+ * @param props.doneHref halaman tujuan setelah tersimpan (bawaan /menu)
+ * @param props.canUploadPhoto `false` menyembunyikan unggah foto (admin tidak bisa mengunggah atas nama toko)
  * @returns formulir, pratinjau pembeli, dan dialog penjaga perubahan
  */
 export function MenuForm({
   categories,
   menu,
   prefill,
+  save = saveMenu,
+  doneHref = "/menu",
+  canUploadPhoto = true,
 }: {
   categories: Category[];
   menu?: MerchantMenu;
   prefill?: { hpp?: number; price?: number };
+  save?: (id: number | null, input: unknown) => Promise<ActionResult<MerchantMenu>>;
+  doneHref?: string;
+  canUploadPhoto?: boolean;
 }) {
   // 1. State isian, foto, galat, dan status simpan.
   const router = useRouter();
@@ -250,7 +260,7 @@ export function MenuForm({
     // 2. Kirim sekali saja.
     if (saving) return;
     setSaving(true);
-    const result = await callAction(() => saveMenu(menu?.id ?? null, input));
+    const result = await callAction(() => save(menu?.id ?? null, input));
     // 3. Gagal: galat per isian dari server dipetakan ke isian dan ringkasan; galat umum menjadi toast.
     if ("error" in result) {
       setSaving(false); // saat sukses tombol tetap "Menyimpan…" sampai halaman berpindah
@@ -268,7 +278,7 @@ export function MenuForm({
     // 4. Berhasil: matikan penjaga perubahan, beri tahu, lalu pindah ke katalog.
     setSaved(true);
     toast({ tone: "success", message: "Menu disimpan" });
-    router.push("/menu");
+    router.push(doneHref);
   }
 
   // Unggahan gagal: tetap tampilkan foto tersimpan, bukan foto baru.
@@ -375,14 +385,17 @@ export function MenuForm({
                 {photoError}
               </p>
             )}
+            {!canUploadPhoto && <p className="text-sm text-ink-muted">Foto hanya bisa diunggah dari akun penjual.</p>}
             {/* foto HP besar diperkecil di lib/upload.ts sebelum diunggah (batas backend 5 MB) */}
-            <FileDrop
-              id="mf-image_url"
-              maxBytes={20 * MEGABYTE}
-              onFile={selectPhoto}
-              onError={setPhotoError}
-              label={displayedPhoto ? "Ganti foto" : "Pilih foto"}
-            />
+            {canUploadPhoto && (
+              <FileDrop
+                id="mf-image_url"
+                maxBytes={20 * MEGABYTE}
+                onFile={selectPhoto}
+                onError={setPhotoError}
+                label={displayedPhoto ? "Ganti foto" : "Pilih foto"}
+              />
+            )}
             {displayedPhoto && (
               <div>
                 <Button variant="ghost" onClick={removePhoto}>
@@ -391,16 +404,18 @@ export function MenuForm({
                 </Button>
               </div>
             )}
-            <p className="mt-2 text-sm font-medium text-ink">Foto tambahan</p>
-            <ExtraPhotos
-              urls={gallery}
-              onChange={(urls) => {
-                setServerErrors({});
-                setGallery(urls);
-              }}
-              onBusy={setGalleryUploading}
-              error={errorFor("gallery")}
-            />
+            {canUploadPhoto && <p className="mt-2 text-sm font-medium text-ink">Foto tambahan</p>}
+            {canUploadPhoto && (
+              <ExtraPhotos
+                urls={gallery}
+                onChange={(urls) => {
+                  setServerErrors({});
+                  setGallery(urls);
+                }}
+                onBusy={setGalleryUploading}
+                error={errorFor("gallery")}
+              />
+            )}
           </FormSection>
 
           <FormSection title="Harga">

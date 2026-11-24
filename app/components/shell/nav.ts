@@ -25,6 +25,7 @@ import {
   ClipboardList,
   UserCog,
   type LucideIcon,
+  Users,
 } from "lucide-react";
 
 /**
@@ -50,6 +51,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { href: "/admin", label: "Ringkasan", icon: LayoutGrid, exact: true },
       { href: "/admin/verifikasi", label: "Verifikasi", icon: ShieldCheck },
       { href: "/admin/penjual", label: "Penjual", icon: Store },
+      { href: "/admin/pembeli", label: "Pembeli", icon: Users },
       { href: "/admin/moderasi", label: "Moderasi", icon: Flag },
       // Tiket bantuan: semua tingkat (super, ops, support), tidak termasuk SUPER_ONLY_PAGES di lib/admin-level.ts
       { href: "/admin/tiket", label: "Tiket", icon: LifeBuoy },

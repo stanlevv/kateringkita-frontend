@@ -153,7 +153,7 @@ const merchantDetail = (overrides: Partial<AdminMerchantDetail>): AdminMerchantD
   created_at: "2026-10-30T03:00:00.000Z",
   merchant_type_name: "Katering Rumahan",
   menu_count: 5,
-  owner: { full_name: "Siti", phone: "081298765432", email: "siti@mail.com" },
+  owner: { full_name: "Siti", phone: "081298765432", email: "siti@mail.com", is_active: true },
   pickup_points: [{ id: 1, name: "Kantin A" }],
   checklist: fullChecklist,
   recent_logs: [
