@@ -48,6 +48,11 @@ const loadArea = cache(async (param: string) => {
   return { point, canonical, stores };
 });
 
+/**
+ * Membuat metadata SEO halaman.
+ * @param props objek berisi `params` (promise) dengan `slug` dari URL
+ * @returns metadata judul, deskripsi, kanonik, dan OpenGraph; galat dari backend dilempar agar halaman galat tampil
+ */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const { point, canonical, stores } = await loadArea(slug);
@@ -75,6 +80,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+/**
+ * Halaman publik daftar toko di satu titik ambil.
+ * @param props objek berisi `params` (promise) dengan `slug` area
+ * @returns tampilan halaman area, atau 404 bila area tidak ditemukan
+ */
 export default async function AreaPage({ params }: Props) {
   // Dirender per permintaan, bukan sekali saat build, supaya daftar toko selalu terbaru.
   await connection();

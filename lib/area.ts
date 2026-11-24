@@ -21,7 +21,7 @@ export function areaSlug(point: { id: number; name: string }): string {
  * @returns id (>= 1, maks 9 digit), atau `null` bila bentuknya tidak valid
  */
 export function parseAreaId(param: string): number | null {
-  const m = /^(\d{1,9})(?:-|$)/.exec(param);
-  const id = m ? Number(m[1]) : 0;
+  const slugMatch = /^(\d{1,9})(?:-|$)/.exec(param);
+  const id = slugMatch ? Number(slugMatch[1]) : 0;
   return id >= 1 ? id : null;
 }

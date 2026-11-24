@@ -35,22 +35,27 @@ const loadProfile = cache(async (slug: string) => {
 /** Menu toko; `cache` agar generateMetadata dan halaman memanggil backend sekali per permintaan. */
 const loadMenus = cache((slug: string) => getMerchantMenus(slug));
 
+/**
+ * Membuat metadata SEO halaman.
+ * @param props objek berisi `params` (promise) dengan `slug` dari URL
+ * @returns metadata judul, deskripsi, kanonik, dan OpenGraph; galat dari backend dilempar agar halaman galat tampil
+ */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const p = await loadProfile(slug);
-  const title = `${p.business_name} — Menu & Harga Katering`;
+  const profile = await loadProfile(slug);
+  const title = `${profile.business_name} — Menu & Harga Katering`;
   const description = (
-    p.description ??
-    `Pesan katering dari ${p.business_name} (${p.merchant_type.name}). Lihat menu, harga, dan titik ambil di KateringKita.`
+    profile.description ??
+    `Pesan katering dari ${profile.business_name} (${profile.merchant_type.name}). Lihat menu, harga, dan titik ambil di KateringKita.`
   ).slice(0, 160);
-  const image = p.cover_url ?? p.logo_url;
+  const image = profile.cover_url ?? profile.logo_url;
   // Toko tanpa menu dianggap halaman tipis; bila menu gagal dimuat, biarkan halaman yang melempar galat.
   const menusRes = await loadMenus(slug);
   const empty = !("error" in menusRes) && menusRes.data.length === 0;
   return {
     title,
     description,
-    alternates: { canonical: `/toko/${p.slug}` },
+    alternates: { canonical: `/toko/${profile.slug}` },
     ...(empty && { robots: { index: false, follow: true } }),
     openGraph: {
       type: "website",
@@ -58,12 +63,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: SITE_NAME,
       title,
       description,
-      url: `/toko/${p.slug}`,
+      url: `/toko/${profile.slug}`,
       ...(image && { images: [image] }),
     },
   };
 }
 
+/**
+ * Halaman publik satu toko beserta menunya.
+ * @param props objek berisi `params` (promise) dengan `slug` toko
+ * @returns tampilan halaman toko, atau 404 bila toko tidak ditemukan
+ */
 export default async function TokoPage({ params }: Props) {
   const { slug } = await params;
   if (!SLUG_RE.test(slug)) notFound();
