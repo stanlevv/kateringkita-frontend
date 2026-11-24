@@ -3,11 +3,17 @@ import { formatRupiah } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import type { MenuCard, MerchantProfile } from "@/types/catalog";
 
+/**
+ * Membuat data terstruktur JSON-LD toko untuk mesin pencari.
+ * @param profile profil publik toko
+ * @param menus daftar menu toko yang tampil
+ * @returns objek JSON-LD bertipe FoodEstablishment, siap diserialisasi ke tag script
+ */
 export function merchantJsonLd(profile: MerchantProfile, menus: MenuCard[]): Record<string, unknown> {
   const sections = new Map<string, MenuCard[]>();
-  for (const m of menus) sections.set(m.category.name, [...(sections.get(m.category.name) ?? []), m]);
+  for (const menu of menus) sections.set(menu.category.name, [...(sections.get(menu.category.name) ?? []), menu]);
   const image = profile.cover_url ?? profile.logo_url;
-  const prices = menus.map((m) => m.price);
+  const prices = menus.map((menu) => menu.price);
   const [min, max] = [Math.min(...prices), Math.max(...prices)];
 
   return {
@@ -36,10 +42,10 @@ export function merchantJsonLd(profile: MerchantProfile, menus: MenuCard[]): Rec
         hasMenuSection: [...sections].map(([name, items]) => ({
           "@type": "MenuSection",
           name,
-          hasMenuItem: items.map((m) => ({
+          hasMenuItem: items.map((menu) => ({
             "@type": "MenuItem",
-            name: m.name,
-            offers: { "@type": "Offer", price: m.price, priceCurrency: "IDR" },
+            name: menu.name,
+            offers: { "@type": "Offer", price: menu.price, priceCurrency: "IDR" },
           })),
         })),
       },

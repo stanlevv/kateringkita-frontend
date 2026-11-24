@@ -100,12 +100,12 @@ export function useQuota(onMenuSaved: (menu: MerchantMenu) => void, menus: Merch
     queue.inFlightPayload = payload;
 
     const result = await callAction(() => adjustQuota(id, payload as { delta: number } | { quota_today: number }));
-    const ok = "data" in result;
+    const isSuccess = "data" in result;
     const sentPayload = queue.inFlightPayload;
     queue.inFlight = false;
     queue.inFlightPayload = undefined;
 
-    if (ok) {
+    if (isSuccess) {
       // 4. Berhasil: kabari pemanggil; draf ditandai tersimpan bila tidak ada perubahan baru yang menunggu.
       onMenuSavedRef.current(result.data);
       if (!(queue as MenuQueue).pending) {

@@ -1,3 +1,4 @@
+// Template grup dashboard: dirender ulang setiap navigasi dan memasang MobileBlock (penghalang layar sempit) di atas halaman.
 import type { ReactNode } from "react";
 import { MobileBlock } from "@/app/components/shell/MobileBlock";
 

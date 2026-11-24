@@ -24,19 +24,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const [res, pointsRes] = await Promise.all([getPublicMerchants(), getPickupPoints()]);
     if (!("data" in res) || !("data" in pointsRes)) return entries;
     // Toko tanpa menu bertanda noindex (F32), jadi tidak masuk sitemap.
-    const stores = res.data.filter((m) => m.menu_count > 0);
-    const perPoint = await Promise.all(pointsRes.data.map((p) => getPublicMerchants(p.id).catch(() => null)));
+    const stores = res.data.filter((store) => store.menu_count > 0);
+    const perPoint = await Promise.all(
+      pointsRes.data.map((pickupPoint) => getPublicMerchants(pickupPoint.id).catch(() => null)),
+    );
     const areas: MetadataRoute.Sitemap = [];
     for (const [i, point] of pointsRes.data.entries()) {
-      const r = perPoint[i];
+      const pointResult = perPoint[i];
       // Satu area gagal dimuat: lewati area itu saja.
-      if (!r || !("data" in r)) continue;
-      if (r.data.filter((m) => m.menu_count > 0).length >= AREA_MIN_STORES) {
+      if (!pointResult || !("data" in pointResult)) continue;
+      if (pointResult.data.filter((store) => store.menu_count > 0).length >= AREA_MIN_STORES) {
         areas.push({ url: `${SITE_URL}/area/${areaSlug(point)}`, changeFrequency: "weekly", priority: 0.8 });
       }
     }
-    for (const m of stores) {
-      entries.push({ url: `${SITE_URL}/toko/${m.slug}`, changeFrequency: "daily", priority: 0.7 });
+    for (const store of stores) {
+      entries.push({ url: `${SITE_URL}/toko/${store.slug}`, changeFrequency: "daily", priority: 0.7 });
     }
     entries.push(...areas);
   } catch {
