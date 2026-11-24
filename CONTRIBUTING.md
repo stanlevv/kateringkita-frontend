@@ -323,9 +323,10 @@ sama.
    git config blame.ignoreRevsFile .git-blame-ignore-revs
    ```
 
-8. **git bisect.** Empat commit pindah file tidak bisa di-build sendiri karena impornya baru diperbarui di commit
-   berikutnya. Lewati keempatnya saat bisect:
+8. **git bisect.** Enam commit tidak bisa di-build sendiri karena impornya baru diperbarui di commit berikutnya
+   (empat commit pindah file, ditambah dua commit sesudah pemindahan `OrderActionParts.tsx`). Lewati keenamnya saat
+   bisect:
 
    ```bash
-   git bisect skip 21e6b70 68dacee e277ee5 93dc2f9
+   git bisect skip 21e6b70 68dacee e277ee5 93dc2f9 561bf87 6969200
    ```
