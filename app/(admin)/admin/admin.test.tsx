@@ -1,5 +1,6 @@
 // Test shell admin (requireAdmin, menu per tingkat admin, lencana antrean dari /queues, layar ganti sandi sementara),
-// halaman ringkasan /admin, dan halaman /admin/log (filter URL diteruskan ke backend).
+// halaman Dashboard /admin (ringkasan dan ubin "Perlu tindakan"), dan halaman /admin/log (filter URL diteruskan ke
+// backend).
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -154,13 +155,57 @@ describe("shell admin", () => {
   });
 });
 
-describe("halaman ringkasan", () => {
-  it("memanggil requireAdmin sendiri dan merender kartu", async () => {
-    adminFetch.mockResolvedValue({ ok: true, status: 200, data: summary });
+describe("halaman dashboard", () => {
+  /** Membalas /summary dan /queues dengan data yang diberikan (undefined = gagal). */
+  const respond = (summaryData: unknown, queuesData: unknown) =>
+    adminFetch.mockImplementation(async (path: string) => {
+      const data = path === "/summary" ? summaryData : path === "/queues" ? queuesData : undefined;
+      return data ? { ok: true, status: 200, data } : failed;
+    });
+  const tiles = () => within(screen.getByRole("region", { name: "Perlu tindakan" }));
+
+  it("memanggil requireAdmin sendiri, berjudul Dashboard, dan merender kartu", async () => {
+    respond(summary, queues);
     render(await AdminPage());
     expect(requireAdmin).toHaveBeenCalledTimes(1);
     expect(adminFetch).toHaveBeenCalledWith("/summary");
+    expect(adminFetch).toHaveBeenCalledWith("/queues");
+    expect(screen.getByRole("heading", { level: 1, name: "Dashboard" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Menunggu verifikasi/ })).toHaveAttribute("href", "/admin/verifikasi");
+  });
+  it("Perlu tindakan (super): 5 ubin bertaut ke antreannya; ubin bernilai 0 tetap tampil", async () => {
+    respond(summary, queues);
+    render(await AdminPage());
+    const links = tiles().getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/admin/verifikasi",
+      "/admin/tiket?status=open",
+      "/admin/chat-dilaporkan",
+      "/admin/pencairan",
+      "/admin/hasil-ai?status=menunggu",
+    ]);
+    expect(tiles().getByRole("link", { name: /Verifikasi penjual/ })).toHaveTextContent("2");
+    expect(tiles().getByRole("link", { name: /Tiket menunggu balasan/ })).toHaveTextContent("3");
+    expect(tiles().getByRole("link", { name: /Laporan chat belum dibuka/ })).toHaveTextContent("1");
+    const payouts = tiles().getByRole("link", { name: /Pencairan/ });
+    expect(payouts).toHaveTextContent("6");
+    expect(payouts).toHaveTextContent("4 toko siap dicairkan · 2 refund menunggu");
+    expect(tiles().getByRole("link", { name: /Hasil AI menunggu/ })).toHaveTextContent("0");
+  });
+  it("angka uang null (bukan super): 4 ubin tanpa Pencairan", async () => {
+    respond(summary, { ...queues, payouts_pending: null, refunds_pending: null });
+    render(await AdminPage());
+    const hrefs = tiles()
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"));
+    expect(hrefs).toHaveLength(4);
+    expect(hrefs).not.toContain("/admin/pencairan");
+  });
+  it("/queues gagal: pesan antrean, ringkasan tetap tampil", async () => {
+    respond(summary, undefined);
+    render(await AdminPage());
+    expect(tiles().getByText("Antrean belum bisa dimuat.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Menunggu verifikasi/ })).toBeInTheDocument();
   });
   it("gagal memuat ringkasan: pesan + Coba lagi", async () => {
     adminFetch.mockResolvedValue({ ok: false, status: 500, error: { code: "X", message: "x" } });
