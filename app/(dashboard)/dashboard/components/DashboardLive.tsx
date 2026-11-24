@@ -1,3 +1,6 @@
+// Komponen DashboardLive: isi halaman /dashboard yang terus diperbarui (antrean, kuota, KPI, banner status).
+// Data awal dari page.tsx; setelah itu useLiveDashboard menanyakan perubahan ke server secara berkala (polling).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -8,104 +11,168 @@ import { QuotaPanel } from "@/app/(dashboard)/dashboard/components/QuotaPanel";
 import { OrderQueue } from "@/app/(dashboard)/dashboard/components/OrderQueue";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { useStoreStatus } from "@/app/components/shell/StoreStatus";
-import { useUbahStatusDapur } from "@/app/components/shell/StoreStatusToggle";
+import { useStoreOpenToggle } from "@/app/components/shell/StoreStatusToggle";
 import { Banner } from "@/app/components/ui/Banner";
 import { Button } from "@/app/components/ui/Button";
 import { IconButton } from "@/app/components/ui/IconButton";
-import { fokus } from "@/app/components/ui/cx";
-import { ganti, pangkasOptimis, ringkasHariIni, terapkanOptimis, terapkanWaktu, type Optimis } from "@/lib/dashboard";
-import { diLuarJamBuka, labelJamBuka, perluTindakan } from "@/lib/shell";
+import { focusRing } from "@/app/components/ui/cx";
+import {
+  setOrDeleteKey,
+  pruneOptimisticActions,
+  summarizeToday,
+  applyOptimisticActions,
+  applyHoldExpiry,
+  type OptimisticActions,
+} from "@/lib/dashboard";
+import { isOutsideOpenHours, openHoursLabel, countNeedsAction } from "@/lib/shell";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
 import { KpiRow } from "./KpiRow";
 import { SetupChecklist } from "./SetupChecklist";
 import { SyncBanner } from "./SyncBanner";
-import { GagalMuat } from "@/app/components/GagalMuat";
-import { useLangsung } from "@/hooks/useLangsung";
-import { useNotifikasi } from "@/hooks/useNotifikasi";
+import { LoadError } from "@/app/components/LoadError";
+import { useLiveDashboard } from "@/hooks/useLiveDashboard";
+import { useNotifications } from "@/hooks/useNotifications";
 
-const TABLET = "(min-width: 768px) and (max-width: 1279px)";
-const adaMedia = () => typeof window.matchMedia === "function";
-const langganTablet = (f: () => void) => {
-  if (!adaMedia()) return () => {};
-  const m = window.matchMedia(TABLET);
-  m.addEventListener("change", f);
-  return () => m.removeEventListener("change", f);
+// Lebar tablet: panel kuota pindah menjadi tab di antrean.
+const TABLET_QUERY = "(min-width: 768px) and (max-width: 1279px)";
+const hasMatchMedia = () => typeof window.matchMedia === "function";
+/** Langganan perubahan lebar layar untuk useSyncExternalStore (membaca nilai di luar React secara aman). */
+const subscribeTablet = (onChange: () => void) => {
+  if (!hasMatchMedia()) return () => {};
+  const query = window.matchMedia(TABLET_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
 };
 
-export type DataDashboard = {
+/** Data awal dashboard dari page.tsx. */
+export type DashboardData = {
   orders: MerchantOrder[];
   menus: MerchantMenu[];
-  adaTitikTemu: boolean;
+  /** Toko sudah memilih titik temu (dipakai kartu "Siapkan toko"). */
+  hasPickupPoints: boolean;
   /** Waktu server saat data dirender (ms); dasar "Diperbarui N detik lalu" dan "data terakhir HH.MM". */
-  dimuat: number;
+  loadedAt: number;
 };
 
 /**
- * Dashboard live v3 (brief §3–§7, DB-*). Menyimpan data baik terakhir: galat saat polling tidak
- * mengganti antrean (banner DB-E5); galat tanpa data sama sekali -> G-1 gagal muat.
+ * Isi dashboard. Data baik terakhir disimpan: bila muat ulang halaman gagal, antrean lama tetap tampil (dengan
+ * banner koneksi terputus). Hanya bila belum pernah ada data sama sekali, tampil layar gagal muat.
+ * @param props.data data awal dari server, atau null bila gagal
+ * @param props.loadFailed pengambilan data di server gagal
+ * @returns layar gagal muat atau isi dashboard
  */
-export function DashboardLive({ data, galat }: { data: DataDashboard | null; galat: boolean }) {
-  const [terakhir, setTerakhir] = useState(data);
-  if (data && data !== terakhir) setTerakhir(data);
-  const tampil = data ?? terakhir;
-  if (!tampil) return <PageHeader title="Dashboard"><GagalMuat /></PageHeader>;
-  return <Isi {...tampil} galat={galat} />;
+export function DashboardLive({ data, loadFailed }: { data: DashboardData | null; loadFailed: boolean }) {
+  // Simpan data baik terakhir (pola "state dari prop": diperbarui saat render, bukan di efek).
+  const [lastData, setLastData] = useState(data);
+  if (data && data !== lastData) setLastData(data);
+  const shownData = data ?? lastData;
+  if (!shownData)
+    return (
+      <PageHeader title="Dashboard">
+        <LoadError />
+      </PageHeader>
+    );
+  return <DashboardContent {...shownData} loadFailed={loadFailed} />;
 }
 
-function Isi({ orders: awalOrders, menus: awalMenus, adaTitikTemu, dimuat, galat }: DataDashboard & { galat: boolean }) {
-  const { orders, menus, terakhir, putus: terputus, selisih, terima, terimaMenu, segarkan } = useLangsung({ orders: awalOrders, menus: awalMenus, dimuat });
-  const { isOpen, buka, tutup } = useStoreStatus();
-  const { ubah: ubahDapur, pending: membuka } = useUbahStatusDapur();
-  const [sekarang, setSekarang] = useState(dimuat);
+/**
+ * Isi dashboard setelah ada data: banner status, KPI, antrean pesanan, panel kuota, dan menu terlaris.
+ * Ukuran layar menentukan letak panel kuota (samping, atau tab di antrean untuk tablet).
+ */
+function DashboardContent({
+  orders: initialOrders,
+  menus: initialMenus,
+  hasPickupPoints,
+  loadedAt,
+  loadFailed,
+}: DashboardData & { loadFailed: boolean }) {
+  // 1. Data live (polling), status dapur bersama, dan jam lokal yang berdetak tiap detik.
+  const { orders, menus, lastSyncedAt, disconnected, clockOffset, receiveOrder, receiveMenu, refresh } =
+    useLiveDashboard({ orders: initialOrders, menus: initialMenus, loadedAt });
+  const { isOpen, openTime, closeTime } = useStoreStatus();
+  const { changeStoreOpen, pending: storeOpenPending } = useStoreOpenToggle();
+  const [now, setNow] = useState(loadedAt);
   useEffect(() => {
-    const i = setInterval(() => setSekarang(Date.now()), 1000);
-    return () => clearInterval(i);
+    const intervalId = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(intervalId);
   }, []);
   const router = useRouter();
-  const [optimis, setOptimis] = useState<Optimis>({});
-  const [dariOrders, setDariOrders] = useState(orders);
-  if (orders !== dariOrders) {
-    setDariOrders(orders);
-    setOptimis((o) => pangkasOptimis(orders, o)); // entri yang sudah digantikan data server dibuang
+  // 2. Aksi optimistis: kartu langsung berpindah status sebelum server menjawab. Entri dibuang begitu data
+  // server yang lebih baru tiba.
+  const [optimisticActions, setOptimisticActions] = useState<OptimisticActions>({});
+  const [seenOrders, setSeenOrders] = useState(orders);
+  if (orders !== seenOrders) {
+    setSeenOrders(orders);
+    setOptimisticActions((previous) => pruneOptimisticActions(orders, previous)); // entri yang sudah digantikan data server dibuang
   }
-  // DB-E5: galat halaman (refresh gagal) tampil sampai penyegaran sukses berikutnya, tidak menetap.
-  const [galatSaat, setGalatSaat] = useState<number | null>(galat ? terakhir : null);
-  if (galat && galatSaat === null) setGalatSaat(terakhir);
-  if (!galat && galatSaat !== null) setGalatSaat(null);
-  const putus = terputus || (galatSaat !== null && galatSaat === terakhir);
-  const lokal = Math.max(sekarang, dimuat);
-  const kini = lokal + selisih; // D8: jam server (timer tahan, "hari ini")
-  const { baru, umumkan, suara, setSuara } = useNotifikasi(orders, dimuat, kini);
+  // 3. Galat muat ulang halaman tampil sebagai banner sampai sinkron sukses berikutnya, tidak menetap.
+  const [loadFailedAt, setLoadFailedAt] = useState<number | null>(loadFailed ? lastSyncedAt : null);
+  if (loadFailed && loadFailedAt === null) setLoadFailedAt(lastSyncedAt);
+  if (!loadFailed && loadFailedAt !== null) setLoadFailedAt(null);
+  const connectionLost = disconnected || (loadFailedAt !== null && loadFailedAt === lastSyncedAt);
+  const localNow = Math.max(now, loadedAt);
+  const serverNow = localNow + clockOffset; // jam server: dasar timer tahan dan batas "hari ini"
+  // 4. Notifikasi pesanan baru (sorot kartu, bunyi, pengumuman untuk pembaca layar).
+  const { newOrderCodes, announcement, soundOn, setSoundOn } = useNotifications(orders, loadedAt, serverNow);
 
-  // D11: badge sidebar dihitung di layout server; segarkan halaman hanya saat angkanya berubah.
-  const tindakan = perluTindakan(orders);
-  const tindakanLalu = useRef(tindakan);
+  // 5. Badge sidebar dihitung di layout server; muat ulang halaman hanya saat jumlah "perlu tindakan" berubah.
+  const needsAction = countNeedsAction(orders);
+  const previousNeedsAction = useRef(needsAction);
   useEffect(() => {
-    if (tindakanLalu.current === tindakan) return;
-    tindakanLalu.current = tindakan;
+    if (previousNeedsAction.current === needsAction) return;
+    previousNeedsAction.current = needsAction;
     router.refresh();
-  }, [tindakan, router]);
-  const tablet = useSyncExternalStore(langganTablet, () => adaMedia() && window.matchMedia(TABLET).matches, () => false);
+  }, [needsAction, router]);
+  // 6. Lebar tablet? (server selalu menganggap bukan tablet.)
+  const isTablet = useSyncExternalStore(
+    subscribeTablet,
+    () => hasMatchMedia() && window.matchMedia(TABLET_QUERY).matches,
+    () => false,
+  );
 
-  const efektif = terapkanWaktu(terapkanOptimis(orders, optimis), kini);
-  const ringkasan = ringkasHariIni(efektif, menus, kini);
+  // 7. Pesanan efektif = data server + aksi optimistis + waktu tahan yang sudah lewat; KPI dihitung dari sini
+  // supaya angkanya sama dengan kartu.
+  const effectiveOrders = applyHoldExpiry(applyOptimisticActions(orders, optimisticActions), serverNow);
+  const summary = summarizeToday(effectiveOrders, menus, serverNow);
 
-  function fokusKuota(menuId?: number) {
+  /** Memindahkan fokus ke isian kuota satu menu, atau ke panel kuota bila menu tidak disebut. */
+  function focusQuota(menuId?: number) {
     // Setelah tab Kuota (tablet) dirender.
     requestAnimationFrame(() => {
-      const el = (menuId && document.querySelector<HTMLElement>(`#kuota-${menuId} input`)) || document.getElementById("panel-kuota");
-      el?.focus();
+      const target =
+        (menuId && document.querySelector<HTMLElement>(`#kuota-${menuId} input`)) ||
+        document.getElementById("panel-kuota");
+      target?.focus();
     });
   }
 
-  const panel = (
+  // Panel kuota dan menu terlaris: di samping antrean, atau di tab "Kuota" pada tablet.
+  const sidePanel = (
     <>
-      <QuotaPanel menus={menus} sekarang={lokal} terakhir={terakhir} onBerubah={(m) => { terimaMenu(m); segarkan(); }} />
+      <QuotaPanel
+        menus={menus}
+        now={localNow}
+        lastSyncedAt={lastSyncedAt}
+        onMenuSaved={(menu) => {
+          receiveMenu(menu);
+          refresh();
+        }}
+      />
       <section aria-labelledby="judul-terlaris" className="rounded-lg border border-line bg-surface p-4">
-        <h2 id="judul-terlaris" className="flex items-center gap-2 text-lg font-semibold text-ink"><Trophy aria-hidden className="size-5 text-primary" />Menu terlaris hari ini</h2>
+        <h2 id="judul-terlaris" className="flex items-center gap-2 text-lg font-semibold text-ink">
+          <Trophy aria-hidden className="size-5 text-primary" />
+          Menu terlaris hari ini
+        </h2>
         <p className="mt-2 text-ink">
-          {ringkasan.terlaris ? <><span className="font-medium">{ringkasan.terlaris.name}</span> <span className="text-ink-muted">· {ringkasan.terlaris.portions} porsi</span></> : <span className="text-ink-muted">Belum ada penjualan hari ini.</span>}
+          {summary.bestSeller ? (
+            <>
+              <span className="font-medium">{summary.bestSeller.name}</span>{" "}
+              <span className="text-ink-muted">· {summary.bestSeller.portions} porsi</span>
+            </>
+          ) : (
+            <span className="text-ink-muted">Belum ada penjualan hari ini.</span>
+          )}
         </p>
       </section>
     </>
@@ -115,29 +182,77 @@ function Isi({ orders: awalOrders, menus: awalMenus, adaTitikTemu, dimuat, galat
     <PageHeader
       title="Dashboard"
       description="Antrean pesanan dan kuota hari ini"
-      actions={<IconButton icon={suara ? Volume2 : VolumeX} label="Suara notifikasi" aria-pressed={suara} onClick={() => setSuara(!suara)} />}
+      actions={
+        <IconButton
+          icon={soundOn ? Volume2 : VolumeX}
+          label="Suara notifikasi"
+          aria-pressed={soundOn}
+          onClick={() => setSoundOn(!soundOn)}
+        />
+      }
     >
       <div className="flex flex-col gap-4">
-        <p className="sr-only" aria-live="polite">{umumkan}</p>
-        {putus && <SyncBanner terakhir={terakhir} />}
+        <p className="sr-only" aria-live="polite">
+          {announcement}
+        </p>
+        {connectionLost && <SyncBanner lastSyncedAt={lastSyncedAt} />}
         {!isOpen && (
-          <Banner tone="warning" action={<Button loading={membuka} onClick={() => ubahDapur(true)}>Buka sekarang</Button>}>
+          <Banner
+            tone="warning"
+            action={
+              <Button loading={storeOpenPending} onClick={() => changeStoreOpen(true)}>
+                Buka sekarang
+              </Button>
+            }
+          >
             Dapur tutup — pembeli tidak bisa memesan
           </Banner>
         )}
-        {diLuarJamBuka(kini, buka, tutup) && (
-          <Banner tone="info" action={<Link href="/pengaturan" className={`inline-flex min-h-11 items-center font-medium underline underline-offset-4 ${fokus}`}>Ubah jam buka</Link>}>
-            {`Di luar jam buka (${labelJamBuka(buka, tutup)}) — pembeli belum bisa memesan sampai ${buka.replace(":", ".")}`}
+        {isOutsideOpenHours(serverNow, openTime, closeTime) && (
+          <Banner
+            tone="info"
+            action={
+              <Link
+                href="/pengaturan"
+                className={`inline-flex min-h-11 items-center font-medium underline underline-offset-4 ${focusRing}`}
+              >
+                Ubah jam buka
+              </Link>
+            }
+          >
+            {`Di luar jam buka (${openHoursLabel(openTime, closeTime)}) — pembeli belum bisa memesan sampai ${openTime.replace(":", ".")}`}
           </Banner>
         )}
-        {(!adaTitikTemu || menus.length === 0) && (
-          <SetupChecklist adaTitikTemu={adaTitikTemu} adaMenu={menus.length > 0} dapurBuka={isOpen} membuka={membuka} onBukaDapur={() => ubahDapur(true)} />
+        {(!hasPickupPoints || menus.length === 0) && (
+          <SetupChecklist
+            hasPickupPoints={hasPickupPoints}
+            hasMenus={menus.length > 0}
+            storeOpen={isOpen}
+            opening={storeOpenPending}
+            onOpenStore={() => changeStoreOpen(true)}
+          />
         )}
-        <KpiRow ringkasan={ringkasan} />
+        <KpiRow summary={summary} />
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-          <OrderQueue orders={efektif} menus={menus} sekarang={kini} baru={baru} optimis={optimis}
-            onOptimis={(c, v) => setOptimis((o) => ganti(o, c, v))} onFokusKuota={fokusKuota} onTerima={terima} onSegarkan={segarkan} kuota={tablet ? <div className="flex flex-col gap-4">{panel}</div> : undefined} />
-          {!tablet && <aside aria-label="Kuota dan menu terlaris" className="flex flex-col gap-4">{panel}</aside>}
+          <OrderQueue
+            orders={effectiveOrders}
+            menus={menus}
+            now={serverNow}
+            newOrderCodes={newOrderCodes}
+            optimisticActions={optimisticActions}
+            onOptimisticChange={(code, entry) =>
+              setOptimisticActions((previous) => setOrDeleteKey(previous, code, entry))
+            }
+            onFocusQuota={focusQuota}
+            onReceiveOrder={receiveOrder}
+            onRefresh={refresh}
+            quotaPanel={isTablet ? <div className="flex flex-col gap-4">{sidePanel}</div> : undefined}
+          />
+          {!isTablet && (
+            <aside aria-label="Kuota dan menu terlaris" className="flex flex-col gap-4">
+              {sidePanel}
+            </aside>
+          )}
         </div>
       </div>
     </PageHeader>

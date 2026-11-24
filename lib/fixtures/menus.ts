@@ -1,9 +1,22 @@
+// Data contoh menu untuk test (12 menu dari beberapa kategori, dengan kuota dan stok berbeda-beda).
+
 import type { MerchantMenu } from "@/types/menu";
 import { categories } from "./meta";
 
-type Baris = [id: number, name: string, cat: number, unit: string, price: number, hpp: number, kuota: number, terjual: number, ditahan: number, opts?: string[]];
+type MenuRow = [
+  id: number,
+  name: string,
+  categoryId: number,
+  unit: string,
+  price: number,
+  hpp: number,
+  quota: number,
+  sold: number,
+  held: number,
+  options?: string[],
+];
 
-const BARIS: Baris[] = [
+const MENU_ROWS: MenuRow[] = [
   [1, "Nasi Ayam Bakar Madu", 1, "1 box", 22000, 14000, 40, 22, 3, ["Sambal pisah", "Tambah telur"]],
   [2, "Nasi Box Rendang", 1, "1 box", 25000, 16500, 30, 30, 0],
   [3, "Nasi Liwet Komplit", 1, "1 box", 24000, 15000, 25, 18, 4],
@@ -18,29 +31,37 @@ const BARIS: Baris[] = [
   [12, "Es Jeruk Peras", 5, "400 ml", 9000, 4500, 30, 3, 0],
 ];
 
+/**
+ * Membuat daftar menu contoh baru (objek baru setiap dipanggil, jadi aman diubah di test).
+ * @returns 12 menu contoh
+ */
 export const menus = (): MerchantMenu[] => {
-  const cat = categories();
-  return BARIS.map(([id, name, c, unit, price, hpp, kuota, terjual, ditahan, opts = []]) => ({
+  const categoryList = categories();
+  return MENU_ROWS.map(([id, name, categoryId, unit, price, hpp, quota, sold, held, options = []]) => ({
     id,
     name,
     description: `${name} buatan dapur sendiri, dibuat segar setiap hari.`,
     image_url: null,
-    category: cat.find((x) => x.id === c)!,
+    category: categoryList.find((category) => category.id === categoryId)!,
     unit_label: unit,
     price,
     hpp,
     margin: price - hpp,
-    daily_quota: kuota,
-    quota_today: kuota,
-    sold_today: terjual,
-    held_today: ditahan,
-    available: kuota - terjual - ditahan,
-    prep_minutes: c === 5 ? 5 : 20,
+    daily_quota: quota,
+    quota_today: quota,
+    sold_today: sold,
+    held_today: held,
+    available: quota - sold - held,
+    prep_minutes: categoryId === 5 ? 5 : 20,
     is_preorder: false,
     preorder_days: 0,
     min_order_qty: 1,
     is_active: id !== 9,
-    options: opts.map((n, i) => ({ id: id * 10 + i, name: n, extra_price: n.startsWith("Tambah") ? 3000 : 0 })),
+    options: options.map((optionName, i) => ({
+      id: id * 10 + i,
+      name: optionName,
+      extra_price: optionName.startsWith("Tambah") ? 3000 : 0,
+    })),
     rating_avg: 4 + (id % 10) / 10,
     rating_count: 10 + id * 7,
   }));

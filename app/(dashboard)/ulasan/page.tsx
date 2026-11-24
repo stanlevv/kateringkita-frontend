@@ -1,41 +1,68 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+// Halaman /ulasan: ringkasan rating toko, rating per menu, dan daftar ulasan pembeli dengan filter.
+// Server component: membaca searchParams (?menu=&bintang=&page=), mengambil semua ulasan dan menu dari backend
+// (services/review.service.ts dan menu.service.ts), lalu menyaring dan membagi halaman di server.
+import { LoadError } from "@/app/components/LoadError";
 import { MenuRatings, RatingSummary } from "@/app/(dashboard)/ulasan/components/RatingSummary";
 import { ReviewList } from "@/app/(dashboard)/ulasan/components/ReviewList";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getMenus } from "@/services/menuService";
-import { getReviews } from "@/services/reviewService";
-import { requireMerchant } from "@/services/authService";
-import { saringUlasan } from "@/lib/ulasan";
+import { getMenus } from "@/services/menu.service";
+import { getReviews } from "@/services/review.service";
+import { requireMerchant } from "@/services/auth.service";
+import { filterReviews } from "@/lib/review";
 
-const angka = (v: string | string[] | undefined, min: number, maks: number) => {
-  const n = typeof v === "string" && /^\d{1,9}$/.test(v) ? Number(v) : NaN;
-  return n >= min && n <= maks ? n : undefined;
+/**
+ * Parameter URL sebagai angka bulat dalam batas; selain itu undefined (dianggap tidak diisi).
+ * @param value nilai parameter URL
+ * @param min batas bawah
+ * @param max batas atas
+ * @returns angka, atau undefined
+ */
+const parseNumberParam = (value: string | string[] | undefined, min: number, max: number) => {
+  const parsed = typeof value === "string" && /^\d{1,9}$/.test(value) ? Number(value) : NaN;
+  return parsed >= min && parsed <= max ? parsed : undefined;
 };
 
-// M-14 — Ulasan (UL-N1…N3, UL-S1). Filter menu, bintang, dan halaman tinggal di URL.
-export default async function UlasanPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+/**
+ * Halaman ulasan. Filter menu, bintang, dan halaman disimpan di URL, jadi tautan bisa dibagikan.
+ * @param props.searchParams parameter URL: `menu` (id menu), `bintang` (1-5), `page`
+ * @returns PageHeader berisi ringkasan, rating per menu, dan daftar ulasan; atau LoadError bila gagal dimuat
+ */
+export default async function ReviewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // 1. Pastikan penjual sudah masuk, lalu ambil ulasan, menu, dan parameter URL bersamaan.
   await requireMerchant();
-  const [ulasan, menus, q] = await Promise.all([getReviews(), getMenus(), searchParams]);
-  if ("error" in ulasan) {
-    return <PageHeader title="Ulasan"><GagalMuat judul="Ulasan belum bisa dimuat" isi="Terjadi kesalahan saat mengambil ulasan. Periksa koneksi lalu coba lagi." /></PageHeader>;
+  const [reviews, menus, params] = await Promise.all([getReviews(), getMenus(), searchParams]);
+  if ("error" in reviews) {
+    return (
+      <PageHeader title="Ulasan">
+        <LoadError
+          title="Ulasan belum bisa dimuat"
+          body="Terjadi kesalahan saat mengambil ulasan. Periksa koneksi lalu coba lagi."
+        />
+      </PageHeader>
+    );
   }
-  const filter = { menu: angka(q.menu, 1, 999_999_999), bintang: angka(q.bintang, 1, 5) };
-  const { rows, total } = saringUlasan(ulasan.data, filter, 1);
-  const halaman = Math.min(angka(q.page, 1, 99_999) ?? 1, Math.max(1, Math.ceil(total / 10)));
-  const kini = halaman === 1 ? { rows, total } : saringUlasan(ulasan.data, filter, halaman);
-  const daftarMenu = "data" in menus ? menus.data.map((m) => ({ id: m.id, name: m.name })) : [];
+  // 2. Saring ulasan; nomor halaman dijepit ke halaman terakhir yang ada (10 ulasan per halaman).
+  const filter = { menu: parseNumberParam(params.menu, 1, 999_999_999), stars: parseNumberParam(params.bintang, 1, 5) };
+  const { rows, total } = filterReviews(reviews.data, filter, 1);
+  const currentPage = Math.min(parseNumberParam(params.page, 1, 99_999) ?? 1, Math.max(1, Math.ceil(total / 10)));
+  const pageResult = currentPage === 1 ? { rows, total } : filterReviews(reviews.data, filter, currentPage);
+  const menuOptions = "data" in menus ? menus.data.map((menu) => ({ id: menu.id, name: menu.name })) : [];
 
   return (
     <PageHeader title="Ulasan">
       <div className="flex flex-col gap-6">
-        <RatingSummary reviews={ulasan.data} />
-        {ulasan.data.length > 0 && (
+        <RatingSummary reviews={reviews.data} />
+        {reviews.data.length > 0 && (
           <div className="grid items-start gap-6 md:grid-cols-[18rem_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)]">
-            <MenuRatings reviews={ulasan.data} menus={daftarMenu} menuId={filter.menu} />
-            <ReviewList rows={kini.rows} total={kini.total} page={halaman} filter={filter} />
+            <MenuRatings reviews={reviews.data} menus={menuOptions} menuId={filter.menu} />
+            <ReviewList rows={pageResult.rows} total={pageResult.total} page={currentPage} filter={filter} />
           </div>
         )}
-        {ulasan.data.length === 0 && <ReviewList rows={[]} total={0} page={1} filter={{}} kosongSemua />}
+        {reviews.data.length === 0 && <ReviewList rows={[]} total={0} page={1} filter={{}} noReviews />}
       </div>
     </PageHeader>
   );

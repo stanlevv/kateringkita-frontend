@@ -45,3 +45,9 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# dokumen agen AI (lokal saja, bukan bagian repo)
+AGENTS.md
+CLAUDE.md
+.claude/
+docs/superpowers/

@@ -1,12 +1,24 @@
+// Komponen Banner: kotak pesan selebar konten (info, peringatan, galat) dengan aksi opsional. Dipakai di banyak
+// halaman.
 import type { ReactNode } from "react";
-import type { Nada } from "@/lib/order-status";
+import type { Tone } from "@/lib/order-status";
 import { cx } from "./cx";
 import { toneClass, toneIcon } from "./tone";
 
-export function Banner({ tone, children, action }: { tone: Nada; children: ReactNode; action?: ReactNode }) {
+/**
+ * Pesan selebar konten. Nada danger memakai role="alert" (langsung dibacakan pembaca layar), lainnya role="status".
+ * @param props.tone nada warna
+ * @param props.children isi pesan
+ * @param props.action tombol/tautan opsional di kanan
+ * @returns elemen `div`
+ */
+export function Banner({ tone, children, action }: { tone: Tone; children: ReactNode; action?: ReactNode }) {
   const Icon = toneIcon[tone];
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={cx("flex flex-wrap items-center gap-3 rounded-md border border-line px-4 py-3", toneClass[tone])}>
+    <div
+      role={tone === "danger" ? "alert" : "status"}
+      className={cx("flex flex-wrap items-center gap-3 rounded-md border border-line px-4 py-3", toneClass[tone])}
+    >
       <Icon aria-hidden className="size-5 shrink-0" />
       <div className="flex-1 text-sm font-medium">{children}</div>
       {action}

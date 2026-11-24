@@ -1,12 +1,21 @@
+// Bentuk data pesanan dari backend (GET /merchant/orders). Nama properti mengikuti JSON backend.
+
 import type { MenuOption } from "@/types/menu";
 import type { PickupPoint } from "@/types/meta";
 
+/**
+ * Tahap pesanan: menunggu (holding), dikonfirmasi, dimasak, siap, selesai, dibatalkan, atau kedaluwarsa.
+ */
 export type OrderStatus = "holding" | "confirmed" | "cooking" | "ready" | "completed" | "cancelled" | "expired";
-// online = halaman bayar Midtrans Snap (pesanan meja F21, pre-order F26). qris = QRIS statis toko: dihapus F26, tinggal di riwayat lama.
+/**
+ * Cara bayar. `va` = virtual account (transfer ke nomor rekening khusus pesanan); `online` = halaman bayar Midtrans
+ * (layanan pembayaran yang dipakai aplikasi); `qris` = QRIS statis toko yang sudah tidak dipakai, hanya ada di riwayat lama.
+ */
 export type PaymentMethod = "cod" | "qris" | "va" | "online";
-// sama dengan ENUM orders.payment_status
+/** Status pembayaran, sama dengan kolom orders.payment_status di database. */
 export type PaymentStatus = "unpaid" | "pending" | "paid" | "failed" | "refunded";
 
+/** Satu baris menu di dalam pesanan. */
 export type OrderItem = {
   menu_id: number;
   menu_name: string;
@@ -16,6 +25,7 @@ export type OrderItem = {
   line_total: number;
 };
 
+/** Satu pesanan lengkap seperti yang dilihat penjual, termasuk waktu tiap tahap statusnya. */
 export type MerchantOrder = {
   code: string;
   status: OrderStatus;
@@ -24,7 +34,7 @@ export type MerchantOrder = {
   hold_until: string | null;
   seconds_left: number | null;
   pickup_point: PickupPoint | null; // null = pesanan meja
-  table: { id: number; label: string } | null; // F21 pesan dari meja
+  table: { id: number; label: string } | null; // diisi bila pesanan dibuat dari meja (pesan dari meja)
   pickup_at: string | null; // null = secepatnya
   items: OrderItem[];
   subtotal: number;

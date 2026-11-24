@@ -1,74 +1,100 @@
+// Test route handler /api/laporan/csv: isi dan nama file CSV, galat backend, rentang tanggal tidak sah, server sesi
+// mati, tanpa sesi penjual, dan permintaan dari situs lain. Sesi dan getTransactions dipalsukan (vi.mock).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 const getSession = vi.fn();
-vi.mock("@/services/authService", () => ({ getSession: () => getSession() }));
+vi.mock("@/services/auth.service", () => ({ getSession: () => getSession() }));
 const getTransactions = vi.fn();
-vi.mock("@/services/reportService", () => ({ getTransactions: (...a: unknown[]) => getTransactions(...a) }));
-import { tanggalWib } from "@/lib/format";
+vi.mock("@/services/report.service", () => ({ getTransactions: (...args: unknown[]) => getTransactions(...args) }));
+import { wibDate } from "@/lib/format";
 import { GET } from "./route";
 
-const hariIni = tanggalWib(new Date().toISOString());
-const minta = (q: string) => GET(new Request(`http://localhost/api/laporan/csv${q}`));
+const today = wibDate(new Date().toISOString());
+const callRoute = (query: string) => GET(new Request(`http://localhost/api/laporan/csv${query}`));
 
-const baris = { code: "KK-20261031-AB2C", created_at: "2026-10-30T10:00:00.000Z", completed_at: "2026-10-31T04:42:00.000Z", customer_name: "Rafli", payment_method: "cod", menu_name: "Nasi Ayam", qty: 2, total: 44000, hpp_total: 28000, status: "completed" };
+const row = {
+  code: "KK-20261031-AB2C",
+  created_at: "2026-10-30T10:00:00.000Z",
+  completed_at: "2026-10-31T04:42:00.000Z",
+  customer_name: "Rafli",
+  payment_method: "cod",
+  menu_name: "Nasi Ayam",
+  qty: 2,
+  total: 44000,
+  hpp_total: 28000,
+  status: "completed",
+};
 beforeEach(() => {
   getSession.mockResolvedValue({ user: { role: "merchant" }, merchant: {} });
-  getTransactions.mockResolvedValue({ data: [baris] });
+  getTransactions.mockResolvedValue({ data: [row] });
 });
 
-describe("LP-N4 rute CSV", () => {
+describe("rute CSV", () => {
   it("text/csv, header kolom, nama file laporan-<dari>-<sampai>.csv", async () => {
-    const res = await minta(`?dari=${hariIni}&sampai=${hariIni}`);
-    expect(res.status).toBe(200);
-    expect(res.headers.get("content-type")).toBe("text/csv; charset=utf-8");
-    expect(res.headers.get("content-disposition")).toBe(`attachment; filename="laporan-${hariIni}-${hariIni}.csv"`);
-    expect(res.headers.get("cache-control")).toBe("no-store");
-    const isi = new TextDecoder("utf-8", { ignoreBOM: true }).decode(await res.arrayBuffer()); // text() membuang BOM
-    expect(isi.startsWith("﻿")).toBe(true);
-    const rows = isi.slice(1).trim().split("\r\n");
+    const response = await callRoute(`?dari=${today}&sampai=${today}`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("text/csv; charset=utf-8");
+    expect(response.headers.get("content-disposition")).toBe(`attachment; filename="laporan-${today}-${today}.csv"`);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    const csvText = new TextDecoder("utf-8", { ignoreBOM: true }).decode(await response.arrayBuffer()); // text() membuang BOM
+    expect(csvText.startsWith("﻿")).toBe(true);
+    const rows = csvText.slice(1).trim().split("\r\n");
     expect(rows[0]).toBe("kode,waktu,menu,qty,omzet,hpp,laba,metode");
     expect(rows[1]).toBe("KK-20261031-AB2C,2026-10-31 11:42,Nasi Ayam,2,44000,28000,16000,cod");
-    expect(getTransactions).toHaveBeenCalledWith({ from: hariIni, to: hariIni });
+    expect(getTransactions).toHaveBeenCalledWith({ from: today, to: today });
   });
   it("galat dari API -> 500 dengan pesan server", async () => {
     getTransactions.mockResolvedValue({ error: { code: "INTERNAL_ERROR", message: "Dari server" } });
-    const res = await minta(`?dari=${hariIni}&sampai=${hariIni}`);
-    expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ message: "Dari server" });
+    const response = await callRoute(`?dari=${today}&sampai=${today}`);
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ message: "Dari server" });
   });
-  it("LP-E1 rentang tidak sah -> 400 dengan pesan Indonesia", async () => {
-    const res = await minta(`?dari=${hariIni}&sampai=2020-01-01`);
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ message: "Tanggal akhir harus setelah tanggal awal." });
-    expect((await minta("?dari=2020-01-01&sampai=2026-10-31")).status).toBe(400);
-    expect((await minta("")).status).toBe(400);
+  it("rentang tidak sah -> 400 dengan pesan Indonesia", async () => {
+    const response = await callRoute(`?dari=${today}&sampai=2020-01-01`);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ message: "Tanggal akhir harus setelah tanggal awal." });
+    expect((await callRoute("?dari=2020-01-01&sampai=2026-10-31")).status).toBe(400);
+    expect((await callRoute("")).status).toBe(400);
   });
   it("backend sesi gagal -> 503 dengan pesan Indonesia", async () => {
-    getSession.mockImplementation(async () => { throw new Error("boom"); });
-    const res = await minta(`?dari=${hariIni}&sampai=${hariIni}`);
-    expect(res.status).toBe(503);
-    expect(await res.json()).toEqual({ message: "Server tidak dapat dihubungi. Coba lagi sesaat lagi." });
+    getSession.mockImplementation(async () => {
+      throw new Error("boom");
+    });
+    const response = await callRoute(`?dari=${today}&sampai=${today}`);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ message: "Server tidak dapat dihubungi. Coba lagi sesaat lagi." });
   });
   it("tanpa sesi penjual -> 401", async () => {
     getSession.mockResolvedValue(null);
-    expect((await minta(`?dari=${hariIni}&sampai=${hariIni}`)).status).toBe(401);
+    expect((await callRoute(`?dari=${today}&sampai=${today}`)).status).toBe(401);
     getSession.mockResolvedValue({ user: { role: "customer" }, merchant: null });
-    expect((await minta(`?dari=${hariIni}&sampai=${hariIni}`)).status).toBe(401);
+    expect((await callRoute(`?dari=${today}&sampai=${today}`)).status).toBe(401);
   });
 });
 
-// AUD-48: navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
+// Navigasi dari situs lain dengan sesi valid dijawab sama persis dengan tanpa sesi (tidak membocorkan siapa yang login)
 describe("XS-Leak", () => {
-  it.each(["cross-site", "same-site", "none"])("sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca", async (asal) => {
-    getSession.mockClear();
-    const res = await GET(new Request(`http://localhost/api/laporan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": asal } }));
-    expect(res.status).toBe(401);
-    expect(await res.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
-    expect(getSession).not.toHaveBeenCalled();
-  });
+  it.each(["cross-site", "same-site", "none"])(
+    "sec-fetch-site %s -> 401 seperti tanpa sesi, sesi tidak dibaca",
+    async (fetchSite) => {
+      getSession.mockClear();
+      const response = await GET(
+        new Request(`http://localhost/api/laporan/csv?dari=${today}&sampai=${today}`, {
+          headers: { "sec-fetch-site": fetchSite },
+        }),
+      );
+      expect(response.status).toBe(401);
+      expect(await response.json()).toEqual({ message: "Sesi berakhir. Masuk lagi untuk mengunduh." });
+      expect(getSession).not.toHaveBeenCalled();
+    },
+  );
   it("same-origin tetap mengunduh", async () => {
-    const res = await GET(new Request(`http://localhost/api/laporan/csv?dari=${hariIni}&sampai=${hariIni}`, { headers: { "sec-fetch-site": "same-origin" } }));
-    expect(res.status).toBe(200);
+    const response = await GET(
+      new Request(`http://localhost/api/laporan/csv?dari=${today}&sampai=${today}`, {
+        headers: { "sec-fetch-site": "same-origin" },
+      }),
+    );
+    expect(response.status).toBe(200);
   });
 });

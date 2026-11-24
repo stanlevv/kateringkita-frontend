@@ -1,8 +1,13 @@
+// Test LogFilters: nilai awal dari URL dan perubahan filter ditulis ke URL (page dibuang).
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const replace = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }), usePathname: () => "/admin/log", useSearchParams: () => new URLSearchParams("action=promo.update&page=3") }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace }),
+  usePathname: () => "/admin/log",
+  useSearchParams: () => new URLSearchParams("action=promo.update&page=3"),
+}));
 import { LogFilters } from "./LogFilters";
 
 describe("filter log", () => {

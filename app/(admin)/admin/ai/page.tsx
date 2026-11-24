@@ -1,20 +1,46 @@
-import { GagalMuat } from "@/app/components/GagalMuat";
+// Halaman /admin/ai (gerbang AI): pemakaian AI dan daftar penyedia AI. Penyedia AI = layanan model bahasa (mis. Google
+// Gemini, Groq) yang dipakai asisten toko dan rekomendasi pembeli, masing-masing dengan API key gratis milik sendiri.
+// Urutan fallback: backend mencoba penyedia aktif dari prioritas terkecil; bila satu kena batas atau error, penyedia
+// berikutnya dicoba. Server component: membaca searchParams (?hari=7|30), mengambil data lewat
+// services/admin-ai.service.ts (GET /admin/ai-providers dan /admin/ai-usage). Hanya admin super.
+import { LoadError } from "@/app/components/LoadError";
 import { PageHeader } from "@/app/components/shell/PageHeader";
-import { getPemakaianAi, getPenyediaAi } from "@/services/adminAiService";
-import { requireAdmin } from "@/services/authService";
-import { PemakaianAi } from "./components/PemakaianAi";
-import { PenyediaAiPanel } from "./components/PenyediaAiPanel";
+import { getAiUsage, getAiProviders } from "@/services/admin-ai.service";
+import { requireAdmin } from "@/services/auth.service";
+import { AiUsagePanel } from "./components/AiUsagePanel";
+import { AiProvidersPanel } from "./components/AiProvidersPanel";
 
-// F22 penyedia AI (gratis) dengan fallback otomatis + F25 pemakaian (token, panggilan, gagal). ?hari=7|30
-export default async function AdminAiPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+/**
+ * Halaman AI. Pemakaian dan penyedia dimuat bersamaan; bila salah satu gagal, bagian lain tetap tampil.
+ * @param props.searchParams parameter URL: `hari` ("30" untuk 30 hari; selain itu 7 hari)
+ * @returns PageHeader berisi AiUsagePanel dan AiProvidersPanel (atau LoadError per bagian)
+ */
+export default async function AdminAiPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  // 1. Hanya admin super; rentang pemakaian dari ?hari= (selain "30" dianggap 7 hari).
   await requireAdmin("super");
-  const hari = (await searchParams).hari === "30" ? 30 : 7;
-  const [r, pakai] = await Promise.all([getPenyediaAi(), getPemakaianAi(hari)]);
+  const days = (await searchParams).hari === "30" ? 30 : 7;
+  // 2. Ambil penyedia dan pemakaian bersamaan.
+  const [providers, usage] = await Promise.all([getAiProviders(), getAiUsage(days)]);
   return (
-    <PageHeader title="AI" description="Pantau pemakaian dan atur penyedia AI untuk asisten toko & rekomendasi pembeli. Penyedia dicoba berurutan; bila satu kena batas atau error, otomatis pindah ke berikutnya.">
+    <PageHeader
+      title="AI"
+      description="Pantau pemakaian dan atur penyedia AI untuk asisten toko & rekomendasi pembeli. Penyedia dicoba berurutan; bila satu kena batas atau error, otomatis pindah ke berikutnya."
+    >
       <div className="flex flex-col gap-10">
-        {"error" in pakai ? <GagalMuat judul="Pemakaian AI belum bisa dimuat" isi="Data gagal dimuat. Coba lagi." /> : <PemakaianAi data={pakai.data} />}
-        {"error" in r ? <GagalMuat judul="Penyedia AI belum bisa dimuat" isi="Data gagal dimuat. Coba lagi." /> : <PenyediaAiPanel data={r.data} />}
+        {"error" in usage ? (
+          <LoadError title="Pemakaian AI belum bisa dimuat" body="Data gagal dimuat. Coba lagi." />
+        ) : (
+          <AiUsagePanel data={usage.data} />
+        )}
+        {"error" in providers ? (
+          <LoadError title="Penyedia AI belum bisa dimuat" body="Data gagal dimuat. Coba lagi." />
+        ) : (
+          <AiProvidersPanel data={providers.data} />
+        )}
       </div>
     </PageHeader>
   );

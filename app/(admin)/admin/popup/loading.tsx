@@ -1,11 +1,18 @@
-import { RangkaHalaman } from "@/app/components/shell/RangkaHalaman";
-import { SkeletonDaftar } from "@/app/components/ui/Skeleton";
+// Kerangka memuat /admin/popup. loading.tsx tampil otomatis selama page.tsx menunggu data dari backend.
+import { PageFrame } from "@/app/components/shell/PageFrame";
+import { SkeletonList } from "@/app/components/ui/Skeleton";
 
-// DaftarPopup: tombol buat + kartu pop-up
+/**
+ * Kerangka PopupList: tombol buat + kartu pop-up.
+ * @returns PageFrame berisi kerangka
+ */
 export default function Loading() {
   return (
-    <RangkaHalaman judul="Pop-up" deskripsi="Pop-up promo saat aplikasi pembeli dibuka. Tampil sekali sehari dan berhenti setelah vouchernya diklaim.">
-      <SkeletonDaftar kolom={3} />
-    </RangkaHalaman>
+    <PageFrame
+      title="Pop-up"
+      description="Pop-up promo saat aplikasi pembeli dibuka. Tampil sekali sehari dan berhenti setelah vouchernya diklaim."
+    >
+      <SkeletonList columns={3} />
+    </PageFrame>
   );
 }

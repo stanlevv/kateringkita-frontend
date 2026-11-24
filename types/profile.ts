@@ -1,5 +1,8 @@
+// Bentuk data profil toko dari backend (GET /merchant/profile).
+
 import type { MerchantType } from "@/types/meta";
 
+/** Profil toko: identitas, jam buka, lama menahan pesanan, target omzet, templat WA, dan titik temu. */
 export type MerchantProfile = {
   business_name: string;
   description: string | null;
@@ -16,5 +19,5 @@ export type MerchantProfile = {
   daily_revenue_target: number;
   wa_template: string | null;
   pickup_point_ids: number[];
-  dine_in_enabled: boolean; // F21 pesan dari meja
+  dine_in_enabled: boolean; // fitur pesan dari meja aktif atau tidak
 };

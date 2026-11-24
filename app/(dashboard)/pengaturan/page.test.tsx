@@ -1,52 +1,71 @@
-// Data penjual dari backend ditiru dengan fixture.
-vi.mock("@/services/api", async (orig) => ({
-  ...(await orig<typeof import("@/services/api")>()),
-  merchantFetch: async (path: string) => ({ ok: true, status: 200, data: path.startsWith("/orders") ? (await import("@/lib/fixtures/orders")).orders() : path === "/tables" ? [] : path === "/payouts" ? (await import("@/lib/fixtures/pencairan")).pencairanSaya() : (await import("@/lib/fixtures/profile")).profile(), meta: { total: 16 } }),
+// Test halaman /pengaturan dan /template-wa: requireMerchant dipanggil, satu h1, semua bagian ada, dan skenario
+// gagal muat. Data penjual dari backend ditiru dengan fixture.
+vi.mock("@/services/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/api")>()),
+  merchantFetch: async (path: string) => ({
+    ok: true,
+    status: 200,
+    data: path.startsWith("/orders")
+      ? (await import("@/lib/fixtures/orders")).orders()
+      : path === "/tables"
+        ? []
+        : path === "/payouts"
+          ? (await import("@/lib/fixtures/payouts")).myPayouts()
+          : (await import("@/lib/fixtures/profile")).profile(),
+    meta: { total: 16 },
+  }),
   apiFetch: async () => ({ ok: true, status: 200, data: (await import("@/lib/fixtures/meta")).pickupPoints() }),
 }));
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const getSkenario = vi.fn();
-const requireMerchant = vi.fn(async () => ({ user: { full_name: "Diego", phone: "081234567890", email: "d@x.id" }, merchant: null }));
-vi.mock("@/lib/skenario", () => ({ getSkenario: () => getSkenario() }));
-vi.mock("@/services/authService", () => ({ requireMerchant: () => requireMerchant() }));
+const getScenario = vi.fn();
+const requireMerchant = vi.fn(async () => ({
+  user: { full_name: "Diego", phone: "081234567890", email: "d@x.id" },
+  merchant: null,
+}));
+vi.mock("@/lib/scenario", () => ({ getScenario: () => getScenario() }));
+vi.mock("@/services/auth.service", () => ({ requireMerchant: () => requireMerchant() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock("@/app/actions/profile", () => ({ saveProfile: vi.fn() }));
 vi.mock("@/app/actions/account", () => ({ changePassword: vi.fn() }));
-import PengaturanPage from "./page";
-import TemplateWAPage from "../template-wa/page";
+import SettingsPage from "./page";
+import WhatsappTemplatePage from "../template-wa/page";
 
-const q = (o: Record<string, string> = {}) => Promise.resolve(o);
-afterEach(() => { getSkenario.mockReset(); requireMerchant.mockClear(); });
+const searchParamsOf = (values: Record<string, string> = {}) => Promise.resolve(values);
+afterEach(() => {
+  getScenario.mockReset();
+  requireMerchant.mockClear();
+});
 
-describe("halaman /pengaturan (M-10)", () => {
+describe("halaman /pengaturan", () => {
   it("memanggil requireMerchant; satu h1; semua bagian ada", async () => {
-    getSkenario.mockResolvedValue(null);
-    render(await PengaturanPage({ searchParams: q() }));
+    getScenario.mockResolvedValue(null);
+    render(await SettingsPage({ searchParams: searchParamsOf() }));
     expect(requireMerchant).toHaveBeenCalled();
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    for (const id of ["profil", "operasional", "titik-temu", "pembayaran", "meja", "akun"]) expect(document.getElementById(id)).toBeInTheDocument();
+    for (const id of ["profil", "operasional", "titik-temu", "pembayaran", "meja", "akun"])
+      expect(document.getElementById(id)).toBeInTheDocument();
   });
   it("gagal-muat -> pesan dan Coba lagi, tanpa form", async () => {
-    getSkenario.mockResolvedValue("gagal-muat");
-    render(await PengaturanPage({ searchParams: q() }));
+    getScenario.mockResolvedValue("gagal-muat");
+    render(await SettingsPage({ searchParams: searchParamsOf() }));
     expect(screen.getByRole("button", { name: "Coba lagi" })).toBeInTheDocument();
     expect(document.getElementById("profil")).not.toBeInTheDocument();
   });
 });
 
-describe("halaman /template-wa (M-11)", () => {
+describe("halaman /template-wa", () => {
   it("memanggil requireMerchant; satu h1; pratinjau dari pesanan pertama", async () => {
-    getSkenario.mockResolvedValue(null);
-    render(await TemplateWAPage());
+    getScenario.mockResolvedValue(null);
+    render(await WhatsappTemplatePage());
     expect(requireMerchant).toHaveBeenCalled();
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByRole("region", { name: "Pratinjau pesan" })).toHaveTextContent("Rafli Ramadhan");
   });
   it("gagal-muat -> Coba lagi", async () => {
-    getSkenario.mockResolvedValue("gagal-muat");
-    render(await TemplateWAPage());
+    getScenario.mockResolvedValue("gagal-muat");
+    render(await WhatsappTemplatePage());
     expect(screen.getByRole("button", { name: "Coba lagi" })).toBeInTheDocument();
   });
 });

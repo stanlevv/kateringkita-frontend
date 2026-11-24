@@ -1,7 +1,11 @@
+// Bentuk data menu penjual dari backend (GET /merchant/menus). Nama properti mengikuti JSON backend.
+
 import type { Category } from "@/types/meta";
 
+/** Satu opsi tambahan menu (mis. "Tambah telur") beserta tambahan harganya. */
 export type MenuOption = { id: number; name: string; extra_price: number };
 
+/** Satu menu milik penjual, termasuk harga, HPP, kuota harian, dan stok tersisa hari ini. */
 export type MerchantMenu = {
   id: number;
   name: string;

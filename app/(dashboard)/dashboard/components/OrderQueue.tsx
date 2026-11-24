@@ -1,159 +1,261 @@
+// Komponen OrderQueue: antrean pesanan dashboard dalam tab (Perlu tindakan, Dimasak, Siap diambil, Semua hari ini)
+// beserta aksi per kartu, dialog tolak, laci slip, dan dialog stok. Dipakai DashboardLive.
+// Status pesanan: holding = menunggu konfirmasi (atau menunggu pembayaran online), confirmed = dikonfirmasi,
+// cooking = dimasak, ready = siap diambil/diantar, completed = selesai, cancelled = dibatalkan, expired = kadaluarsa.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
 import { Inbox } from "lucide-react";
 import { orderAction } from "@/app/actions/orders";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { dismissToast, toast } from "@/app/components/ui/Toast";
-import { antrean, ganti, jumlahTab, sisaHold, type Optimis, type TabAntrean } from "@/lib/dashboard";
-import { nextStatus, teksAksi, teksSukses, type AksiPesanan } from "@/lib/order-status";
+import {
+  queueForTab,
+  setOrDeleteKey,
+  countQueueTabs,
+  holdSecondsLeft,
+  type OptimisticActions,
+  type QueueTab,
+} from "@/lib/dashboard";
+import { nextStatus, actionTexts, successText, type OrderAction } from "@/lib/order-status";
 import type { MerchantMenu } from "@/types/menu";
 import type { MerchantOrder } from "@/types/order";
-import { galatAksi, StokDialog } from "@/app/components/orders/galatAksi";
+import { actionErrorView, OutOfStockDialog } from "@/app/components/orders/OrderActionParts";
 import { OrderCard } from "./OrderCard";
 import { OrderSlipDrawer } from "./OrderSlipDrawer";
 import { RejectDialog } from "@/app/components/orders/RejectDialog";
 import { useDeferredAction } from "@/hooks/useDeferredAction";
 
-const LABEL: Record<TabAntrean, string> = { tindakan: "Perlu tindakan", dimasak: "Dimasak", siap: "Siap diambil", semua: "Semua hari ini" };
+/** Label tab antrean; kuncinya juga id tab (nilai QueueTab dari lib/dashboard). */
+const TAB_LABELS: Record<QueueTab, string> = {
+  tindakan: "Perlu tindakan",
+  dimasak: "Dimasak",
+  siap: "Siap diambil",
+  semua: "Semua hari ini",
+};
 
 type Props = {
   /** Pesanan efektif (data server + perubahan lokal + waktu tahan diterapkan). */
   orders: MerchantOrder[];
   menus: MerchantMenu[];
-  sekarang: number;
-  baru: string[];
-  /** Aksi yang sedang tertunda/terkirim; gugur sendiri begitu `updated_at` server berubah (D14). */
-  optimis: Optimis;
+  now: number;
+  newOrderCodes: string[];
+  /** Aksi yang sedang tertunda/terkirim; gugur sendiri begitu `updated_at` pesanan dari server berubah. */
+  optimisticActions: OptimisticActions;
   /** Pasang (atau hapus bila undefined) entri optimistis satu pesanan. */
-  onOptimis: (code: string, v: Optimis[string] | undefined) => void;
-  onFokusKuota: (menuId?: number) => void;
-  /** D10: baris terkini dari respons aksi, disatukan ke antrean live. */
-  onTerima: (o: MerchantOrder) => void;
+  onOptimisticChange: (code: string, entry: OptimisticActions[string] | undefined) => void;
+  onFocusQuota: (menuId?: number) => void;
+  /** Meneruskan pesanan terbaru dari respons aksi supaya langsung disatukan ke antrean live. */
+  onReceiveOrder: (order: MerchantOrder) => void;
   /** Sinkron antrean sekarang (setelah aksi atau saat status sudah berubah). */
-  onSegarkan: () => void;
-  /** 768–1279 px: panel kuota jadi tab "Kuota" di samping tab antrean (brief §7). */
-  kuota?: ReactNode;
+  onRefresh: () => void;
+  /** Lebar 768–1279 px (tablet): panel kuota menjadi tab "Kuota" di samping tab antrean. */
+  quotaPanel?: ReactNode;
 };
 
 /** Aksi yang ditunda; `order` = pesanan saat aksi dipilih (untuk dialog stok dan dasar entri optimistis). */
-type Tunda = { aksi: AksiPesanan; order: MerchantOrder };
+type PendingAction = { action: OrderAction; order: MerchantOrder };
 
-const KIRIM_LANGSUNG_DETIK = 5; // sisa tahan sependek ini tidak memberi jendela Batalkan
+const SEND_NOW_SECONDS = 5; // sisa tahan sependek ini tidak memberi jendela Batalkan
 
-export function OrderQueue({ orders, menus, sekarang, baru, onOptimis, onFokusKuota, onTerima, onSegarkan, kuota }: Props) {
+/**
+ * Antrean pesanan dengan tab. Aksi kartu dijalankan optimistis (kartu langsung pindah status) lalu dikirim setelah
+ * 5 detik kecuali penjual menekan Batalkan di toast.
+ * @param props.orders pesanan efektif (data server + aksi optimistis + waktu tahan diterapkan)
+ * @param props.menus daftar menu (untuk mencari menu yang kuotanya kurang)
+ * @param props.now jam server sekarang (ms), dasar timer tahan
+ * @param props.newOrderCodes kode pesanan baru yang disorot
+ * @param props.optimisticActions aksi optimistis yang sedang berlaku
+ * @param props.onOptimisticChange memasang atau menghapus aksi optimistis satu pesanan
+ * @param props.onFocusQuota memindahkan fokus ke isian kuota (opsional satu menu)
+ * @param props.onReceiveOrder menerima pesanan terbaru dari respons aksi
+ * @param props.onRefresh meminta sinkron antrean sekarang
+ * @param props.quotaPanel isi tab "Kuota" (hanya di tablet)
+ * @returns elemen `section`
+ */
+export function OrderQueue({
+  orders,
+  menus,
+  now,
+  newOrderCodes,
+  onOptimisticChange,
+  onFocusQuota,
+  onReceiveOrder,
+  onRefresh,
+  quotaPanel,
+}: Props) {
+  // 1. State: tab aktif, pesanan yang sedang ditolak/dilihat slipnya/kurang stok, dan aksi yang sedang dikirim.
   const [tab, setTab] = useState<string>("tindakan");
-  const [tolak, setTolak] = useState<string | null>(null);
-  const [slip, setSlip] = useState<string | null>(null);
-  const [stok, setStok] = useState<MerchantOrder | null>(null);
-  const [kirim, setKirim] = useState<Record<string, AksiPesanan>>({});
-  const toastAksi = useRef(new Map<string, number>());
+  const [rejectCode, setRejectCode] = useState<string | null>(null);
+  const [slipCode, setSlipCode] = useState<string | null>(null);
+  const [outOfStockOrder, setOutOfStockOrder] = useState<MerchantOrder | null>(null);
+  const [sending, setSending] = useState<Record<string, OrderAction>>({});
+  const actionToasts = useRef(new Map<string, number>());
 
-  async function kirimAksi(code: string, t: Tunda, reason?: string) {
-    setKirim((k) => ({ ...k, [code]: t.aksi }));
-    const r = await panggil(() => orderAction(code, t.aksi, reason));
-    setKirim((k) => ganti(k, code, undefined));
-    if ("data" in r) {
-      onOptimis(code, { aksi: t.aksi, dasar: t.order.updated_at }); // gugur saat baris respons (updated_at baru) disatukan
-      onTerima(r.data);
-      onSegarkan();
+  /**
+   * Mengirim aksi ke server.
+   * @returns true bila berhasil
+   */
+  async function sendAction(code: string, pendingAction: PendingAction, reason?: string) {
+    // 1. Tandai kartu sedang mengirim, lalu panggil server action.
+    setSending((previous) => ({ ...previous, [code]: pendingAction.action }));
+    const result = await callAction(() => orderAction(code, pendingAction.action, reason));
+    setSending((previous) => setOrDeleteKey(previous, code, undefined));
+    // 2. Berhasil: teruskan pesanan terbaru dan minta sinkron segera.
+    if ("data" in result) {
+      onOptimisticChange(code, { action: pendingAction.action, baseUpdatedAt: pendingAction.order.updated_at }); // gugur saat baris respons (updated_at baru) disatukan
+      onReceiveOrder(result.data);
+      onRefresh();
       return true;
     }
-    onOptimis(code, undefined); // kartu kembali ke tab semula
-    const g = galatAksi(r.error.code, t.aksi, r.error.message);
-    if (g.jenis === "stok") setStok(t.order);
+    // 3. Gagal: batalkan tampilan optimistis lalu tampilkan galat (dialog stok atau toast).
+    onOptimisticChange(code, undefined); // kartu kembali ke tab semula
+    const errorView = actionErrorView(result.error.code, pendingAction.action, result.error.message);
+    if (errorView.kind === "outOfStock") setOutOfStockOrder(pendingAction.order);
     else {
-      toast({ tone: g.tone, message: g.message });
-      if (g.muatUlang) onSegarkan();
+      toast({ tone: errorView.tone, message: errorView.message });
+      if (errorView.reload) onRefresh();
     }
     return false;
   }
 
-  const { schedule, undo, pending } = useDeferredAction<Tunda>((code, t) => {
-    const id = toastAksi.current.get(code);
+  // 2. Aksi tertunda 5 detik (useDeferredAction); saat waktunya tiba, toast Batalkan ditutup dan aksi dikirim.
+  const { schedule, undo, pending } = useDeferredAction<PendingAction>((code, pendingAction) => {
+    const id = actionToasts.current.get(code);
     if (id) dismissToast(id); // Batalkan tidak berlaku lagi setelah terkirim
-    toastAksi.current.delete(code);
-    void kirimAksi(code, t);
+    actionToasts.current.delete(code);
+    void sendAction(code, pendingAction);
   }, 5000);
 
-  /** DB-A2: kartu langsung pindah ke status tujuan (optimistis); dikirim sekali setelah 5 dtk kecuali dibatalkan. */
-  function aksi(o: MerchantOrder, a: AksiPesanan) {
-    const hasil = nextStatus(o, a);
-    if ("error" in hasil) {
+  /** Kartu langsung pindah ke status tujuan (optimistis); aksi dikirim sekali setelah 5 detik kecuali dibatalkan. */
+  function startAction(order: MerchantOrder, action: OrderAction) {
+    // 1. Aksi tidak berlaku lagi untuk status sekarang: beri tahu dan sinkronkan.
+    const next = nextStatus(order, action);
+    if ("error" in next) {
       toast({ tone: "warning", message: "Pesanan sudah berubah status" });
-      onSegarkan();
+      onRefresh();
       return;
     }
-    const t: Tunda = { aksi: a, order: o };
-    onOptimis(o.code, { aksi: a, dasar: o.updated_at });
-    const pesan = `Pesanan ${o.code} ${teksSukses(a, o)}`;
-    const sisa = sisaHold(o, sekarang);
-    if (a === "confirm" && sisa !== null && sisa <= KIRIM_LANGSUNG_DETIK) {
-      void kirimAksi(o.code, t).then((ok) => ok && toast({ tone: "success", message: pesan }));
+    // 2. Pindahkan kartu secara optimistis.
+    const pendingAction: PendingAction = { action, order };
+    onOptimisticChange(order.code, { action, baseUpdatedAt: order.updated_at });
+    const message = `Pesanan ${order.code} ${successText(action, order)}`;
+    // 3. Waktu tahan hampir habis: kirim konfirmasi langsung tanpa jendela Batalkan.
+    const secondsLeft = holdSecondsLeft(order, now);
+    if (action === "confirm" && secondsLeft !== null && secondsLeft <= SEND_NOW_SECONDS) {
+      void sendAction(order.code, pendingAction).then((ok) => ok && toast({ tone: "success", message }));
       return;
     }
-    schedule(o.code, t);
-    toastAksi.current.set(o.code, toast({ tone: "success", message: pesan, duration: 5000, action: { label: "Batalkan", onClick: () => undo(o.code) && onOptimis(o.code, undefined) } }));
+    // 4. Selain itu: jadwalkan pengiriman dan tampilkan toast dengan tombol Batalkan.
+    schedule(order.code, pendingAction);
+    actionToasts.current.set(
+      order.code,
+      toast({
+        tone: "success",
+        message,
+        duration: 5000,
+        action: { label: "Batalkan", onClick: () => undo(order.code) && onOptimisticChange(order.code, undefined) },
+      }),
+    );
   }
 
-  async function konfirmasiTolak(reason: string) {
-    const code = tolak!;
-    setTolak(null);
-    const o = orders.find((x) => x.code === code);
-    if (o && (await kirimAksi(code, { aksi: "reject", order: o }, reason))) {
-      toast({ tone: "success", message: `Pesanan ${code} ${teksAksi.reject.sukses}` });
+  /** Mengirim tolak pesanan dengan alasan dari dialog (langsung, tanpa jendela Batalkan). */
+  async function confirmReject(reason: string) {
+    const code = rejectCode!;
+    setRejectCode(null);
+    const order = orders.find((candidate) => candidate.code === code);
+    if (order && (await sendAction(code, { action: "reject", order }, reason))) {
+      toast({ tone: "success", message: `Pesanan ${code} ${actionTexts.reject.success}` });
     }
   }
 
-  function fokusKuota(menuId?: number) {
-    if (kuota) setTab("kuota");
-    onFokusKuota(menuId);
+  /** Membuka tab Kuota (di tablet) lalu memfokuskan isian kuota. */
+  function focusQuota(menuId?: number) {
+    if (quotaPanel) setTab("kuota");
+    onFocusQuota(menuId);
   }
 
-  function tambahKuotaStok() {
-    const o = stok!;
-    const kurang = o.items.find((i) => (menus.find((m) => m.id === i.menu_id)?.available ?? 0) < i.qty) ?? o.items[0];
-    setStok(null);
-    fokusKuota(kurang.menu_id);
+  /** Dari dialog stok: fokus ke kuota menu pertama yang tidak cukup. */
+  function addQuotaForStock() {
+    const order = outOfStockOrder!;
+    const shortItem =
+      order.items.find((item) => (menus.find((menu) => menu.id === item.menu_id)?.available ?? 0) < item.qty) ??
+      order.items[0];
+    setOutOfStockOrder(null);
+    focusQuota(shortItem.menu_id);
   }
 
-  const jumlah = jumlahTab(orders);
-  const aktif = tab === "kuota" && !kuota ? "tindakan" : tab;
+  // 3. Hitung isi tiap tab dan daftar pesanan untuk tab aktif.
+  const tabCounts = countQueueTabs(orders);
+  const activeTab = tab === "kuota" && !quotaPanel ? "tindakan" : tab;
   const tabs = [
-    ...(Object.keys(LABEL) as TabAntrean[]).map((id) => ({ id, label: LABEL[id], count: jumlah[id] })),
-    ...(kuota ? [{ id: "kuota", label: "Kuota" }] : []),
+    ...(Object.keys(TAB_LABELS) as QueueTab[]).map((id) => ({ id, label: TAB_LABELS[id], count: tabCounts[id] })),
+    ...(quotaPanel ? [{ id: "kuota", label: "Kuota" }] : []),
   ];
-  const daftar = aktif === "kuota" ? [] : antrean(orders, aktif as TabAntrean, sekarang);
-  const kosong = jumlah.tindakan + jumlah.dimasak + jumlah.siap === 0 && daftar.length === 0;
-  const slipOrder = orders.find((o) => o.code === slip) ?? null;
+  const visibleOrders = activeTab === "kuota" ? [] : queueForTab(orders, activeTab as QueueTab, now);
+  const queueEmpty = tabCounts.tindakan + tabCounts.dimasak + tabCounts.siap === 0 && visibleOrders.length === 0;
+  const slipOrder = orders.find((order) => order.code === slipCode) ?? null;
 
   return (
     <section aria-label="Antrean pesanan" className="flex flex-col gap-4">
-      <Tabs tabs={tabs} value={aktif} onChange={setTab} label="Antrean pesanan" />
-      <div role="tabpanel" aria-labelledby={`tab-${aktif}`}>
-        {aktif === "kuota" ? (
-          kuota
-        ) : kosong ? (
-          <EmptyState icon={Inbox} title="Belum ada pesanan" body="Pastikan status dapur Buka dan menu punya kuota."
-            action={<Button variant="secondary" onClick={() => fokusKuota()}>Atur kuota</Button>} />
-        ) : daftar.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-line-strong px-4 py-8 text-center text-ink-muted">Tidak ada pesanan di tab ini.</p>
+      <Tabs tabs={tabs} value={activeTab} onChange={setTab} label="Antrean pesanan" />
+      <div role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
+        {activeTab === "kuota" ? (
+          quotaPanel
+        ) : queueEmpty ? (
+          <EmptyState
+            icon={Inbox}
+            title="Belum ada pesanan"
+            body="Pastikan status dapur Buka dan menu punya kuota."
+            action={
+              <Button variant="secondary" onClick={() => focusQuota()}>
+                Atur kuota
+              </Button>
+            }
+          />
+        ) : visibleOrders.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-line-strong px-4 py-8 text-center text-ink-muted">
+            Tidak ada pesanan di tab ini.
+          </p>
         ) : (
           <div className="grid gap-4 2xl:grid-cols-2">
-            {daftar.map((o) => (
-              <OrderCard key={o.code} order={o} sisa={sisaHold(o, sekarang)} sekarang={sekarang} baru={baru.includes(o.code)}
-                pending={pending[o.code]?.aksi ?? kirim[o.code]} onAksi={(a) => aksi(o, a)} onTolak={() => setTolak(o.code)} onSlip={() => setSlip(o.code)} />
+            {visibleOrders.map((order) => (
+              <OrderCard
+                key={order.code}
+                order={order}
+                holdSecondsLeft={holdSecondsLeft(order, now)}
+                now={now}
+                isNew={newOrderCodes.includes(order.code)}
+                pending={pending[order.code]?.action ?? sending[order.code]}
+                onAction={(action) => startAction(order, action)}
+                onReject={() => setRejectCode(order.code)}
+                onSlip={() => setSlipCode(order.code)}
+              />
             ))}
           </div>
         )}
       </div>
 
-      <RejectDialog order={orders.find((o) => o.code === tolak) ?? null} onClose={() => setTolak(null)} onConfirm={konfirmasiTolak} />
-      <OrderSlipDrawer order={slipOrder} onClose={() => setSlip(null)} />
-      <StokDialog code={stok?.code ?? null} onClose={() => setStok(null)} onTolak={() => { const c = stok!.code; setStok(null); setTolak(c); }} onTambah={tambahKuotaStok} />
+      <RejectDialog
+        order={orders.find((order) => order.code === rejectCode) ?? null}
+        onClose={() => setRejectCode(null)}
+        onConfirm={confirmReject}
+      />
+      <OrderSlipDrawer order={slipOrder} onClose={() => setSlipCode(null)} />
+      <OutOfStockDialog
+        code={outOfStockOrder?.code ?? null}
+        onClose={() => setOutOfStockOrder(null)}
+        onReject={() => {
+          const code = outOfStockOrder!.code;
+          setOutOfStockOrder(null);
+          setRejectCode(code);
+        }}
+        onAddQuota={addQuotaForStock}
+      />
     </section>
   );
 }

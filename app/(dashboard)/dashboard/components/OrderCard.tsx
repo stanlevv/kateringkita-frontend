@@ -1,3 +1,8 @@
+// Komponen OrderCard: kartu satu pesanan di antrean dashboard (timer tahan, item, titik temu, total, tombol aksi).
+// Dipakai OrderQueue.
+// Status pesanan: holding = menunggu konfirmasi (atau menunggu pembayaran online), confirmed = dikonfirmasi,
+// cooking = dimasak, ready = siap diambil/diantar, completed = selesai, cancelled = dibatalkan, expired = kadaluarsa.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { BellRing, FileText, MapPin, Timer } from "lucide-react";
@@ -6,97 +11,173 @@ import { Button } from "@/app/components/ui/Button";
 import { PaymentBadge } from "@/app/components/ui/PaymentBadge";
 import { StatusBadge } from "@/app/components/ui/StatusBadge";
 import { cx } from "@/app/components/ui/cx";
-import { formatJam, formatRupiah, formatTelepon } from "@/lib/format";
-import { statusViewPesanan, teksAksi, type AksiPesanan } from "@/lib/order-status";
+import { formatTime, formatRupiah, formatPhone } from "@/lib/format";
+import { orderStatusView, actionTexts, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
-import { ChatWaLink, TombolTolak } from "@/app/components/orders/galatAksi";
+import { ChatWaLink, RejectButton } from "@/app/components/orders/OrderActionParts";
 
-const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+/** Detik menjadi "mm:ss". */
+const formatCountdown = (seconds: number) =>
+  `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
 type Props = {
   order: MerchantOrder;
-  /** Detik tahan tersisa (holding saja), dihitung induk. */
-  sisa: number | null;
-  sekarang?: number;
-  baru?: boolean;
+  /** Detik tahan tersisa (hanya pesanan holding), dihitung komponen induk. */
+  holdSecondsLeft: number | null;
+  /** Jam server sekarang (ms), untuk lama memasak. */
+  now?: number;
+  /** Pesanan baru masuk: kartu disorot. */
+  isNew?: boolean;
   /** Aksi yang sedang ditunda/dikirim untuk kartu ini. */
-  pending?: AksiPesanan;
-  onAksi: (aksi: AksiPesanan) => void;
-  onTolak: () => void;
+  pending?: OrderAction;
+  onAction: (action: OrderAction) => void;
+  onReject: () => void;
   onSlip: () => void;
 };
 
-/** Brief v3 §4. Satu aksi utama per status dari `statusView`. */
-export function OrderCard({ order: o, sisa, sekarang, baru, pending, onAksi, onTolak, onSlip }: Props) {
-  const v = statusViewPesanan(o);
-  const segera = sisa !== null && sisa < 60;
-  const totalTahan = o.hold_until ? Math.max(1, (Date.parse(o.hold_until) - Date.parse(o.created_at)) / 1000) : 300;
-  const menitMasak = o.status === "cooking" && o.cooking_at && sekarang ? Math.max(0, Math.floor((sekarang - Date.parse(o.cooking_at)) / 60000)) : null;
-  const dibatalkan = o.status === "cancelled" || o.status === "expired";
+/**
+ * Kartu pesanan. Tiap status punya paling banyak satu tombol aksi utama (dari orderStatusView), misalnya Konfirmasi
+ * untuk pesanan holding. Pesanan holding menampilkan garis dan timer sisa waktu tahan; di bawah 60 detik berwarna merah.
+ * @param props.order data pesanan
+ * @param props.holdSecondsLeft detik tahan tersisa, atau null
+ * @param props.now jam server sekarang (opsional)
+ * @param props.isNew sorot sebagai pesanan baru (opsional)
+ * @param props.pending aksi yang sedang ditunda/dikirim; semua tombol aksi nonaktif selama ada
+ * @param props.onAction dipanggil dengan aksi utama yang ditekan
+ * @param props.onReject membuka dialog tolak
+ * @param props.onSlip membuka laci slip
+ * @returns elemen `article`
+ */
+export function OrderCard({ order, holdSecondsLeft, now, isNew, pending, onAction, onReject, onSlip }: Props) {
+  // 1. Tombol dan keterangan untuk status ini.
+  const view = orderStatusView(order);
+  // 2. Timer tahan: segera bila kurang dari 60 detik; panjang total tahan untuk garis kemajuan (bawaan 5 menit).
+  const urgent = holdSecondsLeft !== null && holdSecondsLeft < 60;
+  const totalHoldSeconds = order.hold_until
+    ? Math.max(1, (Date.parse(order.hold_until) - Date.parse(order.created_at)) / 1000)
+    : 300;
+  // 3. Lama memasak (menit) dan apakah pesanan sudah batal.
+  const cookingMinutes =
+    order.status === "cooking" && order.cooking_at && now
+      ? Math.max(0, Math.floor((now - Date.parse(order.cooking_at)) / 60000))
+      : null;
+  const cancelled = order.status === "cancelled" || order.status === "expired";
 
   return (
     <article
-      data-baru={baru ? "true" : undefined}
-      aria-label={`Pesanan ${o.code}`}
-      className={cx("relative flex flex-col gap-3 overflow-hidden rounded-lg border p-4 pt-5", baru ? "border-accent bg-primary-soft ring-2 ring-accent" : "border-line bg-surface")}
+      data-baru={isNew ? "true" : undefined}
+      aria-label={`Pesanan ${order.code}`}
+      className={cx(
+        "relative flex flex-col gap-3 overflow-hidden rounded-lg border p-4 pt-5",
+        isNew ? "border-accent bg-primary-soft ring-2 ring-accent" : "border-line bg-surface",
+      )}
     >
-      {sisa !== null && (
-        <div role="progressbar" aria-label="Sisa waktu tahan" aria-valuemin={0} aria-valuemax={Math.round(totalTahan)} aria-valuenow={sisa} className="absolute inset-x-0 top-0 h-1 bg-subtle">
+      {holdSecondsLeft !== null && (
+        <div
+          role="progressbar"
+          aria-label="Sisa waktu tahan"
+          aria-valuemin={0}
+          aria-valuemax={Math.round(totalHoldSeconds)}
+          aria-valuenow={holdSecondsLeft}
+          className="absolute inset-x-0 top-0 h-1 bg-subtle"
+        >
           <div
-            className={cx("h-full origin-left transition-transform duration-200 motion-reduce:transition-none", segera ? "bg-danger" : "bg-warning")}
-            style={{ transform: `scaleX(${Math.min(1, sisa / totalTahan)})` }}
+            className={cx(
+              "h-full origin-left transition-transform duration-200 motion-reduce:transition-none",
+              urgent ? "bg-danger" : "bg-warning",
+            )}
+            style={{ transform: `scaleX(${Math.min(1, holdSecondsLeft / totalHoldSeconds)})` }}
           />
         </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <span data-kode className="font-mono text-sm font-semibold text-ink">{o.code}</span>
-        <StatusBadge order={o} />
-        {baru && <Badge tone="info" icon={BellRing}>Baru</Badge>}
+        <span data-kode className="font-mono text-sm font-semibold text-ink">
+          {order.code}
+        </span>
+        <StatusBadge order={order} />
+        {isNew && (
+          <Badge tone="info" icon={BellRing}>
+            Baru
+          </Badge>
+        )}
         <span className="ml-auto flex items-center gap-3 text-sm">
-          {sisa !== null && (
-            <span data-timer className={cx("inline-flex items-center gap-1 font-mono font-semibold", segera ? "text-danger" : "text-warning")}>
+          {holdSecondsLeft !== null && (
+            <span
+              data-timer
+              className={cx(
+                "inline-flex items-center gap-1 font-mono font-semibold",
+                urgent ? "text-danger" : "text-warning",
+              )}
+            >
               <Timer aria-hidden className="size-4" />
-              <span>{segera ? `Segera · ${mmss(sisa)}` : mmss(sisa)}</span>
+              <span>{urgent ? `Segera · ${formatCountdown(holdSecondsLeft)}` : formatCountdown(holdSecondsLeft)}</span>
             </span>
           )}
-          {menitMasak !== null && <span className="text-info">{menitMasak} mnt</span>}
-          <span className="font-mono text-ink-muted">{formatJam(o.created_at)}</span>
+          {cookingMinutes !== null && <span className="text-info">{cookingMinutes} mnt</span>}
+          <span className="font-mono text-ink-muted">{formatTime(order.created_at)}</span>
         </span>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-ink"><span className="font-semibold">{o.customer_name}</span> {o.customer_phone && <span className="text-ink-muted">· {formatTelepon(o.customer_phone)}</span>}</p>
-        <PaymentBadge method={o.payment_method} status={o.payment_status} />
+        <p className="text-ink">
+          <span className="font-semibold">{order.customer_name}</span>{" "}
+          {order.customer_phone && <span className="text-ink-muted">· {formatPhone(order.customer_phone)}</span>}
+        </p>
+        <PaymentBadge method={order.payment_method} status={order.payment_status} />
       </div>
 
       <ul className="flex flex-col gap-1 text-ink">
-        {o.items.map((i) => (
-          <li key={`${i.menu_id}-${i.options.map((x) => x.id).join()}`}>
-            <span className="font-mono">{i.qty}×</span> {i.menu_name}
-            {i.options.map((x) => <span key={x.id} className="ml-2 text-sm text-ink-muted">+{x.name}</span>)}
+        {order.items.map((item) => (
+          <li key={`${item.menu_id}-${item.options.map((option) => option.id).join()}`}>
+            <span className="font-mono">{item.qty}×</span> {item.menu_name}
+            {item.options.map((option) => (
+              <span key={option.id} className="ml-2 text-sm text-ink-muted">
+                +{option.name}
+              </span>
+            ))}
           </li>
         ))}
       </ul>
 
       <div className="flex flex-wrap justify-between gap-2 text-sm text-ink-muted">
-        <span className="inline-flex items-center gap-1"><MapPin aria-hidden className="size-4" /><span>{o.table ? `Meja ${o.table.label}` : o.pickup_point?.name}</span></span>
-        <span>{o.table ? "Makan di tempat" : o.pickup_at ? `Ambil: ${formatJam(o.pickup_at)}` : "Ambil: secepatnya"}</span>
+        <span className="inline-flex items-center gap-1">
+          <MapPin aria-hidden className="size-4" />
+          <span>{order.table ? `Meja ${order.table.label}` : order.pickup_point?.name}</span>
+        </span>
+        <span>
+          {order.table
+            ? "Makan di tempat"
+            : order.pickup_at
+              ? `Ambil: ${formatTime(order.pickup_at)}`
+              : "Ambil: secepatnya"}
+        </span>
       </div>
-      {o.note && <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink">“{o.note}”</p>}
-      {dibatalkan && o.cancel_reason && <p className="text-sm text-danger">Alasan: {o.cancel_reason}</p>}
+      {order.note && <p className="rounded-md bg-subtle px-3 py-2 text-sm text-ink">“{order.note}”</p>}
+      {cancelled && order.cancel_reason && <p className="text-sm text-danger">Alasan: {order.cancel_reason}</p>}
 
       <div className="mt-auto flex flex-col gap-3 border-t border-line pt-3 sm:flex-row sm:items-center">
-        <p className="font-semibold text-ink">Total <span className="font-mono">{formatRupiah(o.total)}</span></p>
+        <p className="font-semibold text-ink">
+          Total <span className="font-mono">{formatRupiah(order.total)}</span>
+        </p>
         <div className="flex flex-wrap gap-2 sm:ml-auto">
-          {v.secondary.includes("reject") && <TombolTolak disabled={!!pending} onClick={onTolak} />}
-          {v.secondary.includes("chat-wa") && o.customer_phone && <ChatWaLink code={o.code} />}
-          <Button variant="ghost" onClick={onSlip}><FileText aria-hidden className="size-4" />Lihat slip</Button>
-          {v.hint && <p className="self-center text-sm text-ink-muted">{v.hint}</p>}
-          {v.primary && (
-            <Button data-aksi-utama className="w-full sm:w-auto" loading={pending === v.primary} loadingText={teksAksi[v.primary].proses}
-              disabled={!!pending} onClick={() => onAksi(v.primary!)}>
-              {v.primaryLabel}
+          {view.secondary.includes("reject") && <RejectButton disabled={!!pending} onClick={onReject} />}
+          {view.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
+          <Button variant="ghost" onClick={onSlip}>
+            <FileText aria-hidden className="size-4" />
+            Lihat slip
+          </Button>
+          {view.hint && <p className="self-center text-sm text-ink-muted">{view.hint}</p>}
+          {view.primary && (
+            <Button
+              data-aksi-utama
+              className="w-full sm:w-auto"
+              loading={pending === view.primary}
+              loadingText={actionTexts[view.primary].pending}
+              disabled={!!pending}
+              onClick={() => onAction(view.primary!)}
+            >
+              {view.primaryLabel}
             </Button>
           )}
         </div>

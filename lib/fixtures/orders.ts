@@ -1,91 +1,294 @@
+// Data contoh pesanan untuk test: semua status dan cara bayar, dengan waktu relatif terhadap sekarang.
+
 import type { MerchantOrder, OrderStatus, PaymentMethod, PaymentStatus } from "@/types/order";
 import { menus } from "./menus";
 import { pickupPoints } from "./meta";
-import { menitLagi, menitLalu } from "./waktu";
+import { minutesFromNow, minutesAgo } from "./time";
 
 type Spec = {
   code: string;
   status: OrderStatus;
-  method: PaymentMethod;
-  pay: PaymentStatus;
-  items: [menuId: number, qty: number, opt?: number][];
-  umur: number; // menit sejak dibuat
-  nama: string;
-  telp: string;
-  titik?: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  items: [menuId: number, qty: number, optionIndex?: number][];
+  ageMinutes: number; // menit sejak dibuat
+  customerName: string;
+  phone: string;
+  pickupPointId?: number;
   note?: string;
-  pickup?: number; // menit dari sekarang; kosong = secepatnya
-  alasan?: string;
-  oleh?: MerchantOrder["cancelled_by"];
+  pickupInMinutes?: number; // menit dari sekarang; kosong = secepatnya
+  cancelReason?: string;
+  cancelledBy?: MerchantOrder["cancelled_by"];
 };
 
-const D = "KK-20261031-";
+const CODE_PREFIX = "KK-20261031-";
 
 const SPEC: Spec[] = [
-  { code: `${D}7QF2`, status: "holding", method: "cod", pay: "unpaid", items: [[1, 2, 0], [7, 1]], umur: 1, nama: "Rafli Ramadhan", telp: "081234567890", note: "Sambal dipisah, sendok 3 pcs" },
-  { code: `${D}K3MA`, status: "holding", method: "va", pay: "unpaid", items: [[5, 1]], umur: 2, nama: "Salsa Putri", telp: "082233445566", titik: 2 },
-  { code: `${D}B4NZ`, status: "holding", method: "cod", pay: "unpaid", items: [[10, 3]], umur: 3, nama: "Dimas Prakoso", telp: "085711223344", titik: 3, pickup: 45 },
-  { code: `${D}C5RW`, status: "confirmed", method: "cod", pay: "unpaid", items: [[3, 2], [11, 2]], umur: 12, nama: "Nadia Kusuma", telp: "081355667788" },
-  { code: `${D}D6TY`, status: "confirmed", method: "online", pay: "paid", items: [[2, 4]], umur: 15, nama: "Bagas Wicaksono", telp: "087812341234", pickup: 60 },
-  { code: `${D}E2HV`, status: "cooking", method: "va", pay: "paid", items: [[6, 3], [12, 3]], umur: 25, nama: "Intan Permata", telp: "081911223355", titik: 2 },
-  { code: `${D}F7JK`, status: "cooking", method: "online", pay: "paid", items: [[1, 1], [8, 2]], umur: 32, nama: "Yoga Pratama", telp: "089612345678" },
-  { code: `${D}G3LM`, status: "ready", method: "cod", pay: "unpaid", items: [[5, 2]], umur: 50, nama: "Citra Anjani", telp: "081298765432", titik: 3 },
-  { code: `${D}H4PQ`, status: "ready", method: "va", pay: "paid", items: [[4, 1], [10, 1]], umur: 55, nama: "Fajar Nugroho", telp: "082144556677" },
-  { code: `${D}J5SD`, status: "completed", method: "cod", pay: "paid", items: [[1, 3]], umur: 120, nama: "Laras Setiawati", telp: "081377889900" },
-  { code: `${D}L6TF`, status: "completed", method: "online", pay: "paid", items: [[7, 4], [10, 4]], umur: 180, nama: "Reza Maulana", telp: "085233221100", titik: 2 },
-  { code: `${D}M7UG`, status: "completed", method: "va", pay: "paid", items: [[3, 2]], umur: 240, nama: "Putri Handayani", telp: "081566778899" },
-  { code: `${D}N2VH`, status: "cancelled", method: "cod", pay: "unpaid", items: [[2, 1]], umur: 90, nama: "Hendra Gunawan", telp: "087755443322", alasan: "Stok habis", oleh: "merchant" },
-  { code: `${D}P3WJ`, status: "cancelled", method: "online", pay: "refunded", items: [[5, 2]], umur: 150, nama: "Winda Lestari", telp: "082199887766", alasan: "Dibatalkan pembeli", oleh: "customer" },
-  { code: `${D}Q4XK`, status: "expired", method: "va", pay: "unpaid", items: [[11, 1]], umur: 200, nama: "Aldi Firmansyah", telp: "081244332211", alasan: "Batas waktu bayar habis", oleh: "system" },
-  { code: `${D}R5YL`, status: "expired", method: "cod", pay: "unpaid", items: [[1, 1]], umur: 300, nama: "Mega Sari", telp: "089955667788", alasan: "Tidak dikonfirmasi tepat waktu", oleh: "system" },
+  {
+    code: `${CODE_PREFIX}7QF2`,
+    status: "holding",
+    paymentMethod: "cod",
+    paymentStatus: "unpaid",
+    items: [
+      [1, 2, 0],
+      [7, 1],
+    ],
+    ageMinutes: 1,
+    customerName: "Rafli Ramadhan",
+    phone: "081234567890",
+    note: "Sambal dipisah, sendok 3 pcs",
+  },
+  {
+    code: `${CODE_PREFIX}K3MA`,
+    status: "holding",
+    paymentMethod: "va",
+    paymentStatus: "unpaid",
+    items: [[5, 1]],
+    ageMinutes: 2,
+    customerName: "Salsa Putri",
+    phone: "082233445566",
+    pickupPointId: 2,
+  },
+  {
+    code: `${CODE_PREFIX}B4NZ`,
+    status: "holding",
+    paymentMethod: "cod",
+    paymentStatus: "unpaid",
+    items: [[10, 3]],
+    ageMinutes: 3,
+    customerName: "Dimas Prakoso",
+    phone: "085711223344",
+    pickupPointId: 3,
+    pickupInMinutes: 45,
+  },
+  {
+    code: `${CODE_PREFIX}C5RW`,
+    status: "confirmed",
+    paymentMethod: "cod",
+    paymentStatus: "unpaid",
+    items: [
+      [3, 2],
+      [11, 2],
+    ],
+    ageMinutes: 12,
+    customerName: "Nadia Kusuma",
+    phone: "081355667788",
+  },
+  {
+    code: `${CODE_PREFIX}D6TY`,
+    status: "confirmed",
+    paymentMethod: "online",
+    paymentStatus: "paid",
+    items: [[2, 4]],
+    ageMinutes: 15,
+    customerName: "Bagas Wicaksono",
+    phone: "087812341234",
+    pickupInMinutes: 60,
+  },
+  {
+    code: `${CODE_PREFIX}E2HV`,
+    status: "cooking",
+    paymentMethod: "va",
+    paymentStatus: "paid",
+    items: [
+      [6, 3],
+      [12, 3],
+    ],
+    ageMinutes: 25,
+    customerName: "Intan Permata",
+    phone: "081911223355",
+    pickupPointId: 2,
+  },
+  {
+    code: `${CODE_PREFIX}F7JK`,
+    status: "cooking",
+    paymentMethod: "online",
+    paymentStatus: "paid",
+    items: [
+      [1, 1],
+      [8, 2],
+    ],
+    ageMinutes: 32,
+    customerName: "Yoga Pratama",
+    phone: "089612345678",
+  },
+  {
+    code: `${CODE_PREFIX}G3LM`,
+    status: "ready",
+    paymentMethod: "cod",
+    paymentStatus: "unpaid",
+    items: [[5, 2]],
+    ageMinutes: 50,
+    customerName: "Citra Anjani",
+    phone: "081298765432",
+    pickupPointId: 3,
+  },
+  {
+    code: `${CODE_PREFIX}H4PQ`,
+    status: "ready",
+    paymentMethod: "va",
+    paymentStatus: "paid",
+    items: [
+      [4, 1],
+      [10, 1],
+    ],
+    ageMinutes: 55,
+    customerName: "Fajar Nugroho",
+    phone: "082144556677",
+  },
+  {
+    code: `${CODE_PREFIX}J5SD`,
+    status: "completed",
+    paymentMethod: "cod",
+    paymentStatus: "paid",
+    items: [[1, 3]],
+    ageMinutes: 120,
+    customerName: "Laras Setiawati",
+    phone: "081377889900",
+  },
+  {
+    code: `${CODE_PREFIX}L6TF`,
+    status: "completed",
+    paymentMethod: "online",
+    paymentStatus: "paid",
+    items: [
+      [7, 4],
+      [10, 4],
+    ],
+    ageMinutes: 180,
+    customerName: "Reza Maulana",
+    phone: "085233221100",
+    pickupPointId: 2,
+  },
+  {
+    code: `${CODE_PREFIX}M7UG`,
+    status: "completed",
+    paymentMethod: "va",
+    paymentStatus: "paid",
+    items: [[3, 2]],
+    ageMinutes: 240,
+    customerName: "Putri Handayani",
+    phone: "081566778899",
+  },
+  {
+    code: `${CODE_PREFIX}N2VH`,
+    status: "cancelled",
+    paymentMethod: "cod",
+    paymentStatus: "unpaid",
+    items: [[2, 1]],
+    ageMinutes: 90,
+    customerName: "Hendra Gunawan",
+    phone: "087755443322",
+    cancelReason: "Stok habis",
+    cancelledBy: "merchant",
+  },
+  {
+    code: `${CODE_PREFIX}P3WJ`,
+    status: "cancelled",
+    paymentMethod: "online",
+    paymentStatus: "refunded",
+    items: [[5, 2]],
+    ageMinutes: 150,
+    customerName: "Winda Lestari",
+    phone: "082199887766",
+    cancelReason: "Dibatalkan pembeli",
+    cancelledBy: "customer",
+  },
+  {
+    code: `${CODE_PREFIX}Q4XK`,
+    status: "expired",
+    paymentMethod: "va",
+    paymentStatus: "unpaid",
+    items: [[11, 1]],
+    ageMinutes: 200,
+    customerName: "Aldi Firmansyah",
+    phone: "081244332211",
+    cancelReason: "Batas waktu bayar habis",
+    cancelledBy: "system",
+  },
+  {
+    code: `${CODE_PREFIX}R5YL`,
+    status: "expired",
+    paymentMethod: "cod",
+    paymentStatus: "unpaid",
+    items: [[1, 1]],
+    ageMinutes: 300,
+    customerName: "Mega Sari",
+    phone: "089955667788",
+    cancelReason: "Tidak dikonfirmasi tepat waktu",
+    cancelledBy: "system",
+  },
 ];
 
-function bangun(s: Spec): MerchantOrder {
-  const katalog = menus();
-  const titik = pickupPoints().find((p) => p.id === (s.titik ?? 1))!;
-  const items = s.items.map(([id, qty, opt]) => {
-    const m = katalog.find((x) => x.id === id)!;
-    const options = opt === undefined ? [] : [m.options[opt]];
-    const unit = m.price + options.reduce((a, o) => a + o.extra_price, 0);
-    return { menu_id: id, menu_name: m.name, qty, unit_price: unit, options, line_total: unit * qty };
+function buildOrder(spec: Spec): MerchantOrder {
+  // 1. Susun item pesanan dari menu contoh (harga satuan = harga menu + opsi).
+  const menuList = menus();
+  const pickupPoint = pickupPoints().find((point) => point.id === (spec.pickupPointId ?? 1))!;
+  const items = spec.items.map(([id, qty, optionIndex]) => {
+    const menu = menuList.find((candidate) => candidate.id === id)!;
+    const options = optionIndex === undefined ? [] : [menu.options[optionIndex]];
+    const unit = menu.price + options.reduce((sum, option) => sum + option.extra_price, 0);
+    return { menu_id: id, menu_name: menu.name, qty, unit_price: unit, options, line_total: unit * qty };
   });
-  const subtotal = items.reduce((a, i) => a + i.line_total, 0);
-  const dibuat = menitLalu(s.umur);
-  const sejak = (menit: number) => menitLalu(Math.max(0, s.umur - menit));
-  const lewatKonfirmasi = ["confirmed", "cooking", "ready", "completed"].includes(s.status);
-  const holding = s.status === "holding";
+  // 2. Hitung subtotal dan waktu tiap tahap, mundur dari umur pesanan.
+  const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
+  const createdAt = minutesAgo(spec.ageMinutes);
+  const afterMinutes = (minutes: number) => minutesAgo(Math.max(0, spec.ageMinutes - minutes));
+  const isPastConfirmation = ["confirmed", "cooking", "ready", "completed"].includes(spec.status);
+  const holding = spec.status === "holding";
+  // 3. Rakit objek pesanan dengan bentuk yang sama seperti jawaban backend.
   return {
-    code: s.code,
-    status: s.status,
-    payment_method: s.method,
-    payment_status: s.pay,
-    hold_until: holding ? menitLagi(5 - s.umur) : null,
-    seconds_left: holding ? Math.round((5 - s.umur) * 60) : null,
-    pickup_point: titik,
+    code: spec.code,
+    status: spec.status,
+    payment_method: spec.paymentMethod,
+    payment_status: spec.paymentStatus,
+    hold_until: holding ? minutesFromNow(5 - spec.ageMinutes) : null,
+    seconds_left: holding ? Math.round((5 - spec.ageMinutes) * 60) : null,
+    pickup_point: pickupPoint,
     table: null,
-    pickup_at: s.pickup ? menitLagi(s.pickup) : null,
+    pickup_at: spec.pickupInMinutes ? minutesFromNow(spec.pickupInMinutes) : null,
     items,
     subtotal,
     discount: 0,
     service_fee: 0,
     total: subtotal,
-    note: s.note ?? null,
-    customer_name: s.nama,
-    customer_phone: s.telp,
-    cancel_reason: s.alasan ?? null,
-    cancelled_by: s.oleh ?? null,
-    created_at: dibuat,
-    updated_at: sejak(1),
-    confirmed_at: lewatKonfirmasi ? sejak(1) : null,
-    cooking_at: ["cooking", "ready", "completed"].includes(s.status) ? sejak(5) : null,
-    ready_at: ["ready", "completed"].includes(s.status) ? sejak(25) : null,
-    completed_at: s.status === "completed" ? sejak(40) : null,
-    cancelled_at: s.alasan ? sejak(1) : null,
+    note: spec.note ?? null,
+    customer_name: spec.customerName,
+    customer_phone: spec.phone,
+    cancel_reason: spec.cancelReason ?? null,
+    cancelled_by: spec.cancelledBy ?? null,
+    created_at: createdAt,
+    updated_at: afterMinutes(1),
+    confirmed_at: isPastConfirmation ? afterMinutes(1) : null,
+    cooking_at: ["cooking", "ready", "completed"].includes(spec.status) ? afterMinutes(5) : null,
+    ready_at: ["ready", "completed"].includes(spec.status) ? afterMinutes(25) : null,
+    completed_at: spec.status === "completed" ? afterMinutes(40) : null,
+    cancelled_at: spec.cancelReason ? afterMinutes(1) : null,
   };
 }
 
-export const orders = (): MerchantOrder[] => SPEC.map(bangun);
+/**
+ * Membuat daftar pesanan contoh.
+ * @returns daftar pesanan contoh
+ */
+export const orders = (): MerchantOrder[] => SPEC.map(buildOrder);
 
-/** Pesanan tambahan untuk skenario "pesanan-baru": masuk tepat saat ini. */
-export const pesananBaru = (): MerchantOrder =>
-  bangun({ code: `${D}S6ZA`, status: "holding", method: "cod", pay: "unpaid", items: [[6, 2], [10, 2]], umur: 0, nama: "Tegar Wibowo", telp: "081322110099", note: "Es teh tanpa gula" });
+/**
+ * Membuat satu pesanan tambahan yang masuk tepat saat ini (dipakai skenario "pesanan-baru").
+ * @returns satu pesanan "holding" yang dibuat sekarang
+ */
+export const newOrder = (): MerchantOrder =>
+  buildOrder({
+    code: `${CODE_PREFIX}S6ZA`,
+    status: "holding",
+    paymentMethod: "cod",
+    paymentStatus: "unpaid",
+    items: [
+      [6, 2],
+      [10, 2],
+    ],
+    ageMinutes: 0,
+    customerName: "Tegar Wibowo",
+    phone: "081322110099",
+    note: "Es teh tanpa gula",
+  });

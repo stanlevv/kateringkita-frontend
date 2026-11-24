@@ -1,8 +1,15 @@
+// Halaman 404: ditampilkan Next.js untuk alamat yang tidak ada.
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 
-const tautan = "inline-flex min-h-11 items-center justify-center rounded-md px-4 font-semibold focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2";
+/** Kelas dasar dua tautan di halaman ini (tinggi minimal 44 px dan garis fokus). */
+const linkClassName =
+  "inline-flex min-h-11 items-center justify-center rounded-md px-4 font-semibold focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2";
 
+/**
+ * Halaman "tidak ditemukan" dengan tautan ke dashboard dan ke beranda.
+ * @returns tampilan 404
+ */
 export default function NotFound() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-canvas p-6 text-center text-ink">
@@ -10,8 +17,12 @@ export default function NotFound() {
       <h1 className="font-display text-2xl font-bold">Halaman tidak ditemukan</h1>
       <p className="max-w-sm text-ink-muted">Alamat yang Anda buka tidak ada atau sudah dipindahkan.</p>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-        <Link href="/dashboard" className={`${tautan} bg-accent text-ink hover:bg-accent-pressed`}>Ke Dashboard</Link>
-        <Link href="/" className={`${tautan} border border-line-strong bg-surface hover:bg-subtle`}>Ke Beranda</Link>
+        <Link href="/dashboard" className={`${linkClassName} bg-accent text-ink hover:bg-accent-pressed`}>
+          Ke Dashboard
+        </Link>
+        <Link href="/" className={`${linkClassName} border border-line-strong bg-surface hover:bg-subtle`}>
+          Ke Beranda
+        </Link>
       </div>
     </main>
   );

@@ -1,7 +1,16 @@
+// Komponen SyncBanner: banner "Koneksi terputus" di dashboard. Dipakai DashboardLive.
 import { Banner } from "@/app/components/ui/Banner";
-import { formatJam } from "@/lib/format";
+import { formatTime } from "@/lib/format";
 
-/** DB-E5: penyegaran gagal atau peramban offline; `terakhir` = waktu penyegaran sukses terakhir. */
-export function SyncBanner({ terakhir }: { terakhir: number }) {
-  return <Banner tone="warning">Koneksi terputus — data terakhir {formatJam(new Date(terakhir).toISOString())}. Mencoba lagi…</Banner>;
+/**
+ * Banner saat sinkron gagal atau peramban offline; data lama tetap tampil dan sinkron terus dicoba.
+ * @param props.lastSyncedAt waktu sinkron sukses terakhir (ms)
+ * @returns Banner peringatan
+ */
+export function SyncBanner({ lastSyncedAt }: { lastSyncedAt: number }) {
+  return (
+    <Banner tone="warning">
+      Koneksi terputus — data terakhir {formatTime(new Date(lastSyncedAt).toISOString())}. Mencoba lagi…
+    </Banner>
+  );
 }

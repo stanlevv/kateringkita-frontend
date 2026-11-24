@@ -1,3 +1,7 @@
+// Komponen MenuForm: formulir tambah dan ubah menu (info dasar, foto, harga, stok, pre-order, opsi) dengan pratinjau
+// pembeli. Dipakai /menu/baru dan /menu/[id]. Data disimpan lewat server action saveMenu (app/actions/menus.ts);
+// foto diunggah langsung dari peramban lewat lib/upload.ts.
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -5,8 +9,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, TriangleAlert, X } from "lucide-react";
 import { saveMenu } from "@/app/actions/menus";
-import { panggil } from "@/lib/aksi";
-import { unggahFoto } from "@/lib/unggah";
+import { callAction } from "@/lib/action";
+import { uploadPhoto } from "@/lib/upload";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
@@ -17,271 +21,551 @@ import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { formatRupiah } from "@/lib/format";
-import { marginPersen } from "@/lib/menu-filter";
-import { cekField, menuFormSchema } from "@/lib/schemas";
+import { marginPercent } from "@/lib/menu-filter";
+import { validateFields, menuFormSchema } from "@/lib/schemas";
 import type { Category } from "@/types/meta";
 import type { MerchantMenu } from "@/types/menu";
-import { FotoTambahan } from "./FotoTambahan";
+import { ExtraPhotos } from "./ExtraPhotos";
 import { MenuPreview } from "./MenuPreview";
-import { OptionsEditor, type BarisOpsi } from "./OptionsEditor";
+import { OptionsEditor, type OptionRow } from "./OptionsEditor";
 
-const MB = 1024 * 1024;
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
-const LABEL: Record<string, string> = {
-  image_url: "Foto", gallery: "Foto tambahan", name: "Nama menu", category_id: "Kategori", description: "Deskripsi", unit_label: "Satuan", price: "Harga jual", hpp: "HPP",
-  daily_quota: "Kuota harian", prep_minutes: "Estimasi siap", min_order_qty: "Minimum pesan", preorder_days: "Hari pre-order",
+const MEGABYTE = 1024 * 1024;
+/** Teks isian menjadi angka; isian kosong menjadi NaN supaya validasi menganggapnya belum diisi. */
+const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
+/** Nama isian untuk ringkasan galat (kunci = nama field API). */
+const FIELD_LABELS: Record<string, string> = {
+  image_url: "Foto",
+  gallery: "Foto tambahan",
+  name: "Nama menu",
+  category_id: "Kategori",
+  description: "Deskripsi",
+  unit_label: "Satuan",
+  price: "Harga jual",
+  hpp: "HPP",
+  daily_quota: "Kuota harian",
+  prep_minutes: "Estimasi siap",
+  min_order_qty: "Minimum pesan",
+  preorder_days: "Hari pre-order",
 };
-const labelKey = (k: string) => {
-  const m = /^options\.(\d+)\./.exec(k);
-  return m ? `Opsi ${Number(m[1]) + 1}` : (LABEL[k] ?? k);
+/** Nama isian untuk ringkasan galat; galat opsi ditulis "Opsi N". */
+const fieldLabel = (fieldKey: string) => {
+  const match = /^options\.(\d+)\./.exec(fieldKey);
+  return match ? `Opsi ${Number(match[1]) + 1}` : (FIELD_LABELS[fieldKey] ?? fieldKey);
 };
 
-type Isian = {
-  name: string; category_id: string; description: string; unit_label: string; price: string; hpp: string; daily_quota: string;
-  prep_minutes: string; is_preorder: boolean; preorder_days: string; min_order_qty: string; options: BarisOpsi[];
+/** Isi formulir; angka disimpan sebagai teks isian dan baru diubah ke angka saat validasi/kirim. */
+type FormValues = {
+  name: string;
+  category_id: string;
+  description: string;
+  unit_label: string;
+  price: string;
+  hpp: string;
+  daily_quota: string;
+  prep_minutes: string;
+  is_preorder: boolean;
+  preorder_days: string;
+  min_order_qty: string;
+  options: OptionRow[];
 };
-type Foto = { file: File; preview: string; status: "mengunggah" | "gagal" | "selesai"; pesan?: string };
+/** Unggahan foto utama: berkas, pratinjau lokal, dan statusnya (mengunggah, gagal, selesai). */
+type PhotoUpload = { file: File; preview: string; status: "mengunggah" | "gagal" | "selesai"; message?: string };
 
-// Tanda UI (t) tidak dihitung sebagai perubahan.
-const kunci = (i: Isian) => JSON.stringify({ ...i, options: i.options.map((o) => [o.name, o.extra_price]) });
+// Isi formulir sebagai teks untuk membandingkan dengan isi awal. Tanda `touched` di opsi tidak ikut, karena itu
+// hanya tanda tampilan, bukan perubahan data.
+const serialize = (values: FormValues) =>
+  JSON.stringify({ ...values, options: values.options.map((option) => [option.name, option.extra_price]) });
 
-const awalDari = (m: MerchantMenu | undefined, prefill: { hpp?: number; price?: number } | undefined): Isian => ({
-  name: m?.name ?? "",
-  category_id: m ? String(m.category.id) : "",
-  description: m?.description ?? "",
-  unit_label: m?.unit_label ?? "porsi",
-  price: String(m?.price ?? prefill?.price ?? ""),
-  hpp: String(m?.hpp ?? prefill?.hpp ?? ""),
-  daily_quota: String(m?.daily_quota ?? 20),
-  prep_minutes: String(m?.prep_minutes ?? 15),
-  is_preorder: m?.is_preorder ?? false,
-  preorder_days: String(m?.is_preorder ? m.preorder_days : 1),
-  min_order_qty: String(m?.min_order_qty ?? 1),
-  options: (m?.options ?? []).map((o, k) => ({ k, name: o.name, extra_price: String(o.extra_price), t: false })),
+/** Isi awal: dari menu (mode ubah), dari prefill Kalkulator HPP, atau nilai bawaan. */
+const initialValues = (
+  menu: MerchantMenu | undefined,
+  prefill: { hpp?: number; price?: number } | undefined,
+): FormValues => ({
+  name: menu?.name ?? "",
+  category_id: menu ? String(menu.category.id) : "",
+  description: menu?.description ?? "",
+  unit_label: menu?.unit_label ?? "porsi",
+  price: String(menu?.price ?? prefill?.price ?? ""),
+  hpp: String(menu?.hpp ?? prefill?.hpp ?? ""),
+  daily_quota: String(menu?.daily_quota ?? 20),
+  prep_minutes: String(menu?.prep_minutes ?? 15),
+  is_preorder: menu?.is_preorder ?? false,
+  preorder_days: String(menu?.is_preorder ? menu.preorder_days : 1),
+  min_order_qty: String(menu?.min_order_qty ?? 1),
+  options: (menu?.options ?? []).map((option, index) => ({
+    id: index,
+    name: option.name,
+    extra_price: String(option.extra_price),
+    touched: false,
+  })),
 });
 
-function Bagian({ judul, children }: { judul: string; children: ReactNode }) {
+/** Satu bagian formulir berjudul (Info dasar, Foto, Harga, ...). */
+function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section aria-label={judul} className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-4 sm:p-6">
-      <h2 className="text-lg font-semibold text-ink">{judul}</h2>
+    <section aria-label={title} className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-4 sm:p-6">
+      <h2 className="text-lg font-semibold text-ink">{title}</h2>
       {children}
     </section>
   );
 }
 
-/** M-07, MF-*: form tambah/ubah menu. `menu` ada = mode ubah. */
-export function MenuForm({ categories, menu, prefill }: { categories: Category[]; menu?: MerchantMenu; prefill?: { hpp?: number; price?: number } }) {
+/**
+ * Formulir tambah/ubah menu. Galat tampil setelah isian disentuh; saat dikirim, semua galat tampil di ringkasan
+ * atas. Perubahan yang belum disimpan dijaga dialog "Buang perubahan?" saat meninggalkan halaman.
+ * HPP = harga pokok produksi (modal per porsi), tidak terlihat pembeli.
+ * @param props.categories daftar kategori
+ * @param props.menu menu yang diubah; ada = mode ubah, tidak ada = mode tambah
+ * @param props.prefill harga dan HPP awal dari Kalkulator HPP (opsional)
+ * @returns formulir, pratinjau pembeli, dan dialog penjaga perubahan
+ */
+export function MenuForm({
+  categories,
+  menu,
+  prefill,
+}: {
+  categories: Category[];
+  menu?: MerchantMenu;
+  prefill?: { hpp?: number; price?: number };
+}) {
+  // 1. State isian, foto, galat, dan status simpan.
   const router = useRouter();
-  const [awal] = useState(() => kunci(awalDari(menu, prefill)));
-  const [v, setV] = useState<Isian>(() => awalDari(menu, prefill));
+  const [initialSnapshot] = useState(() => serialize(initialValues(menu, prefill)));
+  const [values, setValues] = useState<FormValues>(() => initialValues(menu, prefill));
   const [imageUrl, setImageUrl] = useState<string | null>(menu?.image_url ?? null);
-  const [foto, setFoto] = useState<Foto | null>(null);
+  const [photo, setPhoto] = useState<PhotoUpload | null>(null);
   const [gallery, setGallery] = useState<string[]>(menu?.gallery ?? []);
-  const [galeriSibuk, setGaleriSibuk] = useState(false);
-  const [fotoGalat, setFotoGalat] = useState<string | null>(null);
-  const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
-  const [dicoba, setDicoba] = useState(false);
-  const [fokusKey, setFokusKey] = useState(0);
-  const [server, setServer] = useState<Record<string, string>>({});
-  const [menyimpan, setMenyimpan] = useState(false);
-  const [tersimpan, setTersimpan] = useState(false);
-  const unggahKe = useRef(0); // token unggahan terbaru; respons lama diabaikan
-  const fotoRef = useRef(foto);
-  useEffect(() => { fotoRef.current = foto; });
-  useEffect(() => () => { if (fotoRef.current) URL.revokeObjectURL(fotoRef.current.preview); }, []);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [focusKey, setFocusKey] = useState(0);
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const uploadToken = useRef(0); // token unggahan terbaru; respons unggahan lama diabaikan
+  // 2. Pratinjau foto memakai blob URL (alamat sementara berkas lokal di peramban); dilepas saat komponen dilepas
+  // supaya memorinya kembali.
+  const photoRef = useRef(photo);
+  useEffect(() => {
+    photoRef.current = photo;
+  });
+  useEffect(
+    () => () => {
+      if (photoRef.current) URL.revokeObjectURL(photoRef.current.preview);
+    },
+    [],
+  );
 
-  const dirty = kunci(v) !== awal || (foto !== null && foto.status !== "gagal") || imageUrl !== (menu?.image_url ?? null)
-    || JSON.stringify(gallery) !== JSON.stringify(menu?.gallery ?? []);
-  const guard = useUnsavedGuard(dirty && !tersimpan);
+  // 3. Ada perubahan yang belum disimpan? useUnsavedGuard memasang penjaga saat meninggalkan halaman.
+  const dirty =
+    serialize(values) !== initialSnapshot ||
+    (photo !== null && photo.status !== "gagal") ||
+    imageUrl !== (menu?.image_url ?? null) ||
+    JSON.stringify(gallery) !== JSON.stringify(menu?.gallery ?? []);
+  const guard = useUnsavedGuard(dirty && !saved);
 
-  const set = <K extends keyof Isian>(k: K, nilai: Isian[K]) => { setServer({}); setV((p) => ({ ...p, [k]: nilai })); };
-  const sentuh = (k: string) => setTersentuh((p) => new Set(p).add(k));
-  const input = {
-    name: v.name, category_id: num(v.category_id), description: v.description, image_url: imageUrl, gallery, unit_label: v.unit_label,
-    price: num(v.price), hpp: num(v.hpp), daily_quota: num(v.daily_quota), prep_minutes: num(v.prep_minutes),
-    is_preorder: v.is_preorder, preorder_days: v.is_preorder ? num(v.preorder_days) : 0, min_order_qty: num(v.min_order_qty),
-    options: v.options.map((o) => ({ name: o.name, extra_price: num(o.extra_price) })),
+  // 4. Pengubah isian; setiap perubahan menghapus galat server lama.
+  const setField = <K extends keyof FormValues>(field: K, value: FormValues[K]) => {
+    setServerErrors({});
+    setValues((previous) => ({ ...previous, [field]: value }));
   };
-  const semua = cekField(menuFormSchema, input);
-  const galatSemua = dicoba ? { ...server, ...semua } : semua;
-  const galat = (k: string) => (dicoba || tersentuh.has(k) ? galatSemua[k] : undefined);
-  const galatOpsi = dicoba ? galatSemua : Object.fromEntries(Object.entries(galatSemua).filter(([k]) => k.startsWith("options.")));
-  const ringkasan = dicoba ? Object.entries(galatSemua).map(([k, m]) => ({ id: `mf-${k.replace(/\./g, "-")}`, message: `${labelKey(k)}: ${m}` })) : [];
-  const blur = (k: string) => () => sentuh(k);
+  const touch = (field: string) => setTouched((previous) => new Set(previous).add(field));
+  // 5. Data yang akan dikirim (nama field = kontrak API), lalu galat validasi dan ringkasannya.
+  const input = {
+    name: values.name,
+    category_id: toNumber(values.category_id),
+    description: values.description,
+    image_url: imageUrl,
+    gallery,
+    unit_label: values.unit_label,
+    price: toNumber(values.price),
+    hpp: toNumber(values.hpp),
+    daily_quota: toNumber(values.daily_quota),
+    prep_minutes: toNumber(values.prep_minutes),
+    is_preorder: values.is_preorder,
+    preorder_days: values.is_preorder ? toNumber(values.preorder_days) : 0,
+    min_order_qty: toNumber(values.min_order_qty),
+    options: values.options.map((option) => ({ name: option.name, extra_price: toNumber(option.extra_price) })),
+  };
+  const clientErrors = validateFields(menuFormSchema, input);
+  const allErrors = submitAttempted ? { ...serverErrors, ...clientErrors } : clientErrors;
+  const errorFor = (field: string) => (submitAttempted || touched.has(field) ? allErrors[field] : undefined);
+  const optionErrors = submitAttempted
+    ? allErrors
+    : Object.fromEntries(Object.entries(allErrors).filter(([field]) => field.startsWith("options.")));
+  const summaryErrors = submitAttempted
+    ? Object.entries(allErrors).map(([field, message]) => ({
+        id: `mf-${field.replace(/\./g, "-")}`,
+        message: `${fieldLabel(field)}: ${message}`,
+      }))
+    : [];
+  const blur = (field: string) => () => touch(field);
 
-  const price = num(v.price), hpp = num(v.hpp);
-  const hitungOk = Number.isFinite(price) && Number.isFinite(hpp) && price > 0;
-  const margin = hitungOk ? marginPersen({ price, hpp }) : null;
-  const namaKategori = categories.find((c) => String(c.id) === v.category_id)?.name ?? "";
-  const uploading = foto?.status === "mengunggah" || galeriSibuk;
+  // 6. Laba dan margin untuk ditampilkan, nama kategori untuk pratinjau, dan status unggahan.
+  const price = toNumber(values.price),
+    hpp = toNumber(values.hpp);
+  const canCalculate = Number.isFinite(price) && Number.isFinite(hpp) && price > 0;
+  const margin = canCalculate ? marginPercent({ price, hpp }) : null;
+  const categoryName = categories.find((category) => String(category.id) === values.category_id)?.name ?? "";
+  const uploading = photo?.status === "mengunggah" || galleryUploading;
 
-  async function unggah(file: File, preview: string) {
-    const id = ++unggahKe.current;
-    setFoto({ file, preview, status: "mengunggah" });
-    const r = await unggahFoto(file, "menu");
-    if (id !== unggahKe.current) return;
-    if ("error" in r) return setFoto({ file, preview, status: "gagal", pesan: r.error.message }); // MF-E3
-    setImageUrl(r.data.public_url);
-    setFoto({ file, preview, status: "selesai" });
+  /** Mengunggah foto utama; respons yang sudah tidak terbaru diabaikan. */
+  async function upload(file: File, preview: string) {
+    const token = ++uploadToken.current;
+    setPhoto({ file, preview, status: "mengunggah" });
+    const result = await uploadPhoto(file, "menu");
+    if (token !== uploadToken.current) return;
+    // Gagal: simpan pesan dan berkasnya supaya tombol "Coba unggah lagi" bisa mengulang.
+    if ("error" in result) return setPhoto({ file, preview, status: "gagal", message: result.error.message });
+    setImageUrl(result.data.public_url);
+    setPhoto({ file, preview, status: "selesai" });
   }
-  function pilihFoto(file: File) {
-    if (foto) URL.revokeObjectURL(foto.preview);
-    setFotoGalat(null);
-    setServer({});
-    void unggah(file, URL.createObjectURL(file));
+  /** Memilih foto baru: lepas pratinjau lama lalu mulai unggah. */
+  function selectPhoto(file: File) {
+    if (photo) URL.revokeObjectURL(photo.preview);
+    setPhotoError(null);
+    setServerErrors({});
+    void upload(file, URL.createObjectURL(file));
   }
-  function hapusFoto() {
-    unggahKe.current++;
-    if (foto) URL.revokeObjectURL(foto.preview);
-    setFoto(null);
+  /** Menghapus foto utama; unggahan yang masih berjalan diabaikan. */
+  function removePhoto() {
+    uploadToken.current++;
+    if (photo) URL.revokeObjectURL(photo.preview);
+    setPhoto(null);
     setImageUrl(null);
-    setFotoGalat(null);
-    setServer({});
+    setPhotoError(null);
+    setServerErrors({});
   }
 
-  async function kirim(e: React.FormEvent) {
-    e.preventDefault();
-    if (Object.keys(semua).length > 0) {
-      setDicoba(true);
-      setFokusKey((n) => n + 1);
+  /** Mengirim formulir ke server lalu kembali ke /menu bila berhasil. */
+  async function submit(event: React.FormEvent) {
+    // 1. Masih ada galat: tampilkan ringkasan dan pindahkan fokus ke sana.
+    event.preventDefault();
+    if (Object.keys(clientErrors).length > 0) {
+      setSubmitAttempted(true);
+      setFocusKey((count) => count + 1);
       return;
     }
-    if (menyimpan) return;
-    setMenyimpan(true);
-    const r = await panggil(() => saveMenu(menu?.id ?? null, input));
-    if ("error" in r) {
-      setMenyimpan(false); // sukses: tetap "Menyimpan…" sampai halaman berpindah
-      if (r.error.fields) { // MF-E4
-        setServer(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
-        setDicoba(true);
-        setFokusKey((n) => n + 1);
+    // 2. Kirim sekali saja.
+    if (saving) return;
+    setSaving(true);
+    const result = await callAction(() => saveMenu(menu?.id ?? null, input));
+    // 3. Gagal: galat per isian dari server dipetakan ke isian dan ringkasan; galat umum menjadi toast.
+    if ("error" in result) {
+      setSaving(false); // saat sukses tombol tetap "Menyimpan…" sampai halaman berpindah
+      if (result.error.fields) {
+        setServerErrors(
+          Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
+        );
+        setSubmitAttempted(true);
+        setFocusKey((count) => count + 1);
       } else {
-        toast({ tone: "danger", message: r.error.message });
+        toast({ tone: "danger", message: result.error.message });
       }
       return;
     }
-    setTersimpan(true);
+    // 4. Berhasil: matikan penjaga perubahan, beri tahu, lalu pindah ke katalog.
+    setSaved(true);
     toast({ tone: "success", message: "Menu disimpan" });
     router.push("/menu");
   }
 
   // Unggahan gagal: tetap tampilkan foto tersimpan, bukan foto baru.
-  const tampilFoto = foto && foto.status !== "gagal" ? foto.preview : imageUrl;
+  const displayedPhoto = photo && photo.status !== "gagal" ? photo.preview : imageUrl;
   return (
     <>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <form onSubmit={kirim} noValidate className="flex flex-col gap-6">
-          <ErrorSummary errors={ringkasan} focusKey={fokusKey} />
+        <form onSubmit={submit} noValidate className="flex flex-col gap-6">
+          <ErrorSummary errors={summaryErrors} focusKey={focusKey} />
 
-          <Bagian judul="Info dasar">
-            <Field label="Nama menu" id="mf-name" required error={galat("name")}>
-              <Input value={v.name} maxLength={80} onChange={(e) => set("name", e.target.value)} onBlur={blur("name")} />
+          <FormSection title="Info dasar">
+            <Field label="Nama menu" id="mf-name" required error={errorFor("name")}>
+              <Input
+                value={values.name}
+                maxLength={80}
+                onChange={(event) => setField("name", event.target.value)}
+                onBlur={blur("name")}
+              />
             </Field>
-            <Field label="Kategori" id="mf-category_id" required error={galat("category_id")}>
-              <Select value={v.category_id} onChange={(e) => set("category_id", e.target.value)} onBlur={blur("category_id")}>
+            <Field label="Kategori" id="mf-category_id" required error={errorFor("category_id")}>
+              <Select
+                value={values.category_id}
+                onChange={(event) => setField("category_id", event.target.value)}
+                onBlur={blur("category_id")}
+              >
                 <option value="">Pilih kategori</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </Select>
             </Field>
-            <Field label="Deskripsi" id="mf-description" help={`Sebut bahan, rasa, dan porsi (mis. pedas, tanpa daging). Dipakai pencarian dan rekomendasi AI pembeli; 160 karakter pertama paling berpengaruh. ${v.description.length}/500 karakter`} error={galat("description")}>
-              <Textarea value={v.description} onChange={(e) => set("description", e.target.value)} onBlur={blur("description")} />
+            <Field
+              label="Deskripsi"
+              id="mf-description"
+              help={`Sebut bahan, rasa, dan porsi (mis. pedas, tanpa daging). Dipakai pencarian dan rekomendasi AI pembeli; 160 karakter pertama paling berpengaruh. ${values.description.length}/500 karakter`}
+              error={errorFor("description")}
+            >
+              <Textarea
+                value={values.description}
+                onChange={(event) => setField("description", event.target.value)}
+                onBlur={blur("description")}
+              />
             </Field>
-            <Field label="Satuan" id="mf-unit_label" required help="Contoh: porsi, box, isi 5" error={galat("unit_label")}>
-              <Input value={v.unit_label} maxLength={30} onChange={(e) => set("unit_label", e.target.value)} onBlur={blur("unit_label")} />
+            <Field
+              label="Satuan"
+              id="mf-unit_label"
+              required
+              help="Contoh: porsi, box, isi 5"
+              error={errorFor("unit_label")}
+            >
+              <Input
+                value={values.unit_label}
+                maxLength={30}
+                onChange={(event) => setField("unit_label", event.target.value)}
+                onBlur={blur("unit_label")}
+              />
             </Field>
-          </Bagian>
+          </FormSection>
 
-          <Bagian judul="Foto">
-            {tampilFoto && (
+          <FormSection title="Foto">
+            {displayedPhoto && (
               <div className="relative aspect-[16/9] w-full max-w-sm overflow-hidden rounded-md bg-subtle">
-                <Image src={tampilFoto} alt="Pratinjau foto menu" fill unoptimized sizes="384px" className="object-cover" />
+                <Image
+                  src={displayedPhoto}
+                  alt="Pratinjau foto menu"
+                  fill
+                  unoptimized
+                  sizes="384px"
+                  className="object-cover"
+                />
               </div>
             )}
-            {foto?.status === "mengunggah" && (
+            {photo?.status === "mengunggah" && (
               <p role="status" className="flex items-center gap-2 text-sm text-ink-muted">
-                <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />Mengunggah foto…
+                <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
+                Mengunggah foto…
               </p>
             )}
-            {foto?.status === "gagal" && (
-              <div role="alert" className="flex flex-wrap items-center gap-3 rounded-md border border-danger bg-danger-bg p-3 text-danger">
-                <p className="flex items-center gap-2"><TriangleAlert aria-hidden className="size-5" />{foto.pesan ?? "Foto gagal diunggah. Coba lagi"}</p>
-                <Button variant="secondary" onClick={() => void unggah(foto.file, foto.preview)}>Coba unggah lagi</Button>
+            {photo?.status === "gagal" && (
+              <div
+                role="alert"
+                className="flex flex-wrap items-center gap-3 rounded-md border border-danger bg-danger-bg p-3 text-danger"
+              >
+                <p className="flex items-center gap-2">
+                  <TriangleAlert aria-hidden className="size-5" />
+                  {photo.message ?? "Foto gagal diunggah. Coba lagi"}
+                </p>
+                <Button variant="secondary" onClick={() => void upload(photo.file, photo.preview)}>
+                  Coba unggah lagi
+                </Button>
               </div>
             )}
-            {galat("image_url") && <p className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{galat("image_url")}</p>}
-            {fotoGalat && <p role="alert" className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{fotoGalat}</p>}
-            {/* foto HP besar diperkecil di lib/unggah.ts sebelum diunggah (batas backend 5 MB) */}
-            <FileDrop id="mf-image_url" maxBytes={20 * MB} onFile={pilihFoto} onError={setFotoGalat} label={tampilFoto ? "Ganti foto" : "Pilih foto"} />
-            {tampilFoto && <div><Button variant="ghost" onClick={hapusFoto}><X aria-hidden className="size-4" />Hapus foto</Button></div>}
+            {errorFor("image_url") && (
+              <p className="flex items-center gap-2 text-sm text-danger">
+                <TriangleAlert aria-hidden className="size-4" />
+                {errorFor("image_url")}
+              </p>
+            )}
+            {photoError && (
+              <p role="alert" className="flex items-center gap-2 text-sm text-danger">
+                <TriangleAlert aria-hidden className="size-4" />
+                {photoError}
+              </p>
+            )}
+            {/* foto HP besar diperkecil di lib/upload.ts sebelum diunggah (batas backend 5 MB) */}
+            <FileDrop
+              id="mf-image_url"
+              maxBytes={20 * MEGABYTE}
+              onFile={selectPhoto}
+              onError={setPhotoError}
+              label={displayedPhoto ? "Ganti foto" : "Pilih foto"}
+            />
+            {displayedPhoto && (
+              <div>
+                <Button variant="ghost" onClick={removePhoto}>
+                  <X aria-hidden className="size-4" />
+                  Hapus foto
+                </Button>
+              </div>
+            )}
             <p className="mt-2 text-sm font-medium text-ink">Foto tambahan</p>
-            <FotoTambahan urls={gallery} onChange={(l) => { setServer({}); setGallery(l); }} onBusy={setGaleriSibuk} error={galat("gallery")} />
-          </Bagian>
+            <ExtraPhotos
+              urls={gallery}
+              onChange={(urls) => {
+                setServerErrors({});
+                setGallery(urls);
+              }}
+              onBusy={setGalleryUploading}
+              error={errorFor("gallery")}
+            />
+          </FormSection>
 
-          <Bagian judul="Harga">
+          <FormSection title="Harga">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="HPP (Rp)" id="mf-hpp" required help="Modal per porsi. Tidak terlihat pembeli." error={galat("hpp")}>
-                <Input type="number" inputMode="numeric" min={0} step={1} value={v.hpp} onChange={(e) => set("hpp", e.target.value)} onBlur={blur("hpp")} />
+              <Field
+                label="HPP (Rp)"
+                id="mf-hpp"
+                required
+                help="Modal per porsi. Tidak terlihat pembeli."
+                error={errorFor("hpp")}
+              >
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={values.hpp}
+                  onChange={(event) => setField("hpp", event.target.value)}
+                  onBlur={blur("hpp")}
+                />
               </Field>
-              <Field label="Harga jual (Rp)" id="mf-price" required error={galat("price")}>
-                <Input type="number" inputMode="numeric" min={1000} step={1} value={v.price} onChange={(e) => set("price", e.target.value)} onBlur={blur("price")} />
+              <Field label="Harga jual (Rp)" id="mf-price" required error={errorFor("price")}>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1000}
+                  step={1}
+                  value={values.price}
+                  onChange={(event) => setField("price", event.target.value)}
+                  onBlur={blur("price")}
+                />
               </Field>
             </div>
             {margin !== null && price > hpp && (
               <div className="flex flex-col gap-1">
-                <p className="text-ink">Laba per porsi <span className="font-mono font-semibold">{formatRupiah(price - hpp)}</span> · Margin {margin}%</p>
+                <p className="text-ink">
+                  Laba per porsi <span className="font-mono font-semibold">{formatRupiah(price - hpp)}</span> · Margin{" "}
+                  {margin}%
+                </p>
                 {margin < 10 && (
-                  <p role="status" className="flex items-center gap-2 rounded-md bg-warning-bg p-2 text-sm text-warning">
-                    <TriangleAlert aria-hidden className="size-4" />Margin tipis. Pertimbangkan menaikkan harga jual.
+                  <p
+                    role="status"
+                    className="flex items-center gap-2 rounded-md bg-warning-bg p-2 text-sm text-warning"
+                  >
+                    <TriangleAlert aria-hidden className="size-4" />
+                    Margin tipis. Pertimbangkan menaikkan harga jual.
                   </p>
                 )}
               </div>
             )}
-          </Bagian>
+          </FormSection>
 
-          <Bagian judul="Stok & waktu">
+          <FormSection title="Stok & waktu">
             <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Kuota harian" id="mf-daily_quota" required error={galat("daily_quota")}>
-                <Input type="number" inputMode="numeric" min={0} step={1} value={v.daily_quota} onChange={(e) => set("daily_quota", e.target.value)} onBlur={blur("daily_quota")} />
+              <Field label="Kuota harian" id="mf-daily_quota" required error={errorFor("daily_quota")}>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={values.daily_quota}
+                  onChange={(event) => setField("daily_quota", event.target.value)}
+                  onBlur={blur("daily_quota")}
+                />
               </Field>
-              <Field label="Estimasi siap (menit)" id="mf-prep_minutes" required error={galat("prep_minutes")}>
-                <Input type="number" inputMode="numeric" min={1} step={1} value={v.prep_minutes} onChange={(e) => set("prep_minutes", e.target.value)} onBlur={blur("prep_minutes")} />
+              <Field label="Estimasi siap (menit)" id="mf-prep_minutes" required error={errorFor("prep_minutes")}>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  value={values.prep_minutes}
+                  onChange={(event) => setField("prep_minutes", event.target.value)}
+                  onBlur={blur("prep_minutes")}
+                />
               </Field>
-              <Field label="Minimum pesan" id="mf-min_order_qty" required error={galat("min_order_qty")}>
-                <Input type="number" inputMode="numeric" min={1} step={1} value={v.min_order_qty} onChange={(e) => set("min_order_qty", e.target.value)} onBlur={blur("min_order_qty")} />
+              <Field label="Minimum pesan" id="mf-min_order_qty" required error={errorFor("min_order_qty")}>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  value={values.min_order_qty}
+                  onChange={(event) => setField("min_order_qty", event.target.value)}
+                  onBlur={blur("min_order_qty")}
+                />
               </Field>
             </div>
-          </Bagian>
+          </FormSection>
 
-          <Bagian judul="Pre-order">
+          <FormSection title="Pre-order">
             <div className="flex items-center gap-3">
-              <Switch checked={v.is_preorder} onChange={(x) => set("is_preorder", x)} label="Menu pre-order" />
+              <Switch
+                checked={values.is_preorder}
+                onChange={(checked) => setField("is_preorder", checked)}
+                label="Menu pre-order"
+              />
               <span className="text-ink">Menu ini harus dipesan lebih dulu</span>
             </div>
-            {v.is_preorder && (
+            {values.is_preorder && (
               <div className="max-w-xs">
-                <Field label="Pesan H-… (hari sebelumnya)" id="mf-preorder_days" required help="1 sampai 7 hari" error={galat("preorder_days")}>
-                  <Input type="number" inputMode="numeric" min={1} max={7} step={1} value={v.preorder_days} onChange={(e) => set("preorder_days", e.target.value)} onBlur={blur("preorder_days")} />
+                <Field
+                  label="Pesan H-… (hari sebelumnya)"
+                  id="mf-preorder_days"
+                  required
+                  help="1 sampai 7 hari"
+                  error={errorFor("preorder_days")}
+                >
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={7}
+                    step={1}
+                    value={values.preorder_days}
+                    onChange={(event) => setField("preorder_days", event.target.value)}
+                    onBlur={blur("preorder_days")}
+                  />
                 </Field>
               </div>
             )}
-          </Bagian>
+          </FormSection>
 
-          <Bagian judul="Opsi tambahan">
-            <OptionsEditor rows={v.options} errors={galatOpsi} semua={dicoba} onChange={(rows) => set("options", rows)} />
-          </Bagian>
+          <FormSection title="Opsi tambahan">
+            <OptionsEditor
+              rows={values.options}
+              errors={optionErrors}
+              showAllErrors={submitAttempted}
+              onChange={(rows) => setField("options", rows)}
+            />
+          </FormSection>
 
           <div className="flex justify-end">
-            <Button type="submit" size="lg" loading={menyimpan} loadingText="Menyimpan…" disabled={uploading}>Simpan menu</Button>
+            <Button type="submit" size="lg" loading={saving} loadingText="Menyimpan…" disabled={uploading}>
+              Simpan menu
+            </Button>
           </div>
         </form>
 
         <aside className="sticky top-6 hidden xl:block">
           <p className="mb-2 text-sm font-medium text-ink-muted">Pratinjau untuk pembeli</p>
-          <MenuPreview name={v.name} price={Number.isFinite(price) ? price : null} unit={v.unit_label} category={namaKategori} photo={tampilFoto} options={input.options.map((o) => ({ name: o.name, extra_price: Number.isFinite(o.extra_price) ? o.extra_price : 0 }))} />
+          <MenuPreview
+            name={values.name}
+            price={Number.isFinite(price) ? price : null}
+            unit={values.unit_label}
+            category={categoryName}
+            photo={displayedPhoto}
+            options={input.options.map((option) => ({
+              name: option.name,
+              extra_price: Number.isFinite(option.extra_price) ? option.extra_price : 0,
+            }))}
+          />
         </aside>
       </div>
 
-      <ConfirmDialog open={guard.open} onClose={guard.cancel} title="Buang perubahan?" body="Perubahan pada menu ini belum disimpan." confirmLabel="Buang perubahan" cancelLabel="Tetap di sini" tone="danger" onConfirm={guard.confirm} />
+      <ConfirmDialog
+        open={guard.open}
+        onClose={guard.cancel}
+        title="Buang perubahan?"
+        body="Perubahan pada menu ini belum disimpan."
+        confirmLabel="Buang perubahan"
+        cancelLabel="Tetap di sini"
+        tone="danger"
+        onConfirm={guard.confirm}
+      />
     </>
   );
 }

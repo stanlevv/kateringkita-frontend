@@ -1,3 +1,4 @@
+// Layout root: kerangka <html>/<body> untuk semua halaman, font, CSS global, dan metadata SEO bawaan situs.
 import type { Metadata, Viewport } from "next";
 import { fontVariables } from "@/lib/fonts";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
@@ -9,17 +10,36 @@ export const metadata: Metadata = {
   title: { default: SITE_TITLE, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: ["katering kampus", "aplikasi katering", "pre-order makanan mahasiswa", "kelola pesanan katering", "kuota porsi harian", "dashboard penjual katering"],
+  keywords: [
+    "katering kampus",
+    "aplikasi katering",
+    "pre-order makanan mahasiswa",
+    "kelola pesanan katering",
+    "kuota porsi harian",
+    "dashboard penjual katering",
+  ],
   creator: SITE_NAME,
   publisher: SITE_NAME,
   category: "business",
   formatDetection: { telephone: false, email: false, address: false },
-  openGraph: { type: "website", locale: "id_ID", siteName: SITE_NAME, title: SITE_TITLE, description: SITE_DESCRIPTION },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
   twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION },
 };
 
+/** Warna bilah browser di ponsel (oranye merek). */
 export const viewport: Viewport = { themeColor: "#FF6B35" };
 
+/**
+ * Membungkus setiap halaman dengan <html lang="id"> dan variabel font.
+ * @param props.children isi halaman yang sedang dibuka
+ * @returns dokumen HTML dasar
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`${fontVariables} h-full antialiased`}>

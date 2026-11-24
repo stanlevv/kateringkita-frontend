@@ -1,24 +1,39 @@
+// Halaman /dashboard: antrean pesanan, kuota hari ini, KPI, dan menu terlaris penjual.
+// Server component: mengambil antrean pesanan (getQueue), daftar menu (getMenus), dan profil toko (getProfile) di
+// server, lalu menyerahkannya ke DashboardLive (client component) yang memperbaruinya sendiri lewat polling.
 import { DashboardLive } from "@/app/(dashboard)/dashboard/components/DashboardLive";
-import { getMenus } from "@/services/menuService";
-import { getAntrean } from "@/services/orderService";
-import { getProfile } from "@/services/profileService";
-import { requireMerchant } from "@/services/authService";
+import { getMenus } from "@/services/menu.service";
+import { getQueue } from "@/services/order.service";
+import { getProfile } from "@/services/profile.service";
+import { requireMerchant } from "@/services/auth.service";
 
-// M-03, M-04, M-05, M-08 — Dashboard live v3 (brief docs/design/dashboard-v3-brief.md).
-// Selalu merender DashboardLive: galat saat polling memakai data terakhir di klien (DB-E5), bukan layar gagal.
+/**
+ * Halaman dashboard penjual. Selalu merender DashboardLive, juga saat data gagal diambil: bila klien sudah punya
+ * data sebelumnya (mis. setelah router.refresh), data itu tetap ditampilkan dengan banner koneksi, bukan layar gagal.
+ * @returns DashboardLive dengan data awal, atau dengan `data={null}` dan `loadFailed` bila ada yang gagal
+ */
 export default async function DashboardPage() {
+  // 1. Pastikan penjual sudah masuk, lalu ambil antrean, menu, dan profil sekaligus.
   await requireMerchant();
-  const [orders, menus, profil] = await Promise.all([getAntrean(), getMenus(), getProfile()]);
-  if ("error" in orders || "error" in menus || "error" in profil) {
-    return <DashboardLive data={null} galat />;
+  const [orders, menus, profile] = await Promise.all([getQueue(), getMenus(), getProfile()]);
+  // 2. Salah satu gagal: serahkan ke DashboardLive sebagai galat.
+  if ("error" in orders || "error" in menus || "error" in profile) {
+    return <DashboardLive data={null} loadFailed />;
   }
-  // Komponen server dirender sekali per permintaan; waktu ini dasar "Diperbarui N detik lalu" di klien (sama saat hidrasi).
+  // 3. Catat waktu server saat data dimuat. Komponen server dirender sekali per permintaan, jadi nilai ini sama di
+  // server dan saat hidrasi (React menyambungkan HTML dari server dengan kode di peramban). Waktu ini menjadi dasar
+  // "Diperbarui N detik lalu" di klien.
   // eslint-disable-next-line react-hooks/purity
-  const dimuat = Date.now();
+  const loadedAt = Date.now();
   return (
     <DashboardLive
-      galat={false}
-      data={{ orders: orders.data, menus: menus.data, adaTitikTemu: profil.data.pickup_point_ids.length > 0, dimuat }}
+      loadFailed={false}
+      data={{
+        orders: orders.data,
+        menus: menus.data,
+        hasPickupPoints: profile.data.pickup_point_ids.length > 0,
+        loadedAt,
+      }}
     />
   );
 }

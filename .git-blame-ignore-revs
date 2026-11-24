@@ -1,0 +1,52 @@
+# style: format seluruh kode dengan prettier (F28)
+2e2acb943154910320b56e5941fd779c91307882
+# refactor(web-dasar): ganti nama file types, lib, services (F28)
+21e6b7028deb9935e19763fbd088f48bbbf2a467
+# refactor(web-dasar): nama kode bahasa Inggris yang jelas di types, lib, services (F28)
+ba20ed2123aa29619ec6232bbea640ad5635a450
+# refactor(web-dasar): ganti sisa nama satu huruf yang bukan indeks loop (F28)
+389674f490f1139f854640ba24274d336d4a69a6
+# refactor(web-actions): ganti nama file actions ke bahasa Inggris (F28)
+68daceed0204249cd2998619fa93bb9b483e95a9
+# refactor(web-actions): nama kode bahasa Inggris yang jelas (F28)
+c74e8807f9aea2ff1729c3e7fe814f8a6ad37e7b
+# refactor(web-ui): ganti nama file hooks, ui, shell ke bahasa Inggris (F28)
+e277ee5b67b3a015376192f723e6ed73747b5392
+# refactor(web-ui): nama kode bahasa Inggris yang jelas (F28)
+4114a7501926b02179728ab7491fee88bcdfa52a
+# refactor(web-ui): ganti sisa prop test Stepper ke bahasa Inggris (F28)
+3de9cc5dcf22d1f1ef0ad9b5d310754315072157
+# refactor(web-penjual): ganti nama file komponen dashboard penjual ke bahasa Inggris (F28)
+93dc2f9b10d94c0f397ea468270b4b42e4ca0834
+# refactor(web-penjual): nama kode bahasa Inggris yang jelas (F28)
+e29a4d9f53928edf53a0ed0ea42e0fb89f3cbb03
+# refactor(web-pembeli): ganti nama file auth, meja, api ke bahasa Inggris (F28)
+785720c9d1d29860a9391797044bf3c985d8317e
+# refactor(web-pembeli): nama kode bahasa Inggris yang jelas (F28)
+c39a03641efd895915974a102f989ad2a55a5670
+# refactor(test): nama file dan deskripsi test bahasa Inggris (F28) - pindah file
+bd3ca56ae786b815b92098a0e3aabe100546ae6b
+# refactor(test): nama file dan deskripsi test bahasa Inggris (F28) - isi test
+d00423cc33096e5375855623bf8057876dff4686
+# refactor(web-penjual-lain): ganti nama file dashboard penjual lainnya ke bahasa Inggris (F28)
+c00e740f22e227a52f633c0eb35416d994dd4bf3
+# refactor(web-penjual-lain): nama kode bahasa Inggris yang jelas (F28)
+d39351393e201e4821cab54b8016a81335dd9214
+# refactor(web-admin): ganti nama file web-admin ke bahasa Inggris (F28)
+d5bf1816636c8fd81b434ff1881fe392c57b68ba
+# refactor(web-admin): nama kode bahasa Inggris yang jelas (F28)
+87ea4133a7958f070e85ef6f9e2430607fdc95c8
+# refactor(web-admin-2): ganti nama file web-admin-2 ke bahasa Inggris (F28)
+5280a1de7f26534d3e335488ed700303ea082c47
+# refactor(web-admin-2): nama kode bahasa Inggris yang jelas (F28)
+2d2256783a84232214e56daeaaf9e822975728a2
+# refactor(web-root): nama kode bahasa Inggris yang jelas di halaman /, gambar pratinjau, 404, dan vitest.config (F28)
+561bf871ac6825d5bae3d3f61241ff2e4e86957b
+# refactor(web-shell): storeName menjadi merchantName, sama dengan glosarium (F28)
+6969200e3d8d952a61d431920559cd4f60e5545d
+# refactor(web-orders): action-error.tsx menjadi OrderActionParts.tsx, kind "stok" menjadi "outOfStock" (F28)
+52bb57b3a9ff59707103cc1fe2b69b4f63ac3a98
+# refactor(test): kode catatan internal di judul test diganti kata-kata (F28)
+92afe761d725544de50efe8488113acd8fbeaf37
+# refactor(web-root): H2 menjadi SECTION_HEADING, tanpa nama dua huruf (F28)
+7e1fc8441224dd04e468dde12f1cc206e3ff7f5b

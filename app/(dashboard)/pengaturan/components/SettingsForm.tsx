@@ -1,225 +1,426 @@
+// Komponen SettingsForm: seluruh isi /pengaturan. Bagian Profil, Operasional, dan Titik temu adalah satu formulir yang
+// disimpan bersama lewat server action saveProfile (app/actions/profile.ts) dengan bilah "Simpan perubahan" yang
+// menempel di bawah. Bagian Pembayaran (PayoutBankAccount), Pesan dari meja (TableOrderSettings), dan Akun
+// (ChangePasswordForm) menyimpan sendiri-sendiri. Logo dan background diunggah langsung dari peramban (lib/upload.ts).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, TriangleAlert, X } from "lucide-react";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { saveProfile } from "@/app/actions/profile";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
-import { cx, fokus } from "@/app/components/ui/cx";
+import { cx, focusRing } from "@/app/components/ui/cx";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
 import { Field } from "@/app/components/ui/Field";
 import { FileDrop } from "@/app/components/ui/FileDrop";
 import { Input, Textarea } from "@/app/components/ui/Input";
 import { toast } from "@/app/components/ui/Toast";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
-import { formatTelepon } from "@/lib/format";
-import { unggahFoto } from "@/lib/unggah";
-import { cekProfil } from "@/lib/schemas";
+import { formatPhone } from "@/lib/format";
+import { uploadPhoto } from "@/lib/upload";
+import { validateProfile } from "@/lib/schemas";
 import type { MerchantProfile } from "@/types/profile";
 import type { PickupPoint } from "@/types/meta";
-import type { Meja } from "@/types/meja";
-import type { PencairanSaya } from "@/types/pencairan";
+import type { Table } from "@/types/table";
+import type { MyPayouts } from "@/types/payout";
 import { ChangePasswordForm } from "@/app/components/ChangePasswordForm";
-import { PesanMeja } from "./PesanMeja";
+import { TableOrderSettings } from "./TableOrderSettings";
 import { PickupPointPicker } from "./PickupPointPicker";
-import { RekeningPencairan } from "./RekeningPencairan";
+import { PayoutBankAccount } from "./PayoutBankAccount";
 
-const BAGIAN = [
-  { id: "profil", judul: "Profil toko" },
-  { id: "operasional", judul: "Operasional" },
-  { id: "titik-temu", judul: "Titik temu" },
-  { id: "pembayaran", judul: "Pembayaran & pencairan" },
-  { id: "meja", judul: "Pesan dari meja" },
-  { id: "akun", judul: "Akun" },
+/** Bagian halaman; `id` juga dipakai sebagai #hash tautan dan nilai ?lengkapi=, jadi tidak boleh diganti. */
+const SECTIONS = [
+  { id: "profil", title: "Profil toko" },
+  { id: "operasional", title: "Operasional" },
+  { id: "titik-temu", title: "Titik temu" },
+  { id: "pembayaran", title: "Pembayaran & pencairan" },
+  { id: "meja", title: "Pesan dari meja" },
+  { id: "akun", title: "Akun" },
 ] as const;
-const MODE = [
-  { v: "daily", label: "Harian", info: "Porsi satuan yang dijual setiap hari." },
-  { v: "event", label: "Acara", info: "Pesanan besar yang dipesan lebih dulu." },
-  { v: "both", label: "Keduanya", info: "Harian dan acara sekaligus." },
+/** Pilihan mode layanan (nilai = service_mode di API). */
+const SERVICE_MODES = [
+  { value: "daily", label: "Harian", description: "Porsi satuan yang dijual setiap hari." },
+  { value: "event", label: "Acara", description: "Pesanan besar yang dipesan lebih dulu." },
+  { value: "both", label: "Keduanya", description: "Harian dan acara sekaligus." },
 ] as const;
-const LABEL: Record<string, string> = {
-  business_name: "Nama usaha", description: "Deskripsi", address: "Alamat", wa_number: "Nomor WA toko", open_time: "Jam buka", close_time: "Jam tutup",
-  hold_minutes: "Durasi tahan pesanan", logo_url: "Logo toko", cover_url: "Background toko", daily_revenue_target: "Target omzet harian", pickup_point_ids: "Titik temu",
+/** Nama isian untuk ringkasan galat (kunci = nama field API). */
+const FIELD_LABELS: Record<string, string> = {
+  business_name: "Nama usaha",
+  description: "Deskripsi",
+  address: "Alamat",
+  wa_number: "Nomor WA toko",
+  open_time: "Jam buka",
+  close_time: "Jam tutup",
+  hold_minutes: "Durasi tahan pesanan",
+  logo_url: "Logo toko",
+  cover_url: "Background toko",
+  daily_revenue_target: "Target omzet harian",
+  pickup_point_ids: "Titik temu",
 };
-const MB = 1024 * 1024;
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
+const MEGABYTE = 1024 * 1024;
+/** Teks isian menjadi angka; isian kosong menjadi NaN supaya validasi menganggapnya belum diisi. */
+const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
 
-type Isian = {
-  business_name: string; description: string; address: string; wa_number: string; service_mode: MerchantProfile["service_mode"];
-  open_time: string; close_time: string; hold_minutes: string; daily_revenue_target: string; pickup_point_ids: number[];
-  logo_url: string | null; cover_url: string | null;
+/** Isi formulir profil (kunci = nama field API); angka disimpan sebagai teks isian. */
+type ProfileFormValues = {
+  business_name: string;
+  description: string;
+  address: string;
+  wa_number: string;
+  service_mode: MerchantProfile["service_mode"];
+  open_time: string;
+  close_time: string;
+  hold_minutes: string;
+  daily_revenue_target: string;
+  pickup_point_ids: number[];
+  logo_url: string | null;
+  cover_url: string | null;
 };
 
-const awalDari = (p: MerchantProfile): Isian => ({
-  business_name: p.business_name, description: p.description ?? "", address: p.address, wa_number: p.wa_number, service_mode: p.service_mode,
-  open_time: p.open_time, close_time: p.close_time, hold_minutes: String(p.hold_minutes), daily_revenue_target: String(p.daily_revenue_target),
-  pickup_point_ids: p.pickup_point_ids, logo_url: p.logo_url, cover_url: p.cover_url ?? null,
+/** Isi formulir dari profil toko di backend. */
+const toFormValues = (merchantProfile: MerchantProfile): ProfileFormValues => ({
+  business_name: merchantProfile.business_name,
+  description: merchantProfile.description ?? "",
+  address: merchantProfile.address,
+  wa_number: merchantProfile.wa_number,
+  service_mode: merchantProfile.service_mode,
+  open_time: merchantProfile.open_time,
+  close_time: merchantProfile.close_time,
+  hold_minutes: String(merchantProfile.hold_minutes),
+  daily_revenue_target: String(merchantProfile.daily_revenue_target),
+  pickup_point_ids: merchantProfile.pickup_point_ids,
+  logo_url: merchantProfile.logo_url,
+  cover_url: merchantProfile.cover_url ?? null,
 });
-const kunci = (i: Isian) => JSON.stringify({ ...i, pickup_point_ids: [...i.pickup_point_ids].sort((a, b) => a - b) });
+// Isi formulir sebagai teks untuk mendeteksi perubahan; urutan titik temu tidak dianggap perubahan.
+const compareKey = (values: ProfileFormValues) =>
+  JSON.stringify({ ...values, pickup_point_ids: [...values.pickup_point_ids].sort((first, second) => first - second) });
 
-function Bagian({ id, judul, sorot, children }: { id: string; judul: string; sorot: boolean; children: ReactNode }) {
+/**
+ * Satu bagian berjudul. Judul bisa menerima fokus agar bagian yang dituju ?lengkapi= dibacakan pembaca layar.
+ * @param props.id id bagian (juga #hash tautan)
+ * @param props.title judul bagian
+ * @param props.highlighted true = diberi cincin sorot sementara
+ * @param props.children isi bagian
+ * @returns elemen section
+ */
+function Section({
+  id,
+  title,
+  highlighted,
+  children,
+}: {
+  id: string;
+  title: string;
+  highlighted: boolean;
+  children: ReactNode;
+}) {
   return (
-    <section id={id} aria-labelledby={`${id}-judul`} className={cx("flex scroll-mt-24 flex-col gap-4 rounded-lg border border-line bg-surface p-4 transition-shadow duration-200 motion-reduce:transition-none sm:p-6", sorot && "ring-2 ring-info")}>
-      <h2 id={`${id}-judul`} tabIndex={-1} className="text-lg font-semibold text-ink outline-none">{judul}</h2>
+    <section
+      id={id}
+      aria-labelledby={`${id}-judul`}
+      className={cx(
+        "flex scroll-mt-24 flex-col gap-4 rounded-lg border border-line bg-surface p-4 transition-shadow duration-200 motion-reduce:transition-none sm:p-6",
+        highlighted && "ring-2 ring-info",
+      )}
+    >
+      <h2 id={`${id}-judul`} tabIndex={-1} className="text-lg font-semibold text-ink outline-none">
+        {title}
+      </h2>
       {children}
     </section>
   );
 }
 
-const JENIS_GAMBAR = {
-  logo: { nama: "Logo toko", kotak: "aspect-square w-40", isi: "object-contain", sizes: "160px" },
+/** Tampilan per jenis gambar: nama, ukuran bingkai, cara gambar mengisi bingkai, dan ukuran untuk next/image. */
+const IMAGE_KINDS = {
+  logo: { name: "Logo toko", frameClass: "aspect-square w-40", fitClass: "object-contain", sizes: "160px" },
   // background profil toko tampil melebar di atas halaman toko aplikasi
-  cover: { nama: "Background toko", kotak: "aspect-[3/1] w-full max-w-md", isi: "object-cover", sizes: "448px" },
+  cover: {
+    name: "Background toko",
+    frameClass: "aspect-[3/1] w-full max-w-md",
+    fitClass: "object-cover",
+    sizes: "448px",
+  },
 } as const;
 
-/** Logo / background toko: pratinjau, unggah langsung ke penyimpanan (FE-08), hapus (PG-E3). F26: QRIS statis toko dihapus (bayar online lewat Midtrans). */
-function Gambar({ id, jenis = "logo", url, error, onChange, onBusy }: { id: string; jenis?: keyof typeof JENIS_GAMBAR; url: string | null; error?: string; onChange: (u: string | null) => void; onBusy: (b: boolean) => void }) {
-  const j = JENIS_GAMBAR[jenis];
-  const [galat, setGalat] = useState<string | null>(null);
-  const [sibuk, setSibuk] = useState(false);
-  const [selesai, setSelesai] = useState(false);
-  const unggahKe = useRef(0); // token unggahan terbaru; respons lama diabaikan
-  const berjalan = useRef(false);
-  const wadah = useRef<HTMLDivElement>(null);
-  const pindahFokus = useRef(false);
-  // Tombol Hapus hilang bersama gambar; fokus dipindah ke tombol pilih berkas.
+/**
+ * Isian logo atau background toko: pratinjau, unggah langsung dari peramban ke penyimpanan, dan hapus. Selama
+ * unggahan berjalan, induk diberi tahu lewat onBusy supaya tombol Simpan menunggu. (Unggah gambar QRIS toko sudah
+ * dihapus karena pembayaran online lewat Midtrans.)
+ * @param props.id id isian, dipakai tautan ringkasan galat
+ * @param props.kind "logo" atau "cover" (juga jenis unggahan di lib/upload.ts)
+ * @param props.url alamat gambar sekarang, null bila belum ada
+ * @param props.error galat dari validasi formulir
+ * @param props.onChange dipanggil dengan alamat baru, atau null saat dihapus
+ * @param props.onBusy dipanggil true saat unggah mulai dan false saat selesai atau batal
+ * @returns grup isian gambar
+ */
+function ImageField({
+  id,
+  kind = "logo",
+  url,
+  error,
+  onChange,
+  onBusy,
+}: {
+  id: string;
+  kind?: keyof typeof IMAGE_KINDS;
+  url: string | null;
+  error?: string;
+  onChange: (newUrl: string | null) => void;
+  onBusy: (busy: boolean) => void;
+}) {
+  // 1. Tampilan jenis gambar dan state unggahan. uploadToken menandai unggahan terbaru, jadi respons lama diabaikan.
+  const imageKind = IMAGE_KINDS[kind];
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+  const uploadToken = useRef(0); // token unggahan terbaru; respons lama diabaikan
+  const uploadRunning = useRef(false);
+  const container = useRef<HTMLDivElement>(null);
+  const moveFocus = useRef(false);
+  // 2. Tombol Hapus hilang bersama gambar; fokus dipindah ke tombol pilih berkas.
   useEffect(() => {
-    if (!pindahFokus.current) return;
-    pindahFokus.current = false;
-    wadah.current?.querySelector("button")?.focus();
+    if (!moveFocus.current) return;
+    moveFocus.current = false;
+    container.current?.querySelector("button")?.focus();
   }, [url]);
-  // Pindah ke bagian lain (Hapus, pilih ulang, atau form direset): unggahan yang masih jalan dibatalkan.
-  function batalkan() {
-    unggahKe.current++;
-    if (berjalan.current) {
-      berjalan.current = false;
-      setSibuk(false);
+  // 3. Pindah ke bagian lain (Hapus, pilih ulang, atau form direset): unggahan yang masih jalan dibatalkan.
+  function cancelUpload() {
+    uploadToken.current++;
+    if (uploadRunning.current) {
+      uploadRunning.current = false;
+      setUploading(false);
       onBusy(false);
     }
   }
-  useEffect(() => () => { unggahKe.current++; }, []); // form direset (key baru): respons lama diabaikan
-  async function pilih(f: File) {
-    batalkan();
-    const id = unggahKe.current;
-    setGalat(null);
-    setSelesai(false);
-    berjalan.current = true;
-    setSibuk(true);
+  // 4. Saat isian dilepas (form direset dengan key baru), respons unggahan yang masih berjalan diabaikan.
+  useEffect(
+    () => () => {
+      uploadToken.current++;
+    },
+    [],
+  ); // form direset (key baru): respons lama diabaikan
+  // 5. Unggah berkas yang dipilih.
+  async function chooseFile(file: File) {
+    // 1. Batalkan unggahan sebelumnya dan catat token unggahan ini.
+    cancelUpload();
+    const token = uploadToken.current;
+    setUploadError(null);
+    setUploaded(false);
+    uploadRunning.current = true;
+    setUploading(true);
     onBusy(true);
-    const r = await unggahFoto(f, jenis);
-    if (id !== unggahKe.current) return;
-    berjalan.current = false;
-    setSibuk(false);
+    // 2. Unggah; hasil diabaikan bila sudah ada unggahan yang lebih baru atau unggahan dibatalkan.
+    const result = await uploadPhoto(file, kind);
+    if (token !== uploadToken.current) return;
+    uploadRunning.current = false;
+    setUploading(false);
     onBusy(false);
-    if ("error" in r) return setGalat(r.error.message);
-    setSelesai(true);
-    onChange(r.data.public_url);
+    if ("error" in result) return setUploadError(result.error.message);
+    setUploaded(true);
+    onChange(result.data.public_url);
   }
-  const pesan = galat ?? error;
+  const message = uploadError ?? error;
   return (
-    <div role="group" aria-label={j.nama} className="flex flex-col gap-3">
+    <div role="group" aria-label={imageKind.name} className="flex flex-col gap-3">
       {url ? (
-        <div className={cx("relative overflow-hidden rounded-md bg-subtle", j.kotak)}>
-          <Image src={url} alt={j.nama} fill unoptimized sizes={j.sizes} className={j.isi} />
+        <div className={cx("relative overflow-hidden rounded-md bg-subtle", imageKind.frameClass)}>
+          <Image
+            src={url}
+            alt={imageKind.name}
+            fill
+            unoptimized
+            sizes={imageKind.sizes}
+            className={imageKind.fitClass}
+          />
         </div>
       ) : (
         <p className="text-sm text-ink-muted">Belum ada gambar.</p>
       )}
-      {sibuk && <p role="status" className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />Mengunggah…</p>}
-      {selesai && !sibuk && <p role="status" className="text-sm text-success">{jenis === "logo" ? "Logo" : "Background"} terunggah.</p>}
-      {pesan && <p role="alert" className="flex items-center gap-2 text-sm text-danger"><TriangleAlert aria-hidden className="size-4" />{pesan}</p>}
-      <div ref={wadah}><FileDrop id={id} maxBytes={20 * MB /* diperkecil di lib/unggah.ts */} onFile={(f) => void pilih(f)} onError={setGalat} label={`${url ? "Ganti" : "Pilih"} ${jenis === "logo" ? "logo" : "background"}`} /></div>
-      {url && <div><Button variant="ghost" onClick={() => { batalkan(); pindahFokus.current = true; setGalat(null); setSelesai(false); onChange(null); }}><X aria-hidden className="size-4" />Hapus gambar</Button></div>}
+      {uploading && (
+        <p role="status" className="flex items-center gap-2 text-sm text-ink-muted">
+          <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
+          Mengunggah…
+        </p>
+      )}
+      {uploaded && !uploading && (
+        <p role="status" className="text-sm text-success">
+          {kind === "logo" ? "Logo" : "Background"} terunggah.
+        </p>
+      )}
+      {message && (
+        <p role="alert" className="flex items-center gap-2 text-sm text-danger">
+          <TriangleAlert aria-hidden className="size-4" />
+          {message}
+        </p>
+      )}
+      <div ref={container}>
+        <FileDrop
+          id={id}
+          maxBytes={20 * MEGABYTE /* diperkecil di lib/upload.ts */}
+          onFile={(file) => void chooseFile(file)}
+          onError={setUploadError}
+          label={`${url ? "Ganti" : "Pilih"} ${kind === "logo" ? "logo" : "background"}`}
+        />
+      </div>
+      {url && (
+        <div>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              cancelUpload();
+              moveFocus.current = true;
+              setUploadError(null);
+              setUploaded(false);
+              onChange(null);
+            }}
+          >
+            <X aria-hidden className="size-4" />
+            Hapus gambar
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
+/** Prop SettingsForm. */
 type Props = {
-  profile: MerchantProfile; pickupPoints: PickupPoint[] | null; user: { full_name: string; phone: string; email: string }; lengkapi?: string;
-  tables?: Meja[] | null; // F21; undefined = belum dimuat (pratinjau)
-  pencairan?: PencairanSaya | null; // F26; null = gagal dimuat
+  profile: MerchantProfile;
+  pickupPoints: PickupPoint[] | null;
+  user: { full_name: string; phone: string; email: string };
+  incompleteSection?: string;
+  tables?: Table[] | null; // meja untuk pesan dari meja; tidak diisi = daftar kosong
+  payouts?: MyPayouts | null; // data pencairan; null = gagal dimuat
 };
 
-/** M-10, M-03, PG-*: pengaturan toko. */
-export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [], pencairan = null }: Props) {
-  const [awal, setAwal] = useState(() => awalDari(profile));
-  const [v, setV] = useState<Isian>(awal);
-  const [tersentuh, setTersentuh] = useState<Set<string>>(new Set());
-  const [dicoba, setDicoba] = useState(false);
-  const [fokusKey, setFokusKey] = useState(0);
-  const [server, setServer] = useState<Record<string, string>>({});
-  const [menyimpan, setMenyimpan] = useState(false);
-  const [mengunggah, setMengunggah] = useState(0);
-  const [resetKe, setResetKe] = useState(0);
+/**
+ * Formulir pengaturan toko lengkap dengan navigasi bagian, ringkasan galat, bilah simpan menempel, dan penjaga
+ * perubahan belum disimpan (useUnsavedGuard).
+ * @param props.profile profil toko dari backend
+ * @param props.pickupPoints semua titik temu, null = gagal dimuat
+ * @param props.user nama, nomor WA, dan email akun yang masuk
+ * @param props.incompleteSection id bagian dari ?lengkapi= yang digulir dan disorot 3 detik
+ * @param props.tables meja untuk pesan dari meja, null = gagal dimuat
+ * @param props.payouts saldo, rekening, dan riwayat pencairan, null = gagal dimuat
+ * @returns navigasi bagian, formulir, bagian yang tersimpan sendiri, dan dialog buang perubahan
+ */
+export function SettingsForm({ profile, pickupPoints, user, incompleteSection, tables = [], payouts = null }: Props) {
+  // 1. State formulir: isi awal (acuan "ada perubahan"), isi sekarang, isian disentuh, galat server, dan status simpan
+  //    atau unggah. resetCount dipakai sebagai key ImageField supaya Batalkan memasang ulang isian gambar.
+  const [initialValues, setInitialValues] = useState(() => toFormValues(profile));
+  const [values, setValues] = useState<ProfileFormValues>(initialValues);
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [errorFocusKey, setErrorFocusKey] = useState(0);
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [resetCount, setResetCount] = useState(0);
   const router = useRouter();
-  const [sorot, setSorot] = useState<string | null>(() => (BAGIAN.some((b) => b.id === lengkapi) ? lengkapi! : null));
+  const [highlightedSection, setHighlightedSection] = useState<string | null>(() =>
+    SECTIONS.some((section) => section.id === incompleteSection) ? incompleteSection! : null,
+  );
 
-  // PG-A2: gulir ke bagian yang belum lengkap, sorot 3 detik.
+  // 2. Dari kartu "Siapkan toko": gulir ke bagian yang belum lengkap, fokuskan judulnya, dan sorot 3 detik.
   useEffect(() => {
-    const el = BAGIAN.some((b) => b.id === lengkapi) ? document.getElementById(lengkapi!) : null;
-    if (!el) return;
-    const kurangGerak = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ behavior: kurangGerak ? "auto" : "smooth", block: "start" });
-    el.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
-    const h = setTimeout(() => setSorot(null), 3000);
-    return () => clearTimeout(h);
-  }, [lengkapi]);
+    const sectionElement = SECTIONS.some((section) => section.id === incompleteSection)
+      ? document.getElementById(incompleteSection!)
+      : null;
+    if (!sectionElement) return;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    sectionElement.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    sectionElement.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
+    const timer = setTimeout(() => setHighlightedSection(null), 3000);
+    return () => clearTimeout(timer);
+  }, [incompleteSection]);
 
-  const dirty = kunci(v) !== kunci(awal);
+  // 3. Ada perubahan? useUnsavedGuard memasang penjaga saat meninggalkan halaman.
+  const dirty = compareKey(values) !== compareKey(initialValues);
   const guard = useUnsavedGuard(dirty);
 
-  const set = <K extends keyof Isian>(k: K, nilai: Isian[K]) => { setServer({}); setV((p) => ({ ...p, [k]: nilai })); };
-  const sentuh = (k: string) => setTersentuh((p) => new Set(p).add(k));
-  const blur = (k: string) => () => sentuh(k);
-  const input = {
-    business_name: v.business_name, description: v.description, logo_url: v.logo_url, cover_url: v.cover_url, address: v.address, wa_number: v.wa_number, service_mode: v.service_mode,
-    open_time: v.open_time, close_time: v.close_time, hold_minutes: num(v.hold_minutes), daily_revenue_target: num(v.daily_revenue_target),
-    pickup_point_ids: v.pickup_point_ids,
+  // 4. Pengubah isian; setiap perubahan menghapus galat server lama.
+  const setField = <K extends keyof ProfileFormValues>(field: K, value: ProfileFormValues[K]) => {
+    setServerErrors({});
+    setValues((previous) => ({ ...previous, [field]: value }));
   };
-  const semua = cekProfil(input);
-  const galatSemua = dicoba ? { ...server, ...semua } : semua;
-  const galat = (k: string) => (dicoba || tersentuh.has(k) ? galatSemua[k] : undefined);
-  const ringkasan = dicoba ? Object.entries(galatSemua).map(([k, m]) => ({ id: `pg-${k}`, message: `${LABEL[k] ?? k}: ${m}` })) : [];
+  const markTouched = (field: string) => setTouched((previous) => new Set(previous).add(field));
+  const blurHandler = (field: string) => () => markTouched(field);
+  // 5. Data yang dikirim (nama field = kontrak API), galat validasi, dan ringkasannya. Galat per isian baru tampil
+  //    setelah isian disentuh atau setelah mencoba menyimpan.
+  const input = {
+    business_name: values.business_name,
+    description: values.description,
+    logo_url: values.logo_url,
+    cover_url: values.cover_url,
+    address: values.address,
+    wa_number: values.wa_number,
+    service_mode: values.service_mode,
+    open_time: values.open_time,
+    close_time: values.close_time,
+    hold_minutes: toNumber(values.hold_minutes),
+    daily_revenue_target: toNumber(values.daily_revenue_target),
+    pickup_point_ids: values.pickup_point_ids,
+  };
+  const clientErrors = validateProfile(input);
+  const allErrors = submitAttempted ? { ...serverErrors, ...clientErrors } : clientErrors;
+  const fieldError = (field: string) => (submitAttempted || touched.has(field) ? allErrors[field] : undefined);
+  const errorSummary = submitAttempted
+    ? Object.entries(allErrors).map(([field, message]) => ({
+        id: `pg-${field}`,
+        message: `${FIELD_LABELS[field] ?? field}: ${message}`,
+      }))
+    : [];
 
-  function batal() {
-    setResetKe((n) => n + 1); // pasang ulang Gambar: unggahan yang berjalan dibatalkan
-    setMengunggah(0);
-    setV(awal);
-    setServer({});
-    setTersentuh(new Set());
-    setDicoba(false);
+  // 6. Batalkan perubahan: kembali ke isi awal.
+  function cancelChanges() {
+    setResetCount((count) => count + 1); // pasang ulang ImageField: unggahan yang berjalan dibatalkan
+    setUploadingCount(0);
+    setValues(initialValues);
+    setServerErrors({});
+    setTouched(new Set());
+    setSubmitAttempted(false);
   }
 
-  async function kirim(e: React.FormEvent) {
-    e.preventDefault();
-    if (!dirty || mengunggah > 0) return; // Enter di dalam kolom tidak boleh menyimpan tanpa perubahan atau saat unggahan berjalan
-    if (Object.keys(semua).length > 0) {
-      setDicoba(true);
-      setFokusKey((n) => n + 1);
+  // 7. Simpan formulir.
+  async function submit(event: React.FormEvent) {
+    // 1. Jangan simpan tanpa perubahan atau saat unggahan berjalan; galat validasi memindahkan fokus ke ringkasan.
+    event.preventDefault();
+    if (!dirty || uploadingCount > 0) return; // Enter di dalam kolom tidak boleh menyimpan tanpa perubahan atau saat unggahan berjalan
+    if (Object.keys(clientErrors).length > 0) {
+      setSubmitAttempted(true);
+      setErrorFocusKey((count) => count + 1);
       return;
     }
-    if (menyimpan) return;
-    setMenyimpan(true);
-    const r = await panggil(() => saveProfile(input));
-    setMenyimpan(false);
-    if ("error" in r) {
-      if (r.error.fields) {
-        setServer(Object.fromEntries(Object.entries(r.error.fields).map(([k, m]) => [k, m[0]])));
-        setDicoba(true);
-        setFokusKey((n) => n + 1);
+    // 2. Kirim sekali saja; galat per isian dari server dipetakan ke isian, galat umum menjadi toast.
+    if (saving) return;
+    setSaving(true);
+    const result = await callAction(() => saveProfile(input));
+    setSaving(false);
+    if ("error" in result) {
+      if (result.error.fields) {
+        setServerErrors(
+          Object.fromEntries(Object.entries(result.error.fields).map(([field, messages]) => [field, messages[0]])),
+        );
+        setSubmitAttempted(true);
+        setErrorFocusKey((count) => count + 1);
       } else {
-        toast({ tone: "danger", message: r.error.message });
+        toast({ tone: "danger", message: result.error.message });
       }
       return;
     }
-    const baru = awalDari(r.data); // bentuk resmi dari server (mis. deskripsi kosong -> null)
-    setAwal(baru);
-    setV(baru);
-    setDicoba(false);
-    setTersentuh(new Set());
+    // 3. Berhasil: isi dari server menjadi acuan baru.
+    const savedValues = toFormValues(result.data); // bentuk resmi dari server (mis. deskripsi kosong -> null)
+    setInitialValues(savedValues);
+    setValues(savedValues);
+    setSubmitAttempted(false);
+    setTouched(new Set());
     toast({ tone: "success", message: "Pengaturan disimpan" });
     router.refresh(); // status buka/tutup di bilah atas mengikuti jam baru
   }
@@ -229,105 +430,249 @@ export function SettingsForm({ profile, pickupPoints, user, lengkapi, tables = [
       <div className="grid items-start gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]">
         <nav aria-label="Bagian pengaturan" className="lg:sticky lg:top-6">
           <ul className="flex flex-wrap gap-1 lg:flex-col">
-            {BAGIAN.map((b) => (
-              <li key={b.id}>
-                <a href={`#${b.id}`} className={cx("inline-flex min-h-11 items-center rounded-md px-3 font-medium text-ink hover:bg-subtle", fokus)}>{b.judul}</a>
+            {SECTIONS.map((section) => (
+              <li key={section.id}>
+                <a
+                  href={`#${section.id}`}
+                  className={cx(
+                    "inline-flex min-h-11 items-center rounded-md px-3 font-medium text-ink hover:bg-subtle",
+                    focusRing,
+                  )}
+                >
+                  {section.title}
+                </a>
               </li>
             ))}
           </ul>
         </nav>
 
         <div className="flex min-w-0 flex-col gap-6">
-          <form id="pg-form" onSubmit={kirim} noValidate className="flex flex-col gap-6">
-            <ErrorSummary errors={ringkasan} focusKey={fokusKey} />
+          <form id="pg-form" onSubmit={submit} noValidate className="flex flex-col gap-6">
+            <ErrorSummary errors={errorSummary} focusKey={errorFocusKey} />
 
-            <Bagian id="profil" judul="Profil toko" sorot={sorot === "profil"}>
-              <Field label="Nama usaha" id="pg-business_name" required error={galat("business_name")}>
-                <Input value={v.business_name} maxLength={150} onChange={(e) => set("business_name", e.target.value)} onBlur={blur("business_name")} />
+            <Section id="profil" title="Profil toko" highlighted={highlightedSection === "profil"}>
+              <Field label="Nama usaha" id="pg-business_name" required error={fieldError("business_name")}>
+                <Input
+                  value={values.business_name}
+                  maxLength={150}
+                  onChange={(event) => setField("business_name", event.target.value)}
+                  onBlur={blurHandler("business_name")}
+                />
               </Field>
-              <Field label="Deskripsi" id="pg-description" help={`${v.description.length}/500 karakter`} error={galat("description")}>
-                <Textarea value={v.description} onChange={(e) => set("description", e.target.value)} onBlur={blur("description")} />
+              <Field
+                label="Deskripsi"
+                id="pg-description"
+                help={`${values.description.length}/500 karakter`}
+                error={fieldError("description")}
+              >
+                <Textarea
+                  value={values.description}
+                  onChange={(event) => setField("description", event.target.value)}
+                  onBlur={blurHandler("description")}
+                />
               </Field>
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium text-ink">Logo toko</p>
-                <Gambar key={`logo-${resetKe}`} id="pg-logo_url" url={v.logo_url} error={galat("logo_url")} onChange={(u) => set("logo_url", u)} onBusy={(b) => setMengunggah((n) => n + (b ? 1 : -1))} />
+                <ImageField
+                  key={`logo-${resetCount}`}
+                  id="pg-logo_url"
+                  url={values.logo_url}
+                  error={fieldError("logo_url")}
+                  onChange={(newUrl) => setField("logo_url", newUrl)}
+                  onBusy={(busy) => setUploadingCount((count) => count + (busy ? 1 : -1))}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium text-ink">Background toko</p>
-                <p className="text-sm text-ink-muted">Tampil melebar di atas halaman toko di aplikasi pembeli. Pakai foto lanskap, misalnya dapur atau etalase.</p>
-                <Gambar key={`cover-${resetKe}`} id="pg-cover_url" jenis="cover" url={v.cover_url} error={galat("cover_url")} onChange={(u) => set("cover_url", u)} onBusy={(b) => setMengunggah((n) => n + (b ? 1 : -1))} />
+                <p className="text-sm text-ink-muted">
+                  Tampil melebar di atas halaman toko di aplikasi pembeli. Pakai foto lanskap, misalnya dapur atau
+                  etalase.
+                </p>
+                <ImageField
+                  key={`cover-${resetCount}`}
+                  id="pg-cover_url"
+                  kind="cover"
+                  url={values.cover_url}
+                  error={fieldError("cover_url")}
+                  onChange={(newUrl) => setField("cover_url", newUrl)}
+                  onBusy={(busy) => setUploadingCount((count) => count + (busy ? 1 : -1))}
+                />
               </div>
-              <Field label="Alamat" id="pg-address" required error={galat("address")}>
-                <Input value={v.address} maxLength={255} onChange={(e) => set("address", e.target.value)} onBlur={blur("address")} />
+              <Field label="Alamat" id="pg-address" required error={fieldError("address")}>
+                <Input
+                  value={values.address}
+                  maxLength={255}
+                  onChange={(event) => setField("address", event.target.value)}
+                  onBlur={blurHandler("address")}
+                />
               </Field>
-              <Field label="Nomor WA toko" id="pg-wa_number" required help="Pesanan masuk ke nomor ini. Contoh: 081234567890" error={galat("wa_number")}>
-                <Input type="tel" inputMode="numeric" value={v.wa_number} onChange={(e) => set("wa_number", e.target.value.replace(/\D/g, ""))} onBlur={blur("wa_number")} />
+              <Field
+                label="Nomor WA toko"
+                id="pg-wa_number"
+                required
+                help="Pesanan masuk ke nomor ini. Contoh: 081234567890"
+                error={fieldError("wa_number")}
+              >
+                <Input
+                  type="tel"
+                  inputMode="numeric"
+                  value={values.wa_number}
+                  onChange={(event) => setField("wa_number", event.target.value.replace(/\D/g, ""))}
+                  onBlur={blurHandler("wa_number")}
+                />
               </Field>
-            </Bagian>
+            </Section>
 
-            <Bagian id="operasional" judul="Operasional" sorot={sorot === "operasional"}>
+            <Section id="operasional" title="Operasional" highlighted={highlightedSection === "operasional"}>
               <fieldset className="flex flex-col">
                 <legend className="mb-1 text-sm font-medium text-ink">Mode layanan</legend>
-                {MODE.map((m) => (
-                  <label key={m.v} className="flex min-h-11 cursor-pointer items-center gap-3 text-ink">
-                    <input type="radio" name="service_mode" value={m.v} checked={v.service_mode === m.v} onChange={() => set("service_mode", m.v)} className={cx("size-5 accent-primary", fokus)} />
-                    <span>{m.label} <span className="text-sm text-ink-muted">· {m.info}</span></span>
+                {SERVICE_MODES.map((mode) => (
+                  <label key={mode.value} className="flex min-h-11 cursor-pointer items-center gap-3 text-ink">
+                    <input
+                      type="radio"
+                      name="service_mode"
+                      value={mode.value}
+                      checked={values.service_mode === mode.value}
+                      onChange={() => setField("service_mode", mode.value)}
+                      className={cx("size-5 accent-primary", focusRing)}
+                    />
+                    <span>
+                      {mode.label} <span className="text-sm text-ink-muted">· {mode.description}</span>
+                    </span>
                   </label>
                 ))}
               </fieldset>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Jam buka" id="pg-open_time" required error={galat("open_time")}>
-                  <Input type="time" value={v.open_time} onChange={(e) => set("open_time", e.target.value)} onBlur={blur("open_time")} />
+                <Field label="Jam buka" id="pg-open_time" required error={fieldError("open_time")}>
+                  <Input
+                    type="time"
+                    value={values.open_time}
+                    onChange={(event) => setField("open_time", event.target.value)}
+                    onBlur={blurHandler("open_time")}
+                  />
                 </Field>
-                <Field label="Jam tutup" id="pg-close_time" required help="Harus setelah jam buka." error={galat("close_time")}>
-                  <Input type="time" value={v.close_time} onChange={(e) => set("close_time", e.target.value)} onBlur={blur("close_time")} />
+                <Field
+                  label="Jam tutup"
+                  id="pg-close_time"
+                  required
+                  help="Harus setelah jam buka."
+                  error={fieldError("close_time")}
+                >
+                  <Input
+                    type="time"
+                    value={values.close_time}
+                    onChange={(event) => setField("close_time", event.target.value)}
+                    onBlur={blurHandler("close_time")}
+                  />
                 </Field>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Durasi tahan pesanan (menit)" id="pg-hold_minutes" required help="Batas waktu pesanan baru menunggu konfirmasi Anda (tunai) atau pembayaran pembeli (VA, bayar online). Lewat batas, pesanan batal otomatis dan stok kembali. 1 sampai 30 menit." error={galat("hold_minutes")}>
-                  <Input type="number" inputMode="numeric" min={1} max={30} step={1} value={v.hold_minutes} onChange={(e) => set("hold_minutes", e.target.value)} onBlur={blur("hold_minutes")} />
+                <Field
+                  label="Durasi tahan pesanan (menit)"
+                  id="pg-hold_minutes"
+                  required
+                  help="Batas waktu pesanan baru menunggu konfirmasi Anda (tunai) atau pembayaran pembeli (VA, bayar online). Lewat batas, pesanan batal otomatis dan stok kembali. 1 sampai 30 menit."
+                  error={fieldError("hold_minutes")}
+                >
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={30}
+                    step={1}
+                    value={values.hold_minutes}
+                    onChange={(event) => setField("hold_minutes", event.target.value)}
+                    onBlur={blurHandler("hold_minutes")}
+                  />
                 </Field>
-                <Field label="Target omzet harian (Rp)" id="pg-daily_revenue_target" help="Isi 0 bila tidak memakai target." error={galat("daily_revenue_target")}>
-                  <Input type="number" inputMode="numeric" min={0} step={1} value={v.daily_revenue_target} onChange={(e) => set("daily_revenue_target", e.target.value)} onBlur={blur("daily_revenue_target")} />
+                <Field
+                  label="Target omzet harian (Rp)"
+                  id="pg-daily_revenue_target"
+                  help="Isi 0 bila tidak memakai target."
+                  error={fieldError("daily_revenue_target")}
+                >
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={1}
+                    value={values.daily_revenue_target}
+                    onChange={(event) => setField("daily_revenue_target", event.target.value)}
+                    onBlur={blurHandler("daily_revenue_target")}
+                  />
                 </Field>
               </div>
-            </Bagian>
+            </Section>
 
-            <Bagian id="titik-temu" judul="Titik temu" sorot={sorot === "titik-temu"}>
+            <Section id="titik-temu" title="Titik temu" highlighted={highlightedSection === "titik-temu"}>
               <p className="text-ink-muted">Pilih tempat pembeli bisa mengambil pesanan. Minimal satu.</p>
-              <PickupPointPicker points={pickupPoints} value={v.pickup_point_ids} onChange={(ids) => set("pickup_point_ids", ids)} onBlur={blur("pickup_point_ids")} error={pickupPoints ? galat("pickup_point_ids") : undefined} />
-            </Bagian>
+              <PickupPointPicker
+                points={pickupPoints}
+                value={values.pickup_point_ids}
+                onChange={(ids) => setField("pickup_point_ids", ids)}
+                onBlur={blurHandler("pickup_point_ids")}
+                error={pickupPoints ? fieldError("pickup_point_ids") : undefined}
+              />
+            </Section>
           </form>
 
           {/* di luar form utama: aksinya tersimpan langsung, tidak ikut "Simpan perubahan" */}
-          <Bagian id="pembayaran" judul="Pembayaran & pencairan" sorot={sorot === "pembayaran"}>
-            <RekeningPencairan data={pencairan} />
-          </Bagian>
+          <Section id="pembayaran" title="Pembayaran & pencairan" highlighted={highlightedSection === "pembayaran"}>
+            <PayoutBankAccount data={payouts} />
+          </Section>
 
-          <Bagian id="meja" judul="Pesan dari meja" sorot={sorot === "meja"}>
-            <PesanMeja aktifAwal={profile.dine_in_enabled} mejaAwal={tables} />
-          </Bagian>
+          <Section id="meja" title="Pesan dari meja" highlighted={highlightedSection === "meja"}>
+            <TableOrderSettings initialEnabled={profile.dine_in_enabled} initialTables={tables} />
+          </Section>
 
-          <Bagian id="akun" judul="Akun" sorot={sorot === "akun"}>
+          <Section id="akun" title="Akun" highlighted={highlightedSection === "akun"}>
             <dl className="grid gap-3 sm:grid-cols-3">
-              <div><dt className="text-sm text-ink-muted">Nama pemilik</dt><dd className="font-medium text-ink">{user.full_name}</dd></div>
-              <div><dt className="text-sm text-ink-muted">Nomor WA login</dt><dd className="font-medium text-ink">{formatTelepon(user.phone)}</dd></div>
-              <div><dt className="text-sm text-ink-muted">Email</dt><dd className="break-all font-medium text-ink">{user.email || "-"}</dd></div>
+              <div>
+                <dt className="text-sm text-ink-muted">Nama pemilik</dt>
+                <dd className="font-medium text-ink">{user.full_name}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-ink-muted">Nomor WA login</dt>
+                <dd className="font-medium text-ink">{formatPhone(user.phone)}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-ink-muted">Email</dt>
+                <dd className="break-all font-medium text-ink">{user.email || "-"}</dd>
+              </div>
             </dl>
             <ChangePasswordForm />
-          </Bagian>
+          </Section>
 
           {dirty && (
             <div className="sticky bottom-0 z-20 flex flex-wrap items-center justify-end gap-3 rounded-lg border border-line bg-surface p-3 shadow-lg">
               <p className="mr-auto text-ink-muted">Ada perubahan yang belum disimpan.</p>
-              <Button variant="secondary" onClick={batal} disabled={menyimpan}>Batalkan perubahan</Button>
-              <Button type="submit" form="pg-form" loading={menyimpan} loadingText="Menyimpan…" disabled={mengunggah > 0}>Simpan perubahan</Button>
+              <Button variant="secondary" onClick={cancelChanges} disabled={saving}>
+                Batalkan perubahan
+              </Button>
+              <Button
+                type="submit"
+                form="pg-form"
+                loading={saving}
+                loadingText="Menyimpan…"
+                disabled={uploadingCount > 0}
+              >
+                Simpan perubahan
+              </Button>
             </div>
           )}
         </div>
       </div>
 
-      <ConfirmDialog open={guard.open} onClose={guard.cancel} title="Buang perubahan?" body="Perubahan pada pengaturan ini belum disimpan." confirmLabel="Buang perubahan" cancelLabel="Tetap di sini" tone="danger" onConfirm={guard.confirm} />
+      <ConfirmDialog
+        open={guard.open}
+        onClose={guard.cancel}
+        title="Buang perubahan?"
+        body="Perubahan pada pengaturan ini belum disimpan."
+        confirmLabel="Buang perubahan"
+        cancelLabel="Tetap di sini"
+        tone="danger"
+        onConfirm={guard.confirm}
+      />
     </>
   );
 }

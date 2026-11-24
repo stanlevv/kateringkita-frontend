@@ -1,0 +1,55 @@
+// Komponen QrPrintSheet: isi halaman /cetak-qr. Satu kartu per meja aktif (nama toko, nomor meja, QR, ajakan scan),
+// dua kolom per lembar A4. Kartu bergaris putus-putus untuk digunting; judul dan tombol Cetak tidak ikut tercetak
+// (kelas print:hidden). Data meja diambil page.tsx.
+// "use client": komponen ini berjalan di peramban (client component) karena tombol Cetak memanggil window.print().
+"use client";
+
+import { Printer, ScanLine } from "lucide-react";
+import { TableQr } from "@/app/components/table/TableQr";
+import { Button } from "@/app/components/ui/Button";
+import type { Table } from "@/types/table";
+
+/**
+ * Lembar QR meja siap cetak.
+ * @param props.merchantName nama toko yang dicetak di setiap kartu
+ * @param props.tables meja aktif
+ * @returns main berisi kartu QR
+ */
+export function QrPrintSheet({ merchantName, tables }: { merchantName: string; tables: Table[] }) {
+  return (
+    <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 print:max-w-none print:p-0">
+      <style>{"@page { size: A4; margin: 12mm }"}</style>
+      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-ink">QR meja · {merchantName}</h1>
+          <p className="text-ink-muted">{tables.length} meja aktif. Tempel tiap QR di mejanya.</p>
+        </div>
+        <Button onClick={() => window.print()}>
+          <Printer aria-hidden className="size-4" />
+          Cetak
+        </Button>
+      </div>
+      {tables.length === 0 ? (
+        <p className="text-ink-muted">Belum ada meja aktif.</p>
+      ) : (
+        <ul className="grid grid-cols-2 gap-4 print:gap-6">
+          {tables.map((table) => (
+            <li
+              key={table.id}
+              className="flex break-inside-avoid flex-col items-center gap-3 rounded-xl border-2 border-dashed border-line-strong bg-paper p-6 text-center"
+            >
+              <p className="text-sm font-medium uppercase tracking-widest text-ink-muted">{merchantName}</p>
+              <p className="font-display text-4xl font-bold text-ink">Meja {table.label}</p>
+              <TableQr table={table} size={200} />
+              <p className="inline-flex items-center gap-2 font-semibold text-ink">
+                <ScanLine aria-hidden className="size-5 text-primary" />
+                Scan untuk lihat menu &amp; pesan
+              </p>
+              <p className="text-xs text-ink-muted">Bayar langsung dari HP · tanpa daftar akun</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
+  );
+}

@@ -1,72 +1,116 @@
 "use server";
 
+// Server action masuk, daftar penjual, keluar, dan lupa kata sandi untuk web (penjual dan admin).
+// "use server" menandai fungsi di file ini sebagai server action: dijalankan di server Next.js saat form dikirim atau dipanggil komponen.
+// Posisi di alur (ubah data): form/tombol -> server action (file ini) -> api.ts -> backend, kadang lewat services.
+
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { apiFetch } from "@/services/api";
 import { safeNext } from "@/lib/safe-next";
-import { SESSION_COOKIE, getSessionToken } from "@/services/authService";
+import { SESSION_COOKIE, getSessionToken } from "@/services/auth.service";
 
-// code: UNAUTHENTICATED | VALIDATION_ERROR | RATE_LIMITED | NETWORK | CONFLICT (dari apiFetch) atau NOT_MERCHANT.
+/**
+ * Hasil form auth yang dibaca komponen: pesan galat, kode galat, pesan per field, atau `ok: true` bila berhasil.
+ * Kode yang mungkin: UNAUTHENTICATED, VALIDATION_ERROR, RATE_LIMITED, NETWORK, CONFLICT (dari backend) atau NOT_MERCHANT.
+ */
 export type AuthState = { error?: string; code?: string; fields?: Record<string, string[]>; ok?: boolean };
 
-const text = (form: FormData, name: string) => String(form.get(name) ?? "").trim();
+// FormData = isi form yang dikirim browser (pasangan nama field -> nilai). Fungsi ini membaca satu field sebagai teks rapi.
+const readFormText = (form: FormData, name: string) => String(form.get(name) ?? "").trim();
 
-// F01-SEC-2: teruskan IP pengunjung ke API (dipercaya API hanya bersama rahasia internal)
+/**
+ * Menyusun header berisi IP pengunjung untuk backend, agar batas percobaan login dihitung per pengunjung, bukan per server web.
+ * Backend hanya mempercayai IP ini bila dikirim bersama rahasia internal, jadi tanpa env INTERNAL_API_SECRET tidak ada header.
+ * @returns header X-Client-IP (bila IP diketahui) dan X-Internal-Secret, atau undefined bila rahasia belum diatur
+ */
 async function clientIpHeaders(): Promise<Record<string, string> | undefined> {
   const secret = process.env.INTERNAL_API_SECRET;
   if (!secret) return undefined;
-  const h = await headers();
-  const ip = h.get("x-real-ip")?.trim() || h.get("x-forwarded-for")?.split(",")[0].trim();
-  return { ...(ip ? { "X-Client-IP": ip } : {}), "X-Internal-Secret": secret };
+  const requestHeaders = await headers();
+  const clientIp =
+    requestHeaders.get("x-real-ip")?.trim() || requestHeaders.get("x-forwarded-for")?.split(",")[0].trim();
+  return { ...(clientIp ? { "X-Client-IP": clientIp } : {}), "X-Internal-Secret": secret };
 }
 
-export async function login(_prev: AuthState, form: FormData): Promise<AuthState> {
-  const res = await apiFetch<{ token: string; expires_at: string; user?: { role?: string } }>("/auth/login", {
+/**
+ * Masuk dengan email atau nomor WA dan kata sandi (POST /auth/login), lalu menyimpan token di cookie sesi.
+ * Cookie httpOnly tidak bisa dibaca JavaScript di browser, jadi token aman dari skrip pihak ketiga.
+ * `redirect()` menghentikan fungsi dan mengarahkan browser ke halaman lain.
+ * @param _previousState hasil sebelumnya (tidak dipakai; ada agar bentuknya cocok dengan useActionState)
+ * @param form field form `identifier`, `password`, dan `next` (halaman tujuan setelah masuk)
+ * @returns `AuthState` berisi galat bila login ditolak atau akun pembeli (NOT_MERCHANT).
+ *   Bila berhasil tidak kembali: admin dialihkan ke /admin (atau `next` di bawah /admin), penjual ke `next` atau /dashboard.
+ */
+export async function login(_previousState: AuthState, form: FormData): Promise<AuthState> {
+  // 1. Kirim kredensial ke backend beserta IP pengunjung.
+  const response = await apiFetch<{ token: string; expires_at: string; user?: { role?: string } }>("/auth/login", {
     method: "POST",
     headers: await clientIpHeaders(),
-    body: JSON.stringify({ identifier: text(form, "identifier"), password: String(form.get("password") ?? ""), client: "web" }),
+    body: JSON.stringify({
+      identifier: readFormText(form, "identifier"),
+      password: String(form.get("password") ?? ""),
+      client: "web",
+    }),
   });
-  if (!res.ok || !res.data) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  if (!response.ok || !response.data)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
 
-  const role = res.data.user?.role;
+  // 2. Web hanya untuk penjual dan admin: token pembeli langsung dicabut lagi.
+  const role = response.data.user?.role;
   if (role !== "merchant" && role !== "admin") {
-    await apiFetch("/auth/logout", { method: "POST", token: res.data.token }).catch(() => {});
+    await apiFetch("/auth/logout", { method: "POST", token: response.data.token }).catch(() => {});
     return { error: "Akun ini akun pembeli. Gunakan aplikasi KateringKita di ponsel.", code: "NOT_MERCHANT" };
   }
 
-  (await cookies()).set(SESSION_COOKIE, res.data.token, {
+  // 3. Simpan token di cookie httpOnly yang habis bersamaan dengan sesi di backend.
+  (await cookies()).set(SESSION_COOKIE, response.data.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    expires: new Date(res.data.expires_at),
+    expires: new Date(response.data.expires_at),
   });
+  // 4. Arahkan ke tujuan yang aman (safeNext menolak alamat situs lain): admin tetap di area admin, penjual tidak boleh ke area admin.
   const next = String(form.get("next") ?? "");
   if (role === "admin") {
-    const to = safeNext(next, "/admin");
-    redirect(to === "/admin" || to.startsWith("/admin/") || to.startsWith("/admin?") ? to : "/admin");
+    const target = safeNext(next, "/admin");
+    redirect(target === "/admin" || target.startsWith("/admin/") || target.startsWith("/admin?") ? target : "/admin");
   }
-  const to = safeNext(next);
-  redirect(to.startsWith("/admin") ? "/dashboard" : to); // penjual tidak diarahkan ke area admin
+  const target = safeNext(next);
+  redirect(target.startsWith("/admin") ? "/dashboard" : target); // penjual tidak diarahkan ke area admin
 }
 
-export async function registerMerchant(_prev: AuthState, form: FormData): Promise<AuthState> {
-  const res = await apiFetch("/auth/merchant/register", {
+/**
+ * Mendaftarkan akun penjual baru (POST /auth/merchant/register).
+ * @param _previousState hasil sebelumnya (tidak dipakai; ada agar bentuknya cocok dengan useActionState)
+ * @param form field form `full_name`, `phone`, `email`, `password`, `business_name`, `merchant_type_id`, `address`
+ * @returns `{ ok: true }` bila terdaftar; selain itu `AuthState` berisi galat dari backend (mis. email sudah dipakai, pesan per field)
+ */
+export async function registerMerchant(_previousState: AuthState, form: FormData): Promise<AuthState> {
+  // 1. Baca field form (teks dirapikan, kata sandi apa adanya) dan kirim ke backend.
+  const response = await apiFetch("/auth/merchant/register", {
     method: "POST",
     body: JSON.stringify({
-      full_name: text(form, "full_name"),
-      phone: text(form, "phone"),
-      email: text(form, "email"),
+      full_name: readFormText(form, "full_name"),
+      phone: readFormText(form, "phone"),
+      email: readFormText(form, "email"),
       password: String(form.get("password") ?? ""),
-      business_name: text(form, "business_name"),
+      business_name: readFormText(form, "business_name"),
       merchant_type_id: Number(form.get("merchant_type_id")),
-      address: text(form, "address"),
+      address: readFormText(form, "address"),
     }),
   });
-  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+  // 2. Galat backend (mis. email sudah dipakai) diteruskan ke form apa adanya.
+  if (!response.ok)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
   return { ok: true };
 }
 
+/**
+ * Keluar: mencabut token di backend (bila ada), menghapus cookie sesi, lalu mengarahkan ke /login.
+ * Kegagalan backend diabaikan agar pengguna tetap bisa keluar.
+ */
 export async function logout() {
   const token = await getSessionToken();
   if (token) await apiFetch("/auth/logout", { method: "POST", token }).catch(() => {});
@@ -74,15 +118,35 @@ export async function logout() {
   redirect("/login");
 }
 
-// F11 lupa sandi: kode OTP dikirim ke email akun; jawaban API sama untuk email terdaftar atau tidak.
-export async function mintaKodeReset(email: string): Promise<AuthState> {
-  const res = await apiFetch("/auth/password/forgot", { method: "POST", headers: await clientIpHeaders(), body: JSON.stringify({ email }) });
-  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+/**
+ * Meminta kode OTP (kode sekali pakai) reset kata sandi ke email akun (POST /auth/password/forgot).
+ * Backend menjawab sama untuk email terdaftar maupun tidak, agar orang lain tidak bisa menebak email yang terdaftar.
+ * @param email email akun
+ * @returns `{ ok: true }`, atau `AuthState` berisi galat (mis. terlalu sering meminta kode)
+ */
+export async function requestResetCode(email: string): Promise<AuthState> {
+  const response = await apiFetch("/auth/password/forgot", {
+    method: "POST",
+    headers: await clientIpHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
   return { ok: true };
 }
 
-export async function resetKataSandi(input: { email: string; code: string; password: string }): Promise<AuthState> {
-  const res = await apiFetch("/auth/password/reset", { method: "POST", headers: await clientIpHeaders(), body: JSON.stringify(input) });
-  if (!res.ok) return { error: res.error?.message, code: res.error?.code, fields: res.error?.fields };
+/**
+ * Mengganti kata sandi dengan kode OTP dari email (POST /auth/password/reset).
+ * @param input email akun, kode OTP (`code`), dan kata sandi baru (`password`)
+ * @returns `{ ok: true }`, atau `AuthState` berisi galat (mis. kode salah atau kedaluwarsa, pesan per field)
+ */
+export async function resetPassword(input: { email: string; code: string; password: string }): Promise<AuthState> {
+  const response = await apiFetch("/auth/password/reset", {
+    method: "POST",
+    headers: await clientIpHeaders(),
+    body: JSON.stringify(input),
+  });
+  if (!response.ok)
+    return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
   return { ok: true };
 }

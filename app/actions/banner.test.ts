@@ -1,20 +1,32 @@
+// Test server action banner penjual (app/actions/banner.ts) dan banner admin (app/actions/admin/banner.ts).
+// Pemeriksaan sesi dan panggilan ke backend dipalsukan (vi.mock), jadi test berjalan tanpa server.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireMerchant = vi.fn();
 const requireAdmin = vi.fn();
 const merchantFetch = vi.fn();
 const adminFetch = vi.fn();
-vi.mock("@/services/authService", () => ({
-  requireMerchant: (...a: unknown[]) => requireMerchant(...a), requireAdmin: (...a: unknown[]) => requireAdmin(...a),
+vi.mock("@/services/auth.service", () => ({
+  requireMerchant: (...args: unknown[]) => requireMerchant(...args),
+  requireAdmin: (...args: unknown[]) => requireAdmin(...args),
 }));
-vi.mock("@/services/api", async (orig) => ({
-  ...(await orig<typeof import("@/services/api")>()),
-  merchantFetch: (...a: unknown[]) => merchantFetch(...a), adminFetch: (...a: unknown[]) => adminFetch(...a),
+vi.mock("@/services/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/api")>()),
+  merchantFetch: (...args: unknown[]) => merchantFetch(...args),
+  adminFetch: (...args: unknown[]) => adminFetch(...args),
 }));
-import { hapusBannerToko, simpanBannerToko } from "./banner";
-import { buatBannerAdmin, mintaUnggahAdmin, tinjauBannerAdmin } from "./admin/banner";
+import { deleteMerchantBanner, saveMerchantBanner } from "./banner";
+import { createAdminBanner, requestAdminUpload, reviewAdminBanner } from "./admin/banner";
 
-const ISI = { title: "Diskon", image_url: "https://foto.test/a.webp", target: "merchant", promo_id: null, starts_at: "2026-11-17T00:00:00.000Z", ends_at: "2026-11-20T00:00:00.000Z" };
+const BANNER_INPUT = {
+  title: "Diskon",
+  image_url: "https://foto.test/a.webp",
+  target: "merchant",
+  promo_id: null,
+  starts_at: "2026-11-17T00:00:00.000Z",
+  ends_at: "2026-11-20T00:00:00.000Z",
+};
 
 beforeEach(() => {
   requireMerchant.mockReset().mockResolvedValue({});
@@ -25,26 +37,42 @@ beforeEach(() => {
 
 describe("banner penjual", () => {
   it("baru → POST, ubah → PATCH; isian tidak valid tanpa panggilan", async () => {
-    expect(await simpanBannerToko(null, ISI)).toEqual({ data: { id: 9 } });
-    expect(merchantFetch).toHaveBeenLastCalledWith("/banners", { method: "POST", body: JSON.stringify(ISI) });
-    await simpanBannerToko(9, ISI);
-    expect(merchantFetch).toHaveBeenLastCalledWith("/banners/9", { method: "PATCH", body: JSON.stringify(ISI) });
-    expect(await simpanBannerToko(null, { ...ISI, title: "" })).toMatchObject({ error: { code: "VALIDATION_ERROR", fields: { title: ["Judul 3–80 karakter."] } } });
+    expect(await saveMerchantBanner(null, BANNER_INPUT)).toEqual({ data: { id: 9 } });
+    expect(merchantFetch).toHaveBeenLastCalledWith("/banners", { method: "POST", body: JSON.stringify(BANNER_INPUT) });
+    await saveMerchantBanner(9, BANNER_INPUT);
+    expect(merchantFetch).toHaveBeenLastCalledWith("/banners/9", {
+      method: "PATCH",
+      body: JSON.stringify(BANNER_INPUT),
+    });
+    expect(await saveMerchantBanner(null, { ...BANNER_INPUT, title: "" })).toMatchObject({
+      error: { code: "VALIDATION_ERROR", fields: { title: ["Judul 3–80 karakter."] } },
+    });
     expect(merchantFetch).toHaveBeenCalledTimes(2);
-    await hapusBannerToko(9);
+    await deleteMerchantBanner(9);
     expect(merchantFetch).toHaveBeenLastCalledWith("/banners/9", { method: "DELETE" });
   });
 });
 
 describe("banner admin", () => {
   it("super & ops; buat, tinjau (tolak wajib alasan), minta unggah ke folder platform", async () => {
-    await buatBannerAdmin(null, { ...ISI, target: "none", sort_order: 1 });
+    await createAdminBanner(null, { ...BANNER_INPUT, target: "none", sort_order: 1 });
     expect(requireAdmin).toHaveBeenCalledWith("super", "ops");
-    expect(adminFetch).toHaveBeenLastCalledWith("/banners", { method: "POST", body: JSON.stringify({ ...ISI, target: "none", sort_order: 1 }) });
-    expect(await tinjauBannerAdmin(9, { status: "ditolak" })).toMatchObject({ error: { fields: { catatan: ["Tulis alasan penolakan (3–300 karakter)."] } } });
-    await tinjauBannerAdmin(9, { status: "ditolak", catatan: "Gambar buram" });
-    expect(adminFetch).toHaveBeenLastCalledWith("/banners/9", { method: "PATCH", body: JSON.stringify({ status: "ditolak", catatan: "Gambar buram" }) });
-    await mintaUnggahAdmin({ purpose: "banner", content_type: "image/png", size: 10 });
-    expect(adminFetch).toHaveBeenLastCalledWith("/uploads", { method: "POST", body: JSON.stringify({ purpose: "banner", content_type: "image/png", size: 10 }) });
+    expect(adminFetch).toHaveBeenLastCalledWith("/banners", {
+      method: "POST",
+      body: JSON.stringify({ ...BANNER_INPUT, target: "none", sort_order: 1 }),
+    });
+    expect(await reviewAdminBanner(9, { status: "ditolak" })).toMatchObject({
+      error: { fields: { catatan: ["Tulis alasan penolakan (3–300 karakter)."] } },
+    });
+    await reviewAdminBanner(9, { status: "ditolak", catatan: "Gambar buram" });
+    expect(adminFetch).toHaveBeenLastCalledWith("/banners/9", {
+      method: "PATCH",
+      body: JSON.stringify({ status: "ditolak", catatan: "Gambar buram" }),
+    });
+    await requestAdminUpload({ purpose: "banner", content_type: "image/png", size: 10 });
+    expect(adminFetch).toHaveBeenLastCalledWith("/uploads", {
+      method: "POST",
+      body: JSON.stringify({ purpose: "banner", content_type: "image/png", size: 10 }),
+    });
   });
 });

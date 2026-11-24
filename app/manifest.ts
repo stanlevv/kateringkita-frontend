@@ -1,6 +1,12 @@
 import type { MetadataRoute } from "next";
 
-// F21: PWA untuk pelanggan pesan dari meja. Scope /meja: dashboard penjual di luar scope sehingga tidak ditawari dipasang.
+// Manifest PWA (aplikasi web yang bisa dipasang di layar utama ponsel) untuk pelanggan yang memesan dari meja.
+
+/**
+ * Data manifest yang disajikan Next.js di /manifest.webmanifest. Cakupannya hanya /meja, jadi dashboard penjual
+ * tidak ditawari untuk dipasang.
+ * @returns isi manifest: nama, warna, ikon, dan alamat awal
+ */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/meja",

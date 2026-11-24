@@ -1,120 +1,181 @@
+// Komponen OrderDetail: rincian satu pesanan (pemesan, item, harga, riwayat status) dan tombol aksinya.
+// Dipakai halaman /pesanan/[code] dan laci slip di dashboard (tanpa tombol aksi).
+// Status pesanan: holding = menunggu konfirmasi/pembayaran, confirmed = dikonfirmasi, cooking = dimasak,
+// ready = siap, completed = selesai, cancelled = dibatalkan, expired = kadaluarsa (tidak dikonfirmasi tepat waktu).
+// "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { orderAction } from "@/app/actions/orders";
-import { panggil } from "@/lib/aksi";
+import { callAction } from "@/lib/action";
 import { Button } from "@/app/components/ui/Button";
 import { PaymentBadge } from "@/app/components/ui/PaymentBadge";
 import { StatusBadge } from "@/app/components/ui/StatusBadge";
 import { toast } from "@/app/components/ui/Toast";
 import { cx } from "@/app/components/ui/cx";
-import { formatJam, formatRupiah, formatTanggal, formatTelepon, tanggalWib } from "@/lib/format";
-import { statusViewPesanan, teksAksi, teksSukses, type AksiPesanan } from "@/lib/order-status";
+import { formatTime, formatRupiah, formatDate, formatPhone, wibDate } from "@/lib/format";
+import { orderStatusView, actionTexts, successText, type OrderAction } from "@/lib/order-status";
 import type { MerchantOrder } from "@/types/order";
-import { ChatWaLink, galatAksi, StokDialog, TombolTolak } from "./galatAksi";
+import { ChatWaLink, actionErrorView, OutOfStockDialog, RejectButton } from "./OrderActionParts";
 import { RejectDialog } from "./RejectDialog";
 import { StatusTimeline } from "./StatusTimeline";
 
-const Baris = ({ label, nilai, tebal }: { label: string; nilai: string; tebal?: boolean }) => (
-  <div className={cx("flex justify-between gap-3", tebal ? "font-semibold text-ink" : "text-ink-muted")}>
+/** Satu baris rincian harga (label kiri, nominal kanan); `bold` untuk baris Total. */
+const PriceRow = ({ label, value, bold }: { label: string; value: string; bold?: boolean }) => (
+  <div className={cx("flex justify-between gap-3", bold ? "font-semibold text-ink" : "text-ink-muted")}>
     <dt>{label}</dt>
-    <dd className="font-mono">{nilai}</dd>
+    <dd className="font-mono">{value}</dd>
   </div>
 );
 
-const Bagian = ({ judul, children }: { judul: string; children: React.ReactNode }) => (
+/** Bagian rincian dengan judul (Pemesan, Pesanan, Riwayat status). */
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-3">
-    <h2 className="font-semibold text-ink">{judul}</h2>
+    <h2 className="font-semibold text-ink">{title}</h2>
     {children}
   </section>
 );
 
-/** Tombol aksi sama dengan OrderCard (statusView), tetapi langsung terkirim tanpa jendela Batalkan. */
-function Aksi({ order }: { order: MerchantOrder }) {
+/**
+ * Tombol aksi pesanan. Pilihan tombolnya sama dengan OrderCard (dari orderStatusView), tetapi aksi langsung dikirim
+ * tanpa jendela Batalkan 5 detik seperti di dashboard.
+ */
+function OrderActions({ order }: { order: MerchantOrder }) {
+  // State: aksi yang sedang dikirim, dialog tolak, dan dialog stok tidak cukup.
   const router = useRouter();
-  const [kirim, setKirim] = useState<AksiPesanan | null>(null);
-  const [tolak, setTolak] = useState(false);
-  const [stok, setStok] = useState(false);
-  const v = statusViewPesanan(order);
+  const [sending, setSending] = useState<OrderAction | null>(null);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [outOfStockOpen, setOutOfStockOpen] = useState(false);
+  const view = orderStatusView(order);
 
-  async function jalankan(a: AksiPesanan, reason?: string) {
-    setKirim(a);
-    const r = await panggil(() => orderAction(order.code, a, reason));
-    if ("data" in r) {
-      // Tombol tetap terkunci sampai status pada prop berubah (Aksi di-key status); jangan buka kunci di jeda refresh.
-      toast({ tone: "success", message: `Pesanan ${order.code} ${teksSukses(a, order)}` });
+  async function runAction(action: OrderAction, reason?: string) {
+    // 1. Kunci tombol lalu kirim aksi ke server.
+    setSending(action);
+    const result = await callAction(() => orderAction(order.code, action, reason));
+    if ("data" in result) {
+      // 2. Berhasil: tombol tetap terkunci sampai status pada prop berubah (OrderActions di-key status), jadi kunci
+      // tidak terbuka di jeda sebelum data baru tiba.
+      toast({ tone: "success", message: `Pesanan ${order.code} ${successText(action, order)}` });
     } else {
-      setKirim(null);
-      const g = galatAksi(r.error.code, a, r.error.message);
-      if (g.jenis === "stok") setStok(true);
-      else toast({ tone: g.tone, message: g.message });
-      if (g.jenis === "stok" || !g.muatUlang) return;
+      // 3. Gagal: buka kunci, lalu tampilkan galat; hanya CONFLICT yang perlu memuat ulang data.
+      setSending(null);
+      const errorView = actionErrorView(result.error.code, action, result.error.message);
+      if (errorView.kind === "outOfStock") setOutOfStockOpen(true);
+      else toast({ tone: errorView.tone, message: errorView.message });
+      if (errorView.kind === "outOfStock" || !errorView.reload) return;
     }
+    // 4. Muat ulang data server (router.refresh) agar status baru tampil.
     router.refresh();
   }
 
-  if (!v.primary && !v.secondary.some((s) => s !== "lihat-slip")) return null;
+  if (!view.primary && !view.secondary.some((secondary) => secondary !== "lihat-slip")) return null;
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-      {v.hint && <p className="self-center text-ink-muted">{v.hint}</p>}
-      {v.primary && (
-        <Button loading={kirim === v.primary} loadingText={teksAksi[v.primary].proses} disabled={!!kirim} onClick={() => void jalankan(v.primary!)}>
-          {v.primaryLabel}
+      {view.hint && <p className="self-center text-ink-muted">{view.hint}</p>}
+      {view.primary && (
+        <Button
+          loading={sending === view.primary}
+          loadingText={actionTexts[view.primary].pending}
+          disabled={!!sending}
+          onClick={() => void runAction(view.primary!)}
+        >
+          {view.primaryLabel}
         </Button>
       )}
-      {v.secondary.includes("reject") && <TombolTolak disabled={!!kirim} onClick={() => setTolak(true)} />}
-      {v.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
-      <RejectDialog order={tolak ? order : null} onClose={() => setTolak(false)} onConfirm={(r) => { setTolak(false); void jalankan("reject", r); }} />
-      <StokDialog code={stok ? order.code : null} onClose={() => setStok(false)}
-        onTolak={() => { setStok(false); setTolak(true); }}
-        onTambah={() => router.push(`/menu?q=${encodeURIComponent(order.items[0]?.menu_name ?? "")}`)} />
+      {view.secondary.includes("reject") && <RejectButton disabled={!!sending} onClick={() => setRejectOpen(true)} />}
+      {view.secondary.includes("chat-wa") && order.customer_phone && <ChatWaLink code={order.code} />}
+      <RejectDialog
+        order={rejectOpen ? order : null}
+        onClose={() => setRejectOpen(false)}
+        onConfirm={(reason) => {
+          setRejectOpen(false);
+          void runAction("reject", reason);
+        }}
+      />
+      <OutOfStockDialog
+        code={outOfStockOpen ? order.code : null}
+        onClose={() => setOutOfStockOpen(false)}
+        onReject={() => {
+          setOutOfStockOpen(false);
+          setRejectOpen(true);
+        }}
+        onAddQuota={() => router.push(`/menu?q=${encodeURIComponent(order.items[0]?.menu_name ?? "")}`)}
+      />
     </div>
   );
 }
 
-/** PS-N2, PS-A1. `aksi={false}` untuk laci slip (dashboard sudah punya aksi di kartu). Selalu memakai prop; aksi sukses memuat ulang halaman. */
-export function OrderDetail({ order: o, aksi = true }: { order: MerchantOrder; aksi?: boolean }) {
-  const hariPesan = tanggalWib(o.created_at);
+/**
+ * Rincian satu pesanan. Selalu menampilkan data dari prop; setelah aksi berhasil halaman dimuat ulang sehingga prop
+ * berisi status terbaru.
+ * @param props.order data pesanan
+ * @param props.showActions tampilkan tombol aksi (bawaan true; false untuk laci slip di dashboard karena kartu
+ * dashboard sudah punya tombol aksi)
+ * @returns elemen `div` berisi rincian
+ */
+export function OrderDetail({ order, showActions = true }: { order: MerchantOrder; showActions?: boolean }) {
+  const orderDay = wibDate(order.created_at);
   return (
     <div className="flex flex-col gap-6 text-sm text-ink">
-      <div className="flex flex-wrap items-center gap-2"><StatusBadge order={o} /><PaymentBadge method={o.payment_method} status={o.payment_status} /></div>
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusBadge order={order} />
+        <PaymentBadge method={order.payment_method} status={order.payment_status} />
+      </div>
 
-      <Bagian judul="Pemesan">
-        <p><span className="font-semibold">{o.customer_name}</span>{o.customer_phone && ` · ${formatTelepon(o.customer_phone)}`}</p>
-        <p className="inline-flex items-center gap-1 text-ink-muted"><MapPin aria-hidden className="size-4" />{o.table ? `Meja ${o.table.label} · makan di tempat` : `Titik ambil: ${o.pickup_point?.name}`}</p>
-        {!o.table && (
+      <Section title="Pemesan">
+        <p>
+          <span className="font-semibold">{order.customer_name}</span>
+          {order.customer_phone && ` · ${formatPhone(order.customer_phone)}`}
+        </p>
+        <p className="inline-flex items-center gap-1 text-ink-muted">
+          <MapPin aria-hidden className="size-4" />
+          {order.table ? `Meja ${order.table.label} · makan di tempat` : `Titik ambil: ${order.pickup_point?.name}`}
+        </p>
+        {!order.table && (
           <p className="text-ink-muted">
-            Waktu ambil: {o.pickup_at ? `${tanggalWib(o.pickup_at) === hariPesan ? "" : `${formatTanggal(o.pickup_at)} `}${formatJam(o.pickup_at)}` : "Secepatnya"}
+            Waktu ambil:{" "}
+            {order.pickup_at
+              ? `${wibDate(order.pickup_at) === orderDay ? "" : `${formatDate(order.pickup_at)} `}${formatTime(order.pickup_at)}`
+              : "Secepatnya"}
           </p>
         )}
-        {o.note && <p className="rounded-md bg-subtle px-3 py-2">“{o.note}”</p>}
-      </Bagian>
+        {order.note && <p className="rounded-md bg-subtle px-3 py-2">“{order.note}”</p>}
+      </Section>
 
-      <Bagian judul="Pesanan">
+      <Section title="Pesanan">
         <ul className="flex flex-col gap-2">
-          {o.items.map((i) => (
-            <li key={`${i.menu_id}-${i.options.map((x) => x.id).join()}`} className="flex justify-between gap-3">
+          {order.items.map((item) => (
+            <li
+              key={`${item.menu_id}-${item.options.map((option) => option.id).join()}`}
+              className="flex justify-between gap-3"
+            >
               <span>
-                <span className="font-mono">{i.qty}×</span> {i.menu_name}
-                {i.options.map((x) => <span key={x.id} className="block text-ink-muted">+{x.name} ({formatRupiah(x.extra_price)})</span>)}
+                <span className="font-mono">{item.qty}×</span> {item.menu_name}
+                {item.options.map((option) => (
+                  <span key={option.id} className="block text-ink-muted">
+                    +{option.name} ({formatRupiah(option.extra_price)})
+                  </span>
+                ))}
               </span>
-              <span className="font-mono">{formatRupiah(i.line_total)}</span>
+              <span className="font-mono">{formatRupiah(item.line_total)}</span>
             </li>
           ))}
         </ul>
         <dl className="flex flex-col gap-1 border-t border-line pt-3">
-          <Baris label="Subtotal" nilai={formatRupiah(o.subtotal)} />
-          {o.discount > 0 && <Baris label="Diskon" nilai={`− ${formatRupiah(o.discount)}`} />}
-          <Baris label="Biaya layanan" nilai={formatRupiah(o.service_fee)} />
-          <Baris label="Total" nilai={formatRupiah(o.total)} tebal />
+          <PriceRow label="Subtotal" value={formatRupiah(order.subtotal)} />
+          {order.discount > 0 && <PriceRow label="Diskon" value={`− ${formatRupiah(order.discount)}`} />}
+          <PriceRow label="Biaya layanan" value={formatRupiah(order.service_fee)} />
+          <PriceRow label="Total" value={formatRupiah(order.total)} bold />
         </dl>
-      </Bagian>
+      </Section>
 
-      <Bagian judul="Riwayat status"><StatusTimeline order={o} /></Bagian>
+      <Section title="Riwayat status">
+        <StatusTimeline order={order} />
+      </Section>
 
-      {aksi && <Aksi key={o.status} order={o} />}
+      {showActions && <OrderActions key={order.status} order={order} />}
     </div>
   );
 }

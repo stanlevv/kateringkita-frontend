@@ -1,7 +1,11 @@
+// sitemap.xml untuk mesin pencari, disajikan Next.js di /sitemap.xml.
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
-// Hanya halaman publik yang layak muncul di hasil pencarian.
+/**
+ * Daftar halaman publik. Hanya halaman ini yang layak muncul di hasil pencarian.
+ * @returns alamat halaman beserta seberapa sering berubah dan prioritasnya
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: SITE_URL, changeFrequency: "monthly", priority: 1 },
