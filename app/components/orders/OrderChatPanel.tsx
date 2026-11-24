@@ -232,6 +232,7 @@ export function OrderChatPanel({ code }: { code: string }) {
         <ol
           ref={listRef}
           aria-label="Pesan chat"
+          aria-live="polite"
           className="flex max-h-96 flex-col gap-2 overflow-y-auto rounded-md border border-line p-3"
         >
           {messages.map((message) => {
