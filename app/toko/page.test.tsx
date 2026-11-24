@@ -4,6 +4,8 @@ import { render, screen } from "@testing-library/react";
 
 const getPublicMerchants = vi.fn();
 vi.mock("next/server", () => ({ connection: async () => {} }));
+const getPickupPoints = vi.fn();
+vi.mock("@/services/meta.service", () => ({ getPickupPoints: () => getPickupPoints() }));
 vi.mock("@/services/catalog.service", () => ({ getPublicMerchants: () => getPublicMerchants() }));
 
 import Page, { metadata } from "./page";
@@ -19,7 +21,10 @@ const m = (slug: string, name: string, extra = {}) => ({
   ...extra,
 });
 
-beforeEach(() => getPublicMerchants.mockReset());
+beforeEach(() => {
+  getPublicMerchants.mockReset();
+  getPickupPoints.mockReset().mockResolvedValue({ data: [] });
+});
 
 describe("/toko", () => {
   it("menampilkan tautan tiap toko dengan nama dan jenis usaha", async () => {
@@ -34,6 +39,35 @@ describe("/toko", () => {
     expect(a).toHaveTextContent("4.3 (3 ulasan)");
     expect(screen.getByRole("link", { name: /Warung Budi/ })).toHaveAttribute("href", "/toko/warung-budi");
     expect(screen.getByRole("link", { name: /Warung Budi/ })).not.toHaveTextContent("ulasan");
+  });
+
+  it("menampilkan tautan ke tiap titik ambil", async () => {
+    getPublicMerchants.mockResolvedValue({ data: [] });
+    getPickupPoints.mockResolvedValue({
+      data: [
+        { id: 3, name: "Gazebo Fakultas Ilmu Komputer" },
+        { id: 4, name: "Gerbang Utara" },
+      ],
+    });
+    render(await Page());
+    expect(screen.getByRole("heading", { level: 2, name: "Cari berdasarkan titik ambil" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Gazebo Fakultas Ilmu Komputer" })).toHaveAttribute(
+      "href",
+      "/area/3-gazebo-fakultas-ilmu-komputer",
+    );
+    expect(screen.getByRole("link", { name: "Gerbang Utara" })).toHaveAttribute("href", "/area/4-gerbang-utara");
+  });
+
+  it.each([
+    ["error", () => getPickupPoints.mockResolvedValue({ error: { code: "X", message: "x" } })],
+    ["throw", () => getPickupPoints.mockRejectedValue(new Error("down"))],
+    ["kosong", () => getPickupPoints.mockResolvedValue({ data: [] })],
+  ])("titik ambil %s: bagian disembunyikan, halaman tetap tampil", async (_n, setup) => {
+    getPublicMerchants.mockResolvedValue({ data: [m("a", "Dapur Ani")] });
+    setup();
+    render(await Page());
+    expect(screen.queryByText("Cari berdasarkan titik ambil")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Dapur Ani/ })).toBeInTheDocument();
   });
 
   it("ada tautan kembali ke beranda", async () => {

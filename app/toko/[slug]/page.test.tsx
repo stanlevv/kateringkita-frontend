@@ -76,6 +76,17 @@ describe("halaman toko", () => {
     expect(container.querySelector('script[type="application/ld+json"]')).not.toBeNull();
   });
 
+  it("nama titik ambil menaut ke halaman area", async () => {
+    getMerchantBySlug.mockResolvedValue({
+      data: { ...profile, pickup_points: [{ id: 3, name: "Gazebo Fakultas Ilmu Komputer", description: null }] },
+    });
+    render(await Page(params("dapur-ani")));
+    expect(screen.getByRole("link", { name: "Gazebo Fakultas Ilmu Komputer" })).toHaveAttribute(
+      "href",
+      "/area/3-gazebo-fakultas-ilmu-komputer",
+    );
+  });
+
   it("ada tautan ke beranda", async () => {
     render(await Page(params("dapur-ani")));
     expect(screen.getByRole("link", { name: "KateringKita, beranda" })).toHaveAttribute("href", "/");
