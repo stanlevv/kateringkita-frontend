@@ -28,6 +28,7 @@ const report = (overrides: Partial<ChatReportSummary> = {}): ChatReportSummary =
   reporter_name: "Warung Bu Sari",
   reason: "Pembeli mengirim kata kasar berulang kali",
   created_at: "2026-11-24T03:05:00.000Z",
+  reviewed_at: null,
   ...overrides,
 });
 const detail: ChatReportDetail = {

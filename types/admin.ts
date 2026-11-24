@@ -32,6 +32,19 @@ export type AdminSummary = {
 };
 
 /**
+ * Hitungan antrean yang menunggu admin (GET /admin/queues), untuk ubin "Perlu tindakan" dan lencana menu.
+ * `payouts_pending` dan `refunds_pending` null bila admin bukan tingkat super.
+ */
+export type AdminQueues = {
+  merchants_pending: number;
+  tickets_open: number;
+  chats_reported: number;
+  payouts_pending: number | null;
+  refunds_pending: number | null;
+  ai_results_pending: number;
+};
+
+/**
  * Keterangan halaman untuk daftar yang dipecah per halaman: nomor halaman, jumlah per halaman, dan total data.
  */
 export type PageMeta = { page: number; limit: number; total: number };
@@ -212,7 +225,7 @@ export type TicketDetail = Omit<TicketSummary, "last_message_preview" | "custome
 
 /**
  * Satu laporan chat pesanan di daftar admin. `reporter_role` = pihak yang melapor; `reporter_name` null bila akun
- * pelapor sudah dihapus.
+ * pelapor sudah dihapus; `reviewed_at` null bila detailnya belum pernah dibuka admin.
  */
 export type ChatReportSummary = {
   id: number;
@@ -221,6 +234,7 @@ export type ChatReportSummary = {
   reporter_name: string | null;
   reason: string;
   created_at: string;
+  reviewed_at: string | null;
 };
 
 /** Detail laporan chat: ringkasan ditambah seluruh riwayat pesan chat pesanan itu (urut id naik). */
