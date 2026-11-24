@@ -174,7 +174,7 @@ npm run format:check && npm run lint && npx tsc --noEmit && npm run typecheck:e2
 ```
 
 `typecheck:e2e` butuh salinan repo backend di folder `../be`. `build` butuh env `BACKEND_API_URL`, `INTERNAL_API_SECRET`, dan
-`SITE_URL` (CI mengisinya di langkah `build` ci.yml). Aturan alur kerja lengkap ada di CONTRIBUTING bagian "Alur kerja".
+`SITE_URL` (CI mengisinya di langkah `build` ci.yml). `BUYER_APP_URL` (opsional): alamat web aplikasi pembeli; kosong = tombol "Pesan lewat aplikasi" disembunyikan. Aturan alur kerja lengkap ada di CONTRIBUTING bagian "Alur kerja".
 
 ---
 

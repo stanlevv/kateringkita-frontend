@@ -474,6 +474,11 @@ export default async function Home() {
                   Tanya jawab
                 </a>
               </li>
+              <li>
+                <Link href="/toko" className="inline-flex min-h-11 items-center hover:text-ink">
+                  Lihat katering yang sudah bergabung
+                </Link>
+              </li>
             </ul>
           </nav>
           <nav aria-label="Akun">
