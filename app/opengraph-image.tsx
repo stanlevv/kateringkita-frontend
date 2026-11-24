@@ -4,8 +4,11 @@ import { ImageResponse } from "next/og";
 
 // Gambar pratinjau tautan (Open Graph) untuk WhatsApp, X, Facebook, dan LinkedIn.
 // Dibuat sekali saat build; font Plus Jakarta Sans (lisensi OFL) dibaca dari assets/fonts.
+/** Teks alternatif gambar pratinjau. */
 export const alt = "KateringKita — kelola pesanan katering kampus tanpa porsi tersisa";
+/** Ukuran gambar pratinjau dalam piksel. */
 export const size = { width: 1200, height: 630 };
+/** Jenis berkas gambar pratinjau. */
 export const contentType = "image/png";
 
 // Bentuk sama dengan LogoMark (app/components/shell/Brand.tsx), diisi putih.

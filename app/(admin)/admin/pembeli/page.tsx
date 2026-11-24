@@ -21,13 +21,13 @@ export default async function CustomersPage({
   // 1. Wajib admin; baca filter dari URL (nilai yang tidak dikenal diabaikan).
   const { user } = await requireAdmin();
   const params = await searchParams;
-  const q = params.q?.trim() ?? "";
+  const searchQuery = params.q?.trim() ?? "";
   const status = params.status === "active" || params.status === "inactive" ? params.status : "";
   const pageParam = Number(params.page);
   const page = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 100_000 ? pageParam : 1;
   // 2. Ambil satu halaman dari backend.
   const apiQuery = new URLSearchParams({ page: String(page), limit: String(LIMIT_CUSTOMERS) });
-  if (q) apiQuery.set("q", q);
+  if (searchQuery) apiQuery.set("q", searchQuery);
   if (status) apiQuery.set("status", status);
   const response = await adminFetch<CustomerSummary[]>(`/customers?${apiQuery}`);
   const meta = response.meta as PageMeta | undefined;
@@ -42,7 +42,7 @@ export default async function CustomersPage({
           rows={response.data}
           page={page}
           total={meta?.total ?? response.data.length}
-          q={q}
+          q={searchQuery}
           status={status}
         />
       ) : (

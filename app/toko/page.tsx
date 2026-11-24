@@ -15,6 +15,7 @@ const WRAP = "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8";
 const DESCRIPTION =
   "Daftar katering di sekitar Universitas Brawijaya, Malang: nasi box, makan siang, dan pesanan acara. Lihat menu, harga, dan titik ambilnya.";
 
+/** Metadata halaman daftar toko: judul, deskripsi, dan alamat kanonik untuk mesin pencari. */
 export const metadata: Metadata = {
   title: "Katering Kampus UB Malang",
   description: DESCRIPTION,
@@ -30,6 +31,10 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Halaman publik daftar semua toko katering.
+ * @returns tampilan daftar toko
+ */
 export default async function DaftarTokoPage() {
   // Dirender per permintaan, bukan sekali saat build, supaya daftar toko selalu terbaru.
   await connection();

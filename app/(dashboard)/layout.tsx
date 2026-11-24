@@ -22,6 +22,7 @@ import { getMaintenance } from "@/services/meta.service";
 import { MaintenanceNotice } from "@/app/components/MaintenanceNotice";
 import { SIDEBAR_COOKIE, parseSidebarMode } from "@/lib/shell";
 
+/** Metadata halaman penjual: judul tetap dan tidak boleh diindeks mesin pencari. */
 export const metadata: Metadata = { title: "Dashboard penjual", robots: { index: false, follow: false } };
 
 /**
