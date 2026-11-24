@@ -1,3 +1,4 @@
+// Test SEO: robots.txt menutup rute di balik login, selaras dengan proxy.ts, dan sitemap hanya halaman publik.
 import { describe, expect, it } from "vitest";
 import { config } from "@/proxy";
 import { PRIVATE_PATHS, SITE_URL } from "@/lib/site";

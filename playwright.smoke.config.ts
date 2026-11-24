@@ -1,11 +1,11 @@
+// Konfigurasi Playwright varian smoke: sama dengan playwright.config.ts, tetapi web dijalankan dengan next start
+// (build produksi) untuk menghindari masalah Turbopack dengan symlink/junction di worktree Windows.
 import { defineConfig } from "@playwright/test";
 import { API, API_PORT, DB_URL, TEST_JWT_SECRET, WEB_PORT } from "./e2e/helpers";
 
 const web = `http://localhost:${WEB_PORT}`;
 const tsx = "node ../be/node_modules/tsx/dist/cli.mjs";
 
-// Konfigurasi Playwright Smoke untuk mode Next.js Production (next start)
-// Menghindari issue Turbopack symlink/junction pada Windows worktree.
 export default defineConfig({
   testDir: "./e2e",
   workers: 1,

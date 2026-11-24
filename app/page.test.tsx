@@ -1,3 +1,4 @@
+// Test halaman /: tombol utama sesuai peran, header pengunjung saat backend mati, tanpa klaim palsu, dan JSON-LD.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import Home from "./page";

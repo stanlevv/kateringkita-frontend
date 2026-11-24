@@ -1,3 +1,4 @@
+// Konfigurasi Playwright untuk test end-to-end (e2e/): menjalankan backend asli (dari ../be) dan web mode pengembangan.
 import { defineConfig } from "@playwright/test";
 import { API, API_PORT, DB_URL, TEST_JWT_SECRET, WEB_PORT } from "./e2e/helpers";
 
