@@ -38,6 +38,12 @@ const menu = (id: number, name: string, cat: string): MenuCard => ({
 type Ld = Record<string, any>;
 
 describe("merchantJsonLd", () => {
+  it("areaServed dari titik ambil; tanpa titik ambil kunci tidak ada", () => {
+    expect(merchantJsonLd(profile, [])).not.toHaveProperty("areaServed");
+    const ld = merchantJsonLd({ ...profile, pickup_points: [{ id: 1, name: "Gazebo FILKOM", description: null }] }, []);
+    expect(ld.areaServed).toEqual([{ "@type": "Place", name: "Gazebo FILKOM, Malang" }]);
+  });
+
   it("memetakan field dasar dan menu", () => {
     const ld = merchantJsonLd(profile, [
       menu(1, "Nasi Ayam", "Makanan"),

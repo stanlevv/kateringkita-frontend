@@ -17,6 +17,9 @@ export function merchantJsonLd(profile: MerchantProfile, menus: MenuCard[]): Rec
     url: `${SITE_URL}/toko/${profile.slug}`,
     servesCuisine: profile.merchant_type.name,
     openingHours: `Mo-Su ${profile.open_time}-${profile.close_time}`,
+    ...(profile.pickup_points.length > 0 && {
+      areaServed: profile.pickup_points.map((p) => ({ "@type": "Place", name: `${p.name}, Malang` })),
+    }),
     ...(profile.description && { description: profile.description }),
     ...(image && { image }),
     ...(profile.rating_count > 0 && {

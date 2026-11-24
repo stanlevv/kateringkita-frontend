@@ -163,6 +163,10 @@ const JSON_LD = {
   "@graph": [
     {
       "@type": "Organization",
+      areaServed: [
+        { "@type": "City", name: "Malang" },
+        { "@type": "CollegeOrUniversity", name: "Universitas Brawijaya" },
+      ],
       "@id": ORGANIZATION_ID,
       name: SITE_NAME,
       url: SITE_URL,
@@ -271,7 +275,7 @@ export default async function Home() {
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-sm font-medium text-ink-muted shadow-sm">
                 <span aria-hidden className="size-2 rounded-full bg-accent" />
-                Untuk penjual katering di sekitar kampus
+                Untuk penjual katering di sekitar kampus UB Malang
               </p>
               <h1 className="mt-5 font-display text-[clamp(2.4rem,5.2vw,4rem)] font-extrabold leading-[1.04] tracking-[-0.035em] text-balance">
                 {/* judul besar tanpa koma/titik: Plus Jakarta Sans tebal memberi celah lebar sebelum tanda baca */}
@@ -452,8 +456,8 @@ export default async function Home() {
           <div className="col-span-2 sm:col-span-1">
             <Brand />
             <p className="mt-4 max-w-xs text-sm text-ink-muted">
-              Layanan pre-order katering untuk dapur di sekitar kampus. Mahasiswa memesan lewat aplikasi, penjual
-              mengelolanya di sini.
+              Layanan pre-order katering untuk dapur di sekitar Universitas Brawijaya, Malang. Mahasiswa memesan lewat
+              aplikasi, penjual mengelolanya di sini.
             </p>
           </div>
           <nav aria-label="Produk">

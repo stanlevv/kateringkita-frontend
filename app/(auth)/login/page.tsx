@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: "Masuk penjual",
   description: "Masuk ke dashboard KateringKita untuk mengelola menu, kuota porsi, dan pesanan katering kampus Anda.",
   alternates: { canonical: "/login" },
+  robots: { index: false, follow: true },
 };
 
 /** Parameter URL yang dibaca halaman ini; nama kuncinya mengikuti URL, jadi tetap bahasa Indonesia (`alasan`). */

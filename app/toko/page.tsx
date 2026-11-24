@@ -13,19 +13,20 @@ import { getPickupPoints } from "@/services/meta.service";
 const WRAP = "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8";
 
 const DESCRIPTION =
-  "Daftar katering di sekitar kampus yang sudah bergabung di KateringKita. Pilih toko, lihat menu dan harganya.";
+  "Daftar katering di sekitar Universitas Brawijaya, Malang: nasi box, makan siang, dan pesanan acara. Lihat menu, harga, dan titik ambilnya.";
 
 export const metadata: Metadata = {
-  title: "Daftar Katering Kampus",
+  title: "Katering Kampus UB Malang",
   description: DESCRIPTION,
   alternates: { canonical: "/toko" },
   openGraph: {
     type: "website",
     locale: "id_ID",
     siteName: SITE_NAME,
-    title: "Daftar Katering Kampus",
+    title: "Katering Kampus UB Malang",
     description: DESCRIPTION,
     url: "/toko",
+    images: ["/opengraph-image"],
   },
 };
 
@@ -53,9 +54,12 @@ export default async function DaftarTokoPage() {
       </header>
       <main className={`${WRAP} py-10`}>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-          Katering kampus di KateringKita
+          Katering di sekitar kampus UB Malang
         </h1>
-        <p className="mt-2 text-ink-muted">Pilih toko untuk melihat menu, harga, dan titik ambilnya.</p>
+        <p className="mt-2 text-ink-muted">
+          Pesan nasi box, makan siang, atau katering acara dari dapur di sekitar Universitas Brawijaya, Malang. Pilih
+          toko untuk melihat menu dan harganya, lalu ambil pesanan di titik temu kampus.
+        </p>
         {merchants.length === 0 ? (
           <p className="mt-8 text-ink-muted">Belum ada toko yang bisa dipesan.</p>
         ) : (
