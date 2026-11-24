@@ -209,12 +209,15 @@ export type TicketDetail = Omit<TicketSummary, "last_message_preview" | "custome
   messages: TicketMessage[];
 };
 
-/** Satu laporan chat pesanan di daftar admin. `reporter_role` = pihak yang melapor. */
+/**
+ * Satu laporan chat pesanan di daftar admin. `reporter_role` = pihak yang melapor; `reporter_name` null bila akun
+ * pelapor sudah dihapus.
+ */
 export type ChatReportSummary = {
   id: number;
   order_code: string;
   reporter_role: "customer" | "merchant";
-  reporter_name: string;
+  reporter_name: string | null;
   reason: string;
   created_at: string;
 };

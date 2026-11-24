@@ -8,7 +8,12 @@ import { PageHeader } from "@/app/components/shell/PageHeader";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { Pagination } from "@/app/components/ui/Pagination";
 import { formatDate, formatTime } from "@/lib/format";
-import { LIMIT_CHAT_REPORTS, REPORTER_LABELS, parseReportPage } from "@/services/admin-chat-report.service";
+import {
+  DELETED_REPORTER_NAME,
+  LIMIT_CHAT_REPORTS,
+  REPORTER_LABELS,
+  parseReportPage,
+} from "@/services/admin-chat-report.service";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { ChatReportSummary, PageMeta } from "@/types/admin";
@@ -63,7 +68,7 @@ export default async function ChatReportsPage({
                     </span>
                   </span>
                   <span className="text-sm text-ink-muted">
-                    Dilaporkan {REPORTER_LABELS[report.reporter_role]}: {report.reporter_name}
+                    Dilaporkan {REPORTER_LABELS[report.reporter_role]}: {report.reporter_name ?? DELETED_REPORTER_NAME}
                   </span>
                   <span className="line-clamp-2 text-ink">{report.reason}</span>
                 </Link>

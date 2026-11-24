@@ -8,7 +8,7 @@ import { PageHeader } from "@/app/components/shell/PageHeader";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { LinkButton } from "@/app/components/ui/LinkButton";
 import { formatDate, formatTime } from "@/lib/format";
-import { REPORTER_LABELS, isValidChatReportId } from "@/services/admin-chat-report.service";
+import { DELETED_REPORTER_NAME, REPORTER_LABELS, isValidChatReportId } from "@/services/admin-chat-report.service";
 import { adminFetch } from "@/services/api";
 import { requireAdmin } from "@/services/auth.service";
 import type { ChatReportDetail } from "@/types/admin";
@@ -49,8 +49,8 @@ export default async function ChatReportDetailPage({ params }: { params: Promise
       <div className="flex flex-col gap-4">
         <section aria-label="Laporan" className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4">
           <p className="text-sm text-ink-muted">
-            Dilaporkan {REPORTER_LABELS[report.reporter_role]}: {report.reporter_name} · {formatDate(report.created_at)}{" "}
-            {formatTime(report.created_at)}
+            Dilaporkan {REPORTER_LABELS[report.reporter_role]}: {report.reporter_name ?? DELETED_REPORTER_NAME} ·{" "}
+            {formatDate(report.created_at)} {formatTime(report.created_at)}
           </p>
           <p className="whitespace-pre-wrap break-words text-ink">{report.reason}</p>
         </section>

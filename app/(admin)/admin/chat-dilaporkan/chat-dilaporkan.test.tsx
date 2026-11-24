@@ -69,6 +69,12 @@ describe("/admin/chat-dilaporkan daftar", () => {
     expect(screen.getByRole("link", { name: /KK-20261124-AB12/ })).toHaveAttribute("href", "/admin/chat-dilaporkan/12");
   });
 
+  it("akun pelapor dihapus (reporter_name null) -> (akun dihapus)", async () => {
+    adminFetch.mockResolvedValue(ok([report({ reporter_name: null })], { page: 1, limit: 20, total: 1 }));
+    render(await ChatReportsPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByText(/Dilaporkan Penjual: \(akun dihapus\)/)).toBeInTheDocument();
+  });
+
   it("nomor halaman dari URL diteruskan ke backend; nilai ngawur menjadi halaman 1", async () => {
     adminFetch.mockResolvedValue(ok([report()], { page: 3, limit: 20, total: 50 }));
     await ChatReportsPage({ searchParams: Promise.resolve({ page: "3" }) });
@@ -123,6 +129,12 @@ describe("/admin/chat-dilaporkan/<id> baca", () => {
     expect(adminFetch).not.toHaveBeenCalled();
     adminFetch.mockResolvedValue({ ok: false, status: 404, data: undefined });
     await expect(renderDetail("99")).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("akun pelapor dihapus (reporter_name null) -> (akun dihapus)", async () => {
+    adminFetch.mockResolvedValue(ok({ ...detail, reporter_name: null }));
+    await renderDetail("12");
+    expect(screen.getByText(/Dilaporkan Penjual: \(akun dihapus\)/)).toBeInTheDocument();
   });
 
   it("gagal selain 404 menampilkan LoadError; tanpa sesi admin dialihkan", async () => {

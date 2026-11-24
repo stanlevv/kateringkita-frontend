@@ -5,6 +5,8 @@ export const LIMIT_CHAT_REPORTS = 20;
 
 /** Label pihak pelapor. */
 export const REPORTER_LABELS = { customer: "Pembeli", merchant: "Penjual" } as const;
+/** Pengganti nama pelapor bila akunnya sudah dihapus (backend mengirim `reporter_name: null`). */
+export const DELETED_REPORTER_NAME = "(akun dihapus)";
 
 /**
  * Memeriksa id laporan di URL: bilangan bulat positif, tanpa huruf atau tanda lain.
