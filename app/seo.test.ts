@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { config } from "@/proxy";
 import { PRIVATE_PATHS, SITE_URL } from "@/lib/site";
+vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("@/services/catalog.service", () => ({ getPublicMerchants: async () => ({ data: [] }) }));
 
 import robots from "./robots";

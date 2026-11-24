@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const state = vi.hoisted(() => ({ load: (async () => ({})) as () => Promise<unknown> }));
 vi.mock("@/services/catalog.service", () => ({ getPublicMerchants: () => state.load() }));
+vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("@/lib/site", () => ({ SITE_URL: "https://kk.test" }));
 
 import sitemap from "./sitemap";

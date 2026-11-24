@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 const getPublicMerchants = vi.fn();
+vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("@/services/catalog.service", () => ({ getPublicMerchants: () => getPublicMerchants() }));
 
 import Page, { metadata } from "./page";

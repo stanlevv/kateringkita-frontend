@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { Brand } from "@/app/components/shell/Brand";
+import { connection } from "next/server";
 import { getPublicMerchants } from "@/services/catalog.service";
 
 const WRAP = "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8";
@@ -15,6 +16,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DaftarTokoPage() {
+  // Dirender per permintaan, bukan sekali saat build, supaya daftar toko selalu terbaru.
+  await connection();
   const res = await getPublicMerchants();
   if ("error" in res) throw new Error(res.error.message);
   const merchants = res.data;

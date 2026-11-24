@@ -1,6 +1,7 @@
 // sitemap.xml untuk mesin pencari, disajikan Next.js di /sitemap.xml.
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
+import { connection } from "next/server";
 import { getPublicMerchants } from "@/services/catalog.service";
 
 /**
@@ -9,6 +10,8 @@ import { getPublicMerchants } from "@/services/catalog.service";
  * @returns alamat halaman beserta seberapa sering berubah dan prioritasnya
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Dirender per permintaan: tanpa ini sitemap membeku saat build dan daftar toko hilang.
+  await connection();
   const entries: MetadataRoute.Sitemap = [
     { url: SITE_URL, changeFrequency: "monthly", priority: 1 },
     { url: `${SITE_URL}/register`, changeFrequency: "yearly", priority: 0.8 },
