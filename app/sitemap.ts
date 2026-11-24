@@ -25,11 +25,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!("data" in res) || !("data" in pointsRes)) return entries;
     // Toko tanpa menu bertanda noindex (F32), jadi tidak masuk sitemap.
     const stores = res.data.filter((m) => m.menu_count > 0);
-    const perPoint = await Promise.all(pointsRes.data.map((p) => getPublicMerchants(p.id)));
+    const perPoint = await Promise.all(pointsRes.data.map((p) => getPublicMerchants(p.id).catch(() => null)));
     const areas: MetadataRoute.Sitemap = [];
     for (const [i, point] of pointsRes.data.entries()) {
       const r = perPoint[i];
-      if (!("data" in r)) return entries;
+      // Satu area gagal dimuat: lewati area itu saja.
+      if (!r || !("data" in r)) continue;
       if (r.data.filter((m) => m.menu_count > 0).length >= AREA_MIN_STORES) {
         areas.push({ url: `${SITE_URL}/area/${areaSlug(point)}`, changeFrequency: "weekly", priority: 0.8 });
       }

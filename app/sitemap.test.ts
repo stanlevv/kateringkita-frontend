@@ -60,10 +60,29 @@ describe("sitemap", () => {
     expect(await urls()).toEqual(STATIC);
   });
 
-  it("daftar toko per area gagal: hanya halaman statis", async () => {
+  it("daftar toko per area gagal: area itu dilewati, toko tetap ada", async () => {
     state.points = async () => ({ data: [{ id: 1, name: "A" }] });
     state.merchants = async (id) => (id ? { error: { code: "X", message: "x" } } : { data: [store("a")] });
-    expect(await urls()).toEqual(STATIC);
+    expect(await urls()).toEqual([...STATIC, "https://kk.test/toko/a"]);
+  });
+
+  it("satu panggilan per area melempar: area itu dilewati, area lain dan toko tetap", async () => {
+    state.points = async () => ({
+      data: [
+        { id: 1, name: "A" },
+        { id: 2, name: "B" },
+      ],
+    });
+    state.merchants = async (id) => {
+      if (id === 1) throw new Error("down");
+      return { data: [store("a"), store("b")] };
+    };
+    expect(await urls()).toEqual([
+      ...STATIC,
+      "https://kk.test/toko/a",
+      "https://kk.test/toko/b",
+      "https://kk.test/area/2-b",
+    ]);
   });
 
   it("tetap mengembalikan halaman statis saat service mengembalikan error", async () => {

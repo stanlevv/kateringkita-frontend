@@ -9,7 +9,7 @@ const getMerchantMenus = vi.fn();
 vi.mock("@/services/meta.service", () => ({ getPickupPoints: () => getPickupPoints() }));
 vi.mock("@/services/catalog.service", () => ({
   getPublicMerchants: (id: number) => getPublicMerchants(id),
-  getMerchantMenus: (s: string) => getMerchantMenus(s),
+  getMerchantMenus: (s: string, n?: number) => getMerchantMenus(s, n),
 }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
@@ -74,6 +74,19 @@ describe("halaman area", () => {
     expect(screen.getAllByText(/Sedang tutup/)).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Semua toko" })).toHaveAttribute("href", "/toko");
     expect(getPublicMerchants).toHaveBeenCalledWith(3);
+    expect(getMerchantMenus).toHaveBeenCalledWith("ani", 3);
+  });
+
+  it("menampilkan deskripsi titik ambil bila ada, dan tidak bila null", async () => {
+    getPickupPoints.mockResolvedValue({
+      data: [{ id: 3, name: "Gazebo Fakultas Ilmu Komputer", description: "Di depan gedung F" }],
+    });
+    const { unmount } = render(await Page(params(SLUG)));
+    expect(screen.getByText("Di depan gedung F")).toBeInTheDocument();
+    unmount();
+    getPickupPoints.mockResolvedValue({ data: [{ id: 3, name: "Gazebo Fakultas Ilmu Komputer", description: null }] });
+    const { container } = render(await Page(params(SLUG)));
+    expect(container.querySelectorAll("main > p")).toHaveLength(1);
   });
 
   it("id tidak sah -> notFound tanpa panggil service", async () => {

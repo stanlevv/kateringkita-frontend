@@ -32,13 +32,15 @@ export const metadata: Metadata = {
 export default async function DaftarTokoPage() {
   // Dirender per permintaan, bukan sekali saat build, supaya daftar toko selalu terbaru.
   await connection();
-  const res = await getPublicMerchants();
+  // Titik ambil bagian pelengkap: bila gagal dimuat, sembunyikan saja.
+  const [res, points] = await Promise.all([
+    getPublicMerchants(),
+    getPickupPoints()
+      .then((r) => ("data" in r ? r.data : []))
+      .catch(() => []),
+  ]);
   if ("error" in res) throw new Error(res.error.message);
   const merchants = res.data;
-  // Bagian pelengkap: bila titik ambil gagal dimuat, sembunyikan saja.
-  const points = await getPickupPoints()
-    .then((r) => ("data" in r ? r.data : []))
-    .catch(() => []);
 
   return (
     <>

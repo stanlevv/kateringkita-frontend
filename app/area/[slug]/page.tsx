@@ -35,7 +35,7 @@ const loadArea = cache(async (param: string) => {
   const stores = await Promise.all(
     storesRes.data.map(async (s) => {
       if (s.menu_count === 0) return { ...s, menus: [], isOpen: null };
-      const res = await getMerchantMenus(s.slug);
+      const res = await getMerchantMenus(s.slug, MENUS_PER_STORE);
       if ("error" in res) throw new Error(res.error.message);
       // PublicMerchantSummary tidak punya is_open; ambil dari menu (null bila tak ada menu).
       return { ...s, menus: res.data.slice(0, MENUS_PER_STORE), isOpen: res.data[0]?.merchant.is_open ?? null };
@@ -99,6 +99,7 @@ export default async function AreaPage({ params }: Props) {
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
           Katering di {point.name}
         </h1>
+        {point.description && <p className="mt-2 text-ink-muted">{point.description}</p>}
         <p className="mt-2 text-ink-muted">
           Toko yang mengantar ke titik ini. Pilih toko untuk melihat menu lengkapnya.
         </p>
