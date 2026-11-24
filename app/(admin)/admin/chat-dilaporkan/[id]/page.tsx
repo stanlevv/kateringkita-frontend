@@ -1,9 +1,11 @@
 // Halaman /admin/chat-dilaporkan/<id>: satu laporan chat beserta seluruh riwayat pesannya. Hanya baca, tanpa kotak
 // ketik. Server component: mengambil GET /admin/chat-reports/<id>. Id tidak valid atau laporan tidak ada memanggil
-// notFound(). Semua tingkat admin boleh membuka halaman ini.
+// notFound(). Semua tingkat admin boleh membuka halaman ini. Membukanya menandai laporan sudah dibuka di backend, jadi
+// RefreshOnOpen memuat ulang layout agar lencana "Chat dilaporkan" di menu ikut berkurang.
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { LoadError } from "@/app/components/LoadError";
+import { RefreshOnOpen } from "@/app/(admin)/admin/components/RefreshOnOpen";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { cx, focusRing } from "@/app/components/ui/cx";
 import { LinkButton } from "@/app/components/ui/LinkButton";
@@ -46,6 +48,7 @@ export default async function ChatReportDetailPage({ params }: { params: Promise
   const report = response.data;
   return (
     <PageHeader title={`Pesanan ${report.order_code}`} actions={backLink}>
+      <RefreshOnOpen />
       <div className="flex flex-col gap-4">
         <section aria-label="Laporan" className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4">
           <p className="text-sm text-ink-muted">

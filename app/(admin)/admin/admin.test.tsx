@@ -171,7 +171,7 @@ describe("halaman dashboard", () => {
     expect(adminFetch).toHaveBeenCalledWith("/summary");
     expect(adminFetch).toHaveBeenCalledWith("/queues");
     expect(screen.getByRole("heading", { level: 1, name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Menunggu verifikasi/ })).toHaveAttribute("href", "/admin/verifikasi");
+    expect(screen.getByRole("link", { name: /Perlu perbaikan/ })).toHaveAttribute("href", "/admin/verifikasi");
   });
   it("Perlu tindakan (super): 5 ubin bertaut ke antreannya; ubin bernilai 0 tetap tampil", async () => {
     respond(summary, queues);
@@ -205,7 +205,7 @@ describe("halaman dashboard", () => {
     respond(summary, undefined);
     render(await AdminPage());
     expect(tiles().getByText("Antrean belum bisa dimuat.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Menunggu verifikasi/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Perlu perbaikan/ })).toBeInTheDocument();
   });
   it("gagal memuat ringkasan: pesan + Coba lagi", async () => {
     adminFetch.mockResolvedValue({ ok: false, status: 500, error: { code: "X", message: "x" } });
