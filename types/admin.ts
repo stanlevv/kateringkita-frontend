@@ -82,7 +82,8 @@ export type AdminMerchantDetail = {
   created_at: string;
   merchant_type_name: string;
   menu_count: number;
-  owner: { full_name: string; phone: string; email: string | null };
+  description?: string | null;
+  owner: { full_name: string; phone: string; email: string | null; is_active: boolean };
   pickup_points: { id: number; name: string }[];
   checklist: Checklist;
   recent_logs: AuditLog[];
@@ -224,3 +225,21 @@ export type ChatReportSummary = {
 
 /** Detail laporan chat: ringkasan ditambah seluruh riwayat pesan chat pesanan itu (urut id naik). */
 export type ChatReportDetail = ChatReportSummary & { messages: ChatMessage[] };
+
+/** Satu baris daftar pembeli di panel admin. */
+export type CustomerSummary = {
+  id: number;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  is_active: boolean;
+  order_count: number;
+  last_order_at: string | null;
+  created_at: string;
+};
+
+/** Detail satu pembeli di panel admin, dengan ringkasan pesanan (`spent` = total belanja pesanan selesai, Rupiah). */
+export type CustomerDetail = Omit<CustomerSummary, "order_count" | "last_order_at"> & {
+  email_verified: boolean;
+  orders: { total: number; completed: number; cancelled: number; spent: number; last_order_at: string | null };
+};

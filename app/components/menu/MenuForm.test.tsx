@@ -127,6 +127,17 @@ describe("simpan", () => {
     expect((await screen.findAllByText("Menu disimpan")).length).toBeGreaterThan(0);
     expect(push).toHaveBeenCalledWith("/menu");
   });
+  it("panel admin: penyimpan dan tujuan sendiri, tanpa unggah foto", async () => {
+    const adminSave = vi.fn().mockResolvedValue({ data: menus()[0] });
+    renderForm({ save: adminSave, doneHref: "/admin/penjual/7/menu", canUploadPhoto: false });
+    expect(screen.getByText("Foto hanya bisa diunggah dari akun penjual.")).toBeInTheDocument();
+    expect(screen.queryByText("Foto tambahan")).toBeNull();
+    await fillValid();
+    await userEvent.click(screen.getByRole("button", { name: "Simpan menu" }));
+    expect(adminSave).toHaveBeenCalledWith(null, expect.objectContaining({ name: "Nasi Box" }));
+    expect(saveMenu).not.toHaveBeenCalled();
+    expect(push).toHaveBeenCalledWith("/admin/penjual/7/menu");
+  });
   it("error validasi server dipetakan ke field + ringkasan", async () => {
     saveMenu.mockResolvedValue({
       error: { code: "VALIDATION_ERROR", message: "x", fields: { name: ["Nama sudah dipakai."] } },

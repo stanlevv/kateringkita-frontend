@@ -20,7 +20,7 @@ import MerchantsPage from "./page";
 import MerchantDetailPage from "./[id]/page";
 
 beforeEach(() => {
-  requireAdmin.mockReset().mockResolvedValue({});
+  requireAdmin.mockReset().mockResolvedValue({ user: { admin_level: "super" } });
   adminFetch.mockReset();
 });
 

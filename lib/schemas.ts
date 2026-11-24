@@ -65,6 +65,41 @@ export const accountSchema = z.object({
 /** Form ganti email: email baru dan kata sandi saat ini. */
 export const emailChangeSchema = z.object({ email: emailField, current_password: currentPasswordField });
 
+// --- Panel admin: tambah/ubah penjual dan pembeli (aturan sama dengan backend /admin/merchants dan /admin/customers) ---
+const optionalEmailField = z
+  .string()
+  .trim()
+  .refine((email) => email === "" || z.email().safeParse(email).success, "Format email tidak valid.");
+
+/** Form admin ubah akun penjual/pembeli: nama, nomor WA login, email (kosong boleh untuk penjual). */
+export const adminAccountSchema = z.object({
+  full_name: requiredText("Nama lengkap wajib diisi.", 150),
+  phone: waNumber,
+  email: optionalEmailField,
+});
+
+/** Form admin tambah penjual: data pemilik (sandi awal tanpa konfirmasi) dan data usaha. */
+export const adminMerchantCreateSchema = z.object({
+  ...adminAccountSchema.shape,
+  password: newPasswordSchema,
+  ...businessSchema.shape,
+});
+
+/** Form admin tambah pembeli: nama, nomor WA, email wajib, dan sandi awal. */
+export const adminCustomerCreateSchema = z.object({
+  ...adminAccountSchema.shape,
+  email: emailField,
+  password: newPasswordSchema,
+});
+
+/** Form admin ubah profil toko: nama usaha, alamat, WA toko, dan deskripsi. */
+export const adminStoreSchema = z.object({
+  business_name: requiredText("Nama usaha wajib diisi.", 150),
+  address: requiredText("Alamat wajib diisi.", 255),
+  wa_number: waNumber,
+  description: z.string().trim().max(500, "Maksimal 500 karakter."),
+});
+
 /** Form lupa sandi: email tujuan kode reset. */
 export const emailResetSchema = z.object({
   email: z.string().trim().min(1, "Email wajib diisi.").pipe(z.email("Format email tidak valid.")),

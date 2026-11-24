@@ -4,6 +4,7 @@
 import { Suspense } from "react";
 import { MerchantTable } from "@/app/(admin)/admin/components/MerchantTable";
 import { LoadError } from "@/app/components/LoadError";
+import { LinkButton } from "@/app/components/ui/LinkButton";
 import { PageHeader } from "@/app/components/shell/PageHeader";
 import { adminFetch } from "@/services/api";
 import { LIMIT_MERCHANTS } from "@/services/admin-merchant.service";
@@ -25,7 +26,7 @@ export default async function MerchantsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   // 1. Pastikan yang membuka adalah admin, lalu baca parameter URL.
-  await requireAdmin();
+  const { user } = await requireAdmin();
   const params = await searchParams;
   const apiQuery = new URLSearchParams();
   // 2. Saring nilai URL: yang tidak dikenal diabaikan agar tidak menjadi halaman galat.
@@ -44,7 +45,11 @@ export default async function MerchantsPage({
   const response = await adminFetch<MerchantSummary[]>(`/merchants?${apiQuery}`);
   const meta = response.meta as PageMeta | undefined;
   return (
-    <PageHeader title="Penjual" description="Semua penjual yang terdaftar.">
+    <PageHeader
+      title="Penjual"
+      description="Semua penjual yang terdaftar."
+      actions={user.admin_level !== "support" && <LinkButton href="/admin/penjual/baru">Tambah penjual</LinkButton>}
+    >
       {response.ok && response.data ? (
         <Suspense>
           <MerchantTable

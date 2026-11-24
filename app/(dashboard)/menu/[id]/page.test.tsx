@@ -8,7 +8,7 @@ vi.mock("@/services/auth.service", () => ({ requireMerchant: async () => ({}) })
 const getMenu = vi.fn();
 vi.mock("@/services/menu.service", () => ({ getMenu: (...args: unknown[]) => getMenu(...args) }));
 vi.mock("@/services/meta.service", () => ({ getCategories: async () => ({ data: [] }) }));
-vi.mock("@/app/(dashboard)/menu/components/MenuForm", () => ({ MenuForm: () => <p>FORM</p> }));
+vi.mock("@/app/components/menu/MenuForm", () => ({ MenuForm: () => <p>FORM</p> }));
 import EditMenuPage from "./page";
 
 const renderPage = async (id: string) => render(await EditMenuPage({ params: Promise.resolve({ id }) }));
