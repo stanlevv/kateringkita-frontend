@@ -48,3 +48,5 @@ d5bf1816636c8fd81b434ff1881fe392c57b68ba
 52bb57b3a9ff59707103cc1fe2b69b4f63ac3a98
 # refactor(test): kode catatan internal di judul test diganti kata-kata (F28)
 92afe761d725544de50efe8488113acd8fbeaf37
+# refactor(web-root): H2 menjadi SECTION_HEADING, tanpa nama dua huruf (F28)
+7e1fc8441224dd04e468dde12f1cc206e3ff7f5b
