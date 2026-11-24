@@ -17,6 +17,7 @@ export type MerchantProfile = {
   business_name: string;
   description: string | null;
   logo_url: string | null;
+  cover_url: string | null;
   merchant_type: { id: number; name: string };
   is_open: boolean;
   /** "HH:MM" WIB */
