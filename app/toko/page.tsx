@@ -10,7 +10,8 @@ import { getPublicMerchants } from "@/services/catalog.service";
 
 const WRAP = "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8";
 
-const DESCRIPTION = "Daftar katering di sekitar kampus yang sudah bergabung di KateringKita. Pilih toko, lihat menu dan harganya.";
+const DESCRIPTION =
+  "Daftar katering di sekitar kampus yang sudah bergabung di KateringKita. Pilih toko, lihat menu dan harganya.";
 
 export const metadata: Metadata = {
   title: "Daftar Katering Kampus",

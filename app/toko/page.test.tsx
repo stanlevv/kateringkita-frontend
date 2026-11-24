@@ -55,7 +55,12 @@ describe("/toko", () => {
   it("metadata", () => {
     expect(metadata.title).toBe("Daftar Katering Kampus");
     expect(metadata.alternates?.canonical).toBe("/toko");
-    expect(metadata.openGraph).toMatchObject({ type: "website", locale: "id_ID", title: "Daftar Katering Kampus", url: "/toko" });
+    expect(metadata.openGraph).toMatchObject({
+      type: "website",
+      locale: "id_ID",
+      title: "Daftar Katering Kampus",
+      url: "/toko",
+    });
     expect(metadata.openGraph?.description).toBe(metadata.description);
   });
 });

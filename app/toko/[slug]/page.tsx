@@ -39,7 +39,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await loadProfile(slug);
   const title = `${p.business_name} — Menu & Harga Katering`;
   const description = (
-    p.description ?? `Pesan katering dari ${p.business_name} (${p.merchant_type.name}). Lihat menu, harga, dan titik ambil di KateringKita.`
+    p.description ??
+    `Pesan katering dari ${p.business_name} (${p.merchant_type.name}). Lihat menu, harga, dan titik ambil di KateringKita.`
   ).slice(0, 160);
   const image = p.cover_url ?? p.logo_url;
   // Toko tanpa menu dianggap halaman tipis; bila menu gagal dimuat, biarkan halaman yang melempar galat.
@@ -80,13 +81,18 @@ export default async function TokoPage({ params }: Props) {
           <Link href="/" aria-label="KateringKita, beranda" className="rounded-md">
             <Brand />
           </Link>
-          <Link href="/toko" className="inline-flex min-h-11 items-center text-sm font-semibold text-ink-muted hover:text-ink">
+          <Link
+            href="/toko"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-ink-muted hover:text-ink"
+          >
             Semua toko
           </Link>
         </div>
       </header>
       <main className={`${WRAP} py-10`}>
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">{profile.business_name}</h1>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
+          {profile.business_name}
+        </h1>
         <p className="mt-2 text-ink-muted">
           {profile.merchant_type.name} · {profile.open_time}–{profile.close_time} WIB ·{" "}
           <span className={profile.is_open ? "font-semibold text-primary" : "font-semibold"}>

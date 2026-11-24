@@ -25,12 +25,21 @@ describe("catalog.service", () => {
     expect(mocked).toHaveBeenCalledWith("/merchants/dapur-bu-sri");
   });
   it("getMerchantMenus meng-encode slug dan mengembalikan array menu", async () => {
-    mocked.mockResolvedValue({ ok: true, status: 200, data: [{ id: 1 }] as never, meta: { page: 1, limit: 100, total: 1 } });
+    mocked.mockResolvedValue({
+      ok: true,
+      status: 200,
+      data: [{ id: 1 }] as never,
+      meta: { page: 1, limit: 100, total: 1 },
+    });
     expect(await getMerchantMenus("a b")).toEqual({ data: [{ id: 1 }] });
     expect(mocked).toHaveBeenCalledWith("/menus?merchant=a%20b&limit=100");
   });
   it("meneruskan galat 404", async () => {
-    mocked.mockResolvedValue({ ok: false, status: 404, error: { code: "NOT_FOUND", message: "Toko tidak ditemukan." } });
+    mocked.mockResolvedValue({
+      ok: false,
+      status: 404,
+      error: { code: "NOT_FOUND", message: "Toko tidak ditemukan." },
+    });
     expect(await getMerchantBySlug("x")).toEqual({ error: { code: "NOT_FOUND", message: "Toko tidak ditemukan." } });
   });
 });

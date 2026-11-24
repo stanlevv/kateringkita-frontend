@@ -17,7 +17,11 @@ export function merchantJsonLd(profile: MerchantProfile, menus: MenuCard[]): Rec
     ...(profile.description && { description: profile.description }),
     ...(image && { image }),
     ...(profile.rating_count > 0 && {
-      aggregateRating: { "@type": "AggregateRating", ratingValue: profile.rating_avg, reviewCount: profile.rating_count },
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: profile.rating_avg,
+        reviewCount: profile.rating_count,
+      },
     }),
     ...(menus.length > 0 && {
       hasMenu: {

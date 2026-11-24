@@ -59,7 +59,9 @@ const params = (slug: string) => ({ params: Promise.resolve({ slug }) });
 
 beforeEach(() => {
   getMerchantBySlug.mockReset().mockResolvedValue({ data: profile });
-  getMerchantMenus.mockReset().mockResolvedValue({ data: [menu(1, "Nasi Ayam", 15000), menu(2, "Nasi Telur", 12000, "sold_out")] });
+  getMerchantMenus
+    .mockReset()
+    .mockResolvedValue({ data: [menu(1, "Nasi Ayam", 15000), menu(2, "Nasi Telur", 12000, "sold_out")] });
   env.url = null;
 });
 
@@ -87,11 +89,14 @@ describe("halaman toko", () => {
     expect(screen.getByText("Sedang tutup")).toBeInTheDocument();
   });
 
-  it.each(["..%2Fadmin", "ABC", "a".repeat(161)])("slug tidak sah %s -> notFound tanpa panggil service", async (slug) => {
-    await expect(Page(params(slug))).rejects.toThrow("NEXT_NOT_FOUND");
-    await expect(generateMetadata(params(slug))).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(getMerchantBySlug).not.toHaveBeenCalled();
-  });
+  it.each(["..%2Fadmin", "ABC", "a".repeat(161)])(
+    "slug tidak sah %s -> notFound tanpa panggil service",
+    async (slug) => {
+      await expect(Page(params(slug))).rejects.toThrow("NEXT_NOT_FOUND");
+      await expect(generateMetadata(params(slug))).rejects.toThrow("NEXT_NOT_FOUND");
+      expect(getMerchantBySlug).not.toHaveBeenCalled();
+    },
+  );
 
   it("NOT_FOUND -> notFound; galat lain dilempar", async () => {
     getMerchantBySlug.mockResolvedValue({ error: { code: "NOT_FOUND", message: "x" } });
@@ -131,6 +136,8 @@ describe("generateMetadata", () => {
   it("deskripsi null memakai teks bawaan", async () => {
     getMerchantBySlug.mockResolvedValue({ data: { ...profile, description: null } });
     const m = await generateMetadata(params("dapur-ani"));
-    expect(m.description).toBe("Pesan katering dari Dapur Ani (Katering). Lihat menu, harga, dan titik ambil di KateringKita.");
+    expect(m.description).toBe(
+      "Pesan katering dari Dapur Ani (Katering). Lihat menu, harga, dan titik ambil di KateringKita.",
+    );
   });
 });

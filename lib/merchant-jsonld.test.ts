@@ -5,14 +5,33 @@ import type { MenuCard, MerchantProfile } from "@/types/catalog";
 import { merchantJsonLd } from "./merchant-jsonld";
 
 const profile: MerchantProfile = {
-  id: 1, slug: "warung-bu-sari", business_name: "Warung Bu Sari", description: "Katering rumahan",
-  logo_url: "https://img/logo.png", cover_url: null, merchant_type: { id: 2, name: "Katering" },
-  is_open: true, open_time: "08:00", close_time: "17:00", rating_avg: 0, rating_count: 0, pickup_points: [],
+  id: 1,
+  slug: "warung-bu-sari",
+  business_name: "Warung Bu Sari",
+  description: "Katering rumahan",
+  logo_url: "https://img/logo.png",
+  cover_url: null,
+  merchant_type: { id: 2, name: "Katering" },
+  is_open: true,
+  open_time: "08:00",
+  close_time: "17:00",
+  rating_avg: 0,
+  rating_count: 0,
+  pickup_points: [],
 };
 const menu = (id: number, name: string, cat: string): MenuCard => ({
-  id, name, price: 15000, image_url: null, unit_label: "porsi", category: { id: 1, name: cat, slug: cat },
+  id,
+  name,
+  price: 15000,
+  image_url: null,
+  unit_label: "porsi",
+  category: { id: 1, name: cat, slug: cat },
   merchant: { id: 1, slug: "warung-bu-sari", business_name: "Warung Bu Sari", is_open: true },
-  available: 5, badge: "available", rating_avg: 0, rating_count: 0, is_favorite: false,
+  available: 5,
+  badge: "available",
+  rating_avg: 0,
+  rating_count: 0,
+  is_favorite: false,
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,7 +39,11 @@ type Ld = Record<string, any>;
 
 describe("merchantJsonLd", () => {
   it("memetakan field dasar dan menu", () => {
-    const ld = merchantJsonLd(profile, [menu(1, "Nasi Ayam", "Makanan"), menu(2, "Es Teh", "Minuman"), menu(3, "Nasi Telur", "Makanan")]) as Ld;
+    const ld = merchantJsonLd(profile, [
+      menu(1, "Nasi Ayam", "Makanan"),
+      menu(2, "Es Teh", "Minuman"),
+      menu(3, "Nasi Telur", "Makanan"),
+    ]) as Ld;
     expect(ld["@context"]).toBe("https://schema.org");
     expect(ld["@type"]).toBe("FoodEstablishment");
     expect(ld.name).toBe("Warung Bu Sari");
@@ -31,7 +54,8 @@ describe("merchantJsonLd", () => {
     expect(ld.hasMenu.hasMenuSection).toHaveLength(2);
     expect(ld.hasMenu.hasMenuSection[0].hasMenuItem).toHaveLength(2);
     expect(ld.hasMenu.hasMenuSection[0].hasMenuItem[0]).toEqual({
-      "@type": "MenuItem", name: "Nasi Ayam",
+      "@type": "MenuItem",
+      name: "Nasi Ayam",
       offers: { "@type": "Offer", price: 15000, priceCurrency: "IDR" },
     });
   });
