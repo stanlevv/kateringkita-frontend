@@ -62,7 +62,7 @@
 
 ## ⚡ Fitur Utama & Keunggulan Teknis
 
-### 1. Kuota Atomik Penjual (AUD-04 / F04)
+### 1. Kuota Atomik Penjual
 
 - **Anti Lost-Update:** Menggunakan hook `useQuota` terintegrasi dengan backend atomik delta.
 - **Serialisasi In-Flight:** Maksimal satu request berjalan per menu secara berurutan. Mutasi tambahan selama request berlangsung diantrekan secara cerdas.
@@ -75,7 +75,7 @@
 - Hanya mengambil pesanan yang mengalami perubahan status, lalu digabungkan secara efisien di memori klien.
 - Undo window 5 detik saat merchant menekan tombol aksi status pesanan.
 
-### 3. Laporan & Analitik Penjualan (F09)
+### 3. Laporan & Analitik Penjualan
 
 - Visualisasi ringkasan pendapatan kotor, pesanan selesai, dan menu terlaris.
 - Grafik sebaran transaksi per jam dan riwayat pesanan interaktif.
@@ -104,7 +104,7 @@
 | `/admin/moderasi`                      | Sembunyikan ulasan, turunkan menu yang melanggar                                                                                                                           | Admin                                   |
 | `/admin/tiket` & `/admin/tiket/[code]` | Tiket bantuan pembeli: tab Menunggu/Dibalas/Ditutup/Semua, cari, percakapan, balas (notifikasi ke pembeli), tutup tiket                                                    | Admin (semua tingkat, termasuk support) |
 | `/admin/keuangan`                      | Rekap omzet, diskon, biaya layanan per toko + ekspor CSV                                                                                                                   | Admin                                   |
-| `/admin/pencairan`                     | Saldo non-tunai per toko, catat pencairan ke rekening toko, daftar dana yang harus dikembalikan, riwayat (F26)                                                             | Admin super                             |
+| `/admin/pencairan`                     | Saldo non-tunai per toko, catat pencairan ke rekening toko, daftar dana yang harus dikembalikan, riwayat                                                                   | Admin super                             |
 | `/admin/pengumuman`                    | Kirim pengumuman ke notifikasi aplikasi                                                                                                                                    | Admin                                   |
 | `/admin/ai`                            | Penyedia AI gratis untuk Asisten AI: urutan fallback, key (hanya bisa ditulis), uji koneksi, status, dan dasbor pemakaian AI                                               | Admin                                   |
 | `/admin/hasil-ai`                      | Verifikasi AI: setujui / tolak (dengan alasan) hasil AI yang tersimpan                                                                                                     | Admin (super & ops memutuskan)          |
@@ -147,13 +147,15 @@ e2e/                           # End-to-end test Playwright (helpers.ts + spek p
 
 ## 🧭 Cara membaca kode ini
 
-Setiap fitur mengikuti jalur yang sama, dari layar sampai backend:
+Setiap fitur mengikuti dua jalur yang sama, dari layar sampai backend:
 
 ```text
-halaman (app/…/page.tsx) → server action (app/actions) → services → services/api.ts → backend
+baca data:  halaman (app/…/page.tsx) → services → services/api.ts → backend
+ubah data:  form/tombol → server action (app/actions) → services/api.ts → backend   (kadang lewat services)
 ```
 
 - **Halaman** (`page.tsx`) adalah server component: mengambil data lewat `services/<fitur>.service.ts` lalu merender komponen.
+  Halaman tidak memanggil server action.
 - **Server action** (`app/actions/*.ts`, ditandai `"use server"`) dipanggil dari tombol/form di browser, tetapi berjalan di server.
 - **services/** memanggil REST API backend; `services/api.ts` menambahkan token sesi dari cookie `kk_session`.
 - Logika murni (tanpa jaringan) ada di `lib/`, tipe data JSON backend di `types/`, hook React di `hooks/`.
@@ -165,7 +167,14 @@ Contoh penelusuran, penjual menerima pesanan:
 3. `orderAction` memeriksa sesi penjual, lalu memanggil `merchantFetch` di `services/api.ts` → `POST /merchant/orders/:code/confirm` di backend.
 
 Aturan nama (kode bahasa Inggris, teks untuk pengguna bahasa Indonesia) dan glosarium istilah ada di [CONTRIBUTING.md](CONTRIBUTING.md).
-Sebelum commit, jalankan `npm run format:check`, `npm run lint`, dan `npm test`.
+Sebelum push, jalankan pemeriksaan yang sama dengan CI (`.github/workflows/ci.yml`), urutannya juga sama:
+
+```bash
+npm run format:check && npm run lint && npx tsc --noEmit && npm run typecheck:e2e && npm test && npm run build
+```
+
+`typecheck:e2e` butuh salinan repo backend di folder `../be`. `build` butuh env `BACKEND_API_URL`, `INTERNAL_API_SECRET`, dan
+`SITE_URL` (CI mengisinya di langkah `build` ci.yml). Aturan alur kerja lengkap ada di CONTRIBUTING bagian "Alur kerja".
 
 ---
 
@@ -200,15 +209,16 @@ npm run dev
 
 ## 🧪 Skrip & Pengujian Kualitas
 
-| Perintah               | Deskripsi                                                 |
-| ---------------------- | --------------------------------------------------------- |
-| `npm run dev`          | Menjalankan server pengembang Next.js di `localhost:3000` |
-| `npm run build`        | Melakukan build produksi Next.js                          |
-| `npm test`             | Menjalankan unit test Vitest (tanpa backend)              |
-| `npm run format:check` | Memeriksa format kode dengan Prettier                     |
-| `npm run lint`         | Menjalankan ESLint 9 untuk memeriksa kualitas kode        |
-| `npx tsc --noEmit`     | Memeriksa kepatuhan tipe TypeScript di seluruh proyek     |
-| `npx playwright test`  | Menjalankan 14 skenario end-to-end testing di peramban    |
+| Perintah                | Deskripsi                                                 |
+| ----------------------- | --------------------------------------------------------- |
+| `npm run dev`           | Menjalankan server pengembang Next.js di `localhost:3000` |
+| `npm run build`         | Melakukan build produksi Next.js                          |
+| `npm test`              | Menjalankan unit test Vitest (tanpa backend)              |
+| `npm run format:check`  | Memeriksa format kode dengan Prettier                     |
+| `npm run lint`          | Menjalankan ESLint 9 untuk memeriksa kualitas kode        |
+| `npx tsc --noEmit`      | Memeriksa kepatuhan tipe TypeScript di seluruh proyek     |
+| `npm run typecheck:e2e` | Memeriksa tipe test e2e (butuh repo backend di `../be`)   |
+| `npx playwright test`   | Menjalankan 14 skenario end-to-end testing di peramban    |
 
 ---
 
