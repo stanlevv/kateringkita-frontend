@@ -69,5 +69,14 @@ describe("merchantJsonLd", () => {
     expect(ld).not.toHaveProperty("hasMenu");
     expect(ld).not.toHaveProperty("address");
     expect(ld).not.toHaveProperty("telephone");
+    expect(ld).not.toHaveProperty("priceRange");
+  });
+  it("priceRange dari harga menu termurah sampai termahal", () => {
+    const murah = { ...menu(1, "Es Teh", "Minuman"), price: 8000 };
+    const mahal = { ...menu(2, "Nasi Box", "Makanan"), price: 22000 };
+    expect(merchantJsonLd(profile, [mahal, murah, menu(3, "Nasi Ayam", "Makanan")]).priceRange).toBe(
+      "Rp 8.000–Rp 22.000",
+    );
+    expect(merchantJsonLd(profile, [menu(1, "Nasi Ayam", "Makanan")]).priceRange).toBe("Rp 15.000");
   });
 });
