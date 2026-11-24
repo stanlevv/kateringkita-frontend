@@ -1,5 +1,5 @@
-// Test shell admin (requireAdmin, menu per tingkat admin, layar ganti sandi sementara), halaman ringkasan /admin, dan
-// halaman /admin/log (filter URL diteruskan ke backend).
+// Test shell admin (requireAdmin, menu per tingkat admin, lencana antrean dari /queues, layar ganti sandi sementara),
+// halaman ringkasan /admin, dan halaman /admin/log (filter URL diteruskan ke backend).
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -28,13 +28,23 @@ const summary = {
   holding_expiring_soon: 0,
   recent_logs: [],
 };
+const queues = {
+  merchants_pending: 2,
+  tickets_open: 3,
+  chats_reported: 1,
+  payouts_pending: 4,
+  refunds_pending: 2,
+  ai_results_pending: 0,
+};
+const failed = { ok: false, status: 500, error: { code: "X", message: "x" } };
 
 beforeEach(() => {
   requireAdmin.mockReset().mockResolvedValue({
     user: { full_name: "Dina", admin_level: "super", must_change_password: false },
     merchant: null,
   });
-  adminFetch.mockReset();
+  // Layout memanggil /queues; bawaannya gagal (tanpa lencana).
+  adminFetch.mockReset().mockResolvedValue(failed);
 });
 
 describe("shell admin", () => {
@@ -102,6 +112,35 @@ describe("shell admin", () => {
       .map((link) => link.getAttribute("href"));
     for (const path of ["/admin/keuangan", "/admin/pencairan", "/admin/ai", "/admin/admin", "/admin/server"])
       expect(href).not.toContain(path);
+  });
+
+  it("lencana dari /queues di menu", async () => {
+    adminFetch.mockImplementation(async (path: string) =>
+      path === "/queues" ? { ok: true, status: 200, data: queues } : failed,
+    );
+    render(await AdminLayout({ children: <p>isi</p> }));
+    expect(adminFetch).toHaveBeenCalledWith("/queues");
+    const nav = screen.getAllByRole("navigation", { name: "Menu utama" })[0];
+    expect(within(nav).getByRole("link", { name: /2 penjual menunggu verifikasi/ })).toHaveAttribute(
+      "href",
+      "/admin/verifikasi",
+    );
+  });
+
+  it("sandi sementara: /queues tidak dipanggil dan menu tanpa lencana", async () => {
+    requireAdmin.mockResolvedValue({
+      user: { full_name: "Baru", admin_level: "ops", must_change_password: true },
+      merchant: null,
+    });
+    render(await AdminLayout({ children: <p>isi</p> }));
+    expect(adminFetch).not.toHaveBeenCalledWith("/queues");
+    expect(screen.queryByText(/menunggu verifikasi/)).toBeNull();
+  });
+
+  it("/queues gagal: layout tetap tampil tanpa lencana", async () => {
+    render(await AdminLayout({ children: <p>isi</p> }));
+    expect(screen.getByText("isi")).toBeInTheDocument();
+    expect(screen.queryByText(/menunggu verifikasi/)).toBeNull();
   });
 
   it("sandi sementara: isi halaman diganti formulir ganti sandi", async () => {

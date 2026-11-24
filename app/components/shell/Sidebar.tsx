@@ -1,6 +1,7 @@
 // Komponen Sidebar: navigasi kiri panel penjual/admin (logo, menu, status dapur).
 // Dipakai layout app/(dashboard) dan app/(admin)/admin.
 import type { SidebarMode } from "@/lib/shell";
+import type { AdminQueues } from "@/types/admin";
 import { Brand } from "./Brand";
 import { MobileNav } from "./MobileNav";
 import { NavList } from "./NavList";
@@ -20,6 +21,7 @@ import { StoreStatusToggle } from "./StoreStatusToggle";
  * @param props.unreadChats jumlah pesan pembeli belum dibaca di chat pesanan
  * @param props.admin panel admin (tanpa status dapur)
  * @param props.level tingkat admin untuk menyaring menu
+ * @param props.queues hitungan antrean admin untuk lencana menu, atau null bila gagal dimuat
  * @param props.mode "lebar" atau "ringkas" dari cookie
  * @returns CollapsibleSidebar
  */
@@ -30,6 +32,7 @@ export function Sidebar({
   unreadChats = 0,
   admin = false,
   level,
+  queues,
   mode = "lebar",
 }: {
   store: StoreInfo | null;
@@ -38,6 +41,7 @@ export function Sidebar({
   unreadChats?: number;
   admin?: boolean;
   level?: unknown;
+  queues?: AdminQueues | null;
   mode?: SidebarMode;
 }) {
   return (
@@ -54,6 +58,7 @@ export function Sidebar({
             unreadChats={unreadChats}
             admin={admin}
             level={level}
+            queues={queues}
           />
         </>
       }
@@ -66,6 +71,7 @@ export function Sidebar({
           unreadChats={unreadChats}
           admin={admin}
           level={level}
+          queues={queues}
         />
       </div>
       {!admin && (
