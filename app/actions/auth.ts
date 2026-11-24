@@ -34,6 +34,20 @@ async function clientIpHeaders(): Promise<Record<string, string> | undefined> {
 }
 
 /**
+ * Menyimpan token di cookie sesi httpOnly yang habis bersamaan dengan sesi di backend.
+ * Sengaja tidak diekspor: fungsi yang diekspor dari file "use server" menjadi server action yang bisa dipanggil dari browser.
+ */
+async function startSession(token: string, expiresAt: string): Promise<void> {
+  (await cookies()).set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(expiresAt),
+  });
+}
+
+/**
  * Masuk dengan email atau nomor WA dan kata sandi (POST /auth/login), lalu menyimpan token di cookie sesi.
  * Cookie httpOnly tidak bisa dibaca JavaScript di browser, jadi token aman dari skrip pihak ketiga.
  * `redirect()` menghentikan fungsi dan mengarahkan browser ke halaman lain.
@@ -64,13 +78,7 @@ export async function login(_previousState: AuthState, form: FormData): Promise<
   }
 
   // 3. Simpan token di cookie httpOnly yang habis bersamaan dengan sesi di backend.
-  (await cookies()).set(SESSION_COOKIE, response.data.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(response.data.expires_at),
-  });
+  await startSession(response.data.token, response.data.expires_at);
   // 4. Arahkan ke tujuan yang aman (safeNext menolak alamat situs lain): admin tetap di area admin, penjual tidak boleh ke area admin.
   const next = String(form.get("next") ?? "");
   if (role === "admin") {
@@ -85,7 +93,9 @@ export async function login(_previousState: AuthState, form: FormData): Promise<
  * Mendaftarkan akun penjual baru (POST /auth/merchant/register).
  * @param _previousState hasil sebelumnya (tidak dipakai; ada agar bentuknya cocok dengan useActionState)
  * @param form field form `full_name`, `phone`, `email`, `password`, `business_name`, `merchant_type_id`, `address`
- * @returns `{ ok: true }` bila terdaftar; selain itu `AuthState` berisi galat dari backend (mis. email sudah dipakai, pesan per field)
+ * @returns `AuthState` berisi galat dari backend bila daftar ditolak (mis. email sudah dipakai, pesan per field).
+ *   Bila terdaftar dan masuk otomatis berhasil, tidak kembali: penjual dialihkan ke /dashboard.
+ *   Bila terdaftar tetapi masuk otomatis gagal, `{ ok: true }` (layar berhasil, penjual masuk manual).
  */
 export async function registerMerchant(_previousState: AuthState, form: FormData): Promise<AuthState> {
   // 1. Baca field form (teks dirapikan, kata sandi apa adanya) dan kirim ke backend.
@@ -104,7 +114,21 @@ export async function registerMerchant(_previousState: AuthState, form: FormData
   // 2. Galat backend (mis. email sudah dipakai) diteruskan ke form apa adanya.
   if (!response.ok)
     return { error: response.error?.message, code: response.error?.code, fields: response.error?.fields };
-  return { ok: true };
+  // 3. Masuk otomatis dengan nomor WA dan kata sandi yang sama. Bila gagal (batas percobaan, jaringan, bukan penjual),
+  //    akun sudah terbuat, jadi tetap `{ ok: true }` agar form menampilkan layar berhasil dan penjual tidak mendaftar ulang.
+  const session = await apiFetch<{ token: string; expires_at: string; user?: { role?: string } }>("/auth/login", {
+    method: "POST",
+    headers: await clientIpHeaders(),
+    body: JSON.stringify({
+      identifier: readFormText(form, "phone"),
+      password: String(form.get("password") ?? ""),
+      client: "web",
+    }),
+  });
+  if (!session.ok || !session.data || session.data.user?.role !== "merchant") return { ok: true };
+  await startSession(session.data.token, session.data.expires_at);
+  // redirect() melempar, jadi dipanggil di luar try/catch; di klien navigasi dilakukan Next.
+  redirect("/dashboard");
 }
 
 /**

@@ -17,7 +17,7 @@ vi.mock("next/headers", () => ({
 vi.mock("@/services/api", () => ({ apiFetch: (...args: unknown[]) => apiFetch(...args) }));
 vi.mock("@/services/auth.service", () => ({ SESSION_COOKIE: "kk_session", getSessionToken: async () => undefined }));
 
-import { login, requestResetCode, resetPassword } from "./auth";
+import { login, registerMerchant, requestResetCode, resetPassword } from "./auth";
 
 const mockLoginAs = (role: string) =>
   apiFetch.mockResolvedValue({
@@ -133,5 +133,62 @@ describe("lupa sandi", () => {
       code: "VALIDATION_ERROR",
       fields: { code: ["Kode salah atau sudah kedaluwarsa."] },
     });
+  });
+});
+
+describe("daftar penjual: masuk otomatis", () => {
+  const buildRegisterForm = () => {
+    const formData = new FormData();
+    formData.set("phone", " 081234567890 ");
+    formData.set("password", "Rahasia123");
+    formData.set("full_name", "Budi");
+    return formData;
+  };
+  const registered = { ok: true, status: 201, data: {} };
+  const loginOk = (role: string) => ({
+    ok: true,
+    status: 200,
+    data: { token: "tok", expires_at: "2030-01-01T00:00:00Z", user: { role } },
+  });
+
+  it("daftar + login penjual -> cookie sesi dan redirect /dashboard", async () => {
+    apiFetch.mockResolvedValueOnce(registered).mockResolvedValueOnce(loginOk("merchant"));
+    await expect(registerMerchant({}, buildRegisterForm())).rejects.toThrow("REDIRECT /dashboard");
+    expect(apiFetch.mock.calls[1][0]).toBe("/auth/login");
+    expect(JSON.parse((apiFetch.mock.calls[1][1] as { body: string }).body)).toEqual({
+      identifier: "081234567890",
+      password: "Rahasia123",
+      client: "web",
+    });
+    expect(setCookie).toHaveBeenCalledWith(
+      "kk_session",
+      "tok",
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        expires: new Date("2030-01-01T00:00:00Z"),
+      }),
+    );
+  });
+  it("login otomatis gagal (RATE_LIMITED) -> { ok: true }, tanpa cookie dan redirect", async () => {
+    apiFetch
+      .mockResolvedValueOnce(registered)
+      .mockResolvedValueOnce({ ok: false, status: 429, error: { code: "RATE_LIMITED", message: "x" } });
+    await expect(registerMerchant({}, buildRegisterForm())).resolves.toEqual({ ok: true });
+    expect(setCookie).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+  it("login otomatis mengembalikan role bukan penjual -> { ok: true }, tanpa cookie", async () => {
+    apiFetch.mockResolvedValueOnce(registered).mockResolvedValueOnce(loginOk("customer"));
+    await expect(registerMerchant({}, buildRegisterForm())).resolves.toEqual({ ok: true });
+    expect(setCookie).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+  it("daftar gagal (CONFLICT) -> galat, /auth/login tidak dipanggil", async () => {
+    apiFetch.mockResolvedValueOnce({ ok: false, status: 409, error: { code: "CONFLICT", message: "Sudah dipakai" } });
+    await expect(registerMerchant({}, buildRegisterForm())).resolves.toMatchObject({ code: "CONFLICT" });
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(setCookie).not.toHaveBeenCalled();
   });
 });
