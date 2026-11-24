@@ -1,13 +1,15 @@
 // Test ChatNotifier: toast "Pesan baru dari pembeli" hanya saat jumlah belum dibaca suatu pesanan bertambah (tidak saat
-// pertama dimuat, tidak untuk chat yang sedang dibuka), tombol Buka, bunyi yang gagal tidak melempar, cek berhenti
-// saat tab tersembunyi, dan dashboard menyerahkan data sinkronnya sendiri. fetch, Audio, router, dan toast dipalsukan.
+// pertama dimuat, tidak untuk chat yang sedang dibuka), tombol Buka, bunyi sekali per cek dan yang gagal tidak
+// melempar, penyegaran badge, cek berhenti saat tab tersembunyi, dan dashboard menyerahkan data sinkronnya sendiri.
+// fetch, Audio, router, dan toast dipalsukan.
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UnreadChats } from "@/types/order-chat";
 
 const push = vi.fn();
+const refresh = vi.fn();
 // Router yang sama di setiap render, seperti di Next.js.
-const router = { push };
+const router = { push, refresh };
 let pathname = "/menu";
 vi.mock("next/navigation", () => ({ useRouter: () => router, usePathname: () => pathname }));
 const toast = vi.fn();
@@ -49,6 +51,7 @@ beforeEach(() => {
   AudioMock.mockClear();
   play.mockReset().mockResolvedValue(undefined);
   push.mockReset();
+  refresh.mockReset();
   toast.mockReset();
   pathname = "/menu";
   setHidden(false);
@@ -77,12 +80,36 @@ describe("ChatNotifier", () => {
     toast.mock.calls[0][0].action.onClick();
     expect(push).toHaveBeenCalledWith("/pesanan/KK-2#chat");
   });
+  it("dua pesanan bertambah sekaligus -> dua toast, bunyi sekali, badge disegarkan sekali", async () => {
+    serveUnread(unread({ "KK-1": 1 }), unread({ "KK-1": 2, "KK-2": 1 }));
+    renderNotifier();
+    await advance(15_000);
+    expect(toastMessages()).toEqual(["Pesan baru dari pembeli · KK-1", TOAST_KK2]);
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+  it("jumlah turun ke 0 lalu naik lagi -> toast", async () => {
+    serveUnread(unread({ "KK-2": 2 }), unread({}), unread({ "KK-2": 1 }));
+    renderNotifier();
+    await advance(15_000);
+    expect(toast).not.toHaveBeenCalled();
+    await advance(15_000);
+    expect(toastMessages()).toEqual([TOAST_KK2]);
+  });
+  it("alamat dengan kode rusak (%E0) -> tidak jatuh, toast tetap jalan", async () => {
+    pathname = "/pesanan/%E0";
+    serveUnread(unread({}), unread({ "KK-2": 1 }));
+    renderNotifier();
+    await advance(15_000);
+    expect(toastMessages()).toEqual([TOAST_KK2]);
+  });
   it("jumlah tetap atau berkurang -> tanpa toast", async () => {
     serveUnread(unread({ "KK-1": 3 }), unread({ "KK-1": 3 }), unread({ "KK-1": 1 }));
     renderNotifier();
     await advance(30_000);
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(toast).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
   });
   it("chat pesanan yang sedang dibuka -> tanpa toast untuk pesanan itu", async () => {
     pathname = "/pesanan/KK-2";
@@ -153,5 +180,6 @@ describe("ChatNotifier", () => {
       </ChatNotifier>,
     );
     expect(toastMessages()).toEqual([TOAST_KK2]);
+    expect(refresh).not.toHaveBeenCalled(); // dashboard menyegarkan badge sendiri
   });
 });

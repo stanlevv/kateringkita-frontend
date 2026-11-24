@@ -22,7 +22,8 @@ const jsonResponse = (body: unknown, status: number) =>
  * Mengambil perubahan pesanan dan menu untuk dashboard, ditambah jumlah pesan chat belum dibaca.
  * @param request permintaan masuk; parameter `sejak` dibaca dari URL
  * @returns 200 `{ data: { orders, menus, unread_chats?, unread_chat_orders? } }` (`unread_chats` = jumlah pesan,
- *   `unread_chat_orders` = rincian per pesanan; keduanya hanya ada bila data chat berhasil diambil); 400 bila `sejak` tidak sah; 503 `{ error }` bila pesanan atau menu gagal diambil.
+ *   `unread_chat_orders` = rincian per pesanan; keduanya hanya ada bila data chat berhasil diambil); 400 bila `sejak`
+ *   tidak sah; 503 `{ error }` bila pesanan atau menu gagal diambil.
  *   Tanpa sesi penjual, requireMerchant mengalihkan ke /login?alasan=sesi-habis.
  */
 export async function GET(request: NextRequest) {

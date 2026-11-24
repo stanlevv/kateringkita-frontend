@@ -17,6 +17,21 @@ const SOUND_URL = "/suara-chat.wav"; // berkas di public/
 /** Alamat detail pesanan; kode di dalamnya = pesanan yang chatnya sedang dibuka. */
 const ORDER_DETAIL_PATH = /^\/pesanan\/([^/]+)$/;
 
+/**
+ * Kode pesanan yang chatnya sedang dibuka, dibaca dari alamat halaman.
+ * @param pathname alamat halaman sekarang (mis. /pesanan/KK-1)
+ * @returns kode pesanan, atau null bila bukan halaman detail pesanan atau kodenya tidak bisa diurai (mis. `%E0`)
+ */
+function openOrderCode(pathname: string | null): string | null {
+  const match = ORDER_DETAIL_PATH.exec(pathname ?? "");
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
+}
+
 type UnreadOrders = UnreadChats["orders"];
 /** Sambungan dari halaman yang punya data chat sendiri: `claim` menghentikan cek berkala selama halaman tampil. */
 type ChatFeed = { report: (orders: UnreadOrders) => void; claim: () => () => void };
@@ -47,19 +62,23 @@ export function ChatNotifier({ children }: { children: ReactNode }) {
   const openCode = useRef<string | null>(null);
   const claims = useRef(0);
   useEffect(() => {
-    const match = ORDER_DETAIL_PATH.exec(pathname ?? "");
-    openCode.current = match ? decodeURIComponent(match[1]) : null;
+    openCode.current = openOrderCode(pathname);
   }, [pathname]);
 
-  // 2. Bandingkan dengan cek sebelumnya; tiap pesanan yang bertambah mendapat satu toast, bunyi sekali per cek.
+  // 2. Bandingkan dengan cek sebelumnya; tiap pesanan yang bertambah mendapat satu toast. Bunyi dan penyegaran badge
+  //    cukup sekali per cek.
   const report = useCallback(
     (orders: UnreadOrders) => {
+      // 1. Simpan jumlah terbaru; cek pertama hanya dicatat.
       const previous = previousCounts.current;
       previousCounts.current = new Map(orders.map((order) => [order.code, order.unread_count]));
       if (!previous) return;
+      // 2. Pesanan yang jumlahnya bertambah, kecuali yang chatnya sedang dibuka.
       const increased = orders.filter(
         (order) => order.unread_count > (previous.get(order.code) ?? 0) && order.code !== openCode.current,
       );
+      if (increased.length === 0) return;
+      // 3. Satu toast per pesanan.
       for (const order of increased) {
         toast({
           tone: "info",
@@ -68,7 +87,10 @@ export function ChatNotifier({ children }: { children: ReactNode }) {
           duration: TOAST_DURATION_MS,
         });
       }
-      if (increased.length > 0 && readSoundEnabled()) playChatSound();
+      // 4. Bunyi sekali. Di luar /dashboard (tidak ada halaman yang menyerahkan data), badge chat di sidebar
+      //    disegarkan lewat router.refresh(); dashboard sudah menyegarkannya sendiri saat jumlah chat berubah.
+      if (readSoundEnabled()) playChatSound();
+      if (claims.current === 0) router.refresh();
     },
     [router],
   );
