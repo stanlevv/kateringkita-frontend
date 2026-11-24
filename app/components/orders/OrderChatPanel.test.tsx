@@ -19,7 +19,9 @@ vi.mock("@/app/actions/order-chat", () => ({
 const uploadPhoto = vi.fn();
 vi.mock("@/lib/upload", () => ({ uploadPhoto: (...args: unknown[]) => uploadPhoto(...args) }));
 const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+// Router yang sama di setiap render, seperti di Next.js; objek baru tiap render akan menjalankan ulang efek tandai dibaca.
+const router = { refresh };
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
 import { Toaster } from "@/app/components/ui/Toast";
 import { OrderChatPanel } from "./OrderChatPanel";
 
@@ -205,6 +207,19 @@ describe("cek berkala dan tandai dibaca", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     await pollNow();
     expect(markChatRead).toHaveBeenCalledTimes(1);
+  });
+  it("tandai dibaca gagal -> dicoba lagi pada cek berkala berikutnya, sekali saja", async () => {
+    serveChats({ messages: [message(1, "customer", "A")], chat: { unread_count: 1 } });
+    markChatRead.mockResolvedValueOnce({ error: { code: "INTERNAL_ERROR", message: "x" } });
+    renderPanel();
+    await waitFor(() => expect(markChatRead).toHaveBeenCalledTimes(1));
+    expect(refresh).not.toHaveBeenCalled();
+    await pollNow();
+    await waitFor(() => expect(markChatRead).toHaveBeenCalledTimes(2));
+    expect(markChatRead).toHaveBeenLastCalledWith("KK-1", 1);
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await pollNow();
+    expect(markChatRead).toHaveBeenCalledTimes(2);
   });
   it("tanpa pesan belum dibaca -> tidak menandai", async () => {
     serveChats({ messages: [message(1, "customer", "A")] });

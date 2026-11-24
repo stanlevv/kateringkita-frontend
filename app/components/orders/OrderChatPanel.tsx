@@ -121,17 +121,18 @@ export function OrderChatPanel({ code }: { code: string }) {
   }, [code]);
 
   // 3. Tandai dibaca sampai pesan pembeli terakhir yang tampil, sekali per pesan baru. Setelah berhasil, halaman
-  //    dimuat ulang (router.refresh) supaya badge chat di sidebar ikut berkurang.
-  const unreadCount = chat?.unread_count ?? 0;
+  //    dimuat ulang (router.refresh) supaya badge chat di sidebar ikut berkurang. Efek ini jalan lagi setiap cek
+  //    berkala (keadaan `chat` baru), jadi tandai dibaca yang gagal dicoba lagi; penjaga `markedReadId` mencegah
+  //    panggilan ganda selama tandai dibaca sebelumnya belum selesai atau sudah berhasil.
   const lastCustomerId = lastIdFrom(messages, "customer");
   useEffect(() => {
-    if (!unreadCount || lastCustomerId <= markedReadId.current) return;
+    if (!chat?.unread_count || lastCustomerId <= markedReadId.current) return;
     markedReadId.current = lastCustomerId;
     void callAction(() => markChatRead(code, lastCustomerId)).then((result) => {
       if ("data" in result) router.refresh();
-      else markedReadId.current = 0; // dicoba lagi saat ada perubahan berikutnya
+      else markedReadId.current = 0; // dicoba lagi pada cek berkala berikutnya
     });
-  }, [unreadCount, lastCustomerId, code, router]);
+  }, [chat, lastCustomerId, code, router]);
 
   // 4. Gulir ke pesan terbaru setiap jumlah pesan bertambah.
   useEffect(() => {
