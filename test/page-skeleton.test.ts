@@ -12,6 +12,7 @@ const DATA_TITLE_PAGES = new Set([
   "app/(dashboard)/pesanan/[code]",
   "app/(admin)/admin/penjual/[id]",
   "app/(admin)/admin/tiket/[code]",
+  "app/(admin)/admin/chat-dilaporkan/[id]",
 ]);
 
 const toRelative = (filePath: string) => relative(ROOT, filePath).split(sep).join("/");

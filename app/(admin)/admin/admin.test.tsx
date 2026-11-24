@@ -51,6 +51,7 @@ describe("shell admin", () => {
       ["Penjual", "/admin/penjual"],
       ["Moderasi", "/admin/moderasi"],
       ["Tiket", "/admin/tiket"],
+      ["Chat dilaporkan", "/admin/chat-dilaporkan"],
       ["Data master", "/admin/data-master"],
       ["Promo & biaya", "/admin/promo"],
       ["Banner", "/admin/banner"],

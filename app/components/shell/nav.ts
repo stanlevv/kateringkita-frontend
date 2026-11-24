@@ -53,6 +53,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { href: "/admin/moderasi", label: "Moderasi", icon: Flag },
       // Tiket bantuan: semua tingkat (super, ops, support), tidak termasuk SUPER_ONLY_PAGES di lib/admin-level.ts
       { href: "/admin/tiket", label: "Tiket", icon: LifeBuoy },
+      { href: "/admin/chat-dilaporkan", label: "Chat dilaporkan", icon: MessageCircle },
       { href: "/admin/data-master", label: "Data master", icon: Database },
       { href: "/admin/promo", label: "Promo & biaya", icon: Tag },
       // Banner beranda: semua tingkat melihat, super & ops memutuskan (tidak termasuk SUPER_ONLY_PAGES)
