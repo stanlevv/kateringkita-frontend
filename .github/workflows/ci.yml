@@ -40,3 +40,44 @@ jobs:
           BACKEND_API_URL: http://localhost:5000/api/v1
           INTERNAL_API_SECRET: ci-secret-yang-panjangnya-minimal-32-karakter
           SITE_URL: http://localhost:3000
+
+  # Alur end-to-end (e2e/*.spec.ts): backend asli dari repo backend + web mode dev + MySQL sekali-pakai.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: fe
+    services:
+      # Cocok dengan DB_URL bawaan e2e/helpers.ts (root:root@127.0.0.1:3306/kateringkita_e2e)
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: fe
+      - uses: actions/checkout@v4
+        with:
+          repository: stanlevv/kateringkita-backend
+          path: be
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            fe/package-lock.json
+            be/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: be
+      # playwright.config.ts memakai channel "chrome": Google Chrome sudah terpasang di runner ubuntu-latest.
+      - run: npm run test:e2e

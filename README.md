@@ -173,6 +173,8 @@ Sebelum push, jalankan pemeriksaan yang sama dengan CI (`.github/workflows/ci.ym
 npm run format:check && npm run lint && npx tsc --noEmit && npm run typecheck:e2e && npm test && npm run build
 ```
 
+Job `e2e` di CI juga menjalankan `npm run test:e2e` (backend asli + MySQL 8 sekali pakai). Di lokal butuh MySQL; isi
+`E2E_DATABASE_URL` bila kredensialnya bukan `root:root@127.0.0.1:3306` (nama DB harus berakhiran `_e2e`).
 `typecheck:e2e` butuh salinan repo backend di folder `../be`. `build` butuh env `BACKEND_API_URL`, `INTERNAL_API_SECRET`, dan
 `SITE_URL` (CI mengisinya di langkah `build` ci.yml). `BUYER_APP_URL` (opsional): alamat web aplikasi pembeli; kosong = tombol "Pesan lewat aplikasi" disembunyikan. Aturan alur kerja lengkap ada di CONTRIBUTING bagian "Alur kerja".
 
