@@ -130,7 +130,7 @@ describe("generateMetadata", () => {
   it("judul, kanonik, deskripsi dipotong, gambar OG", async () => {
     getMerchantBySlug.mockResolvedValue({ data: { ...profile, description: "x".repeat(300) } });
     const m = await generateMetadata(params("dapur-ani"));
-    expect(m.title).toBe("Dapur Ani — Menu & Harga Katering");
+    expect(m.title).toBe("Dapur Ani — Menu & Harga");
     expect(m.alternates?.canonical).toBe("/toko/dapur-ani");
     expect((m.description ?? "").length).toBeLessThanOrEqual(160);
     expect(JSON.stringify(m.openGraph)).toContain("https://r2.test/cover.jpg");
