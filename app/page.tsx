@@ -122,12 +122,12 @@ const FAQ = [
   {
     question: "Apa itu KateringKita?",
     answer:
-      "KateringKita adalah layanan pre-order katering untuk lingkungan kampus. Mahasiswa memesan lewat aplikasi KateringKita di ponsel atau memindai QR di meja toko, sedangkan penjual mengelola menu, kuota porsi, dan pesanan dari dashboard web ini.",
+      "KateringKita adalah layanan pre-order katering untuk lingkungan kampus Universitas Brawijaya (UB) Malang. Mahasiswa memesan lewat aplikasi KateringKita di ponsel atau memindai QR di meja toko, sedangkan penjual mengelola menu, kuota porsi, dan pesanan dari dashboard web ini.",
   },
   {
     question: "Siapa yang bisa mendaftar sebagai penjual?",
     answer:
-      "Usaha katering atau dapur rumahan yang melayani mahasiswa di sekitar kampus. Setelah mendaftar, admin memeriksa data usaha Anda sebelum toko tampil di aplikasi.",
+      "Usaha katering atau dapur rumahan yang melayani mahasiswa di sekitar kampus UB Malang. Setelah mendaftar, admin memeriksa data usaha Anda sebelum toko tampil di aplikasi.",
   },
   {
     question: "Bagaimana kuota porsi mencegah pesanan berlebih?",

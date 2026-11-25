@@ -43,7 +43,7 @@ const loadMenus = cache((slug: string) => getMerchantMenus(slug));
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const profile = await loadProfile(slug);
-  const title = `${profile.business_name} — Menu & Harga Katering`;
+  const title = `${profile.business_name} — Menu & Harga`;
   const description = (
     profile.description ??
     `Pesan katering dari ${profile.business_name} (${profile.merchant_type.name}). Lihat menu, harga, dan titik ambil di KateringKita.`

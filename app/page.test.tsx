@@ -73,6 +73,16 @@ describe("landing", () => {
     expect(faq.mainEntity.map((question: { name: string }) => question.name)).toEqual(shownQuestions);
   });
 
+  it("FAQ menyebut UB Malang di teks tampil dan JSON-LD", async () => {
+    getSession.mockResolvedValue(null);
+    const { container } = render(await Home());
+    expect(container.querySelector("#faq")!.textContent).toContain("UB Malang");
+    const jsonLd = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!);
+    const faq = jsonLd["@graph"].find((node: { "@type": string }) => node["@type"] === "FAQPage");
+    const apaItu = faq.mainEntity.find((q: { name: string }) => q.name === "Apa itu KateringKita?");
+    expect(apaItu.acceptedAnswer.text).toContain("Universitas Brawijaya (UB) Malang");
+  });
+
   it("sinyal lokal UB Malang: label hero, footer, areaServed Organization", async () => {
     getSession.mockResolvedValue(null);
     const { container } = render(await Home());
