@@ -1,6 +1,6 @@
 // Kerangka memuat /admin/penjual/<id>/menu. loading.tsx tampil otomatis selama page.tsx menunggu data.
 import { PageFrame } from "@/app/components/shell/PageFrame";
-import { SkeletonFilter, SkeletonList } from "@/app/components/ui/Skeleton";
+import { SkeletonList } from "@/app/components/ui/Skeleton";
 
 /**
  * Kerangka MerchantMenuList: tabel menu toko.
