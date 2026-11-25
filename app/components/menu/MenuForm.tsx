@@ -268,7 +268,7 @@ export function MenuForm({
               imageError={errorFor("image_url")}
               photoError={photoError}
               canUploadPhoto={canUploadPhoto}
-              onRetry={() => void upload(photo!.file, photo!.preview)}
+              onRetry={() => photo && void upload(photo.file, photo.preview)}
               onSelect={selectPhoto}
               onError={setPhotoError}
               onRemove={removePhoto}
