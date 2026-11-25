@@ -50,3 +50,11 @@ d5bf1816636c8fd81b434ff1881fe392c57b68ba
 92afe761d725544de50efe8488113acd8fbeaf37
 # refactor(web-root): H2 menjadi SECTION_HEADING, tanpa nama dua huruf (F28)
 7e1fc8441224dd04e468dde12f1cc206e3ff7f5b
+# refactor(pengaturan): pecah SettingsForm menjadi ImageField, SettingsSection, dan settings-form-values
+f1be212a09ad2b71e824296dd82c7b611f667ee7
+# refactor(meja): pecah TableMenuApp menjadi TableMenuCard dan OptionPicker
+933be6f0e2aa9294f65b261b7e32117404a4d86b
+# refactor(menu): pecah MenuForm menjadi menu-form-values, FormSection, dan MenuPhotoField
+1d0b95295c324a0ab609d54720feb30f5ea0e8fd
+# refactor(menu): tombol Coba unggah lagi tanpa non-null assertion
+bd0410865c447cbd555df9a6c41ee42ec2f0f8bb

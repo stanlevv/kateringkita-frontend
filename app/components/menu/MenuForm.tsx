@@ -5,10 +5,9 @@
 // "use client": komponen ini berjalan di peramban (client component) karena memakai state, efek, atau router.
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, TriangleAlert, X } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 import { saveMenu } from "@/app/actions/menus";
 import { callAction } from "@/lib/action";
 import { uploadPhoto } from "@/lib/upload";
@@ -16,7 +15,6 @@ import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import { ErrorSummary } from "@/app/components/ui/ErrorSummary";
 import { Field } from "@/app/components/ui/Field";
-import { FileDrop } from "@/app/components/ui/FileDrop";
 import { Input, Select, Textarea } from "@/app/components/ui/Input";
 import { Switch } from "@/app/components/ui/Switch";
 import { toast } from "@/app/components/ui/Toast";
@@ -29,88 +27,10 @@ import type { MerchantMenu } from "@/types/menu";
 import type { ActionResult } from "@/types/api";
 import { ExtraPhotos } from "./ExtraPhotos";
 import { MenuPreview } from "./MenuPreview";
-import { OptionsEditor, type OptionRow } from "./OptionsEditor";
-
-const MEGABYTE = 1024 * 1024;
-/** Teks isian menjadi angka; isian kosong menjadi NaN supaya validasi menganggapnya belum diisi. */
-const toNumber = (text: string) => (text.trim() === "" ? NaN : Number(text));
-/** Nama isian untuk ringkasan galat (kunci = nama field API). */
-const FIELD_LABELS: Record<string, string> = {
-  image_url: "Foto",
-  gallery: "Foto tambahan",
-  name: "Nama menu",
-  category_id: "Kategori",
-  description: "Deskripsi",
-  unit_label: "Satuan",
-  price: "Harga jual",
-  hpp: "HPP",
-  daily_quota: "Kuota harian",
-  prep_minutes: "Estimasi siap",
-  min_order_qty: "Minimum pesan",
-  preorder_days: "Hari pre-order",
-};
-/** Nama isian untuk ringkasan galat; galat opsi ditulis "Opsi N". */
-const fieldLabel = (fieldKey: string) => {
-  const match = /^options\.(\d+)\./.exec(fieldKey);
-  return match ? `Opsi ${Number(match[1]) + 1}` : (FIELD_LABELS[fieldKey] ?? fieldKey);
-};
-
-/** Isi formulir; angka disimpan sebagai teks isian dan baru diubah ke angka saat validasi/kirim. */
-type FormValues = {
-  name: string;
-  category_id: string;
-  description: string;
-  unit_label: string;
-  price: string;
-  hpp: string;
-  daily_quota: string;
-  prep_minutes: string;
-  is_preorder: boolean;
-  preorder_days: string;
-  min_order_qty: string;
-  options: OptionRow[];
-};
-/** Unggahan foto utama: berkas, pratinjau lokal, dan statusnya (mengunggah, gagal, selesai). */
-type PhotoUpload = { file: File; preview: string; status: "mengunggah" | "gagal" | "selesai"; message?: string };
-
-// Isi formulir sebagai teks untuk membandingkan dengan isi awal. Tanda `touched` di opsi tidak ikut, karena itu
-// hanya tanda tampilan, bukan perubahan data.
-const serialize = (values: FormValues) =>
-  JSON.stringify({ ...values, options: values.options.map((option) => [option.name, option.extra_price]) });
-
-/** Isi awal: dari menu (mode ubah), dari prefill Kalkulator HPP, atau nilai bawaan. */
-const initialValues = (
-  menu: MerchantMenu | undefined,
-  prefill: { hpp?: number; price?: number } | undefined,
-): FormValues => ({
-  name: menu?.name ?? "",
-  category_id: menu ? String(menu.category.id) : "",
-  description: menu?.description ?? "",
-  unit_label: menu?.unit_label ?? "porsi",
-  price: String(menu?.price ?? prefill?.price ?? ""),
-  hpp: String(menu?.hpp ?? prefill?.hpp ?? ""),
-  daily_quota: String(menu?.daily_quota ?? 20),
-  prep_minutes: String(menu?.prep_minutes ?? 15),
-  is_preorder: menu?.is_preorder ?? false,
-  preorder_days: String(menu?.is_preorder ? menu.preorder_days : 1),
-  min_order_qty: String(menu?.min_order_qty ?? 1),
-  options: (menu?.options ?? []).map((option, index) => ({
-    id: index,
-    name: option.name,
-    extra_price: String(option.extra_price),
-    touched: false,
-  })),
-});
-
-/** Satu bagian formulir berjudul (Info dasar, Foto, Harga, ...). */
-function FormSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section aria-label={title} className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-4 sm:p-6">
-      <h2 className="text-lg font-semibold text-ink">{title}</h2>
-      {children}
-    </section>
-  );
-}
+import { FormSection } from "./FormSection";
+import { MenuPhotoField } from "./MenuPhotoField";
+import { OptionsEditor } from "./OptionsEditor";
+import { fieldLabel, initialValues, serialize, toNumber, type FormValues, type PhotoUpload } from "./menu-form-values";
 
 /**
  * Formulir tambah/ubah menu. Galat tampil setelah isian disentuh; saat dikirim, semua galat tampil di ringkasan
@@ -342,69 +262,17 @@ export function MenuForm({
           </FormSection>
 
           <FormSection title="Foto">
-            {displayedPhoto && (
-              <div className="relative aspect-[16/9] w-full max-w-sm overflow-hidden rounded-md bg-subtle">
-                <Image
-                  src={displayedPhoto}
-                  alt="Pratinjau foto menu"
-                  fill
-                  unoptimized
-                  sizes="384px"
-                  className="object-cover"
-                />
-              </div>
-            )}
-            {photo?.status === "mengunggah" && (
-              <p role="status" className="flex items-center gap-2 text-sm text-ink-muted">
-                <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
-                Mengunggah foto…
-              </p>
-            )}
-            {photo?.status === "gagal" && (
-              <div
-                role="alert"
-                className="flex flex-wrap items-center gap-3 rounded-md border border-danger bg-danger-bg p-3 text-danger"
-              >
-                <p className="flex items-center gap-2">
-                  <TriangleAlert aria-hidden className="size-5" />
-                  {photo.message ?? "Foto gagal diunggah. Coba lagi"}
-                </p>
-                <Button variant="secondary" onClick={() => void upload(photo.file, photo.preview)}>
-                  Coba unggah lagi
-                </Button>
-              </div>
-            )}
-            {errorFor("image_url") && (
-              <p className="flex items-center gap-2 text-sm text-danger">
-                <TriangleAlert aria-hidden className="size-4" />
-                {errorFor("image_url")}
-              </p>
-            )}
-            {photoError && (
-              <p role="alert" className="flex items-center gap-2 text-sm text-danger">
-                <TriangleAlert aria-hidden className="size-4" />
-                {photoError}
-              </p>
-            )}
-            {!canUploadPhoto && <p className="text-sm text-ink-muted">Foto hanya bisa diunggah dari akun penjual.</p>}
-            {/* foto HP besar diperkecil di lib/upload.ts sebelum diunggah (batas backend 5 MB) */}
-            {canUploadPhoto && (
-              <FileDrop
-                id="mf-image_url"
-                maxBytes={20 * MEGABYTE}
-                onFile={selectPhoto}
-                onError={setPhotoError}
-                label={displayedPhoto ? "Ganti foto" : "Pilih foto"}
-              />
-            )}
-            {displayedPhoto && (
-              <div>
-                <Button variant="ghost" onClick={removePhoto}>
-                  <X aria-hidden className="size-4" />
-                  Hapus foto
-                </Button>
-              </div>
-            )}
+            <MenuPhotoField
+              displayedPhoto={displayedPhoto}
+              photo={photo}
+              imageError={errorFor("image_url")}
+              photoError={photoError}
+              canUploadPhoto={canUploadPhoto}
+              onRetry={() => photo && void upload(photo.file, photo.preview)}
+              onSelect={selectPhoto}
+              onError={setPhotoError}
+              onRemove={removePhoto}
+            />
             {canUploadPhoto && <p className="mt-2 text-sm font-medium text-ink">Foto tambahan</p>}
             {canUploadPhoto && (
               <ExtraPhotos
